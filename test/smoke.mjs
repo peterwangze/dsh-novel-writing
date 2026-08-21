@@ -184,6 +184,30 @@ const detail = svc.novelDetail(novel)
 check('novelDetail 组织完整', detail.chapters.length === 1 && detail.state.statistics.total_chapters === 1)
 check('fileIndex 列出工作文件', detail.files.length >= 3)
 
+// ── 工作台：新建小说 + 安全文件读取 ────────────────────────────────────
+const created = svc.createProject('新书测试', '我的新书')
+check('createProject 初始状态', created.state.current_stage === 'work_type_selection' && created.title === '我的新书')
+check('createProject 进入书目列表', svc.listNovels().novels.some((n) => n.id === '新书测试'))
+let dup = false
+try { svc.createProject('新书测试') } catch { dup = true }
+check('createProject 重名拒绝', dup)
+let badName = false
+try { svc.createProject('a/b') } catch { badName = true }
+check('createProject 非法名拒绝', badName)
+
+writeFileSync(join(workspace, '新书测试', 'novel-project', '00-work-type.md'), '# 作品类型\n\n长篇小说\n', 'utf8')
+const readFile = svc.readProjectFile('新书测试', '00-work-type.md')
+check('readProjectFile 读取', readFile.content !== null && readFile.content.includes('长篇小说'))
+let esc = false
+try { svc.readProjectFile('新书测试', '../test-novel/novel-project/workflow-state.json') } catch { esc = true }
+check('readProjectFile 路径逃逸拒绝', esc)
+let priv = false
+try { svc.readProjectFile('新书测试', '.dsh-plugin/meta.json') } catch { priv = true }
+check('readProjectFile 私有目录拒绝', priv)
+let missing = false
+try { svc.readProjectFile('新书测试', 'no-such.md') } catch { missing = true }
+check('readProjectFile 缺失报错', missing)
+
 console.log(`\nSMOKE DONE: ${passed} passed, ${failed} failed`)
 rmSync(root, { recursive: true, force: true })
 process.exit(failed === 0 ? 0 : 1)
