@@ -1,0 +1,12 @@
+# 创作内容永不入库
+novel-project/
+test-novel-project/
+dist/
+
+# node
+node_modules/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

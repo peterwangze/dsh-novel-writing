@@ -1,0 +1,12 @@
+# The dsh-novel-writing bundle patch: the automated novel writing & publishing
+# pipeline. Applied as a layer when installed via `dsh plugin add`.
+#
+# One dual-face host row:
+# - 小说项目管理服务（novel-writing）：workspace 扫描、workflow-state 读写、
+#   连续性看护资产（story bible / context card / ledger）、发布适配器、数据回流；
+# - 自动把包内 agent 预设拷贝到 $DSH_HOME/.agent-presets/novel-writing/
+#   （首次安装自动注册「小说写作工作流」预设，无需手动建目录）；
+# - 浏览器侧通过包的 `./client` 入口（dsh.client）提供「小说工作台」视图。
+- insert:
+    - id: novel-writing
+      name: dsh-novel-writing

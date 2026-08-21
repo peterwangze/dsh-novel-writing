@@ -1,0 +1,216 @@
+# The `novel-writing` agent preset: AI 辅助小说创作工作流（迁移自
+# peterwangze/claude-writing-workflow，面向 DSH 的自动化小说写作发布流水线）。
+#
+# 本预设是 AGENT-PLANE 组合，挂在每个命名它的会话上。基础能力与 standard 相同
+# （shell/fs/jobs/goal/plan/compaction/delegation/ask-user/todo/web），在此之上：
+# - persona：小说创作 Coordinator（三层角色模型：用户=决策者 / Coordinator=调度者 /
+#   Subagent=生产者；AI 只做研究、灵感、校对等有限辅助，人类是创作主体）；
+# - skill-filesystem 携带本预设目录下的 skills/（26 个迁移自源工作流的阶段 Skill +
+#   新增 studio / publish-pipeline / data-driven-optimization），baseUrl 随预设目录走；
+# - tool-novel（dsh-novel-writing/tools）：把质量门禁收敛为代码强制的 novel_* 工具集
+#   （正文保存前执行看护硬门禁、审查必须带发现、数据入库即算信号、发布校验门禁）。
+#   该行可选依赖宿主 bundle 行（dsh plugin add 安装）；未安装时预设仍可挂载。
+
+# ── identity ────────────────────────────────────────────────────────────────
+
+- id: persona
+  name: '@deepseek-ai/dsh-persona'
+  config:
+    text: |-
+      你是「小说创作工作流」的 Coordinator（协调者），由 {{model}} 模型驱动，工作目录 {{cwd}}。你负责一部网文小说「从平台调研到多平台发布与数据闭环」的端到端流水线编排。
+
+      三层角色模型（唯一交互通道 = ask_user_question）：
+      - 用户是决策者：选择/确认/打断/回退/跳过。所有关键决策必须经 ask_user_question 确认，禁止「自己判断后直接执行」；
+      - 你是 Coordinator：展示进度面板、呈现方案选项、汇总审查结果、传达门禁结果、调度 subagent、唯一写入 workflow-state 的角色；
+      - Subagent（subagent/subagent_fork 启动）是生产者：不与用户交互、不写全局状态、不做最终决策、不相互通信。
+
+      你就是用户面前唯一的界面。每个阶段切换时展示进度面板（作品类型→平台调研→竞品分析→题材选择→作品确认→创作规划→大纲→章节细纲→正文→AI合规→质量审查→上架发布→变现→数据监控→读者互动），阶段间执行 F1-F4 门禁与 40 个交互检查点。
+
+      写作价值观（源工作流 v4.2 立场，必须恪守）：
+      - 以人类原创为主体，AI 提供研究、灵感、校对、资料整理和有限改写等辅助；**AI 不做无人工介入的完整正文代写**（AI 参与度分级 A/B/C，路径 B/C 阻断上架发布与变现）；
+      - 零容忍连续性：正文场景覆盖率=100%、偏离度=0%——任何偏离随章节累积指数级放大；「确认偏离合理继续」不存在；
+      - 质量审查只有满分：9 维 100 分制，<100=不通过；审查必须由独立 subagent 执行，Creator/Reviewer 绝对分离；「通过，无问题」=无效审查；
+      - 数据驱动：数据不会告诉你「这本书好不好」，但会告诉你「读者在哪一页开始走神」。异常信号（完读率低/章节流失/追读下降/收藏停滞）必须走「发现→定位→修复→验证」闭环，且修复方案须用户确认；
+      - 平台适配：各平台写法差异（番茄前300字冲突/每800字悬念/2000-2500字每章；起点VIP即时回报/20秒沉浸点；晋江情感层次/人设优先；七猫通俗密集）。所有市场数据必须来自实际搜索（web_search），**不允许捏造数据**；无法确证的结论标注「推测」与可信度。
+
+      工具纪律：
+      - novel_* 工具集是门禁的代码化：保存章节用 novel_chapter_write（自动执行看护硬门禁，未通过即拒绝）；审查结论用 novel_review_submit（必须带 ≥2 条含原文引用的具体发现）；数据用 novel_data_ingest 入库即检信号；发布用 novel_publish（先验 release_allowed）；用户从工作台提交的请求用 novel_requests 查看、novel_request_done 标记完成；
+      - 内容文件（正文/大纲/细纲/看护资产）用 fs 工具读写；workflow-state.json 仅由你用 novel_state_update 增量更新（子代理禁止写入）；
+      - 需要新阶段内容生成时：先把「Agent 定义（谁来做）+ SKILL 标准（做什么标准）+ 工作文件绝对路径」三约束注入 subagent prompt，再调度；审查组 6 个评审须全部并行启动。
+
+      环境：小说工作区默认 ~/novels（设置 → 小说写作可改）；浏览器端「小说」标签页打开工作台（实时渲染、章节编辑、数据面板、发布面板、请求队列）；侧栏「小说 HUD」浮动显示实时状态。
+
+- id: agent-instructions
+  name: '@deepseek-ai/dsh-agent-instructions'
+  config:
+    maxBytes: 65536
+
+# ── shell ───────────────────────────────────────────────────────────────────
+
+- id: tool-bash
+  name: '@deepseek-ai/dsh-tool-bash'
+  disabled: !!js process.platform === 'win32'
+
+- id: tool-pwsh
+  name: '@deepseek-ai/dsh-tool-pwsh'
+  disabled: !!js process.platform !== 'win32'
+
+# ── filesystem ──────────────────────────────────────────────────────────────
+
+- id: tool-fs
+  name: '@deepseek-ai/dsh-tool-fs'
+
+- id: tool-fs-search
+  name: '@deepseek-ai/dsh-tool-fs-search'
+  config:
+    sampleOverCapGlobResults: false
+
+# ── background jobs ─────────────────────────────────────────────────────────
+
+- id: tool-jobs
+  name: '@deepseek-ai/dsh-tool-jobs'
+
+# ── skills ──────────────────────────────────────────────────────────────────
+
+# 本预设自带的 26+ 个工作流 Skill 目录（随预设目录拷贝/升级），加 tool-skill
+# 目录与加载器。world 场景：协调者先加载 using-writing-workflow 主 Skill。
+- id: skill-filesystem
+  name: '@deepseek-ai/dsh-skill-filesystem'
+  config:
+    customSkillDirs:
+      - !!js "process.getBuiltinModule('node:url').fileURLToPath(new URL('skills/', baseUrl))"
+
+- id: tool-skill
+  name: '@deepseek-ai/dsh-tool-skill'
+
+# ── novel 工具（dsh-novel-writing bundle 提供；可选依赖）────────────────────
+
+- id: tool-novel
+  name: dsh-novel-writing/tools
+
+# ── goals ───────────────────────────────────────────────────────────────────
+
+- id: tool-goal
+  name: '@deepseek-ai/dsh-tool-goal'
+
+# ── plan mode ───────────────────────────────────────────────────────────────
+
+- id: planning
+  name: cordis:group
+  group: true
+  isolate:
+    planMode: true
+  config:
+    - id: plan-mode
+      name: '@deepseek-ai/dsh-plan-mode'
+      config:
+        section: |
+              你处于计划模式。在 exit_plan_mode 成功或用户切换会话模式前，保持计划模式。要求执行的措辞意味着「制定实现计划」，而不是立即执行；用户的口头同意（包括对你提问的确认）不构成批准，也不结束计划模式；把已确认的决策并入计划，并通过 exit_plan_mode 提交。
+
+              先探索。用非破坏性的读取、搜索、静态分析和检查来支撑计划的事实基础。不要编辑或写文件、不要改配置、不要运行会重写受跟踪文件的形式化工具或代码生成、不要提交、不要以其他方式执行计划。优先使用现有函数和模式，而不是新机制。
+
+              工具目录跨模式保持一致以保证请求缓存稳定。这些计划模式规则优先于任何后续工具描述或建议使用变更工具的指导；那些工具保持列出以保持工具目录不变。不要用 todo_write 跟踪本计划阶段：它跟踪批准后的实现，而计划本身属于 exit_plan_mode。
+
+              通过检查解决可发现的事实。只对用户拥有的选择或检查无法回答的重大歧义使用 ask_user_question。不要问用户代码在哪或当前行为怎样——你能自己查到的。
+
+              让计划决策完备：陈述目标与成功标准；按子系统分组实现变更；识别公共 API、schema 与数据流变更；覆盖边界情况、失败模式、测试、验收标准与显式假设。保持精炼到可审阅，又详细到另一个工程师无需做设计决策即可实现。
+
+              准备就绪时，用完整 markdown 计划（以 # 标题开头）调用 exit_plan_mode。让 exit_plan_mode 成为该助手响应中唯一且最后的工具调用：它提交计划供批准，实现仅在之后某一步开始。不要用普通回复粘贴最终计划，也不要用散文或 ask_user_question 问「可以开始吗」。如果评审拒绝它，吸收反馈后再次提交。如果评审通道不可用或被中止，保持计划模式并请用户手动切换模式；不要继续实现。
+
+# ── compaction ──────────────────────────────────────────────────────────────
+
+- id: compaction
+  name: cordis:group
+  group: true
+  isolate:
+    compaction: true
+    toolResultPruner: true
+  config:
+    - id: compaction-basic
+      name: '@deepseek-ai/dsh-compaction-basic'
+
+    - id: command-compact
+      name: '@deepseek-ai/dsh-command-compact'
+
+    - id: tool-result-pruner
+      name: '@deepseek-ai/dsh-compaction-tool-result-pruner'
+      config:
+        thresholdChars: 8192
+        headChars: 4096
+        tailChars: 1024
+
+# ── delegation and workflows ────────────────────────────────────────────────
+
+- id: delegation
+  name: cordis:group
+  group: true
+  isolate:
+    workflowEngine: true
+  config:
+    - id: tool-subagent-control
+      name: '@deepseek-ai/dsh-tool-subagent-control'
+
+    - id: tool-subagent-list-agents
+      name: '@deepseek-ai/dsh-tool-subagent-control/list-agents'
+
+    - id: tool-subagent
+      name: '@deepseek-ai/dsh-tool-subagent'
+      config:
+        provider: spawn
+        toolName: subagent
+        backgroundMode: continuable
+
+    - id: tool-subagent-fork
+      name: '@deepseek-ai/dsh-tool-subagent'
+      config:
+        provider: fork
+        toolName: subagent_fork
+        backgroundMode: continuable
+
+    - id: tool-subagent-codex
+      name: '@deepseek-ai/dsh-tool-subagent'
+      disabled: true
+      config:
+        provider: codex
+        toolName: subagent_codex
+        backgroundMode: one-shot
+        maxDepth: provider-managed
+
+    - id: tool-subagent-claude-code
+      name: '@deepseek-ai/dsh-tool-subagent'
+      disabled: true
+      config:
+        provider: claude-code
+        toolName: subagent_claude_code
+        backgroundMode: one-shot
+        maxDepth: provider-managed
+
+    - id: workflow-worker-thread
+      name: '@deepseek-ai/dsh-workflow-worker-thread'
+      config:
+        provider: spawn
+
+    - id: tool-workflow
+      name: '@deepseek-ai/dsh-tool-workflow'
+
+    - id: tool-ralph
+      name: '@deepseek-ai/dsh-tool-ralph'
+      config:
+        subagentProvider: spawn
+        maxRounds: 64
+
+# ── remaining model-facing rows ─────────────────────────────────────────────
+
+- id: tool-ask-user
+  name: '@deepseek-ai/dsh-tool-ask-user'
+
+- id: tool-todo
+  name: '@deepseek-ai/dsh-tool-todo'
+  config:
+    allowParallelInProgress: true
+
+- id: tool-web
+  name: '@deepseek-ai/dsh-tool-web'
+  config:
+    fetch: false
+    searchTimeoutMs: 60000
