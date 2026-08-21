@@ -10,3 +10,6 @@ node_modules/
 # OS
 .DS_Store
 Thumbs.db
+
+# CI workflow 需要带 workflow scope 的 token 才能推送；本地保留、首次用 gh api 或网页创建
+
