@@ -35,11 +35,10 @@ dsh-novel-writing 插件在浏览器侧提供两个可视化入口，本文约�
 继续小说创作工作流：《法医仙途》（目录 fayi-xiantu）
 ```
 
-**预设自动保证**（按钮在注入前执行）：
-- 会话已在 novel-writing 预设 → 直接注入；
-- 会话还是 blank（尚未说过话）→ 先经 `agentPresets.select` 把本会话切到 novel-writing 预设再注入（宿主只允许 blank 会话切换）；
-- 会话已开始且用其他预设 → 预设锁定不可切换，按钮给出出路提示（新建会话 / 在 设置→小说写作 把默认预设设为 novel-writing）。
-- 设置页「新会话默认预设」一键把 `agent-presets.default` 设为 novel-writing——此后每个新会话默认就是小说工作流。
+**预设按需加载**（不修改全局默认预设；仅在用户从工作台触发写作逻辑时挂载）：
+- 会话已在 novel-writing 预设 → 直接注入指令；
+- 会话还是 blank（尚未说过话）→ 先经 `agentPresets.select` 把本会话切到 novel-writing 再注入（宿主只允许 blank 会话切换）；
+- 会话已开始且用其他预设 → 预设锁定不可切换；自动新开本工作区专用会话（挂载 novel-writing 预设 → 转场 → pendingLaunch 通道自动发送启动指令；若未自动发送，新会话「小说」标签会出现「▶ 发送启动指令」按钮）。
 
 你收到该形态消息时：按 using-writing-workflow 主 Skill 处理——`novel_list`/`novel_status` 确认该目录存在，然后从 `work_type_selection`（新）或 `workflow-state.json` 断点（旧）继续；目录名即书目 id。新建但未开始的书目 current_stage 为 `work_type_selection` 且无章节。
 
