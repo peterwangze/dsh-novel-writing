@@ -27,7 +27,7 @@
 | G2 | → 技术选型 | passed-on-entry | 2026-08-22 | Node.js ≥20 ESM + DSH 插件体系（cordis/schemastery peerDeps） |
 | G3 | → 环境搭建 | passed-on-entry | 2026-08-22 | install.ps1 / install.sh 双通道安装 + .github/workflows/ci.yml |
 | G4 | → 架构设计 | passed-on-entry | 2026-08-22 | docs/DESIGN.md（novel-writing 服务 / HTTP API / 预设同步 / 工作台） |
-| G5 | → 开发实现 | pending | | — |
+| G5 | → 开发实现 | passed-with-conditions | 2026-08-22 | EVD-007（条件：非功能对应表未表格化/接口字段级契约不全/DESIGN roadmap 待同步——DOC-001 跟踪） |
 | G6 | → 测试 | pending | | |
 | G7 | → 防护网与CI/CD | pending | | |
 | G8 | → 版本发布 | pending | | |
@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 7 | 4 | 0 | 1 | G4 passed-on-entry | — |
+| dsh-novel-writing | development (6/11) | 8 | 5 | 0 | 1 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -52,7 +52,8 @@
 | **P1** | REL-001 | CHANGELOG [0.2.2] 补录：tag 已发布但变更未入账（发布一致性缺口），从 ef5c073 提炼补写 | — | v0.3.0 | closed | ✅ 完成 (2026-08-22) |
 | **P1** | QUAL-001 | RISK-001 CI 观察收尾：核验最近 3 次 CI 运行结果（ci.yml 首跑修复 fdf4edd 后），产出观察结论并更新风险状态 | RISK-001 | v0.3.0 | closed | ✅ 完成 (2026-08-22) |
 | **P2** | REL-002 | 发布一致性自检：建立 tag↔CHANGELOG↔路线图三方核对（脚本或 CI 检查项），防再发版本漏账（产品代码，Developer+Code Reviewer） | REL-001✅ | v0.3.0 | open | ⏳ 待执行 |
-| **P2** | GATE-005 | G5 开发实现阶段 Gate 自评：对照 stage-gates.md G5 检查项逐项评估并显式声明结论 | — | v0.3.0 | open | ⏳ 待执行 |
+| **P2** | GATE-005 | G5 开发实现阶段 Gate 自评：对照 stage-gates.md G5 检查项逐项评估并显式声明结论 | — | v0.3.0 | closed | ✅ 完成 (2026-08-22) |
+| **P2** | DOC-001 | G5 条件关闭：设计文档补强——非功能需求对应表表格化 + 接口字段级契约补全 + DESIGN.md Roadmap 与实际版本演进同步（v0.2 实际=审计修复线；v0.3.0 用户确认=发布卫生线 DEC-008） | GATE-005 | v0.3.0 | open | ⏳ 待执行 |
 | **P2** | SYSGAP-001 | 向插件上游报告 check-governance root_divergence 误报（Check 28c 跨根期望源 / Check 18c·18d 活跃任务误解析），issue 链接回 RISK-002 | RISK-002 | v0.3.0 | open | ⏳ 待执行 |
 
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
