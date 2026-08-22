@@ -2,6 +2,11 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 格式；版本号语义化（0.x 阶段以次要版本承载功能批，补丁号承载修复）。
 
+## [0.3.0] - Unreleased
+
+### 客户端
+- **新会话初始窗口工作台入口（UX-001）**：blank/hero 状态下 `conversation.view`（小说工作台标签）与 `composer.dock`（原预设兜底条）均不渲染，初始窗口无任何工作台入口——兜底条迁移至 `conversation.input.dock`（hero/active 均渲染，standardProps 含 inputActions），并新增「📖 小说工作台」入口行：书目列表 + ▶ 开始/继续工作流（`completedStages`/`totalChapters` 判定）+ 一键新建并开工；启动走按需挂载预设（blank 会话原位 select novel-writing 后注入），预设作为工作台附属组件对用户零感知。
+
 ## [0.2.2] - 2026-08-22
 
 > 补录（2026-08-22，REL-001）：tag `v0.2.2` 发布时本段缺失，现从 commit `ef5c073` 提炼补写。

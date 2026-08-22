@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 8 | 5 | 0 | 1 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 10 | 6 | 0 | 1 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -55,6 +55,8 @@
 | **P2** | GATE-005 | G5 开发实现阶段 Gate 自评：对照 stage-gates.md G5 检查项逐项评估并显式声明结论 | — | v0.3.0 | closed | ✅ 完成 (2026-08-22) |
 | **P2** | DOC-001 | G5 条件关闭：设计文档补强——非功能需求对应表表格化 + 接口字段级契约补全 + DESIGN.md Roadmap 与实际版本演进同步（v0.2 实际=审计修复线；v0.3.0 用户确认=发布卫生线 DEC-008） | GATE-005 | v0.3.0 | open | ⏳ 待执行 |
 | **P2** | SYSGAP-001 | 向插件上游报告 check-governance root_divergence 误报（Check 28c 跨根期望源 / Check 18c·18d 活跃任务误解析），issue 链接回 RISK-002 | RISK-002 | v0.3.0 | open | ⏳ 待执行 |
+| **P1** | UX-001 | 新会话初始窗口工作台入口（预设零感知定位修复）：blank/hero 状态 conversation.view 与 composer.dock 均不渲染 → 入口条迁移至 conversation.input.dock（hero/active 均渲染），点击 ▶ 开始/继续工作流自动按需挂载小说预设（DEC-009） | — | v0.3.0 | closed | ✅ 完成 (2026-08-22) |
+| **P2** | CLEAN-001 | UX-001 评审卫生项收尾（Code Reviewer 建议 A-D）：守卫式 hook 调用改无条件、TTL 渲染期 store 写移入 effect、launch 加 busy/防连点、StudioView L833/L844 陈旧注释更新 | UX-001 | v0.3.0 | open | ⏳ 待执行 |
 
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 
@@ -70,7 +72,7 @@
 | v0.2.0 | 已发布 | — | 双代理审计修复（8 宿主 P0 + 3 客户端 P0 + 17 P1） | —（接入补录，未入账） | git tag v0.2.0 |
 | v0.2.1 | 已发布 | — | 审计 P1 收尾 + 仓库卫生 + 双通道安装验证 | —（接入补录，未入账） | git tag v0.2.1 |
 | v0.2.2 | 已发布 | 2026-08-22 | 配置边界重构：业务配置归一工作台，设置页只留插件级开关 | REL-001（补录） | git tag v0.2.2 + CHANGELOG [0.2.2]（补录） |
-| v0.3.0 | 进行中 | 待定 | 发布卫生 + 质量加固（DEC-008）：CHANGELOG 0.2.2 补录 / CI 观察收尾 / 发布一致性自检 | REL-001, QUAL-001, REL-002 | — |
+| v0.3.0 | 进行中 | 待定 | 发布卫生 + 质量加固（DEC-008）：CHANGELOG 0.2.2 补录 / CI 观察收尾 / 发布一致性自检 / 初始窗口工作台入口（UX-001，DEC-009） | REL-001, QUAL-001, REL-002, UX-001 | — |
 
 ### 版本里程碑
 
