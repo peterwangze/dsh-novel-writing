@@ -221,6 +221,26 @@ check('信号：完读率低', ing.signals.some((s) => s.signal === '完读率�
 check('信号：追读下降', ing.signals.some((s) => s.signal === '追读下降'))
 check('信号：收益持续下滑', ing.signals.some((s) => s.signal === '收益持续下滑'))
 
+// P1 回归：同日重复入库按 date 去重（后到覆盖先到）
+const ing2 = svc.ingestData(novel, [{ date: '2026-05-05', 完读率: 2.8, 追读: 20, 日增收藏: 1, 收益: 30 }])
+check('metrics 同日去重', ing2.total === 5 && svc.readMetrics(novel).find((m) => m.date === '2026-05-05').完读率 === 2.8, JSON.stringify(ing2))
+
+// P1 回归：fetchCommand 适配器（真实子进程，跨平台 node）
+ctx.settings.get = () => ({
+  enabled: true, workspaceRoot: workspace, pollMs: 2000, apiPublic: false, presetAutoSync: false,
+  platforms: { 测试平台: { enabled: false, mode: 'export', command: '', fetchCommand: 'node -e "console.log(JSON.stringify({date:\'2026-05-06\',完读率:8.5,追读:55}))"' } },
+})
+const adapter = await svc.ingestFromAdapter(novel, '测试平台')
+check('fetchCommand 适配器入库', adapter.stored >= 1 && svc.readMetrics(novel).some((m) => m.date === '2026-05-06' && m.完读率 === 8.5), JSON.stringify(adapter).slice(0, 200))
+let adapterFail = false
+try { await svc.ingestFromAdapter(novel, '未配置平台') } catch (e) { adapterFail = e.message.includes('fetchCommand') }
+check('适配器未配置报错', adapterFail)
+
+// P1 回归：updateState allowCreate:false 防幽灵书目
+let ghost = false
+try { svc.updateState('幽灵书目', { current_stage: 'x' }, { allowCreate: false }) } catch (e) { ghost = e.message.includes('novel not found') }
+check('幽灵书目拒绝', ghost && svc.readState('幽灵书目') === null)
+
 // ── 目录索引 ───────────────────────────────────────────────────────────
 const detail = svc.novelDetail(novel)
 check('novelDetail 组织完整', detail.chapters.length === 1 && detail.state.statistics.total_chapters === 1)
