@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 7 | 3 | 0 | 2 | G4 passed-on-entry | — |
+| dsh-novel-writing | development (6/11) | 7 | 4 | 0 | 1 | G4 passed-on-entry | — |
 
 ## 当前活跃事项
 
@@ -50,7 +50,7 @@
 | **P1** | ONBOARD-001 | 治理接入与基线记录：.governance 四件套 + AGENTS.md bootstrap + git hooks + 会话快照（详情见 EVD-001） | — | v0.2.2 | closed | ✅ 完成 (2026-08-22) |
 | **P1** | DEV-001 | 明确 v0.3.0 版本范围并任务入账：用户确认范围 → 版本路线图 v0.3.0 行 + 拆解任务 | — | v0.3.0 | closed | ✅ 完成 (2026-08-22) |
 | **P1** | REL-001 | CHANGELOG [0.2.2] 补录：tag 已发布但变更未入账（发布一致性缺口），从 ef5c073 提炼补写 | — | v0.3.0 | closed | ✅ 完成 (2026-08-22) |
-| **P1** | QUAL-001 | RISK-001 CI 观察收尾：核验最近 3 次 CI 运行结果（ci.yml 首跑修复 fdf4edd 后），产出观察结论并更新风险状态 | RISK-001 | v0.3.0 | open | ⏳ 待执行 |
+| **P1** | QUAL-001 | RISK-001 CI 观察收尾：核验最近 3 次 CI 运行结果（ci.yml 首跑修复 fdf4edd 后），产出观察结论并更新风险状态 | RISK-001 | v0.3.0 | closed | ✅ 完成 (2026-08-22) |
 | **P2** | REL-002 | 发布一致性自检：建立 tag↔CHANGELOG↔路线图三方核对（脚本或 CI 检查项），防再发版本漏账（产品代码，Developer+Code Reviewer） | REL-001✅ | v0.3.0 | open | ⏳ 待执行 |
 | **P2** | GATE-005 | G5 开发实现阶段 Gate 自评：对照 stage-gates.md G5 检查项逐项评估并显式声明结论 | — | v0.3.0 | open | ⏳ 待执行 |
 | **P2** | SYSGAP-001 | 向插件上游报告 check-governance root_divergence 误报（Check 28c 跨根期望源 / Check 18c·18d 活跃任务误解析），issue 链接回 RISK-002 | RISK-002 | v0.3.0 | open | ⏳ 待执行 |
