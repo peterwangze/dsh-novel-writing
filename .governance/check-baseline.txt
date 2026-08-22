@@ -1,0 +1,400 @@
+
+┌─ Check 1: Evidence Completeness ─────────────────────┐
+│  Completed tasks: 1
+│  Tasks with evidence: 1
+│  [PASS] All completed tasks have evidence entries.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 2: Risk Staleness (>7 days) ──────────────────┐
+│  Total open risks: 0
+│  [PASS] No stale risks.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 3: Gate Consistency ──────────────────────────┐
+│  [PASS] Gate status and evidence are consistent.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 4: Evidence Quality ─────────────────────────┐
+│  [PASS] No '会话上下文' references found.
+│  [PASS] No circular references found.
+│  [PASS] No empty evidence locations found.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 5: Protocol Compliance (M8 External) ─────────┐
+│  [PASS] All active tasks have unique DRI.
+│  [PASS] No unresolved conditional passes.
+│  [PASS] All evidence entries have required fields.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 6: Tier Audit Completeness ───────────────────┐
+│  [INFO] No Tier definitions found in plan-tracker — skip.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 7: Commit-Task Traceability ──────────────────┐
+│  Recent commits checked: 20
+│  [WARN] 2 commit(s) without task ID reference:
+│    - ed577cf: DSH-ADAPTER: wire dsh into the mainstream loading sync machinery (FIX-...
+│    - 04a39b8: DSH-ADAPTER: tool-mapping table in the shared SKILL.md DSH section (0....
+│  With task ID: 18/20
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 8: Risk Escalation Deadline ──────────────────┐
+│  [PASS] No open risks with passed escalation deadlines.
+│  Total open risks: 0
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 9: Task Deadline Enforcement ─────────────────┐
+│  [PASS] No active tasks with passed plan-complete dates.
+│  Total active tasks checked: 2
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 10: M5 AskUserQuestion Compliance ────────────┐
+│  [PASS] No M5 anti-patterns in source files.
+│  [PASS] M5 AskUserQuestion rules present in bootstrap.
+│  [PASS] interaction-boundary.md has AskUserQuestion bindings.
+│  Total M5 checks: 5
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 11: Manifest Consistency ─────────────────────┐
+│  Canonical files in manifest: 555
+│  Actual files on disk:       586
+│  [PASS] No missing files (all manifest entries exist on disk).
+│  [PASS] No untracked files (all files covered by manifest).
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 12: Cross-Reference Checking ────────────────┐
+│  Files scanned: 68
+│  References extracted: 648
+│  [PASS] No dangling references found.
+│  [PASS] No deprecated path patterns found.
+│  [PASS] No circular references found.
+│  [PASS] Cross-reference graph is clean.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 13: Sequential ID Checking ───────────────────┐
+│  [PASS] DEC-IDs: 001-006 (6 entries, no gaps)
+│  [PASS] EVD-IDs: 001-001 (1 entries, no gaps)
+│  [PASS] RISK-IDs: 001-001 (1 entries, no gaps)
+│  [PASS] All cross-referenced task IDs exist in plan-tracker.
+│  [PASS] All completed tasks have evidence entries.
+│  [PASS] All ID sequences are clean.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 14: Structural Validity ──────────────────────┐
+│  [PASS] All governance files have valid structure.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 15: Commit Scope Verification ────────────────┐
+│  Recent commits checked: 20
+│  [PASS] All recent commits have clean scope discipline.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 16: Goal Alignment ───────────────────────────┐
+│  [INFO] 项目目标: DSH（DeepSeek Harness）自动化小说写作发布流水线插件——把 claude-writing-workfl...
+│  Impact analysis entries: 0
+│  [PASS] No impact analysis entries to check.
+│  [PASS] Goal alignment check passed.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 17: User Impact ──────────────────────────────┐
+│  Impact analysis entries: 0
+│  [PASS] No impact analysis entries to check.
+│  [PASS] User impact check passed.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 18: Fact Grounding (FIX-080) ─────────────────┐
+│  Current-release evidence entries: 0
+│  [PASS] No current-release product evidence to check.
+│  [PASS] Fact grounding check passed.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 18b: Structured Evidence (FIX-083) ───────────┐
+│  Current-release product evidence entries: 0
+│  [PASS] No current-release product evidence to check.
+│  [PASS] Structured evidence check passed.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 18c: AI Execution Packet (FIX-084) ───────────┐
+│  Required active P0/P1 packet(s): 8
+│  [FAIL] D:\AI\agent\deepseek\harness\writing-workflow\.governance\execution-packets.json not found
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 18d: Product Success Contract (FIX-088) ──────┐
+│  Required active P0/P1 contract(s): 8
+│  [FAIL] D:\AI\agent\deepseek\harness\writing-workflow\.governance\execution-packets.json not found
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 18e: Executable Acceptance Contract (FIX-089) ┐
+│  Required active P0/P1 acceptance contract(s): 8
+│  [FAIL] D:\AI\agent\deepseek\harness\writing-workflow\.governance\execution-packets.json not found
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 18f: Quality Budget Gate (FIX-090) ───────────┐
+│  Required active P0/P1 quality budget(s): 8
+│  [FAIL] D:\AI\agent\deepseek\harness\writing-workflow\.governance\execution-packets.json not found
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 18g: Vertical Slice Delivery Packets (FIX-091) ┐
+│  Required active P0/P1 vertical slice(s): 8
+│  [FAIL] D:\AI\agent\deepseek\harness\writing-workflow\.governance\execution-packets.json not found
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 18h: Weak-LLM Deterministic Scaffolds (FIX-092) ┐
+│  Required scaffold type(s): 3
+│  [PASS] web-app: deterministic scaffold ready
+│  [PASS] cli-tool: deterministic scaffold ready
+│  [PASS] workflow-plugin: deterministic scaffold ready
+│  [PASS] Deterministic scaffold check passed.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 18i: User Interruption Policy v2 (FIX-093) ───┐
+│  Policy example(s): 12
+│  Active packet policy field(s): 8
+│  [FAIL] D:\AI\agent\deepseek\harness\writing-workflow\.governance\execution-packets.json not found
+│  [PASS] product-intent-ambiguity: ask_user
+│  [PASS] acceptance-standard-ambiguity: ask_user
+│  [PASS] irreversible-file-delete: ask_user
+│  [PASS] risk-acceptance: ask_user
+│  [PASS] release-go-no-go: ask_user
+│  [PASS] new-external-dependency: ask_user
+│  [PASS] mode-change: ask_user
+│  [PASS] routine-file-edit: auto_execute
+│  [PASS] local-validation: auto_execute
+│  [PASS] governance-record-update: auto_execute
+│  [PASS] normal-commit-push: auto_execute
+│  [PASS] reversible-default-assumption: record_assumption
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 19: Agent Team Review ────────────────────────┐
+│  Product-code tasks (completed): 0
+│  Reviewed: 0
+│  [PASS] No product-code tasks to review.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 20: Agent Activation (Analyst/Architect) ─────┐
+│  P0 cross-layer product tasks: 0
+│  Analyst activated: 0
+│  [PASS] No P0 cross-layer product tasks to check.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 21: Review Debt / Spawn Gap (FIX-174) ───────┐
+│  Product-code tasks (all, with evidence): 0
+│  Review debt (have execution evidence, no review): 0
+│  [PASS] No product-code tasks to check.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 22: Review Coverage (FIX-037) ────────────────┐
+│  Product code tasks: 0
+│  Tasks with review evidence: 0
+│  Coverage: 0.0%
+│  [PASS] No product-code tasks to check.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 23: Profile Consistency (FIX-038) ────────────┐
+│  Profile: standard
+│  Gate table rows: 11 (expected: 11)
+│  Task table columns: 0 (expected: 20)
+│  Conditional passes found: 0 
+│  [PASS] Profile declaration matches actual structure.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 24: Version Consistency (FIX-052) ───────────┐
+│  [PASS] All version declarations match SKILL.md.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 25: Untracked Files ──────────────────────────┐
+│  [WARN] 2 untracked file(s) detected (ordinary scratch/non-blocking):
+│    (repo root)/
+│      - _dbg_fix261.py
+│    skills/software-project-governance/infra/tests/
+│      - test_pre_commit_review_evidence.py
+│  ── 可能是临时脚本，确认后归档或添加到 .gitignore ── 1 file(s):
+│    - _dbg_fix261.py
+│  ── 需人工判断 ── 1 file(s):
+│    - skills/software-project-governance/infra/tests/test_pre_commit_review_evidence.py
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 26: Agent Lock Consistency (FIX-056) ─────────┐
+│  [INFO] Skipped: agent-locks.json not found — lock consistency check skipped.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 27: Archive Integrity (SYSGAP-030) ───────────┐
+│  Hot tasks (plan-tracker): 9
+│  Archived tasks: 0
+│  Index entries: 0
+│  [PASS] Archive integrity verified — no archive data
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 28: Governance Review Fallback Policy ────────┐
+│  Command files checked: 2
+│  [PASS] Reviewer unavailable path blocks or records degraded evidence only.
+│  [PASS] Coordinator self-review fallback is not allowed.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 28b: Projection Sync Guard (FIX-086) ─────────┐
+│  Source version: 0.75.0
+│  Mirrored files checked: 15
+│  [PASS] Source, target fixture, native entries, and plugin versions are synchronized.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 28c: Hot Fact-Source Consistency (FIX-087) ───┐
+[FAIL] hot fact-source consistency: D:\AI\agent\deepseek\harness\writing-workflow\.governance\session-snapshot.md: session snapshot missing workflow version
+[FAIL] hot fact-source consistency: D:\AI\agent\deepseek\harness\writing-workflow\.governance\plan-tracker.md: missing hot fact-source section ### 1.0.0 依赖链
+[FAIL] hot fact-source consistency: D:\AI\agent\deepseek\harness\writing-workflow\.governance\plan-tracker.md: missing 0.38.0 roadmap row
+[FAIL] hot fact-source consistency: D:\AI\agent\deepseek\harness\writing-workflow\.governance\plan-tracker.md: missing 0.37.0 roadmap row
+[FAIL] hot fact-source consistency: D:\AI\agent\deepseek\harness\writing-workflow\.governance\plan-tracker.md: project config missing active version 0.38.0
+[FAIL] hot fact-source consistency: D:\AI\agent\deepseek\harness\writing-workflow\.governance\plan-tracker.md: project overview missing active version 0.38.0
+[FAIL] hot fact-source consistency: D:\AI\agent\deepseek\harness\writing-workflow\.governance\plan-tracker.md: current active items missing active version 0.38.0
+[FAIL] hot fact-source consistency: D:\AI\agent\deepseek\harness\writing-workflow\.governance\plan-tracker.md: active 0.38.0 task table missing FIX-082
+[FAIL] hot fact-source consistency: D:\AI\agent\deepseek\harness\writing-workflow\.governance\plan-tracker.md: active 0.38.0 task table missing FIX-083
+[FAIL] hot fact-source consistency: D:\AI\agent\deepseek\harness\writing-workflow\.governance\plan-tracker.md: active 0.38.0 task table missing FIX-084
+[FAIL] hot fact-source consistency: D:\AI\agent\deepseek\harness\writing-workflow\.governance\plan-tracker.md: active 0.38.0 task table missing FIX-085
+[FAIL] hot fact-source consistency: D:\AI\agent\deepseek\harness\writing-workflow\.governance\plan-tracker.md: active 0.38.0 task table missing FIX-086
+[FAIL] hot fact-source consistency: D:\AI\agent\deepseek\harness\writing-workflow\.governance\plan-tracker.md: active 0.38.0 task table missing FIX-087
+[FAIL] hot fact-source consistency: D:\AI\agent\deepseek\harness\writing-workflow\.governance\plan-tracker.md: active 0.38.0 task table missing REL-013
+[FAIL] hot fact-source consistency: D:\AI\agent\deepseek\harness\writing-workflow\.governance\plan-tracker.md: requirement matrix missing REQ-070
+[FAIL] hot fact-source consistency: D:\AI\agent\deepseek\harness\writing-workflow\.governance\plan-tracker.md: requirement matrix missing REQ-071
+[FAIL] hot fact-source consistency: D:\AI\agent\deepseek\harness\writing-workflow\.governance\plan-tracker.md: requirement matrix missing REQ-072
+[FAIL] hot fact-source consistency: D:\AI\agent\deepseek\harness\writing-workflow\.governance\plan-tracker.md: requirement matrix missing REQ-073
+[FAIL] hot fact-source consistency: D:\AI\agent\deepseek\harness\writing-workflow\.governance\plan-tracker.md: requirement matrix missing REQ-074
+│  [FAIL] 19 hot fact-source issue(s):
+│    - D:\AI\agent\deepseek\harness\writing-workflow\.governance\session-snapshot.md: session snapshot missing workflow version
+│    - D:\AI\agent\deepseek\harness\writing-workflow\.governance\plan-tracker.md: missing hot fact-source section ### 1.0.0 依赖链
+│    - D:\AI\agent\deepseek\harness\writing-workflow\.governance\plan-tracker.md: missing 0.38.0 roadmap row
+│    - D:\AI\agent\deepseek\harness\writing-workflow\.governance\plan-tracker.md: missing 0.37.0 roadmap row
+│    - D:\AI\agent\deepseek\harness\writing-workflow\.governance\plan-tracker.md: project config missing active version 0.38.0
+│    - D:\AI\agent\deepseek\harness\writing-workflow\.governance\plan-tracker.md: project overview missing active version 0.38.0
+│    - D:\AI\agent\deepseek\harness\writing-workflow\.governance\plan-tracker.md: current active items missing active version 0.38.0
+│    - D:\AI\agent\deepseek\harness\writing-workflow\.governance\plan-tracker.md: active 0.38.0 task table missing FIX-082
+│    - D:\AI\agent\deepseek\harness\writing-workflow\.governance\plan-tracker.md: active 0.38.0 task table missing FIX-083
+│    - D:\AI\agent\deepseek\harness\writing-workflow\.governance\plan-tracker.md: active 0.38.0 task table missing FIX-084
+│    ... and 9 more
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 28d: Runtime Readiness Matrix (FIX-106) ──────┐
+│  [PASS] Public runtime/readiness matrix matches adapter facts and no-overclaim boundaries.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 28e: First-Session Measurement (FIX-107) ─────┐
+│  [PASS] Local demo proof is separated from external first-session measurement.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 28f: Governance Pack Registry (FIX-108) ──────┐
+│  [PASS] Governance pack registry is complete, referenced, and no-overclaim safe.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 28g: Governance Context Discovery (FIX-112) ──┐
+│  [PASS] Governance context discovery is fact-based and not-found safe.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 28h: README Pack Guidance (FIX-109) ──────────┐
+│  [PASS] README maps first-run profiles to packs without replacing profiles or overclaiming.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 28i: Governance Pack Status Boundary (FIX-111) ┐
+│  [PASS] Status and release surfaces expose pack boundaries without overclaiming.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 28j: Capability Context Trace (FIX-115) ──────┐
+│  [PASS] Capability selection trace is fact-backed, degraded-safe, and no-overclaim safe.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 28k: Capability Registry (FIX-116) ───────────┐
+│  [PASS] Capability registry separates catalog facts from runtime PASS and governance packs.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 28l: Restricted Host Capability Context (FIX-117) ┐
+│  [PASS] Restricted-environment capability context degrades honestly without runtime PASS overclaim.
+└──────────────────────────────────────────────────────────┘
+
+┌─ Check 28m: Official Submission Ecosystem (FIX-118) ─┐
+│  [PASS] Official submission docs position governance as ecosystem trust layer without overclaim.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 28n: Mainstream Agent Loading (FIX-122) ──────┐
+│  [PASS] README, Tier 1 adapters, and 0.47.0 requirements keep loading guidance synchronized.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 28o: Architecture Health (ArchGuard/REQ-101) ┐
+│  Module/function/constant: 8 ERROR, 22 WARN
+│    [WARN] function_size: .governance\val008_dogfood_driver.py main
+│    [WARN] function_size: project\e2e-test-project\skills\software-project-governance\infra\archive.py migrate_by_version
+│    [ERROR] module_size: project\e2e-test-project\skills\software-project-governance\infra\verify_workflow.py 14166
+│    [WARN] function_size: project\e2e-test-project\skills\software-project-governance\infra\verify_workflow.py check_m5_compliance
+│    [WARN] function_size: project\e2e-test-project\skills\software-project-governance\infra\verify_workflow.py check_cross_references
+│    [ERROR] function_size: project\e2e-test-project\skills\software-project-governance\infra\verify_workflow.py cmd_check_governance
+│    [WARN] function_size: project\e2e-test-project\skills\software-project-governance\infra\verify_workflow.py main
+│    [ERROR] duplicate_constant: project\e2e-test-project\skills\software-project-governance\infra\verify_workflow.py REQUIRED_SNIPPETS
+│    ... and 22 more
+│  [ADVISORY] fatal_on_error=false — does not block release
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 28p: Duplicate Code (ArchGuard/REQ-101) ─────┐
+│  source/projection pairs checked: 5
+│    [ERROR] duplicate_code: skills\software-project-governance\infra\__init__.py dup=100.0%
+│    [ERROR] duplicate_code: skills\software-project-governance\infra\cleanup.py dup=90.5%
+│    [ERROR] duplicate_code: skills\software-project-governance\infra\resolve_entry.py dup=100.0%
+│  3 ERROR, 0 WARN (advisory)
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 28q: Technical Debt (ArchGuard/REQ-101) ─────┐
+│  residue/docs/hooks-drift/ledger: 0 ERROR, 2 WARN
+│    [WARN] release_docs_versions: docs\release
+│    [WARN] hooks_drift: prepare-commit-msg
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 28r: Complexity (ArchGuard/REQ-101) ─────────┐
+│  [INFO] disabled — AST-based complexity deferred to 0.59.0+; 0.58.0 uses line-based proxy
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 28s: Governance Data Size (FIX-160) ─────────┐
+│  governance files: 2 ERROR, 0 WARN
+│    [ERROR] .governance/plan-tracker.md 256764 bytes (250.7 KB)
+│    [ERROR] .governance/evidence-log.md 1245666 bytes (1216.5 KB)
+│  (advisory — fatal_on_error=false; does not block release)
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 29: M5 Runtime Triggers (FIX-174) ───────────┐
+│  Scanned segments: 1
+│  Verdict: WARN
+│  [WARN] 1 M5.4b notification-prefix WARN(s):
+│    - [M5.4b] evidence-log-facts: prose segment lacks a notification prefix (ℹ️ / 📢 / > 注： / >> 派发) — suspected untagged notification
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 30: Review Closure State Machine (FIX-174) ──┐
+│  Tasks with review sequences: 0
+│  Verdict: no-verdict
+│  [no-verdict] no review evidence found — Check 30 has nothing to validate
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 30c: Review Machine Provenance (FIX-260) ────┐
+│  Rows judged: 0 (machine 0, undated 0); files judged: 0 (legacy 0, undated 0, unmatched 0)
+│  Verdict: no-verdict
+│  [no-verdict] no REVIEW record dated on/after 2026-08-22 — Check 30c has nothing to judge (legacy/undated records are exempt)
+└──────────────────────────────────────────────────────┘
+│  [PASS] loop wiring call sites: 2 (Wiring A review-record + Wiring B gate-engine)
+
+┌─ Check 31: Loop Runtime Claim Gate (FIX-197) ───────┐
+│  Verdict: PASS
+│  Candidates: 581; parsed: 581
+│  Inventory: 95f20f7ba93f6a8d54b4443810fc74999d1582315b8dae16d38204fa274b02ee
+│  [PASS] complete semantic inventory; zero skip/truncate
+│  [PASS] identity attestation (fixture_only staged_index): PASS
+│  identity_verdict=PASS; phase=staged_index
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 32: Change-Control Triage (FIX-237.4) ────────┐
+│  CLI wiring: change-triage registered (argparse + dispatch)
+│  Records checked: 0; invalid: 0
+│  Tasks without triage record: 0; exempt: 0
+│  [PASS] change-triage wiring + record validity + intake enforcement OK.
+└──────────────────────────────────────────────────────┘
+
+┌─ Check 33: Injection Contract (FIX-253/REQ-112) ────┐
+│  Files checked: 3; anchors: 14
+│  [PASS] persona/SKILL/AGENTS injection surfaces carry the contract anchors.
+└──────────────────────────────────────────────────────┘
+
+┌─ Governance Health Summary ──────────────────────────┐
+│  Result: ISSUES FOUND — 27 issue(s)
+└──────────────────────────────────────────────────────┘
