@@ -44,13 +44,39 @@ if (yamlLoad !== null) {
     process.exit(1)
   }
 } else {
-  // 降级：无 js-yaml 时做行级形状检查（行必须携带 name:；!!js 表达式行原样计数）
+  // 降级模式（无 js-yaml / 无 profile）：行级形状检查 + 元数据 + 技能检查后直接收尾。
+  // 不构造占位行（会被行级解析判为未知插件），也不做行级模块解析。
   const lines = readFileSync(compositionPath, 'utf8').split('\n')
   const named = lines.filter((l) => /^\s*-\s*id:\s*\S+/.test(l)).length
   const names = lines.filter((l) => /^\s{0,8}name:\s*\S+/.test(l)).length
-  if (named < 15 || names < 15) { fail(`degraded shape check: rows=${named} names=${names}`); process.exit(1) }
-  rows = [{ name: 'cordis:group', config: [{ name: '__degraded__' }] }]
-  ok(`degraded mode: composition shape plausible (${named} rows, ${names} names; install js-yaml for full parse)`)
+  if (named < 15 || names < 15) { fail(`degraded shape check: rows=${named} names=${names}`); }
+  else ok(`degraded mode: composition shape plausible (${named} rows, ${names} names; install js-yaml for full parse)`)
+  if (!existsSync(join(presetDir, 'preset.yml'))) fail('preset.yml missing')
+  else {
+    ok('preset.yml exists')
+    const metaText = readFileSync(join(presetDir, 'preset.yml'), 'utf8')
+    if (!/name:/.test(metaText) || !/description:/.test(metaText)) fail('preset.yml lacks name/description')
+    else ok('preset.yml carries name/description')
+  }
+  const fs2 = await import('node:fs')
+  const skillsDir2 = join(presetDir, 'skills')
+  const skillDirs2 = fs2.readdirSync(skillsDir2, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name)
+  let skillOk2 = 0
+  for (const s of skillDirs2) {
+    const p = join(skillsDir2, s, 'SKILL.md')
+    if (!existsSync(p)) { fail(`skill ${s} missing SKILL.md`); continue }
+    const head = readFileSync(p, 'utf8').slice(0, 400)
+    if (!/^---\s*\nname:\s*\S+/m.test(head) || !/description:/.test(head)) { fail(`skill ${s} frontmatter incomplete`); continue }
+    skillOk2 += 1
+  }
+  ok(`skills indexed: ${skillOk2}/${skillDirs2.length}`)
+  if (skillDirs2.length < 25) fail('expected >= 25 skills')
+  const compositionText = readFileSync(compositionPath, 'utf8')
+  if (!/customSkillDirs:/.test(compositionText) || !/new URL\('skills\/', baseUrl\)/.test(compositionText)) {
+    fail('skill-filesystem row lacks customSkillDirs baseUrl expression')
+  } else ok('customSkillDirs expression present')
+  console.log(failed === 0 ? '\nPRESET VALIDATION PASSED (degraded)' : `\nPRESET VALIDATION FAILED (${failed})`)
+  process.exit(failed === 0 ? 0 : 1)
 }
 if (!Array.isArray(rows)) { fail('composition must be a top-level list'); process.exit(1) }
 

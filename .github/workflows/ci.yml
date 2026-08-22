@@ -62,26 +62,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      # 宿主逻辑冒烟需要 @deepseek-ai 闭包（Service 基类等）。CI 里用最小替身：
-      # cordis Service 构造器只要求 ctx.reflect.provide —— 由 mock 提供。
-      - name: 宿主服务逻辑冒烟（mock ctx，不依赖运行中的 DSH）
+      # 宿主逻辑冒烟需要 @deepseek-ai 闭包的最小子集。schemastery 是无下游依赖的
+      # 独立库，直接从 registry 装真包（mock 无法覆盖 .default()/.union 等链式 API）；
+      # 其余四个用行为兼容的最小替身。
+      - name: 宿主服务逻辑冒烟（schemastery 真包 + 其余最小替身）
         run: |
-          mkdir -p node_modules/@deepseek-ai/cordis node_modules/@deepseek-ai/schemastery node_modules/@deepseek-ai/dsh-settings node_modules/@deepseek-ai/dsh-home-paths node_modules/@deepseek-ai/dsh-tools
+          mkdir -p node_modules/@deepseek-ai/cordis node_modules/@deepseek-ai/dsh-settings node_modules/@deepseek-ai/dsh-home-paths node_modules/@deepseek-ai/dsh-tools
+          npm install --no-save @deepseek-ai/schemastery >/dev/null 2>&1
           cat > node_modules/@deepseek-ai/cordis/index.js <<'EOF'
           export class Service { constructor(ctx, name) { ctx.reflect.provide(name, this) } }
           EOF
           printf '{ "name": "@deepseek-ai/cordis", "version": "0.0.0-mock", "type": "module", "main": "index.js" }\n' > node_modules/@deepseek-ai/cordis/package.json
-          cat > node_modules/@deepseek-ai/schemastery/index.js <<'EOF'
-          const z = (x) => x
-          z.object = (shape) => ({ shape })
-          z.boolean = () => ({})
-          z.string = () => ({})
-          z.number = () => ({})
-          z.dict = () => ({})
-          z.union = (list) => ({ list })
-          export default z
-          EOF
-          printf '{ "name": "@deepseek-ai/schemastery", "version": "0.0.0-mock", "type": "module", "main": "index.js" }\n' > node_modules/@deepseek-ai/schemastery/package.json
           cat > node_modules/@deepseek-ai/dsh-settings/index.js <<'EOF'
           export const settingsNamespace = (ns) => Symbol.for('dsh-settings:ns:' + ns)
           EOF
@@ -96,4 +87,5 @@ jobs:
           export const defineTool = (def) => def
           EOF
           printf '{ "name": "@deepseek-ai/dsh-tools", "version": "0.0.0-mock", "type": "module", "main": "index.js" }\n' > node_modules/@deepseek-ai/dsh-tools/package.json
+          node -e "import('@deepseek-ai/schemastery').then((m) => console.log('schemastery real package:', typeof m.default.object))"
           node test/smoke.mjs
