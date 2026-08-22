@@ -43,14 +43,16 @@
 
 ## 当前活跃事项
 
-| ID | 阶段 | 任务项 | 目标/预期结果 | 输入 | 输出 | Owner (DRI) | 协同角色 | Escalation | 状态 | 优先级 | 计划开始 | 计划完成 | 实际完成 | Gate | 验收标准 | 证据 | 风险/偏差 | 纠偏动作 | 备注 | 审查状态 |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ONBOARD-001 | 开发 | 治理接入与基线记录 | .governance 四件套 + AGENTS.md bootstrap + git hooks 安装 | resolve_entry envelope + 项目探索信号 + 用户确认参数 | .governance/{plan-tracker,evidence-log,decision-log,risk-log}.md + AGENTS.md + .git/hooks/* | Coordinator | — | — | 已完成 | P1 | 2026-08-22 | 2026-08-22 | 2026-08-22 | — | 4 文件创建且 check-governance 可运行 | EVD-001 | — | — | 治理记录任务 | 不需审查 |
-| DEV-001 | 开发 | 明确 v0.3.0 版本范围并任务入账 | 下一版本范围经用户确认后写入版本规划节并拆解任务 | CHANGELOG.md v0.2.x 历史 + README 需求矩阵 + 用户输入 | 版本路线图 v0.3.0 行 + 拆解任务入账 | Coordinator | Release + Analyst | 用户 | 未开始 | P1 | — | — | — | — | v0.3.0 范围行 + ≥1 条可执行任务 | — | — | — | 版本规划属治理记录；后续产品代码任务单独触发审查 | 不需审查 |
-| GATE-005 | 开发 | G5 开发实现阶段 Gate 自评 | 按 stage-gates.md G5 检查项逐项评估并显式声明结论 | stage-gates.md G5 定义 + 当前代码/测试/CI 事实 | G5 结论（通过/未通过/有条件通过）+ 证据 | Coordinator | — | 用户 | 未开始 | P2 | — | — | — | G5 | 每项检查有事实依据，结论可追溯到证据 | — | — | — | Gate 自评 | 不需审查 |
-| SYSGAP-001 | 维护 | 向插件上游报告 check-governance root_divergence 误报（Check 28c 跨根期望源 / Check 18c·18d 活跃任务误解析） | 插件仓库 issue 提交并链接回 RISK-002 | DEC-007 误报判定 + check-baseline.txt 证据 + plugin_root/.governance/plan-tracker.md 逐项验证结果 | 上游 issue 链接记入 RISK-002 | Coordinator | — | 用户 | 未开始 | P2 | — | — | — | — | issue 已提交且 RISK-002 记录链接 | — | RISK-002 | — | 治理记录任务（跨仓库动作） | 不需审查 |
+### 优先级一览
 
-> **依赖列说明**：上表采用 standard 21 列格式；依赖关系经 `task-priority-analysis` 由任务 ID 链计算（DEV-001 与 GATE-005 无前置依赖，均 unblocked）。
+| 优先级 | ID | 事项 | 依赖 | 目标版本 | 闭环路径 | 状态 |
+|--------|----|------|------|---------|---------|------|
+| **P1** | ONBOARD-001 | 治理接入与基线记录：.governance 四件套 + AGENTS.md bootstrap + git hooks + 会话快照（详情见 EVD-001） | — | v0.2.2 | closed | ✅ 完成 (2026-08-22) |
+| **P1** | DEV-001 | 明确 v0.3.0 版本范围并任务入账：用户确认范围 → 版本路线图 v0.3.0 行 + 拆解任务 | — | v0.3.0 | open | ⏳ 待执行 |
+| **P2** | GATE-005 | G5 开发实现阶段 Gate 自评：对照 stage-gates.md G5 检查项逐项评估并显式声明结论 | — | v0.3.0 | open | ⏳ 待执行 |
+| **P2** | SYSGAP-001 | 向插件上游报告 check-governance root_divergence 误报（Check 28c 跨根期望源 / Check 18c·18d 活跃任务误解析），issue 链接回 RISK-002 | RISK-002 | v0.3.0 | open | ⏳ 待执行 |
+
+> **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 
 ## 版本规划
 
