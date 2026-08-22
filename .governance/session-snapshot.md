@@ -1,27 +1,27 @@
-# 会话快照 — 2026-08-23
+# 会话快照 — 2026-08-23（收工）
 
-- **session_id**: 20260823-ux001
+- **session_id**: 20260823-ux
 - **session_date**: 2026-08-23
 - **agent**: DeepSeek Harness Coordinator (software-project-governance v0.75.0)
 
 ## 当前状态
 - **current_stage**: 6/11 development（开发实现）
-- **current_gate**: G5 (状态: passed-with-conditions，条件项 DOC-001 跟踪)
-- **trigger_mode**: always-on
-- **permission_mode**: maximum-autonomy
+- **current_gate**: G5 (passed-with-conditions，条件项 DOC-001 跟踪)
+- **trigger_mode**: always-on / **permission_mode**: maximum-autonomy
+- **项目总览**: 13 任务 / 8 已完成 / 0 阻塞 / 关键风险 1（RISK-002）
 
 ## 遗留任务
 | 任务 ID | 描述 | 完成百分比 | 阻塞原因 | 优先级 |
 |---------|-------------|-----------|------------|----------|
-| CLEAN-001 | UX-001 评审卫生项收尾（建议 A-D：守卫式 hook、TTL effect 化、launch 防连点、陈旧注释） | 0% | — | P2 |
-| DOC-001 | G5 条件关闭：设计文档补强（非功能对应表 + 接口契约 + Roadmap 同步） | 0% | — | P2 |
-| REL-002 | 发布一致性自检（tag↔CHANGELOG↔路线图三方核对，产品代码） | 0% | — | P2 |
+| CLEAN-002 | UX-002 遗留：①pendingLaunch「已创建未启动」弱提示/补发；②shell.overlay 面板实机浏览器验证 | 0% | — | P2 |
+| DOC-001 | G5 条件关闭：设计文档补强（非功能对应表 + 接口契约 + Roadmap 同步 + 本次入口演进更新 DESIGN） | 0% | — | P2 |
+| REL-002 | 发布一致性自检（tag↔CHANGELOG↔路线图，含 v0.3.0 未发布段） | 0% | — | P2 |
 | SYSGAP-001 | 向插件上游报告 check-governance 跨根误报（RISK-002） | 0% | — | P2 |
 
 ## 待确认决策
 | 决策 ID | 标题 | 上下文 | 截止日期 |
 |-------------|-------|---------|----------|
-| — | （无） | v0.3.0 范围已确认（DEC-008 + DEC-009 追加 UX-001）；DESIGN Roadmap 同步方向并入 DOC-001 | — |
+| — | （无） | v0.3.0 范围：DEC-008（发布卫生+质量加固）+ DEC-009（UX-001）+ DEC-010（UX-002 侧栏入口）+ 项目原则 DEC-011 | — |
 
 ## 活跃风险
 | 风险 ID | 描述 | 升级截止日期 | 负责人 |
@@ -29,22 +29,25 @@
 | RISK-002 | check-governance 跨根误报（Check 28c/18c/18d，root_divergence 兼容性） | 未定（SYSGAP-001 上游反馈） | Coordinator |
 
 ## 本轮已完成
-- **UX-001 闭环（EVD-009）**：新会话初始窗口工作台入口——用户反馈「初始窗口无工作台入口、预设不应被感知」→ 定位 DSH 核心 blank 状态不渲染 conversation.view（L7416）与 composer.dock（L7243 仅 !hero），而 conversation.input.dock hero/active 均渲染（L7254）→ Developer 实现槽位迁移 + blank 入口行（▶ 开始/继续、＋新建并开工、预设原位自动挂载）→ Code Reviewer 独立审查 APPROVED → 验证 node --check / validate-preset 29/29 / smoke 60/60（受限模式 EPERM 为沙箱边界，提权后全绿）→ CHANGELOG [0.3.0] + README 使用指导同步 + commit/push（待收尾确认）
-- 决策 DEC-009（v0.3.0 范围追加 UX-001，用户确认）
+- **UX-001**（e440bd9）：初始窗口工作台入口修复（预设零感知定位）——DEC-009；EVD-009；评审 APPROVED（建议 A-D → CLEAN-001）
+- **CLEAN-001 + UX-002**（b842ecc，同区域合并落地）：评审卫生项 A-D + StudioView 同模式两处；入口收敛为侧栏「📖 小说」+ 浮层面板（DEC-010），W1/W2/S1/S2 加固；EVD-010/EVD-011；两轮评审 APPROVED
+- **GOV-001**（d31dbd4）：项目原则入册——12 条（P-01~P-07, C-01~C-05）写入 `.governance/project-principles.md`（权威源）+ AGENTS.md 项目级节（Bootstrap 段未动）；DEC-011；EVD-012
+- 决策补充：DEC-009 / DEC-010 / DEC-011
+- 环境处置：git ownership 校验用 `-c safe.directory` 命令级绕过（未改全局配置）；smoke 受限模式 EPERM 为沙箱 pipe 边界（文件策略转 danger-full-access 后 60/60 通过）
 
 ## 未完成 / 已延期
-- CLEAN-001 / DOC-001 / REL-002 / SYSGAP-001：待执行
+- CLEAN-002 / DOC-001 / REL-002 / SYSGAP-001：待执行
 
 ## 下次会话优先级
-1. CLEAN-001：UX-001 评审卫生项（小步快收，防建议扩散）
-2. DOC-001：G5 条件关闭（Top pick，EVD-008）
-3. REL-002：发布一致性自检（需 spawn Developer + Code Reviewer）
+1. CLEAN-002：UX-002 遗留（面板实机验证优先——本会话无 GUI 无法实测）
+2. DOC-001：G5 条件关闭（含 DESIGN Roadmap 同步 UX 系列演进）
+3. REL-002：发布一致性自检
 4. SYSGAP-001：向插件上游反馈 RISK-002
 
 ## 用户偏好设置
 - profile: standard / trigger_mode: always-on / permission_mode: maximum-autonomy
-- 阶段判定：开发 (6/11)（DEC-001）；v0.3.0 范围：发布卫生+质量加固（DEC-008）+ 初始窗口工作台入口（DEC-009）
+- 产品立场：插件 UI 居于外围（不喧宾夺主）；预设作为附属组件零感知；原则已入册为强制底线
 
 ## 环境备注
-- 本机 git 仓库存在 ownership 校验（.git 属 Administrators），操作需 `-c safe.directory=D:/AI/agent/deepseek/harness/writing-workflow`（未改全局配置）
-- 受限模式下 node 子进程默认 pipe stdio 触发 EPERM：本地跑 smoke 需环境提权；CI 不受影响
+- git 命令需 `-c safe.directory=D:/AI/agent/deepseek/harness/writing-workflow`
+- 本项目（dsh-novel-writing）与运行中 DSH 实例为 `link:` 安装连接，客户端改动需重启 DSH 后生效（工作台/侧栏入口/HUD）
