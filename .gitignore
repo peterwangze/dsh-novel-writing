@@ -10,9 +10,3 @@ node_modules/
 # OS
 .DS_Store
 Thumbs.db
-
-# CI：.github/workflows/ci.yml 需要带 workflow scope 的 token 才能推送。
-# 本地保留该文件；启用远端 CI 的两条路径（任选其一）：
-#   1) gh auth refresh -h github.com -s workflow && git add .github/workflows/ci.yml && git commit -m ci && git push
-#   2) 在 GitHub 网页上新建 .github/workflows/ci.yml 并粘贴本地文件内容
-.github/workflows/ci.yml
