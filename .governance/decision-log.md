@@ -15,7 +15,5 @@
 
 | DEC-009 | 2026-08-22 | v0.3.0 范围追加：新会话初始窗口工作台入口（预设零感知） | 用户反馈新会话初始窗口无工作台入口、预设被迫暴露；经运行环境事实核验：DSH 核心 blank 会话不渲染 conversation.view（dsh-client-ui-conversation L7416），composer.dock 仅 !hero 渲染（L7243），而 conversation.input.dock hero/active 均渲染且 standardProps 含 inputActions/useSessions/useWorkspaces（dsh-cordis-client-runner L2551-2599）；插件原兜底条挂了 composer.dock → 初始窗口死路径 | 只诊断不改 / 先出设计再改 / 立即实现修复 | 用户经 ask_user_question 确认「立即实现修复」：入口条迁至 conversation.input.dock（含 pendingLaunch 通道迁移），blank 会话显示「📖 小说工作台」行（▶ 开始/继续 或 ＋新建小说），点击走现有 launch 逻辑按需挂载 novel-writing 预设，用户零感知 | 预设作为工作台附属组件的产品原则是插件既定设计（v0.1.3 按需加载），本次为其兑现初始窗口入口；修复嵌入 v0.3.0 质量加固范围 | 客户端 UI 入口、v0.3.0 版本范围（UX-001） | UX-001 | 已执行 | v0.3.0 发布时复核 |
 
-## 使用规则
-
-- 方案变更、范围变更、门禁变化都应进入决策记录。
+| DEC-010 | 2026-08-22 | 工作台常驻入口位置：侧栏 + 浮层面板（用户确认） | UX-001 把入口实现为 input.dock 整行横幅（用户实测：位于工作区行与输入框之间的正中、60-70% 宽、含醒目蓝按钮，视觉焦点喧宾夺主）；契约事实：shell.overlay/sidebar.footer.action 为 root 作用域（standardProps 仅 useSessions/useWorkspaces，无 inputActions/sessionId），sessions 快照含 current/byId 可定位当前会话；输入注入必须走对话作用域 pendingLaunch 兜底条 | 保持整行横幅并弱化样式 / 输入框工具行小按钮 / 侧栏入口 + 浮层面板 | 用户经 ask_user_question 确认「侧栏入口 + 浮层面板（推荐）」；常驻入口 = 侧栏「📖 小说」+ 浮层（书目选择/开始继续/新建即启动）；input.dock 仅保留 pendingLaunch 瞬时兜底条（符合其 queue-row 设计用途）；插件 UI 居于外围，多插件共存不打架 | 与「插件不是主体」的产品原则一致（用户原话）；hero 主输入区零插件占位 | 客户端 UI 布局、v0.3.0（UX-002） | UX-002 | 已执行 | v0.3.0 发布时复核 |
 - 决策记录应与计划和风险记录形成引用关系。
