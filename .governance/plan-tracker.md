@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 14 | 9 | 0 | 1 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 17 | 12 | 0 | 1 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -61,6 +61,9 @@
 | **P2** | CLEAN-002 | UX-002 遗留项：①pendingLaunch 兜底条「小说已创建未启动」弱提示/补发（评审 S1）——✅ 完成 2026-08-23（launchHint + createdNew + W1 清 hint 全覆盖，EVD-015）；②shell.overlay 面板实机浏览器验证——⏳ 待用户重启后按清单执行 | UX-002 | v0.3.0 | open | 🔄 ①完成 · ②待实机验证 (2026-08-23) |
 | **P2** | GOV-001 | 项目原则入册：12 条（P-01 事实驱动/P-02 全面分析/P-03 回归意识/P-04 测试看护/P-05 泛化性/P-06 质量优先/P-07 安全数据 + C-01 可扩展/C-02 防腐化/C-03 职责单一/C-04 无冗余/C-05 commit 原子）写入 .governance/project-principles.md（权威源）+ AGENTS.md 项目级节（会话强制注入，Bootstrap 段不动）；DEC-011 | — | v0.3.0 | closed | ✅ 完成 (2026-08-22) |
 | **P1** | UX-003 | 浮层面板首次进入支持设置 workspace（用户实机验证反馈：快速面板仅显示「小说工作区为空」，无根目录设置入口——WorkspaceRootEditor 仅在工作台侧栏，初始窗口不可达）：面板内接入工作区根目录行（复用 WorkspaceRootEditor/api.settings.update）+ 空态提示指引 | UX-002 | v0.3.0 | closed | ✅ 完成 (2026-08-23) |
+| **P1** | UX-004 | 面板空态行动入口可见性（用户实机反馈「看不清怎么选择工作区或者创建新小说」）| UX-003 | v0.3.0 | closed | ⛔ 被 UX-005 取代（2026-08-23）：统一入口方案落地后面板退位纯状态 HUD，未提交改动已回退（git checkout lib/client.js 至 b31e367），方向词修正同废 |
+| **P1** | UX-005 | 统一入口：侧栏「📖 小说工作台」→ 选择/新建工作区（workspace.list + host.pickDirectory + host.createDirectory + workspace.create；无已配置工作区则强制新建）→ api.sessions.create(workspaceId) → agentPresets.select(novel-writing) → session.prompt(开始指令) → 打开会话；无视图切换 API → 明确提醒用户点「小说」标签进工作台；浮层面板退位纯状态 HUD（去启动/新建/工作区编辑）；workspaceRoot 同步为选定工作区目录 | UX-002, UX-003 | v0.3.0 | closed | ✅ 完成 (2026-08-23) |
+| **P2** | CLEAN-003 | UX-005 评审非阻断备注：createdId 与 workspaceId 成对存储（切换选中工作区即清，避免失败重试时复用旧会话）；及统一入口实机验证后按需的小修 | UX-005 | v0.3.0 | open | ⏳ 待执行 |
 
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 

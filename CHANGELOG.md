@@ -8,6 +8,7 @@
 - **新会话初始窗口工作台入口（UX-001）**：blank/hero 状态下 `conversation.view`（小说工作台标签）与 `composer.dock`（原预设兜底条）均不渲染，初始窗口无任何工作台入口——兜底条迁移至 `conversation.input.dock`（hero/active 均渲染，standardProps 含 inputActions），并新增「📖 小说工作台」入口行：书目列表 + ▶ 开始/继续工作流（`completedStages`/`totalChapters` 判定）+ 一键新建并开工；启动走按需挂载预设（blank 会话原位 select novel-writing 后注入），预设作为工作台附属组件对用户零感知。
 - **工作台入口收敛为侧栏 + 浮层面板（UX-002）**：整行 input.dock 横幅（用户反馈喧宾夺主）移除——常驻入口改为侧栏底部「📖 小说」+ 浮层面板（书目选择/启动·继续/新建即启动，经 pendingLaunch 通道注入，输入框上方仅瞬时出现「启动指令待发送」小条）；`conversation.input.dock` 仅保留 pendingLaunch 兜底条；StudioView 主按钮防连点补全（`disabled: launching || creating`）。
 - **浮层面板首次进入支持设置 workspace（UX-003）**：快速面板新增「工作区」根目录行（复用 WorkspaceRootEditor / `api.settings.update`），空态提示更新为面板内指引；WorkspaceRootEditor 补齐 API 不可用守卫（面板与工作台侧栏两消费点同受益）；陈旧 `noNovelsHint` 文案（原指向设置页）更新。
+- **统一入口：选择/新建工作区 → 自动建会话（UX-005）**：侧栏「📖 小说工作台」→ 对话框（`workspace.list` 单选 + 新建：`host.pickDirectory` 选择文件夹 / `host.createDirectory` 新建子目录 + `workspace.create`）→ 确认后 `session.create(workspaceId)` → `agentPresets.select('novel-writing')` → `settings.update(workspaceRoot=工作区目录)` → `session.prompt('开始小说创作工作流')` 自动启动；成功后明确提醒进入「小说工作台」标签（宿主无视图切换 API）；失败重试**幂等**（缓存本次链 createdId，不再二次建会话）；浮层面板退位为纯状态 HUD（移除书目选择/启动/新建/工作区行）；`workspaceRoot` 与所选工作区目录一致，业务配置收敛于工作台。
 
 ## [0.2.2] - 2026-08-22
 
