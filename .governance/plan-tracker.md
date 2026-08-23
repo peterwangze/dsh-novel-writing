@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 17 | 12 | 0 | 1 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 19 | 13 | 0 | 1 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -64,6 +64,8 @@
 | **P1** | UX-004 | 面板空态行动入口可见性（用户实机反馈「看不清怎么选择工作区或者创建新小说」）| UX-003 | v0.3.0 | closed | ⛔ 被 UX-005 取代（2026-08-23）：统一入口方案落地后面板退位纯状态 HUD，未提交改动已回退（git checkout lib/client.js 至 b31e367），方向词修正同废 |
 | **P1** | UX-005 | 统一入口：侧栏「📖 小说工作台」→ 选择/新建工作区（workspace.list + host.pickDirectory + host.createDirectory + workspace.create；无已配置工作区则强制新建）→ api.sessions.create(workspaceId) → agentPresets.select(novel-writing) → session.prompt(开始指令) → 打开会话；无视图切换 API → 明确提醒用户点「小说」标签进工作台；浮层面板退位纯状态 HUD（去启动/新建/工作区编辑）；workspaceRoot 同步为选定工作区目录 | UX-002, UX-003 | v0.3.0 | closed | ✅ 完成 (2026-08-23) |
 | **P2** | CLEAN-003 | UX-005 评审非阻断备注：createdId 与 workspaceId 成对存储（切换选中工作区即清，避免失败重试时复用旧会话）；及统一入口实机验证后按需的小修 | UX-005 | v0.3.0 | open | ⏳ 待执行 |
+| **P1** | INST-001 | 本机 DSH 安装 dsh-novel-writing（离线通道）：junction 接入 profiles\node_modules + cordis.patch.yml 插行 + agent 预设同步（29 SKILL/16 agents）+ settings.yaml 默认节；install.ps1 在本机 PS 5.1 下因 UTF-8 无 BOM 解析失败，经临时 BOM 副本执行原脚本内容（仓库零改动） | — | v0.3.0 | closed | ✅ 完成 (2026-08-23) |
+| **P2** | BUG-001 | install.ps1 离线执行缺陷：UTF-8 无 BOM 在 Windows PowerShell 5.1 下按 ANSI 解码，中文注释/字符串乱码致 ParserError（宣称支持 5.1+ 但离线 .ps1 通道不可用；在线 iex 通道不受影响）；修复 = 文件补 BOM + 双通道回归验证；版本归属待用户确认（范围变更） | INST-001 | 待定 | open | ⏳ 待执行 |
 
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 
