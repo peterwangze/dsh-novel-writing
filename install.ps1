@@ -1,4 +1,4 @@
-# dsh-novel-writing 安装脚本（Windows / PowerShell 5.1+）
+﻿# dsh-novel-writing 安装脚本（Windows / PowerShell 5.1+）
 # 在线：powershell -ExecutionPolicy Bypass -Command "iex (((irm https://raw.githubusercontent.com/peterwangze/dsh-novel-writing/main/install.ps1) -join [Environment]::NewLine).TrimStart([char]0xFEFF))"
 # 离线：解压发行包后，在包目录内执行  .\install.ps1 -LocalPath .
 # 环境变量 DSH_HOME 可覆盖配置目录（默认 ~/.dsh）；-Profile 指定目标 profile（默认 web）。

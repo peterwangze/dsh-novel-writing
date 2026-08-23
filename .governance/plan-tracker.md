@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 19 | 13 | 0 | 1 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 19 | 14 | 0 | 1 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -65,7 +65,7 @@
 | **P1** | UX-005 | 统一入口：侧栏「📖 小说工作台」→ 选择/新建工作区（workspace.list + host.pickDirectory + host.createDirectory + workspace.create；无已配置工作区则强制新建）→ api.sessions.create(workspaceId) → agentPresets.select(novel-writing) → session.prompt(开始指令) → 打开会话；无视图切换 API → 明确提醒用户点「小说」标签进工作台；浮层面板退位纯状态 HUD（去启动/新建/工作区编辑）；workspaceRoot 同步为选定工作区目录 | UX-002, UX-003 | v0.3.0 | closed | ✅ 完成 (2026-08-23) |
 | **P2** | CLEAN-003 | UX-005 评审非阻断备注：createdId 与 workspaceId 成对存储（切换选中工作区即清，避免失败重试时复用旧会话）；及统一入口实机验证后按需的小修 | UX-005 | v0.3.0 | open | ⏳ 待执行 |
 | **P1** | INST-001 | 本机 DSH 安装 dsh-novel-writing（离线通道）：junction 接入 profiles\node_modules + cordis.patch.yml 插行 + agent 预设同步（29 SKILL/16 agents）+ settings.yaml 默认节；install.ps1 在本机 PS 5.1 下因 UTF-8 无 BOM 解析失败，经临时 BOM 副本执行原脚本内容（仓库零改动） | — | v0.3.0 | closed | ✅ 完成 (2026-08-23) |
-| **P2** | BUG-001 | install.ps1 离线执行缺陷：UTF-8 无 BOM 在 Windows PowerShell 5.1 下按 ANSI 解码，中文注释/字符串乱码致 ParserError（宣称支持 5.1+ 但离线 .ps1 通道不可用；在线 iex 通道不受影响）；修复 = 文件补 BOM + 双通道回归验证；版本归属待用户确认（范围变更） | INST-001 | 待定 | open | ⏳ 待执行 |
+| **P2** | BUG-001 | install.ps1 离线执行缺陷：UTF-8 无 BOM 在 Windows PowerShell 5.1 下按 ANSI 解码，中文注释/字符串乱码致 ParserError（宣称支持 5.1+ 但离线 .ps1 通道不可用；在线 iex 通道不受影响）；修复 = 文件补 BOM + 双通道回归验证；版本归属待用户确认（范围变更） | INST-001 | v0.3.0 | closed | ✅ 完成 (2026-08-23，DEC-012 用户确认纳入 v0.3.0) |
 
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 
@@ -81,7 +81,7 @@
 | v0.2.0 | 已发布 | — | 双代理审计修复（8 宿主 P0 + 3 客户端 P0 + 17 P1） | —（接入补录，未入账） | git tag v0.2.0 |
 | v0.2.1 | 已发布 | — | 审计 P1 收尾 + 仓库卫生 + 双通道安装验证 | —（接入补录，未入账） | git tag v0.2.1 |
 | v0.2.2 | 已发布 | 2026-08-22 | 配置边界重构：业务配置归一工作台，设置页只留插件级开关 | REL-001（补录） | git tag v0.2.2 + CHANGELOG [0.2.2]（补录） |
-| v0.3.0 | 进行中 | 待定 | 发布卫生 + 质量加固（DEC-008）：CHANGELOG 0.2.2 补录 / CI 观察收尾 / 发布一致性自检 / 初始窗口工作台入口（UX-001，DEC-009） | REL-001, QUAL-001, REL-002, UX-001, UX-002 | — |
+| v0.3.0 | 进行中 | 待定 | 发布卫生 + 质量加固（DEC-008 + DEC-012 追加）：CHANGELOG 0.2.2 补录 / CI 观察收尾 / 发布一致性自检 / 初始窗口工作台入口（UX-001，DEC-009）/ install.ps1 BOM 修复（BUG-001） | REL-001, QUAL-001, REL-002, UX-001, UX-002, BUG-001 | — |
 
 ### 版本里程碑
 

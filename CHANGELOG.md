@@ -10,6 +10,9 @@
 - **浮层面板首次进入支持设置 workspace（UX-003）**：快速面板新增「工作区」根目录行（复用 WorkspaceRootEditor / `api.settings.update`），空态提示更新为面板内指引；WorkspaceRootEditor 补齐 API 不可用守卫（面板与工作台侧栏两消费点同受益）；陈旧 `noNovelsHint` 文案（原指向设置页）更新。
 - **统一入口：选择/新建工作区 → 自动建会话（UX-005）**：侧栏「📖 小说工作台」→ 对话框（`workspace.list` 单选 + 新建：`host.pickDirectory` 选择文件夹 / `host.createDirectory` 新建子目录 + `workspace.create`）→ 确认后 `session.create(workspaceId)` → `agentPresets.select('novel-writing')` → `settings.update(workspaceRoot=工作区目录)` → `session.prompt('开始小说创作工作流')` 自动启动；成功后明确提醒进入「小说工作台」标签（宿主无视图切换 API）；失败重试**幂等**（缓存本次链 createdId，不再二次建会话）；浮层面板退位为纯状态 HUD（移除书目选择/启动/新建/工作区行）；`workspaceRoot` 与所选工作区目录一致，业务配置收敛于工作台。
 
+### 修复
+- **install.ps1 补 UTF-8 BOM（BUG-001）**：脚本原为 UTF-8 无 BOM，Windows PowerShell 5.1 对无 BOM 的 .ps1 按 ANSI(GBK) 解码，中文注释/字符串乱码触发 ParserError（The string is missing the terminator），离线通道 `.\install.ps1 -LocalPath .` 完全不可用；现于文件头补 3 字节 BOM（EF BB BF，其余字节逐字节不变），PS 5.1 解析通过、离线安装恢复；在线通道（irm + iex）头部命令已含 `.TrimStart([char]0xFEFF)`，不受 BOM 影响。
+
 ## [0.2.2] - 2026-08-22
 
 > 补录（2026-08-22，REL-001）：tag `v0.2.2` 发布时本段缺失，现从 commit `ef5c073` 提炼补写。
