@@ -12,6 +12,7 @@
 
 ### 修复
 - **install.ps1 补 UTF-8 BOM（BUG-001）**：脚本原为 UTF-8 无 BOM，Windows PowerShell 5.1 对无 BOM 的 .ps1 按 ANSI(GBK) 解码，中文注释/字符串乱码触发 ParserError（The string is missing the terminator），离线通道 `.\install.ps1 -LocalPath .` 完全不可用；现于文件头补 3 字节 BOM（EF BB BF，其余字节逐字节不变），PS 5.1 解析通过、离线安装恢复；在线通道（irm + iex）头部命令已含 `.TrimStart([char]0xFEFF)`，不受 BOM 影响。
+- **lib/tools.js 补 inject 声明修复预设挂载失败（BUG-002）**：UX-005 实机验证——统一入口建会话成功但「小说写作工作流」预设挂载失败，宿主报 `agent-presets: preset "novel-writing" failed to mount: failed to apply loader entry tool-novel (dsh-novel-writing/tools): cannot get property "tools" without inject`；根因是工具行模块在 apply 内 11 处 `ctx.tools.register(...)` 但未声明 inject（Cordis 强制：ctx 服务属性访问必须先在插件声明 inject）。现补 `export const inject = ['tools']`（tools 硬依赖；novel-writing 服务保持可选经 ctx.get 探测、不进 inject——未装 bundle 时本行静默激活注册 0 个工具，预设仍可挂载），并清除挂载路径上第二个潜伏阻断：`novel_state_update` 的 `latestAiPath` 参数 enum 含 null，真 dsh-tools 的 defineTool 校验拒绝（string enum 必须全字符串值），修为 `['A','B','C']`——此前被 inject 错误掩盖、从未在挂载中执行到；smoke 新增 tool 行挂载契约断言（inject 声明含 tools 且不含 novel-writing / apply 挂载注册恰好 11 个工具且名字集合精确匹配 / 可选服务缺席时静默 0 注册三路径；mock ctx 以 getter 复刻 Cordis inject 门控，本地真包与 CI 恒等 mock 两条路径均通过），堵住 CI 四道检查（语法/依赖架构/静态校验/smoke）均不经过 apply 挂载路径的防护网缺口（冒烟 60 → 67 项）。
 
 ## [0.2.2] - 2026-08-22
 

@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 19 | 14 | 0 | 1 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 20 | 15 | 0 | 1 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -66,6 +66,7 @@
 | **P2** | CLEAN-003 | UX-005 评审非阻断备注：createdId 与 workspaceId 成对存储（切换选中工作区即清，避免失败重试时复用旧会话）；及统一入口实机验证后按需的小修 | UX-005 | v0.3.0 | open | ⏳ 待执行 |
 | **P1** | INST-001 | 本机 DSH 安装 dsh-novel-writing（离线通道）：junction 接入 profiles\node_modules + cordis.patch.yml 插行 + agent 预设同步（29 SKILL/16 agents）+ settings.yaml 默认节；install.ps1 在本机 PS 5.1 下因 UTF-8 无 BOM 解析失败，经临时 BOM 副本执行原脚本内容（仓库零改动） | — | v0.3.0 | closed | ✅ 完成 (2026-08-23) |
 | **P2** | BUG-001 | install.ps1 离线执行缺陷：UTF-8 无 BOM 在 Windows PowerShell 5.1 下按 ANSI 解码，中文注释/字符串乱码致 ParserError（宣称支持 5.1+ 但离线 .ps1 通道不可用；在线 iex 通道不受影响）；修复 = 文件补 BOM + 双通道回归验证；版本归属待用户确认（范围变更） | INST-001 | v0.3.0 | closed | ✅ 完成 (2026-08-23，DEC-012 用户确认纳入 v0.3.0) |
+| **P1** | BUG-002 | UX-005 实机验证阻断缺陷：lib/tools.js 未声明 inject 即访问 ctx.tools（Cordis 强制：属性访问须先声明），预设挂载失败「cannot get property "tools" without inject」；修复 = 补 `export const inject = ['tools']`（范本：包内 index.js L31 / 官方 dsh-tool-todo L12）+ 清除第二个潜伏阻断（latestAiPath enum 去 null，真 dsh-tools defineTool 拒绝）+ smoke 增挂载契约断言堵防护网缺口（60→67 项） | UX-005 | v0.3.0 | closed | ✅ 完成 (2026-08-23，EVD-019；评审 APPROVED-WITH-NOTES——N1 CI 恒等 mock 无 schema 校验建议后补，N2 注释措辞) |
 
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 

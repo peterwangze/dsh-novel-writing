@@ -2,7 +2,8 @@
  * dsh-novel-writing 宿主服务冒烟测试（不依赖运行中的 DSH，mock ctx 直测核心逻辑）。
  * 运行：node test/smoke.mjs
  * 覆盖：listNovels / updateState / gateCheck / saveChapter / lightAudit /
- *       requests / publish(export) / ingestData / computeSignals。
+ *       requests / publish(export) / ingestData / computeSignals +
+ *       lib/tools.js 挂载契约（inject 声明 / 11 工具注册 / 可选服务静默）。
  */
 import { mkdtempSync, writeFileSync, mkdirSync, readFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
@@ -310,6 +311,47 @@ try { svc.createProject('不该出现') } catch (e) { disabled = e.message.inclu
 check('enabled=false 拒绝变更', disabled)
 check('enabled=false 不落盘', svc.listNovels().novels.every((n) => n.id !== '不该出现'))
 ctx.settings.get = () => ({ enabled: true, workspaceRoot: workspace, pollMs: 2000, apiPublic: false, presetAutoSync: false, platforms: {} })
+
+// ── tool 行挂载契约（BUG-002 回归）───────────────────────────────────────
+// 缺陷：lib/tools.js 曾未声明 inject 即在 apply 内访问 ctx.tools，实机预设
+// 挂载即抛 `cannot get property "tools" without inject`；CI 四道检查均不经
+// 过 apply 挂载路径（本文件此前只直测 NovelWritingService，从不 import
+// lib/tools.js），缺陷因此逃逸。此处直接驱动挂载路径补防护网。
+// mock ctx 以 getter 复刻 Cordis 最低门控契约：未声明 inject 的服务属性访问
+// 即抛同源错误；novel-writing 保持可选（ctx.get 探测，缺席时静默 0 注册）。
+const toolsMod = await import('../lib/tools.js')
+const EXPECTED_TOOL_NAMES = ['novel_list', 'novel_status', 'novel_state_update', 'novel_chapter_read', 'novel_chapter_write', 'novel_gate_check', 'novel_review_submit', 'novel_data_ingest', 'novel_publish', 'novel_requests', 'novel_request_done']
+
+check('tool行 inject 声明 tools 硬依赖', Array.isArray(toolsMod.inject) && toolsMod.inject.includes('tools'), 'inject=' + JSON.stringify(toolsMod.inject))
+check('tool行可选服务 novel-writing 不进 inject', Array.isArray(toolsMod.inject) && !toolsMod.inject.includes('novel-writing'), 'inject=' + JSON.stringify(toolsMod.inject))
+
+function mountCtx(service) {
+  const declared = Array.isArray(toolsMod.inject) ? toolsMod.inject : []
+  const registered = []
+  const ctx = {
+    get: (name) => (name === 'novel-writing' ? service : undefined),
+    logger: { info() {}, warn() {} },
+    get tools() {
+      if (!declared.includes('tools')) throw new Error('cannot get property "tools" without inject')
+      return { register: (tool) => registered.push(tool) }
+    },
+  }
+  return { ctx, registered }
+}
+
+const mounted = mountCtx({})
+let mountError = ''
+try { toolsMod.apply(mounted.ctx) } catch (e) { mountError = e.message }
+check('tool行 apply 挂载成功（服务在位）', mountError === '', mountError)
+const registeredNames = mounted.registered.map((t) => t?.name).sort().join(',')
+check('tool行注册恰好 11 个工具', mounted.registered.length === 11, 'count=' + mounted.registered.length)
+check('tool行注册名集合精确匹配', registeredNames === [...EXPECTED_TOOL_NAMES].sort().join(','), registeredNames)
+
+const silent = mountCtx(undefined)
+let silentError = ''
+try { toolsMod.apply(silent.ctx) } catch (e) { silentError = e.message }
+check('tool行无服务静默挂载不抛错', silentError === '', silentError)
+check('tool行无服务 0 注册（未装 bundle 预设仍可挂载）', silent.registered.length === 0, 'count=' + silent.registered.length)
 
 console.log(`\nSMOKE DONE: ${passed} passed, ${failed} failed`)
 rmSync(root, { recursive: true, force: true })
