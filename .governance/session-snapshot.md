@@ -32,16 +32,17 @@
 - **UX-001**（e440bd9）：初始窗口工作台入口修复（预设零感知定位）——DEC-009；EVD-009；评审 APPROVED（建议 A-D → CLEAN-001）
 - **CLEAN-001 + UX-002**（b842ecc，同区域合并落地）：评审卫生项 A-D + StudioView 同模式两处；入口收敛为侧栏「📖 小说」+ 浮层面板（DEC-010），W1/W2/S1/S2 加固；EVD-010/EVD-011；两轮评审 APPROVED
 - **GOV-001**（d31dbd4）：项目原则入册——12 条（P-01~P-07, C-01~C-05）写入 `.governance/project-principles.md`（权威源）+ AGENTS.md 项目级节（Bootstrap 段未动）；DEC-011；EVD-012
-- **UX-003**（b092553）：浮层面板首次进入支持设置 workspace——面板「工作区」根目录行 + 空态指引 + WorkspaceRootEditor API 守卫 + 陈旧文案更新；EVD-014；两轮评审 APPROVED
+- **UX-003**（b092553）：浮层面板首次进入支持设置 workspace——面板「工作区」根目录行 + 空态指引 + WorkspaceRootEditor API 守卫 + 陈旧文案更新；EVD-014；两轮评审 APPROVED（后被 UX-005 取代退化）
 - **CLEAN-002 ①**（fa7cc14）：兜底条「已创建未启动」弱提示——launchHint + createdNew + StudioView 发送路径统一清 hint + deps 卫生；EVD-015；两轮评审 APPROVED
-- 决策补充：DEC-009 / DEC-010 / DEC-011
+- **UX-005**（f9998f0）：统一入口——侧栏「📖 小说工作台」对话框（workspace.list 选/建 + host.pickDirectory/createDirectory + workspace.create）→ session.create(workspaceId) → agentPresets.select(novel-writing) → settings.update(workspaceRoot) → session.prompt(开始指令)；无视图切换 API → 成功提醒点「小说工作台」标签；幂等（createdId）；HUD 退位纯状态；EVD-016；两轮评审 APPROVED
+- 决策补充：DEC-009 / DEC-010 / DEC-011；UX-004 被 UX-005 取代（未提交改动已回退）
 - 环境处置：git ownership 校验用 `-c safe.directory` 命令级绕过（未改全局配置）；smoke 受限模式 EPERM 为沙箱 pipe 边界（文件策略转 danger-full-access 后 60/60 通过）；子代理通道一度故障（EVD-013）后恢复
 
 ## 未完成 / 已延期
-- CLEAN-002 ②（实机验证，待用户重启后按清单执行）/ DOC-001 / REL-002 / SYSGAP-001
+- CLEAN-002 ②（实机验证，待用户重启后按统一入口清单执行）/ CLEAN-003（createdId×workspaceId 成对等备注项）/ DOC-001 / REL-002 / SYSGAP-001
 
 ## 下次会话优先级
-1. CLEAN-002 ②：用户实机验证结果收集（含 UX-003 工作区行复验；异常则修复）
+1. **用户实机验证收集**（统一入口全链路 + 工作台/会话/预设联动；异常则修复 → CLEAN-002②/CLEAN-003）
 2. DOC-001：G5 条件关闭（含 DESIGN Roadmap 同步 UX 系列演进）
 3. REL-002：发布一致性自检
 4. SYSGAP-001：向插件上游反馈 RISK-002
