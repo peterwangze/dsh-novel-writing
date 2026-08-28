@@ -8,7 +8,7 @@
  *       注册与抽屉无按钮组，无 DOM 降级 + UX-008 控制台树：底部搜索行/＋ 磁贴/
  *       排序钮/无「▶ 打开」）。
  */
-import { mkdtempSync, writeFileSync, mkdirSync, readFileSync, rmSync } from 'node:fs'
+import { mkdtempSync, writeFileSync, mkdirSync, readFileSync, rmSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
@@ -294,6 +294,24 @@ let badName = false
 try { svc.createProject('a/b') } catch { badName = true }
 check('createProject 非法名拒绝', badName)
 
+// ── UX-011：删除小说（novel-delete 服务 + API 注册 + id 校验链）──────────
+check('deleteProject id 校验与 createProject 同规（../x / .. / 空串 / null / a\\b / con / 点开头）', (() => {
+  let n = 0
+  for (const bad of ['../x', '..', '', null, 'a/b', 'con', '.hidden']) {
+    try { svc.deleteProject(bad) } catch { n += 1 }
+  }
+  return n === 7
+})(), 'rejected=' + 'expect 7')
+check('deleteProject 校验拒绝后原书目不受影响', svc.listNovels().novels.some((n) => n.id === novel) && svc.listNovels().novels.some((n) => n.id === '新书测试'))
+const notFound = svc.deleteProject('不存在的书目id')
+check('deleteProject 不存在返回 ok:false not found', notFound.ok === false && notFound.error === 'not found', JSON.stringify(notFound))
+svc.createProject('probe-del-book', '删除演练')
+const delRes = svc.deleteProject('probe-del-book')
+check('deleteProject 删除成功返回 { ok:true, id }', delRes.ok === true && delRes.id === 'probe-del-book', JSON.stringify(delRes))
+check('deleteProject 后书目列表消失且目录移除', !svc.listNovels().novels.some((n) => n.id === 'probe-del-book') && !existsSync(join(workspace, 'probe-del-book')))
+const hostSrc = readFileSync(new URL('../lib/index.js', import.meta.url), 'utf8')
+check('novel-delete API 注册 + 校验链抽出复用（sanitizeNovelId）', hostSrc.includes("api('novel-delete'") && hostSrc.includes('sanitizeNovelId'), 'novel-delete route missing')
+
 // ── UX-006：overview 附带 bindings + novel-create 返回 path ─────────────
 check('createProject 返回目录路径 path（sessions.create cwd 用）', typeof created.path === 'string' && created.path.includes(join(workspace, '新书测试')), String(created.path))
 check('listNovels 无配置时附带空 bindings', (() => { const b = svc.listNovels().bindings; return b !== null && typeof b === 'object' && Object.keys(b).length === 0 })(), JSON.stringify(svc.listNovels().bindings))
@@ -520,6 +538,21 @@ check('控制台源码面：UX-010 批注（✕ 醒目变体/排序 pill 13px/18
 check('控制台源码面：UX-010④ current 联动（s.current 订阅 + ref 基准守卫 + 插件切换豁免）',
   clientSrc.includes('s.current') && clientSrc.includes('currentSeededRef') && clientSrc.includes('prevCurrentRef')
     && clientSrc.includes('pluginOpened') && clientSrc.includes('launcher.pluginOpened.add'), 'ux010 linkage missing')
+// UX-011（两级工作台）：①改名 entryLabel/creationLabel/creationTitle ②卡片 🗑 删除钮 +
+// novel-delete 对接（confirm 显式确认 fail-closed / stopPropagation / 绑定键清理 / consoleFocus 清理）
+check('客户端源码面：UX-011 删除钮（🗑 22×22 平级钮 + novel-delete POST + confirm 前置 + 绑定键清理）', (() => {
+  return clientSrc.includes("className: 'nv-cico nv-cico-del'") && clientSrc.includes("'🗑'")
+    && clientSrc.includes("apiJson('/novel-writing/api/novel-delete', { novel: novel.id })")
+    && clientSrc.includes('delConfirm') && clientSrc.includes('window.confirm')
+    && clientSrc.includes('props.onDelete(novel)') && clientSrc.includes('delete next[novel.id]')
+    && clientSrc.includes('consoleFocus === novel.id')
+})(), 'ux011 delete flow missing')
+check('客户端源码面：UX-011 两级命名（entryLabel=小说管理工作台 / creationLabel=小说创作工作台 分栏标题）', (() => {
+  return clientSrc.includes("entryLabel: '📖 小说管理工作台'") && clientSrc.includes("entryLabel: '📖 Novel Management Workbench'")
+    && clientSrc.includes("creationLabel: '小说创作工作台'") && clientSrc.includes('小说创作工作台 · 《')
+    && clientSrc.includes("t('creationTitle'") && clientSrc.includes("t('creationLabel')")
+    && !clientSrc.includes("title: '小说工作台'") && !clientSrc.includes('📖 小说工作台')
+})(), 'ux011 naming missing')
 let renderErr = ''
 check('各注册面 render 可调用（组件体可求值；关闭态浮层输出 null 合法）', (() => {
   for (const r of slotRegs) {
