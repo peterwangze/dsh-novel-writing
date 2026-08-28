@@ -5,7 +5,8 @@
  *       requests / publish(export) / ingestData / computeSignals +
  *       lib/tools.js 挂载契约（inject 声明 / 11 工具注册 / 可选服务静默）+
  *       lib/client.js 挂载契约（UX-006 注册面/退役面/可逆清理 + UX-007 控制台
- *       注册与抽屉无按钮组，无 DOM 降级）。
+ *       注册与抽屉无按钮组，无 DOM 降级 + UX-008 控制台树：底部搜索行/＋ 磁贴/
+ *       排序钮/无「▶ 打开」）。
  */
 import { mkdtempSync, writeFileSync, mkdirSync, readFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
@@ -446,6 +447,53 @@ check('抽屉无按钮组（⚙/＋/🔗/▶ 文本缺席）', (() => {
   const joined = texts.join('')
   return hasHeadBtn && !joined.includes('⚙') && !joined.includes('＋') && !joined.includes('🔗') && !joined.includes('▶')
 })(), 'head=' + 'n/a')
+// UX-008（DEC-017）：控制台树断言——经抽屉标题行 onClick 置 store.consoleOpen，再渲染 nv-console 取组件树
+check('控制台树：底部搜索行 + ＋ 磁贴居末 + 排序两态钮 + 无「▶ 打开」', (() => {
+  const dr = slotRegs.find((r) => r.id === 'novel-drawer')
+  const con = slotRegs.find((r) => r.id === 'nv-console')
+  if (dr === undefined || con === undefined) return false
+  // 1) 点抽屉标题行（真实入口路径）打开控制台
+  let headBtn = null
+  const findHead = (n) => {
+    if (n === null || n === undefined || typeof n !== 'object') return
+    if (Array.isArray(n)) { for (const c of n) findHead(c); return }
+    if (n.props !== undefined && n.props.className === 'nv-drawer-head') { headBtn = n; return }
+    if (Array.isArray(n.children)) for (const c of n.children) findHead(c)
+  }
+  findHead(dr.render({ wide: true }))
+  if (headBtn === null || typeof headBtn.props.onClick !== 'function') return false
+  headBtn.props.onClick() // toggleConsole → store.set({consoleOpen:true})
+  // 2) 渲染控制台取树（open 态全量输出）
+  const root = con.render({})
+  if (root === null || typeof root !== 'object') return false
+  const clsCount = {}
+  const texts = []
+  let gridKids = null
+  let footHasSearch = false
+  const walk = (n, inFoot) => {
+    if (n === null || n === undefined) return
+    if (typeof n === 'string') { texts.push(n); return }
+    if (typeof n !== 'object') return
+    if (Array.isArray(n)) { for (const c of n) walk(c, inFoot); return }
+    const cn = n.props !== undefined && typeof n.props.className === 'string' ? n.props.className : ''
+    if (cn === 'nv-cfoot') inFoot = true
+    if (cn === 'nv-csearch' && inFoot === true) footHasSearch = true
+    if (cn === 'nv-cgrid') gridKids = Array.isArray(n.children) ? n.children.flat(2).filter((c) => c !== null && c !== undefined && typeof c === 'object' && c.__nvEl === true) : []
+    if (cn !== '') clsCount[cn] = (clsCount[cn] ?? 0) + 1
+    if (Array.isArray(n.children)) for (const c of n.children) walk(c, inFoot)
+  }
+  walk(root, false)
+  const lastCn = gridKids !== null && gridKids.length > 0 && gridKids[gridKids.length - 1].props !== undefined ? gridKids[gridKids.length - 1].props.className : ''
+  return footHasSearch === true                     // ② 搜索行移到容器底部（nv-cfoot 内）
+    && lastCn === 'nv-cplus'                        // ③ ＋ 虚线磁贴在网格末尾
+    && (clsCount['nv-csortbtn'] ?? 0) === 2         // ④ 排序 默认/手动 两态钮
+    && (clsCount['nv-cact'] ?? 0) === 0             // ③ 卡内「▶ 打开」文本钮消失（类整体移除）
+    && !texts.join('').includes('▶ 打开')
+    && !clientSrc.includes('openBtn')               // i18n 键同步清理
+})(), 'console tree mismatch')
+check('控制台源码面：拖拽排序持久化 + 3 列网格 + 药丸搜索样式', clientSrc.includes('dsh.novel.order.v1')
+  && clientSrc.includes('draggable: props.draggable') && clientSrc.includes('minmax(300px,1fr)')
+  && clientSrc.includes('nv-cplus{') && clientSrc.includes('border-radius:999px'), 'order-persist/drag/grid/pill missing')
 let renderErr = ''
 check('各注册面 render 可调用（组件体可求值；关闭态浮层输出 null 合法）', (() => {
   for (const r of slotRegs) {
