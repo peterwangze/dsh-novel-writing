@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 20 | 15 | 0 | 1 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 22 | 16 | 0 | 2 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -58,7 +58,7 @@
 | **P1** | UX-001 | 新会话初始窗口工作台入口（预设零感知定位修复）：blank/hero 状态 conversation.view 与 composer.dock 均不渲染 → 入口条迁移至 conversation.input.dock（hero/active 均渲染），点击 ▶ 开始/继续工作流自动按需挂载小说预设（DEC-009） | — | v0.3.0 | closed | ✅ 完成 (2026-08-22) |
 | **P2** | CLEAN-001 | UX-001 评审卫生项收尾（Code Reviewer 建议 A-D）：守卫式 hook 调用改无条件、TTL 渲染期 store 写移入 effect、launch 加 busy/防连点、StudioView L833/L844 陈旧注释更新 | UX-001 | v0.3.0 | closed | ✅ 完成 (2026-08-22) |
 | **P1** | UX-002 | 工作台入口收敛（用户反馈 UX-001 整行横幅喧宾夺主）：删除 input.dock 常驻工作台行（仅留 pendingLaunch 瞬时兜底条），常驻入口改侧栏「📖 小说」+ 浮层面板（书目选择/开始继续/新建即启动，经 pendingLaunch 通道注入；DEC-010）| UX-001, CLEAN-001 | v0.3.0 | closed | ✅ 完成 (2026-08-22) |
-| **P2** | CLEAN-002 | UX-002 遗留项：①pendingLaunch 兜底条「小说已创建未启动」弱提示/补发（评审 S1）——✅ 完成 2026-08-23（launchHint + createdNew + W1 清 hint 全覆盖，EVD-015）；②shell.overlay 面板实机浏览器验证——⏳ 待用户重启后按清单执行 | UX-002 | v0.3.0 | open | 🔄 ①完成 · ②待实机验证 (2026-08-23) |
+| **P2** | CLEAN-002 | UX-002 遗留项：①pendingLaunch 兜底条「小说已创建未启动」弱提示/补发（评审 S1）——✅ 完成 2026-08-23（launchHint + createdNew + W1 清 hint 全覆盖，EVD-015）；②shell.overlay 面板实机浏览器验证——⛔ ②被 UX-006 取代（2026-08-28）：原浮层面板/HUD 面已随工作台重构整体退役，实机验证面转入 CLEAN-004 | UX-002 | v0.3.0 | closed | ✅ ①完成 · ②被取代 (2026-08-28) |
 | **P2** | GOV-001 | 项目原则入册：12 条（P-01 事实驱动/P-02 全面分析/P-03 回归意识/P-04 测试看护/P-05 泛化性/P-06 质量优先/P-07 安全数据 + C-01 可扩展/C-02 防腐化/C-03 职责单一/C-04 无冗余/C-05 commit 原子）写入 .governance/project-principles.md（权威源）+ AGENTS.md 项目级节（会话强制注入，Bootstrap 段不动）；DEC-011 | — | v0.3.0 | closed | ✅ 完成 (2026-08-22) |
 | **P1** | UX-003 | 浮层面板首次进入支持设置 workspace（用户实机验证反馈：快速面板仅显示「小说工作区为空」，无根目录设置入口——WorkspaceRootEditor 仅在工作台侧栏，初始窗口不可达）：面板内接入工作区根目录行（复用 WorkspaceRootEditor/api.settings.update）+ 空态提示指引 | UX-002 | v0.3.0 | closed | ✅ 完成 (2026-08-23) |
 | **P1** | UX-004 | 面板空态行动入口可见性（用户实机反馈「看不清怎么选择工作区或者创建新小说」）| UX-003 | v0.3.0 | closed | ⛔ 被 UX-005 取代（2026-08-23）：统一入口方案落地后面板退位纯状态 HUD，未提交改动已回退（git checkout lib/client.js 至 b31e367），方向词修正同废 |
@@ -67,6 +67,8 @@
 | **P1** | INST-001 | 本机 DSH 安装 dsh-novel-writing（离线通道）：junction 接入 profiles\node_modules + cordis.patch.yml 插行 + agent 预设同步（29 SKILL/16 agents）+ settings.yaml 默认节；install.ps1 在本机 PS 5.1 下因 UTF-8 无 BOM 解析失败，经临时 BOM 副本执行原脚本内容（仓库零改动） | — | v0.3.0 | closed | ✅ 完成 (2026-08-23) |
 | **P2** | BUG-001 | install.ps1 离线执行缺陷：UTF-8 无 BOM 在 Windows PowerShell 5.1 下按 ANSI 解码，中文注释/字符串乱码致 ParserError（宣称支持 5.1+ 但离线 .ps1 通道不可用；在线 iex 通道不受影响）；修复 = 文件补 BOM + 双通道回归验证；版本归属待用户确认（范围变更） | INST-001 | v0.3.0 | closed | ✅ 完成 (2026-08-23，DEC-012 用户确认纳入 v0.3.0) |
 | **P1** | BUG-002 | UX-005 实机验证阻断缺陷：lib/tools.js 未声明 inject 即访问 ctx.tools（Cordis 强制：属性访问须先声明），预设挂载失败「cannot get property "tools" without inject」；修复 = 补 `export const inject = ['tools']`（范本：包内 index.js L31 / 官方 dsh-tool-todo L12）+ 清除第二个潜伏阻断（latestAiPath enum 去 null，真 dsh-tools defineTool 拒绝）+ smoke 增挂载契约断言堵防护网缺口（60→67 项） | UX-005 | v0.3.0 | closed | ✅ 完成 (2026-08-23，EVD-019；评审 APPROVED-WITH-NOTES——N1 CI 恒等 mock 无 schema 校验建议后补，N2 注释措辞) |
+| **P1** | UX-006 | 工作台重构（dsh-worktable 思路，DEC-013 五项定案）：侧栏「小说工作台」抽屉（书目卡片+绑定状态点+工作区管理）+ 挤法分栏工作区（左导航可折叠｜中内容页签｜右官方对话窗，分隔线可拖+宽度记忆+⇄换边）+ 小说↔会话 1:1 绑定（settings ns 存储，sessions.open 切换，sessions.list 订阅状态镜像）+ 视觉全量 --dsw-alias-* 令牌化；退役 conversation.view 标签页 / input.dock LaunchBar / HUD（DEC-013①⑤）；宿主 Config 增 bindings 字段 + overview 携带；smoke/README/CHANGELOG 同步 | UX-005 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-020；评审 APPROVED-WITH-NOTES——N6 已修·N4 注释已补·N1/N3/N5/N7 非阻断备注；实机验证转 CLEAN-004) |
+| **P2** | CLEAN-004 | UX-006 实机浏览器验证清单（重启 DSH 后执行）：抽屉开书/反选关闭/Esc 关闭、分隔线拖拽+宽度记忆（dsh.novel.split.v1）、⇄ 换边、绑定/失效重绑、新建全链（cwd 建会话→预设→绑定→开分栏→启动指令）、会话状态点镜像、降级模式（sessions 缺席/挤法失败提示）、与 dsh-worktable 共存互斥、N6「会话已打开」行为定案确认；评审备注处置评估（N1 yieldObserver 重挂/N3 表单保活/N5 组件级测试/N7 引擎拆块） | UX-006 | v0.4.0 | open | ⏳ 待执行（用户重启后） |
 
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 
@@ -83,6 +85,7 @@
 | v0.2.1 | 已发布 | — | 审计 P1 收尾 + 仓库卫生 + 双通道安装验证 | —（接入补录，未入账） | git tag v0.2.1 |
 | v0.2.2 | 已发布 | 2026-08-22 | 配置边界重构：业务配置归一工作台，设置页只留插件级开关 | REL-001（补录） | git tag v0.2.2 + CHANGELOG [0.2.2]（补录） |
 | v0.3.0 | 进行中 | 待定 | 发布卫生 + 质量加固（DEC-008 + DEC-012 追加）：CHANGELOG 0.2.2 补录 / CI 观察收尾 / 发布一致性自检 / 初始窗口工作台入口（UX-001，DEC-009）/ install.ps1 BOM 修复（BUG-001） | REL-001, QUAL-001, REL-002, UX-001, UX-002, BUG-001 | — |
+| v0.4.0 | 进行中 | 待定 | 工作台重构（DEC-013）：分栏工作区 + 小说绑定会话 + 侧栏抽屉 + 设计令牌迁移（UX-006） | UX-006 | — |
 
 ### 版本里程碑
 
@@ -91,6 +94,8 @@
 | 治理接入完成 | — | 2026-08-22 | 达成（ONBOARD-001） |
 | v0.3.0 范围确认 | v0.3.0 | 2026-08-22 | 达成（DEV-001，DEC-008） |
 | v0.3.0 发布 | v0.3.0 | 待定 | 未开始 |
+| v0.4.0 范围确认 | v0.4.0 | 2026-08-28 | 达成（DEC-013，UX-006 入账） |
+| v0.4.0 发布 | v0.4.0 | 待定 | 未开始 |
 
 ### 版本 Gate 检查项
 

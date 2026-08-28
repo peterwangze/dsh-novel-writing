@@ -3,7 +3,8 @@
  * 运行：node test/smoke.mjs
  * 覆盖：listNovels / updateState / gateCheck / saveChapter / lightAudit /
  *       requests / publish(export) / ingestData / computeSignals +
- *       lib/tools.js 挂载契约（inject 声明 / 11 工具注册 / 可选服务静默）。
+ *       lib/tools.js 挂载契约（inject 声明 / 11 工具注册 / 可选服务静默）+
+ *       lib/client.js 挂载契约（UX-006：新注册面/退役面/可逆清理，无 DOM 降级）。
  */
 import { mkdtempSync, writeFileSync, mkdirSync, readFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
@@ -291,6 +292,12 @@ let badName = false
 try { svc.createProject('a/b') } catch { badName = true }
 check('createProject 非法名拒绝', badName)
 
+// ── UX-006：overview 附带 bindings + novel-create 返回 path ─────────────
+check('createProject 返回目录路径 path（sessions.create cwd 用）', typeof created.path === 'string' && created.path.includes(join(workspace, '新书测试')), String(created.path))
+check('listNovels 无配置时附带空 bindings', (() => { const b = svc.listNovels().bindings; return b !== null && typeof b === 'object' && Object.keys(b).length === 0 })(), JSON.stringify(svc.listNovels().bindings))
+ctx.settings.get = () => ({ enabled: true, workspaceRoot: workspace, pollMs: 2000, apiPublic: false, presetAutoSync: false, platforms: {}, bindings: { 'test-novel': 'sess-1' } })
+check('listNovels 透传已配置 bindings', svc.listNovels().bindings['test-novel'] === 'sess-1', JSON.stringify(svc.listNovels().bindings))
+
 writeFileSync(join(workspace, '新书测试', 'novel-project', '00-work-type.md'), '# 作品类型\n\n长篇小说\n', 'utf8')
 const readFile = svc.readProjectFile('新书测试', '00-work-type.md')
 check('readProjectFile 读取', readFile.content !== null && readFile.content.includes('长篇小说'))
@@ -352,6 +359,65 @@ let silentError = ''
 try { toolsMod.apply(silent.ctx) } catch (e) { silentError = e.message }
 check('tool行无服务静默挂载不抛错', silentError === '', silentError)
 check('tool行无服务 0 注册（未装 bundle 预设仍可挂载）', silent.registered.length === 0, 'count=' + silent.registered.length)
+
+// ── 客户端行挂载契约（UX-006：新注册面 + 退役面 + 可逆清理）──────────────
+// lib/client.js 是 window.__ModuleLoader__ 脚本（非 ESM）：读源码经 new Function 在
+// mock window 下执行捕获模块定义；factory 仅依赖 require('react')（最小 mock，组件
+// 体不执行）。mock 环境无 window/localStorage/document——客户端加载路径须可降级。
+const clientSrc = readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8')
+let capturedDef = null
+globalThis.window = { __ModuleLoader__: { load(def) { capturedDef = def } } }
+try { new Function(clientSrc)() } finally { delete globalThis.window }
+check('客户端模块经 __ModuleLoader__ 注册', capturedDef !== null && capturedDef.id === 'dsh-novel-writing')
+const mockReact = {
+  createElement: (type, props, ...children) => ({ __nvEl: true, type, props: props ?? {}, children }),
+  useState: (v) => [typeof v === 'function' ? v() : v, () => {}],
+  useEffect: () => {},
+  useRef: (v) => ({ current: v }),
+  useMemo: (fn) => fn(),
+}
+let clientExports = null
+let clientFactoryErr = ''
+try {
+  clientExports = capturedDef.factory((id) => { if (id === 'react') return mockReact; throw new Error('unexpected require: ' + id) })
+} catch (e) { clientFactoryErr = e.message }
+check('客户端 factory 无 DOM 环境可求值', clientFactoryErr === '' && clientExports !== null, clientFactoryErr)
+check('客户端 exports.apply 为函数', clientExports !== null && typeof clientExports.apply === 'function')
+check('客户端 inject 声明 slots/connection/locale', clientExports !== null && Array.isArray(clientExports.inject)
+  && ['slots', 'connection', 'locale'].every((x) => clientExports.inject.includes(x)), 'inject=' + JSON.stringify(clientExports !== null ? clientExports.inject : null))
+
+const slotRegs = []
+let pendingSlotName = ''
+const clientCtx = {
+  get: () => undefined,
+  slots: {
+    inject(slotName, fn) { pendingSlotName = slotName; fn() },
+    register(def, render) { slotRegs.push({ slot: pendingSlotName, id: def.id, order: def.order, render }) },
+  },
+}
+let clientCleanup = null
+let clientApplyErr = ''
+try { clientCleanup = clientExports.apply(clientCtx) } catch (e) { clientApplyErr = e.message }
+check('客户端 apply 无 DOM 环境可挂载（降级路径）', clientApplyErr === '', clientApplyErr)
+const EXPECTED_SLOTS = 'settings.section:novel-writing sidebar.footer.action:novel-drawer shell.overlay:novel-workspace-dialog shell.overlay:novel-split shell.overlay:novel-bind-dialog'.split(' ')
+const gotSlots = slotRegs.map((r) => r.slot + ':' + r.id)
+check('注册面 = 设置页+抽屉+三浮层（恰好 5 席）', gotSlots.length === EXPECTED_SLOTS.length && EXPECTED_SLOTS.every((k) => gotSlots.includes(k)), gotSlots.join(','))
+check('退役：conversation.view「小说」标签页不再注册', !slotRegs.some((r) => r.slot === 'conversation.view'))
+check('退役：conversation.input.dock 兜底条不再注册', !slotRegs.some((r) => r.slot === 'conversation.input.dock'))
+check('退役：novel-studio/novel-launch-dock/novel-hud/novel-hud-panel/novel-entry 不再出现', !slotRegs.some((r) => ['novel-studio', 'novel-launch-dock', 'novel-hud', 'novel-hud-panel', 'novel-entry'].includes(r.id)), gotSlots.join(','))
+check('抽屉 novel-drawer order=9', (() => { const r = slotRegs.find((x) => x.id === 'novel-drawer'); return r !== undefined && r.order === 9 })(), 'order=' + JSON.stringify(slotRegs.find((x) => x.id === 'novel-drawer')))
+let renderErr = ''
+check('各注册面 render 可调用（mock react，不执行组件体）', (() => {
+  for (const r of slotRegs) {
+    try { const out = r.render({ wide: true }); if (out === null || out === undefined) { renderErr = r.id + ':null'; return false } }
+    catch (e) { renderErr = r.id + ':' + e.message; return false }
+  }
+  return true
+})(), renderErr)
+check('apply 返回清理函数（可逆性）', typeof clientCleanup === 'function')
+let clientCleanupErr = ''
+try { if (typeof clientCleanup === 'function') clientCleanup() } catch (e) { clientCleanupErr = e.message }
+check('客户端清理可执行（引擎/监听/style 降级移除）', clientCleanupErr === '', clientCleanupErr)
 
 console.log(`\nSMOKE DONE: ${passed} passed, ${failed} failed`)
 rmSync(root, { recursive: true, force: true })
