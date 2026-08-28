@@ -553,6 +553,25 @@ check('客户端源码面：UX-011 两级命名（entryLabel=小说管理工作�
     && clientSrc.includes("t('creationTitle'") && clientSrc.includes("t('creationLabel')")
     && !clientSrc.includes("title: '小说工作台'") && !clientSrc.includes('📖 小说工作台')
 })(), 'ux011 naming missing')
+// UX-012（新建弹窗与创建链调整）：①新建 = 居中模态（遮罩类 + 居中卡片 520/85vh/14px）
+// ②表单仅目录名（书名字段/状态整体退役）③按钮仅「创建/取消」④自动启动链退役
+// （不再 sessions.create/挂预设/绑定/发指令）⑤分栏标题栏 ▶ 开始/继续工作流。
+check('客户端源码面：UX-012 新建 = 居中模态 + 仅目录名 + 创建/取消两钮（「创建并开始」链整体退役）', (() => {
+  return clientSrc.includes('nv-cmodal-backdrop') && clientSrc.includes('.nv-cmodal{')
+    && clientSrc.includes('width:min(520px,100%)') && clientSrc.includes('max-height:85vh')
+    && clientSrc.includes("apiJson('/novel-writing/api/novel-create', { name })")
+    && clientSrc.includes("t('createBtn')") && clientSrc.includes("t('cancel')")
+    && !/\b(createGo|createOnly|bookPlaceholder|bookTitle|createDone)\b/.test(clientSrc)
+    && !clientSrc.includes('sessions.create({ cwd: r.path })')   // go 分支自动建会话链已删
+    && !clientSrc.includes('bindSession(r.id')                   // 创建即绑定已删（绑定归 🔗/绑定面板）
+})(), 'ux012 create modal missing')
+check('客户端源码面：UX-012 分栏标题栏 ▶ 开始/继续工作流（accent 实底钮 + 三态提示 + busy 防连点 + promptLaunch 复用）', (() => {
+  return clientSrc.includes("className: 'nv-bar-launch'") && clientSrc.includes('.nv-bar-launch{')
+    && clientSrc.includes("t('startWorkflow')") && clientSrc.includes("t('continueWorkflow')")
+    && clientSrc.includes('bindFirstHint') && clientSrc.includes('setLaunchBusy')
+    && clientSrc.includes('launcher.promptLaunch(sid, current, novels)')
+    && clientSrc.includes('.nv-bar-note')                       // 三态提示条（ok/err/info）
+})(), 'ux012 split launch missing')
 let renderErr = ''
 check('各注册面 render 可调用（组件体可求值；关闭态浮层输出 null 合法）', (() => {
   for (const r of slotRegs) {

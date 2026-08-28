@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 25 | 19 | 0 | 2 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 26 | 20 | 0 | 2 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -76,6 +76,7 @@
 | **P1** | UX-009 | 控制台视觉精修（实机目检诊断——建立视觉闭环：read_image 实测可用+无头截图目检+探针量化）：①工作区切换钮**紧邻路径**（删除 headflex 间隔）、标题 16px+📖18px、路径 13px、无工作区行动文案；②网格 minmax(320px,1fr) gap16 3 列均分、卡与＋磁贴统一 min-height 200px、卡 padding16/radius14/字号梯度；③搜索药丸 48px/min(640px)/999px/🔍16/占位15/focus 3px 光环/投影；④卡片浅色主题洗白修复（border l1→l2 + 投影）；排序 pill 12px；smoke 88→89；探针 8 项测量全绿 + 目检通过 | UX-008 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-025；目检+探针双验收；多书等高场景转 CLEAN-004) |
 | **P1** | UX-010 | 控制台四调整（用户批注）：①退出 ✕ 显眼化（28×28 带边框按钮/hover accent）；②排序 pill 字体 12→13px；③卡片字体调大一档（16/13/13/12）、卡与磁贴 200→180px、网格 gap 16→20px；④行为——点击其他工作区 session 自动退出工作台界面（sessions.current 变化联动关闭，三重守卫：首次快照只记基准/prev null 不关/pluginOpened 一次性豁免集防降级态误关）；smoke 89→91；探针 8 项全绿含真鼠标行为断言 + 目检通过 | UX-009 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-026；探针行为断言真点击侧栏会话→控制台关闭+current 恢复；修复 sessions 快照异步免关缺陷) |
 | **P1** | UX-011 | 两级工作台架构（用户截图批注）：①标题改名——侧栏入口/管理控制台标题改「小说管理工作台」，打开小说后的分栏标题改「小说创作工作台 ·《书名》」；②管理台职责收敛=工作区创建/切换 + 小说创建（＋磁贴）/删除（新卡片 🗑 删除钮 + 宿主 novel-delete 接口：id 校验/路径穿越防护/仅删项目目录/前确认风控）+ 卡片化呈现；③创作台=既有分栏（内容/状态/数据）不改职责；smoke/README/CHANGELOG 同步 | UX-010 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-027；本地 HTTP E2E 17/17 + smoke 99/0 + 目检通过；novel-delete 宿主路由需重启 DSH 生效——实机验证转 CLEAN-004) |
+| **P1** | UX-012 | 新建小说弹窗与创建链调整（用户批注）：①弹窗**居中放大**（模态遮罩+居中卡片 min(520px)，替换右侧悬浮面板；Esc/遮罩关闭）；②表单**仅目录名**（书名字段去除——novel-create 仅传 {name}，宿主 title 缺省=name 查证确认，卡片名=目录名）；③按钮**仅「创建」/「取消」**（删自动启动链——创建后所有动作在创作工作台进行；控制台 notice 指引）；④创作工作台（SplitWorkspace）标题栏补**▶ 开始/继续工作流**（accent 实底，三态提示：降级/未绑定弹绑定/失效重绑，复用 promptLaunch，busy 防连点）；i18n 失用键清理；smoke 99→101 | UX-011 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-028；探针 16/17（blocked=宿主旧包 novel-delete 405，待重启清 probe 样本）；修复冒泡自关缺陷；目检通过) |
 
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 
