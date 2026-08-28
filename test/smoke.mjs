@@ -4,7 +4,8 @@
  * 覆盖：listNovels / updateState / gateCheck / saveChapter / lightAudit /
  *       requests / publish(export) / ingestData / computeSignals +
  *       lib/tools.js 挂载契约（inject 声明 / 11 工具注册 / 可选服务静默）+
- *       lib/client.js 挂载契约（UX-006：新注册面/退役面/可逆清理，无 DOM 降级）。
+ *       lib/client.js 挂载契约（UX-006 注册面/退役面/可逆清理 + UX-007 控制台
+ *       注册与抽屉无按钮组，无 DOM 降级）。
  */
 import { mkdtempSync, writeFileSync, mkdirSync, readFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
@@ -369,13 +370,32 @@ let capturedDef = null
 globalThis.window = { __ModuleLoader__: { load(def) { capturedDef = def } } }
 try { new Function(clientSrc)() } finally { delete globalThis.window }
 check('客户端模块经 __ModuleLoader__ 注册', capturedDef !== null && capturedDef.id === 'dsh-novel-writing')
-const mockReact = {
-  createElement: (type, props, ...children) => ({ __nvEl: true, type, props: props ?? {}, children }),
-  useState: (v) => [typeof v === 'function' ? v() : v, () => {}],
-  useEffect: () => {},
-  useRef: (v) => ({ current: v }),
-  useMemo: (fn) => fn(),
-}
+const mockReact = (() => {
+  // 逐层执行函数组件的最小 React mock：createElement 对函数类型直接调用（hooks 按帧实现：
+  // useState 一帧一值 / useEffect 只收集不执行 / useRef·useMemo 一次求值）——
+  // 供 UX-007 抽屉树结构断言取到组件体真实产出（仅单次渲染，不做更新调度）。
+  let frames = []
+  const useHook = (init) => {
+    const f = frames[frames.length - 1]
+    const i = f.i
+    f.i += 1
+    if (f.hooks[i] === undefined) f.hooks[i] = typeof init === 'function' ? init() : init
+    return f.hooks[i]
+  }
+  return {
+    createElement: (type, props, ...children) => {
+      if (typeof type === 'function') {
+        frames.push({ i: 0, hooks: [] })
+        try { return type({ ...(props ?? {}), children }) } finally { frames.pop() }
+      }
+      return { __nvEl: true, type, props: props ?? {}, children }
+    },
+    useState: (v) => { const s = useHook(v); return [s, () => {}] },
+    useEffect: () => {},
+    useRef: (v) => ({ current: v }),
+    useMemo: (fn) => fn(),
+  }
+})()
 let clientExports = null
 let clientFactoryErr = ''
 try {
@@ -399,17 +419,41 @@ let clientCleanup = null
 let clientApplyErr = ''
 try { clientCleanup = clientExports.apply(clientCtx) } catch (e) { clientApplyErr = e.message }
 check('客户端 apply 无 DOM 环境可挂载（降级路径）', clientApplyErr === '', clientApplyErr)
-const EXPECTED_SLOTS = 'settings.section:novel-writing sidebar.footer.action:novel-drawer shell.overlay:novel-workspace-dialog shell.overlay:novel-split shell.overlay:novel-bind-dialog'.split(' ')
+const EXPECTED_SLOTS = 'settings.section:novel-writing sidebar.footer.action:novel-drawer shell.overlay:nv-console shell.overlay:novel-workspace-dialog shell.overlay:novel-split shell.overlay:novel-bind-dialog'.split(' ')
 const gotSlots = slotRegs.map((r) => r.slot + ':' + r.id)
-check('注册面 = 设置页+抽屉+三浮层（恰好 5 席）', gotSlots.length === EXPECTED_SLOTS.length && EXPECTED_SLOTS.every((k) => gotSlots.includes(k)), gotSlots.join(','))
+check('注册面 = 设置页+抽屉+四浮层（恰好 6 席）', gotSlots.length === EXPECTED_SLOTS.length && EXPECTED_SLOTS.every((k) => gotSlots.includes(k)), gotSlots.join(','))
+check('控制台 nv-console order=25', (() => { const r = slotRegs.find((x) => x.id === 'nv-console'); return r !== undefined && r.order === 25 })(), 'order=' + JSON.stringify(slotRegs.find((x) => x.id === 'nv-console')))
+check('控制台 z-index 950 随样式注入', clientSrc.includes("className: 'nv-console'") && clientSrc.includes('z-index:950'))
 check('退役：conversation.view「小说」标签页不再注册', !slotRegs.some((r) => r.slot === 'conversation.view'))
 check('退役：conversation.input.dock 兜底条不再注册', !slotRegs.some((r) => r.slot === 'conversation.input.dock'))
 check('退役：novel-studio/novel-launch-dock/novel-hud/novel-hud-panel/novel-entry 不再出现', !slotRegs.some((r) => ['novel-studio', 'novel-launch-dock', 'novel-hud', 'novel-hud-panel', 'novel-entry'].includes(r.id)), gotSlots.join(','))
 check('抽屉 novel-drawer order=9', (() => { const r = slotRegs.find((x) => x.id === 'novel-drawer'); return r !== undefined && r.order === 9 })(), 'order=' + JSON.stringify(slotRegs.find((x) => x.id === 'novel-drawer')))
+// UX-007（DEC-015）：抽屉 = 纯主入口——无 ⚙/＋/🔗/▶ 按钮组，标题行整体为可点按钮（nv-drawer-head）
+check('抽屉无按钮组（⚙/＋/🔗/▶ 文本缺席）', (() => {
+  const dr = slotRegs.find((r) => r.id === 'novel-drawer')
+  if (dr === undefined) return false
+  const root = dr.render({ wide: true })
+  const texts = []
+  let hasHeadBtn = false
+  const walk = (n) => {
+    if (n === null || n === undefined) return
+    if (typeof n === 'string') { texts.push(n); return }
+    if (typeof n !== 'object') return
+    if (Array.isArray(n.children)) for (const c of n.children) walk(c)
+    if (n.props !== null && n.props !== undefined && n.props.className === 'nv-drawer-head') hasHeadBtn = true
+  }
+  walk(root)
+  const joined = texts.join('')
+  return hasHeadBtn && !joined.includes('⚙') && !joined.includes('＋') && !joined.includes('🔗') && !joined.includes('▶')
+})(), 'head=' + 'n/a')
 let renderErr = ''
-check('各注册面 render 可调用（mock react，不执行组件体）', (() => {
+check('各注册面 render 可调用（组件体可求值；关闭态浮层输出 null 合法）', (() => {
   for (const r of slotRegs) {
-    try { const out = r.render({ wide: true }); if (out === null || out === undefined) { renderErr = r.id + ':null'; return false } }
+    try {
+      const out = r.render({ wide: true })
+      if (out === null) continue // 控制台/分栏/对话框 = 门控浮层：关闭态 null（与真实 React 一致）
+      if (out === undefined) { renderErr = r.id + ':undefined'; return false }
+    }
     catch (e) { renderErr = r.id + ':' + e.message; return false }
   }
   return true

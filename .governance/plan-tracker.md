@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 22 | 16 | 0 | 2 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 23 | 17 | 0 | 2 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -68,7 +68,8 @@
 | **P2** | BUG-001 | install.ps1 离线执行缺陷：UTF-8 无 BOM 在 Windows PowerShell 5.1 下按 ANSI 解码，中文注释/字符串乱码致 ParserError（宣称支持 5.1+ 但离线 .ps1 通道不可用；在线 iex 通道不受影响）；修复 = 文件补 BOM + 双通道回归验证；版本归属待用户确认（范围变更） | INST-001 | v0.3.0 | closed | ✅ 完成 (2026-08-23，DEC-012 用户确认纳入 v0.3.0) |
 | **P1** | BUG-002 | UX-005 实机验证阻断缺陷：lib/tools.js 未声明 inject 即访问 ctx.tools（Cordis 强制：属性访问须先声明），预设挂载失败「cannot get property "tools" without inject」；修复 = 补 `export const inject = ['tools']`（范本：包内 index.js L31 / 官方 dsh-tool-todo L12）+ 清除第二个潜伏阻断（latestAiPath enum 去 null，真 dsh-tools defineTool 拒绝）+ smoke 增挂载契约断言堵防护网缺口（60→67 项） | UX-005 | v0.3.0 | closed | ✅ 完成 (2026-08-23，EVD-019；评审 APPROVED-WITH-NOTES——N1 CI 恒等 mock 无 schema 校验建议后补，N2 注释措辞) |
 | **P1** | UX-006 | 工作台重构（dsh-worktable 思路，DEC-013 五项定案）：侧栏「小说工作台」抽屉（书目卡片+绑定状态点+工作区管理）+ 挤法分栏工作区（左导航可折叠｜中内容页签｜右官方对话窗，分隔线可拖+宽度记忆+⇄换边）+ 小说↔会话 1:1 绑定（settings ns 存储，sessions.open 切换，sessions.list 订阅状态镜像）+ 视觉全量 --dsw-alias-* 令牌化；退役 conversation.view 标签页 / input.dock LaunchBar / HUD（DEC-013①⑤）；宿主 Config 增 bindings 字段 + overview 携带；smoke/README/CHANGELOG 同步 | UX-005 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-020；评审 APPROVED-WITH-NOTES——N6 已修·N4 注释已补·N1/N3/N5/N7 非阻断备注；实机验证转 CLEAN-004) |
-| **P2** | CLEAN-004 | UX-006 实机浏览器验证清单（重启 DSH 后执行）：抽屉开书/反选关闭/Esc 关闭、分隔线拖拽+宽度记忆（dsh.novel.split.v1）、⇄ 换边、绑定/失效重绑、新建全链（cwd 建会话→预设→绑定→开分栏→启动指令）、会话状态点镜像、降级模式（sessions 缺席/挤法失败提示）、与 dsh-worktable 共存互斥、N6「会话已打开」行为定案确认；评审备注处置评估（N1 yieldObserver 重挂/N3 表单保活/N5 组件级测试/N7 引擎拆块） | UX-006 | v0.4.0 | open | ⏳ 待执行（用户重启后） |
+| **P2** | CLEAN-004 | UX-006/UX-007 实机浏览器验证清单（重启 DSH 后执行）：①控制台全链路——侧栏标题行开/关（反选）、搜索滤小说+找 session、＋新建表单（创建并开始/仅创建）、卡片状态光效/数据卡片、▶打开=切绑定会话+进分栏（**口径确认**：卡片打开是否要自动进分栏，或仅切会话）、🔗绑定/失效重绑、➤继续工作流；②分栏——分隔线拖拽+宽度记忆（dsh.novel.split.v1）、⇄换边、Esc/✕/反选、脏稿守卫；③降级——sessions 缺席/挤法失败/控制台几何无会话根；④与 dsh-worktable 共存互斥；⑤评审备注处置评估：A-1 抽 launcher.createAndStart 收口三份拷贝、B-1 对话框 Esc 让位、C-1 守卫式 hook 注释/stub、C-2 selector 重建噪音、C-3 聚焦选择器单引号、F-1/F-2/F-3 smoke 断言收紧（z-index 类归属/null 白名单/卡片路径树断言）、H-1 实机行为面清单、H-2 未用 i18n 键清理 | UX-006, UX-007 | v0.4.0 | open | ⏳ 待执行（用户重启后） |
+| **P1** | UX-007 | 工作台入口与工作台界面重构（用户两次实机反馈修正 DEC-014→DEC-015）：侧栏「小说工作台」区块=纯主入口（标题+书目卡片列表，**无 🔍⚙＋ 按钮组**），点击进入**完整工作台界面**（shell.overlay 全屏控制台，**不涵盖对话框**——仅小说工作区创建、小说管理：创建/关键词找 session/小说状态/数据卡片），管理全部界面化卡片按钮；卡片视觉按 dsh-worktable 控制室卡片（状态光效/数据卡片）；点击卡片=切绑定会话并关控制台；冒烟/README/CHANGELOG 同步 | UX-006 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-021；评审 APPROVED-WITH-NOTES——G-1 已修，A-1/F-1~F-3/H-2 归 CLEAN-004/发布卫生；实机验证转 CLEAN-004) |
 
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 
@@ -85,7 +86,7 @@
 | v0.2.1 | 已发布 | — | 审计 P1 收尾 + 仓库卫生 + 双通道安装验证 | —（接入补录，未入账） | git tag v0.2.1 |
 | v0.2.2 | 已发布 | 2026-08-22 | 配置边界重构：业务配置归一工作台，设置页只留插件级开关 | REL-001（补录） | git tag v0.2.2 + CHANGELOG [0.2.2]（补录） |
 | v0.3.0 | 进行中 | 待定 | 发布卫生 + 质量加固（DEC-008 + DEC-012 追加）：CHANGELOG 0.2.2 补录 / CI 观察收尾 / 发布一致性自检 / 初始窗口工作台入口（UX-001，DEC-009）/ install.ps1 BOM 修复（BUG-001） | REL-001, QUAL-001, REL-002, UX-001, UX-002, BUG-001 | — |
-| v0.4.0 | 进行中 | 待定 | 工作台重构（DEC-013）：分栏工作区 + 小说绑定会话 + 侧栏抽屉 + 设计令牌迁移（UX-006） | UX-006 | — |
+| v0.4.0 | 进行中 | 待定 | 工作台重构（DEC-013）：分栏工作区 + 小说绑定会话 + 侧栏抽屉 + 设计令牌迁移（UX-006） | UX-006, UX-007 | — |
 
 ### 版本里程碑
 
