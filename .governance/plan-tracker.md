@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 23 | 17 | 0 | 2 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 24 | 18 | 0 | 2 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -60,6 +60,7 @@
 | **P1** | UX-002 | 工作台入口收敛（用户反馈 UX-001 整行横幅喧宾夺主）：删除 input.dock 常驻工作台行（仅留 pendingLaunch 瞬时兜底条），常驻入口改侧栏「📖 小说」+ 浮层面板（书目选择/开始继续/新建即启动，经 pendingLaunch 通道注入；DEC-010）| UX-001, CLEAN-001 | v0.3.0 | closed | ✅ 完成 (2026-08-22) |
 | **P2** | CLEAN-002 | UX-002 遗留项：①pendingLaunch 兜底条「小说已创建未启动」弱提示/补发（评审 S1）——✅ 完成 2026-08-23（launchHint + createdNew + W1 清 hint 全覆盖，EVD-015）；②shell.overlay 面板实机浏览器验证——⛔ ②被 UX-006 取代（2026-08-28）：原浮层面板/HUD 面已随工作台重构整体退役，实机验证面转入 CLEAN-004 | UX-002 | v0.3.0 | closed | ✅ ①完成 · ②被取代 (2026-08-28) |
 | **P2** | GOV-001 | 项目原则入册：12 条（P-01 事实驱动/P-02 全面分析/P-03 回归意识/P-04 测试看护/P-05 泛化性/P-06 质量优先/P-07 安全数据 + C-01 可扩展/C-02 防腐化/C-03 职责单一/C-04 无冗余/C-05 commit 原子）写入 .governance/project-principles.md（权威源）+ AGENTS.md 项目级节（会话强制注入，Bootstrap 段不动）；DEC-011 | — | v0.3.0 | closed | ✅ 完成 (2026-08-22) |
+| **P2** | GOV-002 | 原则追加 P-08 禁止自造轮子（用户直接要求）：有开源参考与免费资源优先使用，严禁自己造轮子（时间/token 浪费）；权威源 + AGENTS.md 注入面 + Code Review 核对项；DEC-016 | — | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-022) |
 | **P1** | UX-003 | 浮层面板首次进入支持设置 workspace（用户实机验证反馈：快速面板仅显示「小说工作区为空」，无根目录设置入口——WorkspaceRootEditor 仅在工作台侧栏，初始窗口不可达）：面板内接入工作区根目录行（复用 WorkspaceRootEditor/api.settings.update）+ 空态提示指引 | UX-002 | v0.3.0 | closed | ✅ 完成 (2026-08-23) |
 | **P1** | UX-004 | 面板空态行动入口可见性（用户实机反馈「看不清怎么选择工作区或者创建新小说」）| UX-003 | v0.3.0 | closed | ⛔ 被 UX-005 取代（2026-08-23）：统一入口方案落地后面板退位纯状态 HUD，未提交改动已回退（git checkout lib/client.js 至 b31e367），方向词修正同废 |
 | **P1** | UX-005 | 统一入口：侧栏「📖 小说工作台」→ 选择/新建工作区（workspace.list + host.pickDirectory + host.createDirectory + workspace.create；无已配置工作区则强制新建）→ api.sessions.create(workspaceId) → agentPresets.select(novel-writing) → session.prompt(开始指令) → 打开会话；无视图切换 API → 明确提醒用户点「小说」标签进工作台；浮层面板退位纯状态 HUD（去启动/新建/工作区编辑）；workspaceRoot 同步为选定工作区目录 | UX-002, UX-003 | v0.3.0 | closed | ✅ 完成 (2026-08-23) |
