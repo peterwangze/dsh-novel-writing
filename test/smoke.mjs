@@ -494,10 +494,32 @@ check('控制台树：底部搜索行 + ＋ 磁贴居末 + 排序两态钮 + 无
 check('控制台源码面：拖拽排序持久化 + 3 列网格 + 药丸搜索样式', clientSrc.includes('dsh.novel.order.v1')
   && clientSrc.includes('draggable: props.draggable') && clientSrc.includes('minmax(320px,1fr)')
   && clientSrc.includes('nv-cplus{') && clientSrc.includes('border-radius:999px'), 'order-persist/drag/grid/pill missing')
-// UX-009（视觉精修）：头部左对齐组（无 headflex + accent 变体钮 + 未设置工作区文案）、卡片/磁贴统一 200px、48px 药丸
-check('控制台源码面：UX-009 视觉精修令牌（头部组/200px 卡片磁贴/48px 药丸/无 headflex）', clientSrc.includes('nv-cbtn-ws')
-  && clientSrc.includes('min-height:200px') && clientSrc.includes('height:48px')
+// UX-009（视觉精修）：头部左对齐组（无 headflex + accent 变体钮 + 未设置工作区文案）、48px 药丸
+check('控制台源码面：UX-009 视觉精修令牌（头部组/48px 药丸/无 headflex）', clientSrc.includes('nv-cbtn-ws')
+  && clientSrc.includes('height:48px')
   && !clientSrc.includes('nv-console-headflex') && clientSrc.includes('wsUnset'), 'ux009 visual tokens missing')
+// UX-010（用户批注 4 点）：①头部 ✕ 28×28 有边框醒目变体 ②排序 pill 13px/7px 14px/两钮 gap 8px
+// ③卡片/磁贴统一 180px + 网格 gap 20px + 字号上调一档 ④current 联动（s.current 订阅 + 插件切换豁免）
+check('控制台源码面：UX-010 批注（✕ 醒目变体/排序 pill 13px/180px 卡片磁贴/gap 20/字号一档）', (() => {
+  const css = (cls) => {
+    const m = new RegExp(cls.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{([^}]*)\\}').exec(clientSrc)
+    return m !== null ? m[1] : ''
+  }
+  const xBtn = css('.nv-console-head .nv-mini')
+  const card = css('.nv-ccard')
+  const tile = css('.nv-cplus')
+  const grid = css('.nv-cgrid')
+  const sort = css('.nv-csortbtn')
+  return xBtn.includes('width:28px') && xBtn.includes('height:28px') && xBtn.includes('border:1px solid')
+    && sort.includes('font-size:13px') && sort.includes('padding:7px 14px')
+    && css('.nv-csort').includes('gap:8px')
+    && card.includes('min-height:180px') && tile.includes('min-height:180px') && grid.includes('gap:20px')
+    && css('.nv-ccard-name').includes('font-size:16px') && css('.nv-ccard-status').includes('font-size:13px')
+    && css('.nv-ccard-data').includes('font-size:13px') && css('.nv-cmeta').includes('font-size:12px')
+})(), 'ux010 tokens missing')
+check('控制台源码面：UX-010④ current 联动（s.current 订阅 + ref 基准守卫 + 插件切换豁免）',
+  clientSrc.includes('s.current') && clientSrc.includes('currentSeededRef') && clientSrc.includes('prevCurrentRef')
+    && clientSrc.includes('pluginOpened') && clientSrc.includes('launcher.pluginOpened.add'), 'ux010 linkage missing')
 let renderErr = ''
 check('各注册面 render 可调用（组件体可求值；关闭态浮层输出 null 合法）', (() => {
   for (const r of slotRegs) {
