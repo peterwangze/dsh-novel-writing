@@ -492,8 +492,12 @@ check('控制台树：底部搜索行 + ＋ 磁贴居末 + 排序两态钮 + 无
     && !clientSrc.includes('openBtn')               // i18n 键同步清理
 })(), 'console tree mismatch')
 check('控制台源码面：拖拽排序持久化 + 3 列网格 + 药丸搜索样式', clientSrc.includes('dsh.novel.order.v1')
-  && clientSrc.includes('draggable: props.draggable') && clientSrc.includes('minmax(300px,1fr)')
+  && clientSrc.includes('draggable: props.draggable') && clientSrc.includes('minmax(320px,1fr)')
   && clientSrc.includes('nv-cplus{') && clientSrc.includes('border-radius:999px'), 'order-persist/drag/grid/pill missing')
+// UX-009（视觉精修）：头部左对齐组（无 headflex + accent 变体钮 + 未设置工作区文案）、卡片/磁贴统一 200px、48px 药丸
+check('控制台源码面：UX-009 视觉精修令牌（头部组/200px 卡片磁贴/48px 药丸/无 headflex）', clientSrc.includes('nv-cbtn-ws')
+  && clientSrc.includes('min-height:200px') && clientSrc.includes('height:48px')
+  && !clientSrc.includes('nv-console-headflex') && clientSrc.includes('wsUnset'), 'ux009 visual tokens missing')
 let renderErr = ''
 check('各注册面 render 可调用（组件体可求值；关闭态浮层输出 null 合法）', (() => {
   for (const r of slotRegs) {
