@@ -840,7 +840,7 @@ check('客户端源码面：UX-036 工作流状态迁左窗（左窗=纵向分�
   return clientSrc.includes("['data', t('data')], ['publish', t('publish')], ['requests', t('requests')]")
     && !clientSrc.includes("'chapters', t('chapters')]")                                  // UX-042 章节不再页签（常驻上半区）
     && !clientSrc.includes("'workflow', t('workflow')]")
-    && clientSrc.includes("flex: '0 0 30%', minHeight: 0, display: 'flex', flexDirection: 'column', borderTop")   // UX-044 底部工作台全宽+30% 高（46% 太高）
+    && clientSrc.includes("minHeight: 0, display: 'flex', flexDirection: 'column', borderTop")                   // UX-044/047 底部工作台全宽+高度可拖（默认 30%）
     && clientSrc.includes('detail !== null ? midFooter : null')                           // UX-044 底部工作台为顶区兄弟（章节列不占全高）
     && clientSrc.includes("flex: '0 0 auto', maxHeight: '78%'")                            // 工作流容器随内容自适应（UX-039：不固定 60%、无下方空白）
     && !clientSrc.includes("maxHeight: '220px', overflow: 'auto' }")                        // 清单卡取消内部滚动（全部展开——上面不再滚动）
@@ -850,6 +850,17 @@ check('客户端源码面：UX-036 工作流状态迁左窗（左窗=纵向分�
     && clientSrc.includes("position: 'absolute', left: '50%', transform: 'translateX(-50%)'")
     && clientSrc.includes("const titleStageName = (NOVEL_STAGES.find(([id]) => id === curStage) ?? [])[1] ?? curStage")
     && clientSrc.includes("detail.state?.statistics?.total_words ?? 0} ${t('words')}")
+check('客户端源码面：UX-047 中窗上下工作台分隔线可拖（.nv-middiv 水平命中区 row-resize + hover/active accent；midDividerHandler pointer 拖拽：下半区高度 120px–60% bodyH、默认 30%、持久化 midH〔loadSplitSaved/persistSplit/novelSplit.setMidH〕；i18n resizeMid 成对）', (() => {
+  return clientSrc.includes("className: 'nv-middiv'") && clientSrc.includes('onPointerDown: midDividerHandler')
+    && clientSrc.includes('.nv-middiv{flex:none;height:4px;cursor:row-resize;background:transparent;touch-action:none}')
+    && clientSrc.includes('.nv-middiv:hover,.nv-middiv:active{box-shadow:inset 0 1px 0 0 var(--dsw-alias-state-accent-primary,#4f8ef7)}')
+    && clientSrc.includes('midH: Number.isFinite(s.midH) ? s.midH : null')
+    && clientSrc.includes('midH: state.midH')
+    && clientSrc.includes('setMidH(w) {')
+    && clientSrc.includes("midHpx !== null ? ('0 0 ' + midHpx + 'px') : '0 0 30%'")
+    && clientSrc.includes('clampNum(Math.round(init.h + (init.y - ev.clientY)), 120, max)')
+    && clientSrc.includes('resizeMid: \'拖拽调整下方工作台高度\'') && clientSrc.includes('resizeMid: \'Drag to resize bottom workbench height\'')
+})(), 'ux047 mid divider draggable')
     && clientSrc.includes("const NOVEL_STAGES = [")
     && (clientSrc.match(/el\(TitleDot, \{ useSessions: props\.useSessions, boundId, t \}\)/g) ?? []).length === 1   // 状态点回到标题栏（仅一处）
     && clientSrc.includes('`${t(\'stage\')}：${titleStageName}`')                          // UX-041b 阶段前缀「阶段：」
