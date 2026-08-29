@@ -20,7 +20,9 @@
  *       常驻可见；「拖动条」=滚动条默认隐藏；滚动隔离=章节列/左窗/正文
  *       独立滚动——高度链修复）+ UX-053 工作台视觉重构（Lucide 内联图标
  *       体系 NV_ICONS/nvIcon + 焦点双环统一 + 光效收敛〔扫光删除〕+
- *       color-mix 令牌化兜底 + 选中态类化 + 空态 24px 图标）。
+ *       color-mix 令牌化兜底 + 选中态类化 + 空态 24px 图标）+
+ *       UX-059 工作流控制条（标题栏启动钮迁移 / 停止·继续合并主按钮
+ *       形态切换 / 压缩上下文 /compact / 绑定新会话——不自动打开）。
  */
 import { mkdtempSync, writeFileSync, mkdirSync, readFileSync, rmSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -630,17 +632,55 @@ check('客户端源码面：UX-012 新建 = 居中模态 + 仅目录名 + 创建
     && !clientSrc.includes('sessions.create({ cwd: r.path })')   // go 分支自动建会话链已删
     && !clientSrc.includes('bindSession(r.id')                   // 创建即绑定已删（绑定归 🔗/绑定面板）
 })(), 'ux012 create modal missing')
-check('客户端源码面：UX-012 分栏标题栏 ▶ 开始/继续工作流（accent 实底钮 + 三态提示 + busy 防连点 + promptLaunch 复用）', (() => {
-  return clientSrc.includes("className: 'nv-bar-launch'") && clientSrc.includes('.nv-bar-launch{')
+check('客户端源码面：UX-059 工作流控制条（标题栏 ▶ 启动钮迁移至创作台下半区；主按钮按绑定会话状态切换 go/stop 形态 + busy 防连点 + promptLaunch 复用）', (() => {
+  const css = (cls) => {
+    const m = new RegExp(cls.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{([^}]*)\\}').exec(clientSrc)
+    return m !== null ? m[1] : ''
+  }
+  const go = css('.nv-wfctl-btn[data-mode=go]')
+  return clientSrc.includes("className: 'nv-wfctl-btn'") && clientSrc.includes('.nv-wfctl-btn{')
+    && go.includes('background:var(--dsw-alias-state-accent-primary')  // 空闲=accent 实底（原 nv-bar-launch 迁移）
     && clientSrc.includes("t('startWorkflow')") && clientSrc.includes("t('continueWorkflow')")
-    && clientSrc.includes('bindFirstHint') && clientSrc.includes('setLaunchBusy')
+    && clientSrc.includes("t('stopWorkflow')")
+    && clientSrc.includes('bindFirstHint') && clientSrc.includes('setWfBusy')
     && clientSrc.includes('launcher.promptLaunch(sid, current, novels)')
-    && clientSrc.includes('.nv-bar-note')                       // 三态提示条（ok/err/info）
-})(), 'ux012 split launch missing')
+    && clientSrc.includes('.nv-bar-note')                       // 三态提示条（ok/err/info）保留
+    && !clientSrc.includes("className: 'nv-bar-launch'")        // 标题栏启动钮已删除（迁移负断言）
+})(), 'ux059 wf ctl missing')
+check('客户端源码面：UX-059 工作流控制条全链（迁移+停止/继续形态切换+压缩上下文+绑定新会话+i18n 11 键成对）', (() => {
+  const css = (cls) => {
+    const m = new RegExp(cls.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{([^}]*)\\}').exec(clientSrc)
+    return m !== null ? m[1] : ''
+  }
+  const stop = css('.nv-wfctl-btn[data-mode=stop]')
+  return clientSrc.includes("className: 'nv-wfctl'")                  // 控制条容器（nv-tabs 之前）
+    && clientSrc.includes("className: 'nv-wfctl-btn'") && clientSrc.includes('.nv-wfctl-btn{')
+    && clientSrc.includes("'data-mode': wfRunning === true ? 'stop' : 'go'")  // 形态切换
+    && stop.includes('background:var(--dsw-alias-state-danger')       // 运行中=⏹ 停止 danger 实底
+    && clientSrc.includes('sessions.cancel') && clientSrc.includes("apiHas('sessions', 'cancel')")  // 停止（队列保留）
+    && clientSrc.includes("text: '/compact'") && clientSrc.includes('compactBusyHint') && clientSrc.includes('compactSent')  // 压缩上下文
+    && clientSrc.includes("t('bindNewSession')") && clientSrc.includes('bindNewDone') && clientSrc.includes('bindNewSessionCtl')  // 绑定新会话（链唯一函数名，不自动打开）
+    && clientSrc.includes("api.agentPresets.select({ sessionId, agentPreset: 'novel-writing' })")  // 绑定链：create → 预设 → 绑定
+    && !clientSrc.includes("className: 'nv-bar-launch'")              // 标题栏启动钮整块删除（迁移）
+    && !clientSrc.includes('.nv-bar-launch')                          // 样式/选择器残留负断言
+    // i18n 11 键 zh/en 成对
+    && clientSrc.includes("stopWorkflow: '⏹ 停止工作流'") && clientSrc.includes("stopWorkflow: '⏹ Stop workflow'")
+    && clientSrc.includes("compactWorkflow: '压缩上下文'") && clientSrc.includes("compactWorkflow: 'Compact context'")
+    && clientSrc.includes("bindNewSession: '绑定新会话'") && clientSrc.includes("bindNewSession: 'Bind new session'")
+    && clientSrc.includes("wfRunning: '运行中…'") && clientSrc.includes("wfRunning: 'Running…'")
+    && clientSrc.includes("wfIdle: '空闲'") && clientSrc.includes("wfIdle: 'Idle'")
+    && clientSrc.includes("compactBusyHint: '请先停止当前工作流，再压缩上下文'") && clientSrc.includes("compactBusyHint: 'Stop the running workflow before compacting'")
+    && clientSrc.includes("cancelSentPrefix: '已发送停止指令：'") && clientSrc.includes("cancelSentPrefix: 'Stop instruction sent: '")
+    && clientSrc.includes("compactSent: '已发送压缩上下文请求'") && clientSrc.includes("compactSent: 'Compaction requested'")
+    && clientSrc.includes("cancelFailPrefix: '停止工作流失败：'") && clientSrc.includes("cancelFailPrefix: 'Stop workflow failed: '")
+    && clientSrc.includes("compactFailPrefix: '压缩上下文失败：'") && clientSrc.includes("compactFailPrefix: 'Compaction failed: '")
+    && clientSrc.includes("bindNewDone: (id) => `已为本书绑定新会话 ${id}，点「继续工作流」即可续跑`")
+    && clientSrc.includes("bindNewDone: (id) => `A new session ${id} is bound to this novel — press \"Continue workflow\" to resume`")
+})(), 'ux059 wf control bar missing')
 // UX-013（用户批注 6 点）：
 //  ①工作区对话框去会话创建（createSessionBtn/done 态/sync 键随链退役；switchHint + 信息性 hasSessionsHint 在位）
 //  ②首次点卡片自动建会话并关联（openBookCreate 链：workspace.list 命中 root→workspaceId / cwd 回退 → create →
-//    预设挂载 → bindSession → open+ensureSplit；自动链无 prompt——启动归创作台标题栏）
+//    预设挂载 → bindSession → open+ensureSplit；自动链无 prompt——启动归创作台工作流控制条）
 //  ②.4 卡片 ➤ 启动钮退役（onLaunch/continueBtn/launch 卡片消费点删除；promptLaunch 保留给创作台）
 //  ③侧栏抽屉对齐+调宽+字大（.nv-drawer width:100% 与工作区列表行同宽 / 标题 13px+📖16px / 卡 14px/12.5px /
 //    点 9px / 分隔线 l2 / 区块底部留白 8px）
@@ -663,7 +703,7 @@ check('客户端源码面：UX-013 卡片两钮（➤ 启动钮退役：onLaunch
     && clientSrc.includes("className: 'nv-cico'")
     && clientSrc.includes("title: st === 'stale' ? t('bindStaleHint') : t('bindBtn')")
     && clientSrc.includes("className: 'nv-cico nv-cico-del'")
-    && clientSrc.includes("launcher.promptLaunch(sid, current, novels)") // promptLaunch 保留（创作台 ▶）
+    && clientSrc.includes("launcher.promptLaunch(sid, current, novels)") // promptLaunch 保留（创作台工作流控制条 ▶）
     && clientSrc.includes("t('autoBindDone'")
 })(), 'ux013 card buttons missing')
 check('客户端源码面：UX-013 首次开卡自动链（workspaceId/cwd → create → 预设 → bind → open；无 prompt）', (() => {
@@ -772,7 +812,7 @@ check('客户端源码面：UX-014⑧ 创作台会话联动关闭分栏（splitC
 })(), 'ux014 split linkage missing')
 // UX-015（用户实机批注 5 点）：
 //  ①标题栏加高放大（.nv-bar 30→38px / padding 0 14px / .nv-bar-title 14px / .nv-badge 13px /
-//    .nv-bar .nv-mini 24px / .nv-bar-ctl 32×32·18px·600 / TITLE_BAR_H=38 / ▶ 启动钮 padding 5px 14px）
+//    .nv-bar .nv-mini 24px / .nv-bar-ctl 32×32·18px·600 / TITLE_BAR_H=38 / ▶ 工作流控制条主钮 padding 5px 14px）
 //  ②章节列表行显示章节名（中窗左列；UX-019 定案 = 仅「第N章 · 名称」/空名称「第N章」，无字数）
 //  ③章节列 160px + 直排滚动（.nv-chlist overflow:auto）；UX-020（用户实机反馈修正
 //    UX-019③）恢复 UX-015③ 拖宽条：.nv-chdiv pointer 拖拽 120–360px + chapterW 持久化
@@ -788,14 +828,14 @@ check('客户端源码面：UX-015① 标题栏加高放大（38px 高 / 14px �
   const badge = css('.nv-badge')
   const ctl = css('.nv-bar-ctl')
   const barMini = css('.nv-bar .nv-mini')
-  const launch = css('.nv-bar-launch')
+  const launch = css('.nv-wfctl-btn')
   return clientSrc.includes('const TITLE_BAR_H = 38')
     && bar.includes('height:38px') && bar.includes('padding:0 14px')
     && bt.includes('TYPO.page') && bt.includes('font-weight:600') && bt.includes('letter-spacing:-.015em') // UX-055①：书名 14→20px/600（字阶第一级）
     && badge.includes('font-size:13px')
     && ctl.includes('width:32px') && ctl.includes('height:32px') && ctl.includes('font-size:18px') && ctl.includes('font-weight:600')
     && barMini.includes('width:24px') && barMini.includes('height:24px')
-    && launch.includes('padding:5px 14px')
+    && launch.includes('padding:5px 14px')  // UX-059：主按钮（工作流控制条）padding 沿用 5px 14px
 })(), 'ux015 bar missing')
 check('客户端源码面：UX-019② 章节行仅「第N章 + 名称」（去字数+去装饰圆点〔UX-021〕；有名称「第N章 名称」/空名称回退「第N章」；ellipsis 沿用；UX-053：✓/⚠ 标记图标化〔check/triangle-alert〕）', (() => {
   return clientSrc.includes("const cName = typeof c.name === 'string' ? c.name : ''")
@@ -1170,7 +1210,8 @@ check('客户端源码面：UX-055⑥ 细节统一（抽屉小卡 13.5px / 当�
 // 交付验证最终修复（A-prime——精确测量；两轮经验合并：A 根因①barRef 未绑定 .nv-bar→监听全未注册
 //  ②右检「r.left > b.right」过滤重叠控件；B 残余缺陷=固定阈值 960 覆盖不了「960≤barW<~1300+书名宽」
 //  组合）：leftClear = 书名 span 自然宽（rect.left + scrollWidth——不受 flex 裁剪/ellipsis 影响）+M(8)
-//   ≤ 横幅左缘；rightClear = 横幅右缘 +M ≤ 右簇首个可见控件 min-left（launch/ctl/note；无重叠过滤）；
+//   ≤ 横幅左缘；rightClear = 横幅右缘 +M ≤ 右簇首个可见控件 min-left（ctl/note；无重叠过滤——
+//   UX-059 启动钮迁出后右簇仅剩 .nv-bar-ctl/.nv-bar-note）；
 //  任一不满足 → data-hidden（visibility:hidden 元素保留可测量）；RO 观察 bar/banner/title 三元素 +
 //  window resize 兜底 + 切书名（scrollWidth 不触发 RO）deps 含 snap.novelId；BANNER_MIN_WIDTH 已删。
 check('客户端源码面：交付验证最终修复 标题栏横幅碰撞防护（A-prime 精确测量：scrollWidth 自然宽 + 右簇 min-left 无重叠过滤 + 三元素 RO + BANNER_MIN_WIDTH 删除）', (() => {
@@ -1179,7 +1220,7 @@ check('客户端源码面：交付验证最终修复 标题栏横幅碰撞防护
     && clientSrc.includes("const t = title.getBoundingClientRect()")             // 标题 span rect（左缘基线）
     && clientSrc.includes('Math.min(rightStart, r.left)')                       // 右簇最小 left（天然覆盖重叠控件——无 r.left > b.right 过滤）
     && !clientSrc.includes('r.left > b.right')                                  // A 方案右检过滤形态负断言（注释已回避字面）
-    && clientSrc.includes("querySelectorAll('.nv-bar-launch, .nv-bar-ctl, .nv-bar-note')")
+    && clientSrc.includes("querySelectorAll('.nv-bar-ctl, .nv-bar-note')")
     && clientSrc.includes('const M = 8')                                        // 安全边距 8px
     && clientSrc.includes('{ ref: barRef, className: \'nv-bar\' }')             // barRef 绑定 .nv-bar（A 根因①修复）
     && clientSrc.includes('ref: bannerRef') && clientSrc.includes('ref: titleTextRef')  // 测量 refs 全绑定

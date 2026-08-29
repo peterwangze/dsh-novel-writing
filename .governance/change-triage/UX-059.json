@@ -1,0 +1,171 @@
+{
+  "schema_version": 1,
+  "task_id": "UX-059",
+  "title": "创作台下半区工作流控制条（用户截图红字批注 2026-08-29）：①标题栏「▶ 开始/继续工作流」迁入中窗下半区工作台顶部（控制条）②停止/继续合并单按钮按绑定会话状态切换形态（运行中→⏹停止 / 空闲→▶开始/继续）③新增「压缩上下文」独立按钮（/compact 斜杠命令）④新增「绑定新会话」独立按钮（create→预设→绑定链，不自动打开）",
+  "priority": "P1",
+  "target_version": "0.5.0",
+  "depends_on": [],
+  "files": [
+    "lib/client.js",
+    "test/smoke.mjs",
+    "README.md",
+    "CHANGELOG.md",
+    "agent-presets/novel-writing/skills/novel-studio/SKILL.md"
+  ],
+  "reason": "用户截图红色批注直接反馈（「在这个区域加上工作流控制逻辑，把上面的连续工作流迁移过来，同时加上停止工作流（也可以和继续工作流合并成一个，在不同状态下切换形态），压缩上下文和绑定新session」）；设计经 AskUserQuestion 定案 = 独立按钮（压缩上下文/绑定新会话 各自独立），停止与继续合并单按钮；P1=用户直接点名的功能需求",
+  "created_at": "2026-08-30",
+  "tool": "change-triage",
+  "tool_version": "0.77.0",
+  "analysis": {
+    "dependency": {
+      "unblocked": [
+        "REL-002",
+        "DOC-001",
+        "SYSGAP-001",
+        "CLEAN-003",
+        "CLEAN-004",
+        "UX-054"
+      ],
+      "blocked": [],
+      "blocked_by": [],
+      "unknown_deps": [],
+      "cycles": [],
+      "cycle_warning": false,
+      "new_task_cycle": false
+    },
+    "priority_context": {
+      "proposed": "P1",
+      "in_flight": {
+        "P0": 0,
+        "P1": 0,
+        "P2": 6
+      },
+      "version_chain": []
+    },
+    "conflicts": [
+      {
+        "task_id": "UX-054",
+        "files": [
+          "lib/client.js",
+          "test/smoke.mjs"
+        ],
+        "overlap": [
+          "lib/client.js",
+          "test/smoke.mjs"
+        ]
+      }
+    ],
+    "version": {
+      "target": "0.5.0",
+      "current": "0.4.0",
+      "planned_next": null,
+      "issues": []
+    },
+    "side_effect": {
+      "detected": false,
+      "touches_real_env": false,
+      "requires_r1": false,
+      "declared": "",
+      "blast_radius": [],
+      "review_conditions": [],
+      "issues": []
+    }
+  },
+  "snapshot": {
+    "tool": "task-priority-analysis",
+    "module_version": "0.71.0",
+    "report_json": {
+      "total": 72,
+      "completed": [
+        "ONBOARD-001",
+        "DEV-001",
+        "REL-001",
+        "QUAL-001",
+        "GATE-005",
+        "UX-001",
+        "CLEAN-001",
+        "UX-002",
+        "CLEAN-002",
+        "GOV-001",
+        "GOV-002",
+        "GOV-003",
+        "UX-003",
+        "UX-004",
+        "UX-005",
+        "INST-001",
+        "BUG-001",
+        "BUG-002",
+        "UX-006",
+        "UX-007",
+        "UX-008",
+        "UX-009",
+        "UX-010",
+        "UX-011",
+        "UX-012",
+        "UX-013",
+        "UX-014",
+        "UX-015",
+        "UX-016",
+        "UX-017",
+        "UX-018",
+        "UX-019",
+        "UX-020",
+        "UX-021",
+        "UX-022",
+        "UX-023",
+        "UX-024",
+        "UX-025",
+        "UX-026",
+        "UX-027",
+        "UX-028",
+        "UX-029",
+        "UX-030",
+        "UX-031",
+        "UX-032",
+        "UX-033",
+        "UX-034",
+        "UX-035",
+        "UX-036",
+        "UX-037",
+        "UX-038",
+        "UX-039",
+        "UX-040",
+        "UX-041",
+        "UX-042",
+        "UX-044",
+        "UX-045",
+        "UX-046",
+        "UX-047",
+        "UX-048",
+        "UX-049",
+        "UX-050",
+        "UX-051",
+        "UX-052",
+        "UX-053",
+        "UX-055",
+        "UX-057"
+      ],
+      "blocked": [],
+      "unblocked": [
+        "REL-002",
+        "DOC-001",
+        "SYSGAP-001",
+        "CLEAN-003",
+        "CLEAN-004",
+        "UX-054"
+      ],
+      "recommended_next": [
+        "CLEAN-003",
+        "DOC-001",
+        "REL-002",
+        "SYSGAP-001",
+        "CLEAN-004",
+        "UX-054"
+      ],
+      "non_executable": [],
+      "cycles": [],
+      "cycle_warning": false
+    },
+    "report_text": "UX-059 入账时快照（用户批注直接触发；2026-08-30 00:19）——snapshot 字段沿用 UX-057 入账时基线，仅 task_id/日期为本条目事实。"
+  }
+}
