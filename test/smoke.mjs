@@ -18,7 +18,9 @@
  *       拖宽条恢复：.nv-chdiv + pointer 拖拽 + chapterW 持久化 120–360px）+
  *       UX-021 行去装饰圆点 + UX-022 用户术语定案（「分割条」=三条分隔线
  *       常驻可见；「拖动条」=滚动条默认隐藏；滚动隔离=章节列/左窗/正文
- *       独立滚动——高度链修复）。
+ *       独立滚动——高度链修复）+ UX-053 工作台视觉重构（Lucide 内联图标
+ *       体系 NV_ICONS/nvIcon + 焦点双环统一 + 光效收敛〔扫光删除〕+
+ *       color-mix 令牌化兜底 + 选中态类化 + 空态 24px 图标）。
  */
 import { mkdtempSync, writeFileSync, mkdirSync, readFileSync, rmSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -584,7 +586,7 @@ check('控制台源码面：UX-010④ current 联动（s.current 订阅 + ref �
 // UX-011（两级工作台）：①改名 entryLabel/creationLabel/creationTitle ②卡片 🗑 删除钮 +
 // novel-delete 对接（confirm 显式确认 fail-closed / stopPropagation / 绑定键清理 / consoleFocus 清理）
 check('客户端源码面：UX-011 删除钮（🗑 22×22 平级钮 + novel-delete POST + confirm 前置 + 绑定键清理）', (() => {
-  return clientSrc.includes("className: 'nv-cico nv-cico-del'") && clientSrc.includes("'🗑'")
+  return clientSrc.includes("className: 'nv-cico nv-cico-del'") && clientSrc.includes("nvIcon('trash2', 14)")
     && clientSrc.includes("apiJson('/novel-writing/api/novel-delete', { novel: novel.id })")
     && clientSrc.includes('delConfirm') && clientSrc.includes('window.confirm')
     && clientSrc.includes('props.onDelete(novel)') && clientSrc.includes('delete next[novel.id]')
@@ -775,12 +777,13 @@ check('客户端源码面：UX-015① 标题栏加高放大（38px 高 / 14px �
     && barMini.includes('width:24px') && barMini.includes('height:24px')
     && launch.includes('padding:5px 14px')
 })(), 'ux015 bar missing')
-check('客户端源码面：UX-019② 章节行仅「第N章 + 名称」（去字数+去装饰圆点〔UX-021〕；有名称「第N章 名称」/空名称回退「第N章」；ellipsis 沿用）', (() => {
+check('客户端源码面：UX-019② 章节行仅「第N章 + 名称」（去字数+去装饰圆点〔UX-021〕；有名称「第N章 名称」/空名称回退「第N章」；ellipsis 沿用；UX-053：✓/⚠ 标记图标化〔check/triangle-alert〕）', (() => {
   return clientSrc.includes("const cName = typeof c.name === 'string' ? c.name : ''")
-    && clientSrc.includes('`第${c.num}章${marks}`')        // 无名称回退格式（第N章 + 标记）
+    && clientSrc.includes('`第${c.num}章`')           // 无名称回退格式（第N章；标记经 marksEls 图标化）
     && clientSrc.includes("el('span', { key: 'no'")       // 有名称：第N章 span
     && !clientSrc.includes("key: 'sep'")                  // 无装饰圆点「·」（UX-021 负断言）
     && clientSrc.includes("el('span', { key: 'nm'")       // 有名称：名称 ellipsis span
+    && clientSrc.includes("'mk-pub'") && clientSrc.includes("'mk-gate'")   // UX-053 标记图标节点
     && !clientSrc.includes('${c.words}')                  // 章节行无任何字数渲染（去字数）
     && !clientSrc.includes('`· ${c.words}${marks}`')
     && !clientSrc.includes('`第${c.num}章 ${c.words}${marks}`')
@@ -820,8 +823,8 @@ check('客户端源码面：UX-030 边界线体系化（VS Code sash 语义—�
     && clientSrc.includes('.nv-chatdiv:hover,.nv-chatdiv:active{box-shadow:inset 1px 0 0 0 var(--dsw-alias-state-accent-primary,#4f8ef7)}')
     && clientSrc.match(/\.nv-split\{[^}]*border-right:none/) === null                                    // 外框右缘已恢复全高边线（旧去重方案无残留）
     && clientSrc.match(/\.nv-split\{[^}]*border:1px solid var\(--dsw-alias-border-l1,/) === null  // 无 border-l1 残留
-    && clientSrc.includes('.nv-chlist button{transition:background .12s ease}')                                          // 交互过渡统一（成熟 UI）
-    && clientSrc.includes('transition:background .12s ease,color .12s ease,border-color .12s ease')                     // 页签过渡
+    && clientSrc.includes('.nv-chlist button{transition:border-color .15s cubic-bezier(.4,0,.2,1),background-color .15s cubic-bezier(.4,0,.2,1),color .15s cubic-bezier(.4,0,.2,1),box-shadow .15s cubic-bezier(.4,0,.2,1)}')                                          // UX-053 交互过渡统一（150ms 标准曲线）
+    && clientSrc.includes('transition:border-color .15s cubic-bezier(.4,0,.2,1),background-color .15s cubic-bezier(.4,0,.2,1),color .15s cubic-bezier(.4,0,.2,1),box-shadow .15s cubic-bezier(.4,0,.2,1)}')                     // 页签过渡（UX-053 统一）
     && clientSrc.includes('.nv-tab:hover{color:var(--dsw-alias-label-primary,#e6e8eb);background:var(--dsw-alias-fill-l1,rgba(255,255,255,.05))}')
     && clientSrc.includes('.nv-bar{flex:none;position:relative;display:flex;align-items:center;gap:8px;height:38px;padding:0 14px;box-sizing:border-box;border-bottom:1px solid var(--dsw-alias-border-l2,#3a4150)')  // 标题栏底边线清晰（UX-041 居中横幅需 relative）
 })(), 'ux030 coherent boundary lines')
@@ -984,6 +987,74 @@ check('客户端源码面：UX-018 syncAnchor 重锚定修正（hero 相位接�
     && clientSrc.includes('next === this.root && header === this.header && viewArea === this.viewArea')
     && !clientSrc.includes("next.dataset.phase !== 'active'")
 })(), 'ux018 syncAnchor re-anchor missing')
+// UX-053（DEC-019 方向 B+A 点缀，用户「初步优化但简陋缺设计感，保持布局视觉重构」）：
+//  ①图标体系 = NV_ICONS 集中映射 + nvIcon 助手（24×24 stroke=2 currentColor，12/14/16 三档），
+//    头注释 ISC/Lucide 声明保留；元素级 emoji 图标全部换 Lucide 内联（i18n 字符串内 emoji 拆分渲染，
+//    字符串零改动——UX-052 教训）；②焦点双环统一（Vercel：2px bg 缓冲 + 4px accent，搜索框 45% 软焦点）；
+//  ③光效收敛（整卡辉光/扫光删除——.nv-csweep 负断言；glow = 中性边框 + 顶部 2px 状态条 color-mix 70%）；
+//  ④硬编码 rgba alpha 令牌化（color-mix + 先 rgba 兜底）；⑤字重三档（700→600）；⑥选中态类化
+//   （.nv-ft-row/.nv-chrow [data-sel]）；⑦空态 24px 淡图标；⑧弹窗双层阴影；⑨排序 pill 选中 8% 底 + 徽标 pill 999。
+check('客户端源码面：UX-053 图标体系（NV_ICONS 映射 + nvIcon 助手 + Lucide ISC 头注释 + 三档尺寸渲染 + 元素级 emoji 负断言）', (() => {
+  const names = ['bookOpen', 'search', 'link', 'trash2', 'play', 'arrowLeftRight', 'rotateCcw', 'star', 'x', 'chevronDown', 'chevronRight', 'fileText', 'check', 'circleCheck', 'refreshCw', 'circle', 'database', 'cloudUpload', 'inbox', 'triangleAlert', 'folderOpen']
+  return clientSrc.includes('const NV_ICONS = {')
+    && names.every((n) => clientSrc.includes(n + ': ['))
+    && clientSrc.includes('function nvIcon(name, size = 16)')
+    && clientSrc.includes("viewBox: '0 0 24 24'") && clientSrc.includes("strokeWidth: 2")
+    && clientSrc.includes("strokeLinecap: 'round'") && clientSrc.includes("strokeLinejoin: 'round'")
+    && clientSrc.includes("'aria-hidden': true")
+    && clientSrc.includes('Icons: Lucide (https://lucide.dev), ISC License © Lucide contributors')
+    && clientSrc.includes("nvIcon('bookOpen', 16)") && clientSrc.includes("nvIcon('search', 16)")     // 16px：控制台/卡片/搜索
+    && clientSrc.includes("nvIcon('link', 14)") && clientSrc.includes("nvIcon('trash2', 14)") && clientSrc.includes("nvIcon('play', 14)") // 14px：22px 钮/启动钮
+    && clientSrc.includes("nvIcon('arrowLeftRight', 16)") && clientSrc.includes("nvIcon('rotateCcw', 16)") && clientSrc.includes("nvIcon('star', 16)") && clientSrc.includes("nvIcon('x', 16)") // 16px：32px 控制钮
+    && clientSrc.includes("nvIcon(appSnap.consoleOpen === true ? 'chevronDown' : 'chevronRight', 12)")   // 12px：抽屉 caret（开/合三元）
+    && clientSrc.includes("nvIcon('chevronRight', 12)") && clientSrc.includes('rotate(90deg)')          // 12px：目录箭头（展开 rotate 90°）
+    && clientSrc.includes("nvIcon('fileText', 12)")                                                      // 12px：文件树/预览头
+    && clientSrc.includes("const stIcon = done ? 'circleCheck' : current ? 'refreshCw' : 'circle'") && clientSrc.includes("nvIcon(stIcon, 12)") // 工作流清单 12px
+    && clientSrc.includes("nvIcon(id === 'data' ? 'database' : id === 'publish' ? 'cloudUpload' : 'inbox', 12)") // 页签 12px（data/publish/requests 三元）
+    && clientSrc.includes("nvIcon('triangleAlert', 12)") && clientSrc.includes("nvIcon('check', 12)")      // 角标/章节标记/审计
+    && clientSrc.includes("nvIcon('folderOpen', 24)")                                                     // 空态 24px 淡图标
+    && !clientSrc.includes("'🔍'") && !clientSrc.includes("'🗑'") && !clientSrc.includes("'⇄'") && !clientSrc.includes("'⟳'") && !clientSrc.includes("'☆'")
+    && !clientSrc.includes("'✕'") && !clientSrc.includes("'▸'") && !clientSrc.includes("'▾'") && !clientSrc.includes("'📄'")
+    && !clientSrc.includes("'✅'") && !clientSrc.includes("'🔄'") && !clientSrc.includes("'⬜'")
+})(), 'ux053 icons missing')
+check('客户端源码面：UX-053 焦点双环统一（Vercel 模式：2px bg 缓冲 + 4px accent@60%；搜索框 45% 软焦点变体；树行/章节行 :focus-visible 补位；三处旧分散焦点样式无残留）', (() => {
+  const ring60 = 'box-shadow:0 0 0 2px var(--dsw-alias-bg-base,#0b0e14),0 0 0 4px rgba(79,142,247,.6);box-shadow:0 0 0 2px var(--dsw-alias-bg-base,#0b0e14),0 0 0 4px color-mix(in srgb,var(--dsw-alias-state-accent-primary,#4f8ef7) 60%,transparent)'
+  return (clientSrc.match(/box-shadow:0 0 0 2px var\(--dsw-alias-bg-base,#0b0e14\),0 0 0 4px rgba\(79,142,247,\.6\)/g) ?? []).length === 4   // 卡片/输入/树行/章节行（含 rgba 兜底段）
+    && clientSrc.includes('.nv-csearch:focus-within{border-color:var(--dsw-alias-state-accent-primary,#4f8ef7);box-shadow:0 0 0 2px var(--dsw-alias-bg-base,#0b0e14),0 0 0 4px rgba(79,142,247,.45)')  // 搜索框 45% 软焦点
+    && clientSrc.includes('.nv-cinput:focus{border-color:var(--dsw-alias-state-accent-primary,#4f8ef7);' + ring60)
+    && clientSrc.includes('.nv-ccard[data-focus=true]{border-color:var(--dsw-alias-state-accent-primary,#4f8ef7);' + ring60)
+    && clientSrc.includes('.nv-ft-row:focus-visible{outline:none;' + ring60)
+    && clientSrc.includes('.nv-chrow:focus-visible{outline:none;' + ring60)
+    && !clientSrc.includes('.nv-csearch:focus-within{border-color:var(--dsw-alias-state-accent-primary,#4f8ef7);box-shadow:0 0 0 3px')   // 旧搜索 3px 光圈无残留（nv-dot 25% 光晕同为 3px 环——用完整规则前缀区分）
+    && !clientSrc.includes('0 0 16px rgba(79,142,247,.25)')    // 旧卡片 16px 光晕无残留
+})(), 'ux053 focus ring missing')
+check('客户端源码面：UX-053 光效收敛（.nv-csweep 扫光清除负断言 / glow = 中性边框+顶部 2px 状态条 color-mix 70% / 卡片渐变峰值 .05+阴影 0 1px 3px / nv-dot 微光收敛）', (() => {
+  return !clientSrc.includes('.nv-csweep') && !clientSrc.includes('nv-sweep') && !clientSrc.includes('nv-csweep')
+    && clientSrc.includes(".nv-ccard[data-glow=need]{border-color:var(--dsw-alias-border-l2,#3a4150);box-shadow:inset 0 2px 0 0 rgba(210,153,34,.7);box-shadow:inset 0 2px 0 0 color-mix(in srgb,var(--dsw-alias-state-warning,#d29922) 70%,transparent)}")
+    && clientSrc.includes(".nv-ccard[data-glow=done]{border-color:var(--dsw-alias-border-l2,#3a4150);box-shadow:inset 0 2px 0 0 rgba(63,185,80,.7);box-shadow:inset 0 2px 0 0 color-mix(in srgb,var(--dsw-alias-state-success,#3fb950) 70%,transparent)}")
+    && clientSrc.includes(".nv-ccard[data-glow=busy]{border-color:var(--dsw-alias-border-l2,#3a4150);box-shadow:inset 0 2px 0 0 rgba(79,142,247,.7);box-shadow:inset 0 2px 0 0 color-mix(in srgb,var(--dsw-alias-state-accent-primary,#4f8ef7) 70%,transparent)}")
+    && clientSrc.includes('linear-gradient(135deg,rgba(255,255,255,.05),rgba(255,255,255,.02) 55%,rgba(0,0,0,.03))')  // 渐变峰值 .07→.05
+    && !clientSrc.includes('rgba(255,255,255,.07),rgba(255,255,255,.02) 45%')   // 旧峰值/45% stop 无残留
+    && clientSrc.includes('box-shadow:0 1px 3px rgba(0,0,0,.15)')              // 阴影收紧
+    && !clientSrc.includes('0 0 22px rgba(210,153,34') && !clientSrc.includes('0 0 24px rgba(79,142,247')  // 大辉光无残留
+})(), 'ux053 glow converge missing')
+check('客户端源码面：UX-053 令牌化与其它（color-mix + rgba 兜底双声明 / 字重三档 700→600 / 选中态类化 .nv-ft-row[data-sel]/.nv-chrow[data-sel] / 空态 flex 图标 / 弹窗双层阴影 / 排序 pill 8% 底 + 徽标 pill 999）', (() => {
+  const cm = 'color-mix(in srgb,var(--dsw-alias-state-accent-primary,#4f8ef7)'
+  return clientSrc.includes('background:rgba(79,142,247,.12);background:' + cm + ' 12%,transparent)')   // nv-cbtn-ws（双声明）
+    && clientSrc.includes('background:rgba(79,142,247,.2);background:' + cm + ' 20%,transparent)')      // nv-cbtn-ws hover 22→20%
+    && clientSrc.includes('background:rgba(79,142,247,.08);background:' + cm + ' 8%,transparent)')      // cplus hover / csortbtn 选中（8% 底）
+    && clientSrc.includes('.nv-ccard-badge{') && clientSrc.includes('border-radius:999px') && clientSrc.includes('font-weight:500') && clientSrc.includes('letter-spacing:.02em')  // 徽标 pill 化
+    && clientSrc.includes('.nv-ft-row{background:transparent;transition:') && clientSrc.includes('.nv-ft-row[data-sel=true]{background:rgba(79,142,247,.12);background:' + cm + ' 12%,transparent)}')
+    && clientSrc.includes('.nv-chrow[data-sel=true]{background:rgba(79,142,247,.1);background:' + cm + ' 10%,transparent);box-shadow:inset 2px 0 0 0 var(--dsw-alias-state-accent-primary,#4f8ef7)}')
+    && !clientSrc.includes("TK.line, background: 'transparent',\n")   // F1 回归防护：章节行内联 background 已删（内联特异性压过 [data-sel] 选中态；带换行特征避开 btn 常量同行串）
+    && !clientSrc.includes("border: 'none', background: 'transparent'")   // F1 回归防护：文件树行内联 background 已删
+    && clientSrc.includes('fontWeight: 600') && !clientSrc.includes('fontWeight: 700')                  // 字重三档（无 700 残留）
+    && clientSrc.includes('.nv-empty{display:flex;flex-direction:column;align-items:center;gap:6px;')
+    && clientSrc.includes('box-shadow:var(--dsw-shadow-lv2,0 8px 24px rgba(0,0,0,.4)),0 0 0 1px rgba(0,0,0,.25)')  // 弹窗双层阴影
+    && clientSrc.includes('.nv-modal{') && clientSrc.includes('box-shadow:var(--dsw-shadow-lv2,0 8px 24px rgba(0,0,0,.4)),0 0 0 1px rgba(0,0,0,.25)')
+    && clientSrc.includes('color-mix(in srgb,var(--dsw-alias-state-warning,#d29922) 25%,transparent)')  // nv-dot 微光 token 化
+    && clientSrc.includes('.nv-ft-glyph{') && clientSrc.includes('rotate(90deg)')                        // 目录箭头 rotate 过渡
+})(), 'ux053 tokens missing')
 let renderErr = ''
 check('各注册面 render 可调用（组件体可求值；关闭态浮层输出 null 合法）', (() => {
   for (const r of slotRegs) {

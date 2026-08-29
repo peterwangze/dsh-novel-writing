@@ -1,95 +1,65 @@
-# 会话快照 — 2026-08-28（UX-019~022 收尾轮：书名校准 + 拖宽条还原 + 术语定案 + 滚动隔离）
+# 会话快照 — 2026-08-29（UX-053 视觉设计重构轮：调研→实现→R1R2 审查闭环）
 
-- **session_id**: 20260828-ux019-020
-- **session_date**: 2026-08-28
-- **agent**: DeepSeek Harness Coordinator (software-project-governance v0.75.0)
-- **工作流版本**: 0.75.0（plan-tracker 声明值；本机钩子已自升级至 0.78.0——其新增检查已甄别：可修项已修，其余属 DEC-007/RISK-002 记录的跨根误报家族）
+- **session_id**: 20260829-ux053-visual
+- **session_date**: 2026-08-29
+- **agent**: DeepSeek Harness Coordinator (software-project-governance)
+- **工作流版本**: 0.78.0（SKILL frontmatter；plan-tracker 记录 0.75.0 待版本升级流程同步）
 
 ## 当前状态
 - **current_stage**: 6/11 development（开发实现）
 - **current_gate**: G5 (passed-with-conditions，条件项 DOC-001 跟踪)
 - **trigger_mode**: always-on / **permission_mode**: maximum-autonomy
-- **项目总览**: 45 任务 / 40 已完成 / 0 阻塞 / 关键风险 2（RISK-002、RISK-003）
-- **版本**: v0.3.0（发布卫生线，进行中）+ v0.4.0（工作台重构线，进行中——UX-011~022 代码完成；UX-018 用户实机确认修复生效；UX-019/020/021/022 本轮交付待实机复验）
+- **项目总览**: 63 任务 / 59 已完成 / 0 阻塞 / 关键风险 2（RISK-002、RISK-003）
+- **版本**: v0.3.0（发布卫生线，进行中）+ v0.4.0（工作台重构线，进行中——UX-053 视觉重构代码+审查闭环完成，待用户实机目检 V7）
 
 ## 本轮完成（增量）
-- **UX-019 收尾三改 + UX-020 用户修正**（EVD-035）：
-  - ① v4 诊断徽标净除（CLIENT_TAG/.nv-tag 双挂载点/样式全撤；smoke 负断言）
-  - ② 章节行仅「第N章 · 名称」（去字数；空名称回退第N章+标记；ellipsis 沿用）
-  - ③ 章节栏直排滚动（.nv-chlist overflow:auto —— UX-015③ 原有即满足）
-  - **UX-020（用户两问「章节标题栏单独拖动」「宽度调整边框怎么删了」）**：上轮误删 .nv-chdiv，首版恢复又误做再设计（6px+1px 线）→ 用户反馈「误删了，还乱修改」→ **统一还原 UX-015③ 原始样式**（4px 实底 border-l2 + radius 2px + hover accent；常量/ref/注释全部回退）；git diff HEAD 逐字节核对：lib/client.js 与 HEAD 差异仅剩 UX-019 两合法变更
-  - **章节名校准**：novel-001 ch-004/005/018 首行带 BOM + ch-018 冒号变体 → chapterNameOf 剥 BOM + 前缀正则扩（章/回/全角冒号/全角空格；无标题/不匹配→''，禁回退正文行）
-  - 验证：node --check ×3 通过；validate-preset 29/29；smoke **129/129**（128→129）；real novel-001 38 章直测 004→质检员 7 号 / 005→考勤，还是判决 / 010→第七号放映厅 / 018→老福宾馆，空名=0，只读零写；清理临时文件 .tmp-check-name.mjs / .tmp-ux015-client.patch
-- **UX-021 创作台双批注（EVD-036）**：①章节行去「·」装饰圆点（行=「第N章 名称」）；②三条可拖分隔线（vdiv/chdiv/chatdiv）默认透明、悬停显 border-l2、拖动 :active accent；③章节列拖宽单独生效；④**章节名异常根因取证**：novel-001 38 章只读核对=13 章 BOM（001-012/018）+24 章冒号变体（014+）→ 旧宿主模拟=12 空名+24「：」前缀，与截图逐行吻合——修复在 ba38681 宿主代码（剥 BOM+变体正则），**重启 DSH 生效**；smoke 130/130
-- **UX-022 术语定案 + 滚动隔离（EVD-037）**：用户红框两张定案——「分割条」（三条可拖分隔线）=拖了改布局→**常驻可见**（撤 UX-021 ② 误透明化）；「拖动条」（滚动条）=拖了滚内容→**默认隐藏**（webkit track/thumb 透明 + 容器 hover/thumb hover 显）；**滚动隔离**：探针取证 .nv-chlist 高 1587px（章节页签包装层 display:block 破坏高度链）→ 外层页签容器整体滚动带正文（滑章节名→正文上滑）；修复=包装层 height:100%+overflow:hidden + 正文列/左窗/页签外层独立 overflow:auto（.nv-scroll）+ overscroll-behavior:contain；CDP 真实滚轮实测：列表 st 0→618、正文 0 不变；smoke 131/131；**用户约束入册：全部改动限插件自身元素，零宿主选择器依赖/零宿主源码改动**
-- **UX-023 补充（EVD-038）**：正文阅读区 `renderContent` 容器（maxHeight 560 + overflow auto）与编辑 textarea 纳入 `.nv-scroll`——共 5 个滚动容器全部默认隐藏+悬停显示（用户实测「两个滚动条只有一个能隐藏/滚动时不自动出现」的根因）；smoke 断言修正（`.className:` 多圆点假失败→逐段插桩定位）；**UX-024 待用户实机复验**（三分割线常驻/滑章节名不带正文/滚动条滚动中显现、停止后自动隐藏）
-- **UX-024（EVD-039/040）**：滚动条行为定案——撤悬停常驻规则，改滚动事件驱动 `.nv-scl`（scroll 捕获监听 + **1.5s** 空闲撤除〔用户调长〕）；CDP 实测四态（前隐藏/中显现/停后隐藏/再滚再显）；smoke 131/131；零宿主依赖
-- **UX-025（EVD-041）**：界面优化——三分隔线 4px 实底→1px 细线（4px 抓握区保留/hover accent）+ 章节列浅底侧栏感 + 章节行/页签 hover 过渡统一（参照 VS Code/Linear 成熟惯例；控制台保持既有成熟形态）；computed 实测+目检通过；smoke 131/131
-- **UX-026（EVD-042）**：区域分割线提清晰——标题栏底边/左窗右缘/外框 border-l1→border-l2（用户红框指认「你能看清吗」——上轮"其他分割线不明显"遗漏认领）；与 1px 细拖线同层级；smoke 131/131
-- **UX-027（EVD-043）**：聊天边界两根线去重——UX-026 提亮外框后与拖线相距 2px 成双线；外框 border-right:none（聊天边界唯一线=1px 拖线）；smoke 131/131
-- **UX-028（EVD-044，P-08 检视）**：调研 VS Code sash.css + 参考项目 → 现有 4px 抓握区+1px 线+hover accent 即确立规范；修正：树窗右缘线移除（vdiv 拖线承担，一处边界一条线）；分割条 border-l2 = user-driven 偏差（参考 l1 但用户屏不可见）；smoke 131/131
-- **UX-029（EVD-045）**：连接处直角化——外框 border-radius:0（共享边线单容器直角惯例）+ chatdiv 定位 -3（右缘对齐/顶部直角相接）；computed+目检通过；smoke 131/131
-- **UX-030（EVD-046）**：边界线体系化（VS Code sash 语义）——拖区纯透明命中区（无边框）+ 可见线=面板/列自身边缘线（0 偏移 T 型相接）；4x 放大目检无台阶；smoke 131/131；**教训入册：P-08 必须先调研后动手，禁止"头痛医头"式补丁**
-- **UX-031（EVD-047）**：滚动条悬停即显取消——删除 `::-webkit-scrollbar-thumb:hover`（仅 .nv-scl 滚动驱动显示 + :active 拖动高亮；悬停完全不显，边界拖区可正常抓取）；smoke 131/131
-- **UX-032（EVD-048）**：分割线命中区与可见线齐平——章节面板行去 gap:12px（命中区与列右缘齐平，抓线即拖）+ 内容列 paddingLeft 12px；探针 flush+命中实测；smoke 131/131
-- **UX-033（EVD-049）**：拖线选中高亮——三拖区 :hover/:active box-shadow 1px accent（VS Code sash hoverBorder 范本）；默认干净无抖动；smoke 131/131
-- **UX-034（EVD-050）**：文件显示复用章节界面——fileSel 提升受控，文件在中窗内容列（同一 nv-scroll 阅读区、整列滚动无截断、✕ 返回）；左窗仅树选择；探针实测+smoke 132/132
-- **UX-035（EVD-051）**：文件视图点章节跳转——select/startEdit 退出文件视图；smoke 132/132
-- **UX-036（EVD-052）**：工作流状态迁左窗——左窗纵向分栏（树 flex:1 + 工作流状态 46% 滚动+顶边线）；中窗去「工作流」页签；smoke 133/133
-- **UX-037（EVD-053）**：左窗工作流面板修正——删阶段信息卡（阶段逻辑由清单图标承载）+恢复门禁/清单卡+下段内容自适应（auto+max 55%）；smoke 133/133
-- **UX-038（EVD-054）**：左窗占比调整——工作流 60%/文件树 40%（用户要求工作流占比大）；smoke 133/133
-- **UX-039（EVD-055）**：工作流面板内容流式化——清单卡去内部滚动（19 项全展开）+容器随内容自适应（auto+78%）；smoke 133/133
-- **UX-040（EVD-056）**：阶段徽标+统计迁移——标题栏去 badge/状态点，WorkflowPanel 新增阶段+统计卡（本地化阶段名+○+书名+章·字数）；smoke 133/133
-- **UX-041（EVD-057）**：标题栏居中「阶段+统计」横幅（用户箭头指定：标题栏内居中——阶段：质量审查 ○ 38章·89232字；NOVEL_STAGES 共用；左窗面板不重复）；smoke 133/133
-- **UX-042（EVD-058）**：中窗下半区数据/发布/请求工作台（红框区成台；页签迁入；上部章节工作台常驻）；smoke 133/133
-- **UX-044（EVD-059）**：底部工作台高度 46%→30%（全宽；「太高」修正——UX-043 章节列全高已回退）；smoke 133/133
-- **UX-045/046（EVD-060/061）**：分隔线两端相接——列 padding 归零（右端接面板边）+ vdiv 悬浮命中区（左端接左窗边线）；探针 flush 实测；smoke 133/133
-- **UX-047（EVD-062）**：中窗上下工作台分隔线可拖（nv-middiv 水平 4px + 高度 120–60% 拖调 + midH 持久化）；smoke 133/133
-- **UX-048（EVD-064）**：当前布局固化为默认——☆ 按钮写默认槽（defaults.v1）+无存档回退+open 回读 midH 修复；smoke 133/133
-- **UX-049（EVD-065）**：恢复默认布局——⟳ 按钮 resetSplit（清存档→默认槽/内置）；smoke 133/133
-- **UX-050（EVD-066）**：数据页字体/布局协调——12px 基准/表头加粗/表单标签上置满宽/页脚 note；smoke 133/133
-- **UX-051（EVD-067）**：数据页紧凑化——录入单行+信号一行+表瘦身+脚注一行（去大标题/三卡堆叠，高度减半）；smoke 133/133
-- **UX-052（EVD-068）**：数据页越界修正——文案全部恢复原文（只保留布局紧凑：表单单行/边距收紧）；smoke 133/133
-- **git 状态**：HEAD=524ae72（UX-021，已推送 origin/main）；本轮 UX-022 待提交推送
+- **UX-053 工作台视觉设计重构（EVD-069）**：
+  - **决策**：DEC-019（范围=管理台+创作台统一/素材=内联开源 SVG 图标/版本=v0.4.0）+ DEC-020（方向=B+A 点缀/图标=Lucide ISC 接受/光效=收敛）——六项全经 ask_user_question 用户确认
+  - **调研**：Analyst 子代理产出 docs/research/UX-053-visual-design-research.md（5 开源参考系/42 图标实抓/反面证据 3 条/8 原则+3 方向）；关键修正：Lucide=ISC 非 MIT（Feather=MIT）；V1 克隆路径已由 Coordinator 补记（%TEMP%\dsh-worktable-research，Analyst 搜错盘）
+  - **实现**：Developer 子代理——NV_ICONS 21 图标+nvIcon 助手/焦点双环/光效收敛（扫光全删+顶部 2px 状态条）/color-mix 令牌化双声明/选中态类化（.nv-ft-row/.nv-chrow）/空态图标化/弹窗双层阴影；i18n 字符串零改动（前缀 emoji 拆分渲染）
+  - **审查**：Code Reviewer R1 NEEDS_CHANGE（P0=2：F1 选中态行内覆盖失效+F2 hover 无兜底）→返工→R2 APPROVED_WITH_NOTES unresolved_blockers=0；review-record 机器持久化 REVIEW-UX-053-R1/R2
+  - **验证**：smoke 133→137（+4）/node --check/validate-preset 29/29——Coordinator 独立复跑一致；布局几何红线 Reviewer 逐项核对零变化
+  - **遗留**：UX-054 已入账（P2，F3~F12+G1 备注收敛，TRIAGE-UX-054）
+- **治理卫生**：修复 plan-tracker 真实结构缺陷（UX-049~053 任务行错挂项目总览表 8 列下致解析异常——移回优先级一览 7 列表）；UX-004 取代态 ✅ 前缀修复（执行包误解析消除）；execution-packets.json 建立（UX-053 包含完整产品成功契约/验收契约/质量预算/垂直切片，闭环时填真实 PASS）；agent-locks 全程锁纪律（获取→更新→释放）
+- **git 状态**：本轮 UX-053 全部变更待提交推送（commit message 引用 UX-053）
 
 ## 遗留任务
 | 任务 ID | 描述 | 完成百分比 | 阻塞原因 | 优先级 |
 |---------|-------------|-----------|------------|----------|
-| CLEAN-004 | 实机浏览器验证清单（UX-006~020 收尾轮）：控制台全链路 + 分栏（分隔线拖拽/宽度记忆/⇄/Esc/脏稿守卫）+ 章节列拖宽条恢复外观 + 章节名实际显示（**需重启 DSH 后 004/005/018 正确显示**——BOM/冒号变体为宿主代码）+ 降级 + 与 dsh-worktable 互斥 | 0% | 需 GUI 重启 | P2 |
-| CLEAN-003 | createdId 与 workspaceId 成对存储（评审备注；WorkspaceDialog 仍复用，适用性保持） | 0% | — | P2 |
-| DOC-001 | G5 条件关闭：设计文档补强（非功能对应表 + 接口契约 + Roadmap 同步——含 UX-006~020 入口演进） | 0% | — | P2 |
-| REL-002 | 发布一致性自检（tag↔CHANGELOG↔路线图，含 v0.3.0/v0.4.0 未发布段） | 0% | — | P2 |
-| SYSGAP-001 | 向插件上游报告 check-governance 跨根误报（RISK-002） | 0% | — | P2 |
-| BUG-003（候选） | CI 恒等 mock 无 schema 校验（latestAiPath enum 回归仅本机真包拦截）；未正式入账 | 0% | — | P3 候选 |
-| BUG-004（候选） | install.ps1 无显式 exit 0 + 步骤4文案恒报已同步；未正式入账 | 0% | — | P3 候选 |
+| UX-053-V7 | 用户实机目检：强刷浏览器（junction per-request no-cache 即时生效）→ 检查两台图标渲染/焦点双环/顶部状态条/选中态 accent 底/空态图标/整体设计感；异常则回 UX-054 或修复轮 | 90% | 需用户操作 | P1 |
+| UX-054 | 视觉重构遗留项批次（F3 React key/F4 图标间隙/F5 ✓✗ 标记/F7 «»/F8 ＋磁贴字重/F9 caret/F10 bell 角标/F11 cinput 13px/F12 bar-note 前缀/G1 chrow 焦点环覆盖）——用户目检后按需裁剪 | 0% | — | P2 |
+| CLEAN-004 | 实机浏览器验证清单（UX-006~020 收尾轮）：控制台全链路+分栏+章节名显示（需重启 DSH 后 BOM/冒号修复生效）+降级+互斥；**并入 UX-053 视觉面目检** | 0% | 需 GUI 重启/用户操作 | P2 |
+| CLEAN-003 | createdId 与 workspaceId 成对存储（评审备注） | 0% | — | P2 |
+| DOC-001 | G5 条件关闭：设计文档补强（含 UX-006~053 入口/视觉演进） | 0% | — | P2 |
+| REL-002 | 发布一致性自检（tag↔CHANGELOG↔路线图） | 0% | — | P2 |
+| SYSGAP-001 | 向插件上游报告 check-governance 跨根误报（RISK-002；本会话新增证据：EVD-028 目标对齐/用户影响字段实存但 Check16/17 报缺失） | 0% | — | P2 |
+| REVIEW-DEBT | UX-036~052 批次 PENDING-CODEREVIEW 收尾轮（历史批量微调的审查债务） | 0% | — | P2 候选 |
 
 ## 待确认决策
 | 决策 ID | 标题 | 上下文 | 截止日期 |
 |---------|-------|---------|----------|
-| — | ✅ 卡片「▶ 打开」=切会话+自动进分栏（已确认 2026-08-28） | DEC-015⑤ 实现与用户确认一致，无需改动 | 已确认 |
-| — | v0.4.0 发布时点 | 待 CLEAN-004 实机验证后定 | — |
+| — | UX-053 视觉验收（V7） | 用户强刷后目检两台视觉；不满意→UX-054 裁剪或返工 | 待用户 |
 
 ## 活跃风险
 | 风险 ID | 描述 | 升级截止日期 | 负责人 |
 |---------|-------------|---------------------|-------|
-| RISK-002 | check-governance 跨根误报（Check 28c/18c/18d，root_divergence 兼容性） | 未定（SYSGAP-001 上游反馈） | Coordinator |
-| RISK-003 | UX-006 挤法布局依赖宿主 DOM 约定（[data-phase]/children[1]/margin），DSH web 升级可能失效；已实现降级（不动布局+提示+抽屉仍可切会话） | CLEAN-004 实机验证后复核 | Coordinator |
+| RISK-002 | check-governance 跨根误报（Check 28c/18c/18d/16/17——本会话实证 EVD-028 字段实存仍报缺失） | 未定（SYSGAP-001） | Coordinator |
+| RISK-003 | UX-006 挤法布局依赖宿主 DOM 约定，DSH web 升级可能失效；已有降级 | CLEAN-004 复核 | Coordinator |
 
 ## 下次会话优先级
-1. **用户重启 DSH 后实机复验**（CLEAN-004——章节名 004/005/018 应显示「质检员 7 号/考勤，还是判决/老福宾馆」，拖宽条 4px 原样 + 拖拽持久化；异常则修复）
-2. DOC-001：G5 条件关闭（含 DESIGN Roadmap 同步 UX-006~020 演进）
-3. REL-002：发布一致性自检（v0.3.0 按原范围收尾发布；v0.4.0 待实机验证后发布）
-4. SYSGAP-001：向插件上游反馈 RISK-002
+1. **用户强刷浏览器目检 UX-053 视觉**（V7——两台设计语言/图标/焦点/选中态/状态条）；异常→修复或 UX-054
+2. UX-054 遗留项批次（按目检结果裁剪范围）
+3. CLEAN-004 实机验证清单（合并视觉面）
+4. DOC-001 / REL-002 / SYSGAP-001
 
 ## 用户偏好设置
 - profile: standard / trigger_mode: always-on / permission_mode: maximum-autonomy
-- 产品立场：插件 UI 居于外围（不喧宾夺主）；预设作为附属组件零感知；原则已入册为强制底线
-- 设计口径：工作台走侧栏分栏模式（挤法），素材只用宿主设计令牌/emoji/CSS，不引入外部素材与图标库；**用户对「恢复原样」零容忍再设计——恢复请求=逐字节还原，不做创意性改动**；**兼容性红线（用户 2026-08-28 明示）：所有修改不得修改 DSH 源码，只能作为独立插件逻辑——不影响宿主、不被宿主升级导致兼容性问题（禁宿主选择器依赖）**
+- 产品立场：插件 UI 居于外围；素材口径已由 DEC-019 放宽（允许内联开源 SVG 图标——Lucide ISC）；**兼容性红线不变：零宿主源码改动/零宿主选择器依赖**
+- 设计口径：UX-053 起两台统一设计语言（DEC-020：B+A 点缀）；「恢复原样」零容忍再设计原则不变；文案内容零改动红线（UX-052 教训）
 
 ## 环境备注
 - git 命令需 `-c safe.directory=D:/AI/agent/deepseek/harness/writing-workflow`
-- **本机 `pwsh` 实为 Windows PowerShell 5.1.26100（无 pwsh 7）**——读 UTF-8 文件用 read 工具（PS 5.1 Get-Content 无 -Encoding UTF8 时乱码）
-- 本项目与 DSH 为 junction 安装连接（INST-001，EVD-017）：**lib/client.js 改动刷新即生效（per-request no-cache）；lib/index.js 宿主改动需重启 DSH 生效**
-- 调研克隆在 %TEMP%\dsh-worktable-research（本会话有效；重启后如需可重新克隆）
-- 参考项目共存：dsh-worktable 与本插件经 dsh:split-claim 互斥协议兼容（同一时刻仅一个分栏工作区）
-- 远端推送：origin/main=524ae72（UX-021）；本轮 UX-022 提交后需推送
+- 本机 pwsh 实为 Windows PowerShell 5.1（无 pwsh 7）——读 UTF-8 用 read 工具；ConvertTo-Json 无 -AsHashtable
+- junction 安装：**lib/client.js 改动强刷浏览器即生效**；lib/index.js 需重启 DSH
+- 调研克隆 %TEMP%\dsh-worktable-research 仍在（重启后可能被清理）
+- DSH web 存活于 http://127.0.0.1:3080（本会话实测 HTTP 200）
