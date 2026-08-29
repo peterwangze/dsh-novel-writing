@@ -9,7 +9,7 @@
 - **current_stage**: 6/11 development（开发实现）
 - **current_gate**: G5 (passed-with-conditions，条件项 DOC-001 跟踪)
 - **trigger_mode**: always-on / **permission_mode**: maximum-autonomy
-- **项目总览**: 44 任务 / 39 已完成 / 0 阻塞 / 关键风险 2（RISK-002、RISK-003）
+- **项目总览**: 45 任务 / 40 已完成 / 0 阻塞 / 关键风险 2（RISK-002、RISK-003）
 - **版本**: v0.3.0（发布卫生线，进行中）+ v0.4.0（工作台重构线，进行中——UX-011~022 代码完成；UX-018 用户实机确认修复生效；UX-019/020/021/022 本轮交付待实机复验）
 
 ## 本轮完成（增量）
@@ -32,6 +32,7 @@
 - **UX-030（EVD-046）**：边界线体系化（VS Code sash 语义）——拖区纯透明命中区（无边框）+ 可见线=面板/列自身边缘线（0 偏移 T 型相接）；4x 放大目检无台阶；smoke 131/131；**教训入册：P-08 必须先调研后动手，禁止"头痛医头"式补丁**
 - **UX-031（EVD-047）**：滚动条悬停即显取消——删除 `::-webkit-scrollbar-thumb:hover`（仅 .nv-scl 滚动驱动显示 + :active 拖动高亮；悬停完全不显，边界拖区可正常抓取）；smoke 131/131
 - **UX-032（EVD-048）**：分割线命中区与可见线齐平——章节面板行去 gap:12px（命中区与列右缘齐平，抓线即拖）+ 内容列 paddingLeft 12px；探针 flush+命中实测；smoke 131/131
+- **UX-033（EVD-049）**：拖线选中高亮——三拖区 :hover/:active box-shadow 1px accent（VS Code sash hoverBorder 范本）；默认干净无抖动；smoke 131/131
 - **git 状态**：HEAD=524ae72（UX-021，已推送 origin/main）；本轮 UX-022 待提交推送
 
 ## 遗留任务

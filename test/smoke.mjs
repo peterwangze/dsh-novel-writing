@@ -815,6 +815,9 @@ check('客户端源码面：UX-030 边界线体系化（VS Code sash 语义—�
     && clientSrc.includes('.nv-split{position:fixed;display:flex;flex-direction:column;box-sizing:border-box;border:1px solid var(--dsw-alias-border-l2,#3a4150);border-radius:0;')  // 外框全边线（直角）
     && clientSrc.includes("(snap.chatSide === 'left' ? g.left : x + contentW) - 2) + 'px'")                            // 聊天命中区居中于右缘
     && !clientSrc.includes('.nv-vdiv:hover{border') && !clientSrc.includes('.nv-chdiv:hover{border') && !clientSrc.includes('.nv-chatdiv:hover{border')  // 无 hover 线残留
+    && clientSrc.includes('.nv-vdiv:hover,.nv-vdiv:active{box-shadow:inset 1px 0 0 0 var(--dsw-alias-state-accent-primary,#4f8ef7)}')   // UX-033 选中高亮
+    && clientSrc.includes('.nv-chdiv:hover,.nv-chdiv:active{box-shadow:inset 1px 0 0 0 var(--dsw-alias-state-accent-primary,#4f8ef7)}')
+    && clientSrc.includes('.nv-chatdiv:hover,.nv-chatdiv:active{box-shadow:inset 1px 0 0 0 var(--dsw-alias-state-accent-primary,#4f8ef7)}')
     && clientSrc.match(/\.nv-split\{[^}]*border-right:none/) === null                                    // 外框右缘已恢复全高边线（旧去重方案无残留）
     && clientSrc.match(/\.nv-split\{[^}]*border:1px solid var\(--dsw-alias-border-l1,/) === null  // 无 border-l1 残留
     && clientSrc.includes('.nv-chlist button{transition:background .12s ease}')                                          // 交互过渡统一（成熟 UI）
