@@ -9,7 +9,7 @@
 - **current_stage**: 6/11 development（开发实现）
 - **current_gate**: G5 (passed-with-conditions，条件项 DOC-001 跟踪)
 - **trigger_mode**: always-on / **permission_mode**: maximum-autonomy
-- **项目总览**: 40 任务 / 35 已完成 / 0 阻塞 / 关键风险 2（RISK-002、RISK-003）
+- **项目总览**: 41 任务 / 36 已完成 / 0 阻塞 / 关键风险 2（RISK-002、RISK-003）
 - **版本**: v0.3.0（发布卫生线，进行中）+ v0.4.0（工作台重构线，进行中——UX-011~022 代码完成；UX-018 用户实机确认修复生效；UX-019/020/021/022 本轮交付待实机复验）
 
 ## 本轮完成（增量）
@@ -28,6 +28,7 @@
 - **UX-026（EVD-042）**：区域分割线提清晰——标题栏底边/左窗右缘/外框 border-l1→border-l2（用户红框指认「你能看清吗」——上轮"其他分割线不明显"遗漏认领）；与 1px 细拖线同层级；smoke 131/131
 - **UX-027（EVD-043）**：聊天边界两根线去重——UX-026 提亮外框后与拖线相距 2px 成双线；外框 border-right:none（聊天边界唯一线=1px 拖线）；smoke 131/131
 - **UX-028（EVD-044，P-08 检视）**：调研 VS Code sash.css + 参考项目 → 现有 4px 抓握区+1px 线+hover accent 即确立规范；修正：树窗右缘线移除（vdiv 拖线承担，一处边界一条线）；分割条 border-l2 = user-driven 偏差（参考 l1 但用户屏不可见）；smoke 131/131
+- **UX-029（EVD-045）**：连接处直角化——外框 border-radius:0（共享边线单容器直角惯例）+ chatdiv 定位 -3（右缘对齐/顶部直角相接）；computed+目检通过；smoke 131/131
 - **git 状态**：HEAD=524ae72（UX-021，已推送 origin/main）；本轮 UX-022 待提交推送
 
 ## 遗留任务
