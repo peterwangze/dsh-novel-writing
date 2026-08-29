@@ -842,6 +842,8 @@ check('客户端源码面：UX-022 两个「拖动条」（滚动条）默认隐
     && clientSrc.includes('value: draft') && clientSrc.includes('onKeyDown: (e) =>')           // 编辑 textarea 同链（类在五项计数内）
     && clientSrc.includes("{ display: tab === 'chapters' ? 'block' : 'none', height: '100%', overflow: 'hidden' }")  // 高度链修复
     && clientSrc.includes("className: 'nv-scroll', style: { flex: 1, minWidth: 0, overflow: 'auto' }")
+    && clientSrc.includes('{ style: { display: \'flex\', height: \'100%\' } }')                                        // 命中区紧贴列边缘（UX-032 去 gap）
+    && clientSrc.includes("className: 'nv-scroll', style: { flex: 1, minWidth: 0, overflow: 'auto', paddingLeft: '12px' } }")  // 内容列 paddingLeft 保留间距（UX-032）
 })(), 'ux022 scrollbars hidden + scroll isolated + ux024 auto reveal')
 check('客户端源码面：UX-015④ 抽屉小一档（13/12px + 6·8px + 4px 间隙 + 8px 点 + 空态随动；控制台卡片不动）', (() => {
   const css = (cls) => {
