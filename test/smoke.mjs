@@ -16,7 +16,9 @@
  *       章节行仅号+名去字数 / 列表 overflow:auto）+ UX-020 用户修正
  *       （章节名校准：中文数字/冒号/BOM 容错/无标题负回退；客户端章节列
  *       拖宽条恢复：.nv-chdiv + pointer 拖拽 + chapterW 持久化 120–360px）+
- *       UX-021 用户批注（行去装饰圆点 / 三条可拖分隔线默认透明·悬停定位·拖动 accent）。
+ *       UX-021 行去装饰圆点 + UX-022 用户术语定案（「分割条」=三条分隔线
+ *       常驻可见；「拖动条」=滚动条默认隐藏；滚动隔离=章节列/左窗/正文
+ *       独立滚动——高度链修复）。
  */
 import { mkdtempSync, writeFileSync, mkdirSync, readFileSync, rmSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -798,27 +800,36 @@ check('客户端源码面：UX-020 章节列拖宽条（.nv-chdiv 元素+pointer
     && clientSrc.includes('clampNum(saved.chapterW, CHAPTER_W_MIN, CHAPTER_W_MAX)')
     && clientSrc.includes("width: chapterW + 'px'")                                     // 列宽随章列状态
     && clientSrc.includes('title: t(\'resizeChlist\')') && clientSrc.includes('resizeChlist:')
-    && clientSrc.includes('.nv-chlist{flex:none;min-height:0;overflow:auto}')           // 滚动（UX-015③ 原样）
-    && clientSrc.includes('.nv-chdiv{flex:none;width:4px;align-self:stretch;cursor:col-resize;background:transparent;border-radius:2px;touch-action:none}')  // 4px 几何保持；默认透明（UX-021）
-    && clientSrc.includes('.nv-chdiv:hover{background:var(--dsw-alias-border-l2,#3a4150)}')
-    && clientSrc.includes('.nv-chdiv:active{background:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
+    && clientSrc.includes('.nv-chlist{flex:none;min-height:0;overflow-y:auto;overscroll-behavior:contain}')           // 独立滚动（UX-022）
+    && clientSrc.includes('.nv-chdiv{flex:none;width:4px;align-self:stretch;cursor:col-resize;background:var(--dsw-alias-border-l2,#3a4150);border-radius:2px;touch-action:none}')  // 分割条常驻实底（UX-022 恢复）
+    && clientSrc.includes('.nv-chdiv:hover{background:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
 })(), 'ux020 chapter drag restored')
-check('客户端源码面：UX-021 所有拖动图标默认隐藏（vdiv/chatdiv/chdiv 三条可拖线默认 background:transparent + hover 显 border-l2 定位 + :active 拖动 accent；无旧常驻实底线残留）', (() => {
+check('客户端源码面：UX-022 三条「分割条」常驻可见（vdiv/chdiv/chatdiv 拖了改布局——border-l2 实底 + hover accent；无透明化残留）', (() => {
   const divider = (cls) => {
     const m = new RegExp('\\.' + cls + '\\{([^}]*)\\}').exec(clientSrc)
     return m !== null ? m[1] : ''
   }
-  return divider('nv-vdiv').includes('background:transparent')
-    && divider('nv-chatdiv').includes('background:transparent')
-    && divider('nv-chdiv').includes('background:transparent')
-    && clientSrc.includes('.nv-vdiv:hover{background:var(--dsw-alias-border-l2,#3a4150)}')
-    && clientSrc.includes('.nv-chatdiv:hover{background:var(--dsw-alias-border-l2,#3a4150)}')
-    && clientSrc.includes('.nv-chdiv:hover{background:var(--dsw-alias-border-l2,#3a4150)}')
-    && clientSrc.includes('.nv-vdiv:active{background:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
-    && clientSrc.includes('.nv-chatdiv:active{background:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
-    && clientSrc.includes('.nv-chdiv:active{background:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
-    && !clientSrc.includes('background:var(--dsw-alias-border-l2,#3a4150);touch-action:none}')   // 旧常驻实底线（vdiv 形态）已无
-})(), 'ux021 dividers hidden by default')
+  return divider('nv-vdiv').includes('background:var(--dsw-alias-border-l2')
+    && divider('nv-chatdiv').includes('background:var(--dsw-alias-border-l2')
+    && divider('nv-chdiv').includes('background:var(--dsw-alias-border-l2')
+    && clientSrc.includes('.nv-vdiv:hover{background:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
+    && clientSrc.includes('.nv-chatdiv:hover{background:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
+    && clientSrc.includes('.nv-chdiv:hover{background:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
+    && !divider('nv-vdiv').includes('background:transparent')
+    && !divider('nv-chatdiv').includes('background:transparent')
+    && !divider('nv-chdiv').includes('background:transparent')
+    && !clientSrc.includes('.nv-vdiv:active{') && !clientSrc.includes('.nv-chatdiv:active{') && !clientSrc.includes('.nv-chdiv:active{')
+})(), 'ux022 dividers always visible')
+check('客户端源码面：UX-022 两个「拖动条」（滚动条）默认隐藏 + 滚动隔离（-webkit-scrollbar track/thumb 透明、容器 hover 才显；.nv-chlist/.nv-scroll 带 overscroll-behavior:contain；高度链=章节页签包装层 height:100%+overflow:hidden、正文列/左窗/页签外层均为 nv-scroll 独立滚动容器——章节列 1587px 撑开整体联动问题修复）', (() => {
+  return clientSrc.includes('.nv-chlist::-webkit-scrollbar,.nv-scroll::-webkit-scrollbar{width:8px;background:transparent}')
+    && clientSrc.includes('.nv-chlist::-webkit-scrollbar-thumb,.nv-scroll::-webkit-scrollbar-thumb{background:transparent}')
+    && clientSrc.includes('.nv-chlist:hover::-webkit-scrollbar-thumb,.nv-scroll:hover::-webkit-scrollbar-thumb{background:var(--dsw-alias-border-l2,#3a4150)}')
+    && clientSrc.includes('.nv-scroll{overscroll-behavior:contain}')
+    && clientSrc.includes("className: 'nv-scroll'")                                    // 三个滚动容器（正文列/左窗/页签外层）
+    && (clientSrc.match(/className: 'nv-scroll'/g) ?? []).length === 3
+    && clientSrc.includes("{ display: tab === 'chapters' ? 'block' : 'none', height: '100%', overflow: 'hidden' }")  // 高度链修复
+    && clientSrc.includes("className: 'nv-scroll', style: { flex: 1, minWidth: 0, overflow: 'auto' }")
+})(), 'ux022 scrollbars hidden + scroll isolated')
 check('客户端源码面：UX-015④ 抽屉小一档（13/12px + 6·8px + 4px 间隙 + 8px 点 + 空态随动；控制台卡片不动）', (() => {
   const css = (cls) => {
     const m = new RegExp(cls.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{([^}]*)\\}').exec(clientSrc)
