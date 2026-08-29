@@ -6,7 +6,8 @@
  *       lib/tools.js 挂载契约（inject 声明 / 11 工具注册 / 可选服务静默）+
  *       lib/client.js 挂载契约（UX-006 注册面/退役面/可逆清理 + UX-007 控制台
  *       注册与抽屉无按钮组，无 DOM 降级 + UX-008 控制台树：底部搜索行/＋ 磁贴/
- *       排序钮/无「▶ 打开」）。
+ *       排序钮/无「▶ 打开」+ UX-013 工作区对话框去会话创建/卡片两钮/首次开卡
+ *       自动链/抽屉字形/BindDialog 既有能力/删除链绑定清理 mutate unset）。
  */
 import { mkdtempSync, writeFileSync, mkdirSync, readFileSync, rmSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -572,6 +573,78 @@ check('客户端源码面：UX-012 分栏标题栏 ▶ 开始/继续工作流（
     && clientSrc.includes('launcher.promptLaunch(sid, current, novels)')
     && clientSrc.includes('.nv-bar-note')                       // 三态提示条（ok/err/info）
 })(), 'ux012 split launch missing')
+// UX-013（用户批注 6 点）：
+//  ①工作区对话框去会话创建（createSessionBtn/done 态/sync 键随链退役；switchHint + 信息性 hasSessionsHint 在位）
+//  ②首次点卡片自动建会话并关联（openBookCreate 链：workspace.list 命中 root→workspaceId / cwd 回退 → create →
+//    预设挂载 → bindSession → open+ensureSplit；自动链无 prompt——启动归创作台标题栏）
+//  ②.4 卡片 ➤ 启动钮退役（onLaunch/continueBtn/launch 卡片消费点删除；promptLaunch 保留给创作台）
+//  ③侧栏抽屉对齐+调宽+字大（.nv-drawer width:100% 与工作区列表行同宽 / 标题 13px+📖16px / 卡 14px/12.5px /
+//    点 9px / 分隔线 l2 / 区块底部留白 8px）
+//  ④BindDialog 既有能力（新建关联 & 关联既有）核验入断言：新建会话并绑定（bindNew/createAndBind/
+//    sessions.create cwd）+ 既有会话行按 workspace.list 分组（workspace.list + nv-srow + finishBind）
+check('客户端源码面：UX-013 工作区对话框去会话创建（createSessionBtn/done 态/sync 键退役 + switchHint 在位）', (() => {
+  return clientSrc.includes("switchHint: '切换后管理工作台显示该工作区书目。'")
+    && clientSrc.includes("switchFailPrefix: '切换工作区失败：'")
+    && clientSrc.includes("hasSessionsHint: (n) => `该工作区已有 ${n} 个会话。`")
+    && clientSrc.includes('pickWorkspace') && clientSrc.includes("patch: { workspaceRoot: w.path }")
+    && !/[\u3000-\u303F]?createSessionBtn/.test(clientSrc) && !clientSrc.includes('createSessionBtn')
+    && !clientSrc.includes('doneTitle') && !clientSrc.includes('doneMsg') && !clientSrc.includes('doneClose')
+    && !clientSrc.includes('syncFailPrefix') && !clientSrc.includes('syncFailSuffix')
+    && !clientSrc.includes('confirmCreate') && !clientSrc.includes('START_MSG')
+    && !clientSrc.includes('确认将新建一个小说会话')
+})(), 'ux013 ws dialog missing')
+check('客户端源码面：UX-013 卡片两钮（➤ 启动钮退役：onLaunch/continueBtn/launch 卡片点删除；🔗/🗑 保留）', (() => {
+  return !clientSrc.includes('onLaunch') && !clientSrc.includes('continueBtn')
+    && !clientSrc.includes('const launch = async')
+    && clientSrc.includes("className: 'nv-cico'")
+    && clientSrc.includes("title: st === 'stale' ? t('bindStaleHint') : t('bindBtn')")
+    && clientSrc.includes("className: 'nv-cico nv-cico-del'")
+    && clientSrc.includes("launcher.promptLaunch(sid, current, novels)") // promptLaunch 保留（创作台 ▶）
+    && clientSrc.includes("t('autoBindDone'")
+})(), 'ux013 card buttons missing')
+check('客户端源码面：UX-013 首次开卡自动链（workspaceId/cwd → create → 预设 → bind → open；无 prompt）', (() => {
+  return clientSrc.includes('openBookCreate')
+    && clientSrc.includes("if (st === 'none') { openBookCreate(novel); return }")
+    && clientSrc.includes('hit.workspaceId') && clientSrc.includes('joinNovelRoot(wsRoot, novel.id)')
+    && clientSrc.includes("api.agentPresets.select({ sessionId, agentPreset: 'novel-writing' })")
+    && clientSrc.includes('launcher.bindSession(novel.id, sessionId)')
+    && clientSrc.includes('launcher.open(sessionId)')
+    && !clientSrc.includes("content: [{ type: 'text', text: START_MSG }]")
+})(), 'ux013 auto chain missing')
+check('客户端源码面：UX-013 抽屉字形（width 100% 对齐 + 13px/📖16px/14px/12.5px/9px 点/l2 分隔线/8px 留白）', (() => {
+  const css = (cls) => {
+    const m = new RegExp(cls.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{([^}]*)\\}').exec(clientSrc)
+    return m !== null ? m[1] : ''
+  }
+  const drawer = css('.nv-drawer')
+  const title = css('.nv-drawer-title')
+  const ico = css('.nv-drawer-title-ico')
+  const card = css('.nv-card')
+  const ct = css('.nv-card-title')
+  const cs = css('.nv-card-sub')
+  const dot = css('.nv-dot')
+  const sep = css('.nv-sep')
+  return drawer.includes('width:100%') && drawer.includes('margin:2px 0 8px')
+    && title.includes('font-size:13px') && title.includes('font-weight:600') && title.includes('letter-spacing:.06em')
+    && ico.includes('font-size:16px')
+    && card.includes('padding:8px 10px') && card.includes('border-radius:10px') && card.includes('margin:6px 0')
+    && ct.includes('font-size:14px') && ct.includes('font-weight:600')
+    && cs.includes('font-size:12.5px')
+    && dot.includes('width:9px') && dot.includes('height:9px')
+    && sep.includes('--dsw-alias-border-l2')
+})(), 'ux013 drawer typography missing')
+check('客户端源码面：UX-013 BindDialog 既有能力核验（新建会话并绑定 + 按工作区分组关联既有）', (() => {
+  return clientSrc.includes("t('bindNew')") && clientSrc.includes('createAndBind')
+    && clientSrc.includes("api.sessions.create({ cwd })") && clientSrc.includes('joinNovelRoot(meta.root, target.novelId)')
+    && clientSrc.includes('api.workspace.list({})') && clientSrc.includes("className: 'nv-srow'")
+    && clientSrc.includes('finishBind(sessionId') && clientSrc.includes('groups.push')
+    && clientSrc.includes("t('bindPick')")
+})(), 'ux013 binddialog capability missing')
+check('客户端源码面：UX-013 删除链绑定清理走 settings.mutate unset（deep-merge update 无法键级删除——探针实测）', (() => {
+  return clientSrc.includes("api.settings.mutate({ ns: 'novel-writing', ops: [{ op: 'unset', path: ['bindings', novel.id] }] })")
+    && clientSrc.includes("launcher.apiHas('settings', 'mutate')")
+    && clientSrc.includes('delete next[novel.id]')         // 回退路径保留（旧宿主）
+})(), 'ux013 delete binding mutate missing')
 let renderErr = ''
 check('各注册面 render 可调用（组件体可求值；关闭态浮层输出 null 合法）', (() => {
   for (const r of slotRegs) {
