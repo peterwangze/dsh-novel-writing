@@ -857,6 +857,7 @@ check('客户端源码面：UX-047 中窗上下工作台分隔线可拖（.nv-mi
     && clientSrc.includes('midH: Number.isFinite(s.midH) ? s.midH : null')
     && clientSrc.includes('midH: state.midH')
     && clientSrc.includes('setMidH(w) {')
+    && clientSrc.includes('midH: this.midH')
     && clientSrc.includes("midHpx !== null ? ('0 0 ' + midHpx + 'px') : '0 0 30%'")
     && clientSrc.includes('clampNum(Math.round(init.h + (init.y - ev.clientY)), 120, max)')
     && clientSrc.includes('resizeMid: \'拖拽调整下方工作台高度\'') && clientSrc.includes('resizeMid: \'Drag to resize bottom workbench height\'')
