@@ -840,7 +840,7 @@ check('客户端源码面：UX-036 工作流状态迁左窗（左窗=纵向分�
   return clientSrc.includes("['chapters', t('chapters')], ['data', t('data')], ['publish', t('publish')], ['requests', t('requests')]")
     && !clientSrc.includes("'workflow', t('workflow')]")
     && !clientSrc.includes("tab === 'workflow'")
-    && clientSrc.includes("flex: '0 0 auto', maxHeight: '55%'")                          // 内容自适应（UX-037 取消固定 46% 二分）
+    && clientSrc.includes("flex: '0 0 60%'")                                               // 工作流占比大（UX-038：左窗上树40%/下工作流60%）
     && !clientSrc.includes("flex: '0 0 46%'")
     && clientSrc.includes("el(WorkflowPanel, { t, novel: detail })")
     && (clientSrc.match(/el\(WorkflowPanel, \{ t, novel: detail \}\)/g) ?? []).length === 1
