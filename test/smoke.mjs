@@ -840,8 +840,8 @@ check('客户端源码面：UX-036 工作流状态迁左窗（左窗=纵向分�
   return clientSrc.includes("['chapters', t('chapters')], ['data', t('data')], ['publish', t('publish')], ['requests', t('requests')]")
     && !clientSrc.includes("'workflow', t('workflow')]")
     && !clientSrc.includes("tab === 'workflow'")
-    && clientSrc.includes("flex: '0 0 60%'")                                               // 工作流占比大（UX-038：左窗上树40%/下工作流60%）
-    && !clientSrc.includes("flex: '0 0 46%'")
+    && clientSrc.includes("flex: '0 0 auto', maxHeight: '78%'")                            // 工作流容器随内容自适应（UX-039：不固定 60%、无下方空白）
+    && !clientSrc.includes("maxHeight: '220px', overflow: 'auto' }")                        // 清单卡取消内部滚动（全部展开——上面不再滚动）
     && clientSrc.includes("el(WorkflowPanel, { t, novel: detail })")
     && (clientSrc.match(/el\(WorkflowPanel, \{ t, novel: detail \}\)/g) ?? []).length === 1
     && !clientSrc.includes("${t('stage')}：${state.current_stage ?? '—'}")                // UX-037 阶段信息卡已删（阶段逻辑由清单图标承载）
