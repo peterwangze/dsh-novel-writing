@@ -9,7 +9,8 @@
  *       排序钮/无「▶ 打开」+ UX-013 工作区对话框去会话创建/卡片两钮/首次开卡
  *       自动链/抽屉字形/BindDialog 既有能力/删除链绑定清理 mutate unset +
  *       UX-015 章节名数据链（宿主解析/meta 优先/缓存失效）与客户端标题栏
- *       放大/章节名渲染/列宽持久化拖拽/抽屉小档 四源码面）。
+ *       放大/章节名渲染/列宽持久化拖拽/抽屉小档 四源码面 + UX-016 小窗聊天
+ *       优先钳制重分配（128/320/300/0.45 公式）。
  */
 import { mkdtempSync, writeFileSync, mkdirSync, readFileSync, rmSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -795,6 +796,18 @@ check('客户端源码面：UX-015④ 抽屉小一档（13/12px + 6·8px + 4px �
     && empty.includes('padding:6px 8px')
     && ccard.includes('min-height:180px') && ccard.includes('padding:16px') // 管理层卡片不动（层级感=抽屉小于控制台）
 })(), 'ux015 drawer small missing')
+// UX-016（用户实机「首次进入还是截断」；Coordinator 1078×593 复现取证）：
+//  原钳制 hi = colW − 160 − 420，1078 窗口（colW=798）下 hi=218 → 聊天被压到 240 下限：
+//  hero 折行 + 输入框裁切。修复 = 最小预留重分配——左 160→128、中 420→320、聊天 240→300；
+//  无存档默认 = clamp(round(colW*0.45), 300, max(300, colW−128−320))（聊天优先 45%，
+//  上限 colW−448 保证左 128+中 320 预留；colW<748 上下限收敛 300）；存档超界收敛同钳。
+check('客户端源码面：UX-016 小窗聊天优先（LEFT_MIN=128 / CENTER_MIN=320 / CHAT_MIN=300 / 0.45 默认公式）', (() => {
+  return clientSrc.includes('const LEFT_MIN = 128') && clientSrc.includes('const CENTER_MIN = 320')
+    && clientSrc.includes('const CHAT_MIN = 300') && clientSrc.includes('CHAT_DEFAULT_RATIO = 0.45')
+    && clientSrc.includes('Math.round(colW0 * CHAT_DEFAULT_RATIO)')
+    && clientSrc.includes('clampNum(saved.chatW, CHAT_MIN, Math.max(CHAT_MIN, colW0 - LEFT_MIN - CENTER_MIN))')
+    && !clientSrc.includes('Math.round(colW0 * 0.34)')
+})(), 'ux016 chat min reassign missing')
 let renderErr = ''
 check('各注册面 render 可调用（组件体可求值；关闭态浮层输出 null 合法）', (() => {
   for (const r of slotRegs) {

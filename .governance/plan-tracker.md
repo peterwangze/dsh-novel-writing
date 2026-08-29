@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 29 | 23 | 0 | 2 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 30 | 24 | 0 | 2 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -80,6 +80,7 @@
 | **P1** | UX-013 | 创建链与抽屉调整（用户批注 6 点）：①工作区管理去会话创建（WorkspaceDialog 仅切换/创建工作区，删「在此工作区创建小说会话」链+done 态+createdId 幂等）；②首次点卡片自动创建会话并关联（root 匹配 workspaceId 或 cwd 回退 → sessions.create → 预设挂载（失败即停提示）→ bindSession → open，busy 防连点，**无 prompt**）；③后续点击进入已关联会话；④🔗 会话管理=新建关联 or 关联既有（BindDialog 既有能力核验通过未补码）；⑤卡片移除 ➤ 启动工作流按钮（启动已下放创作台标题栏；promptLaunch 保留）；⑥侧栏抽屉对齐（width:100% 修 footerActions 自缩 + 卡左缘=工作区行左缘 0px 实测）+ 调宽 256px + 字体（13px 标题/14px 卡/12.5px sub）+ 层次（sep l2/gap 6）；顺带修复删除链绑定键清理失效（deep-merge 无法键级删 → settings.mutate unset 主路径）；smoke 101→107 | UX-012 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-029；探针 26/27（唯一未过=探针自身基线自证项）；自动链 202ms 实测+无 prompt；mutate 修复实机两验；目检通过；3 个探针空白测试会话待用户清理) |
 | **P1** | UX-014 | 创作工作台精修（用户批注 8 点）：①二级台**去掉工作区行+书目列表**（左窗仅文件树）；②标题显示书名（保持核验）；③文件树**目录默认折叠**（collectDirPaths+collapseInitRef，用户展开态不被轮询重置）；④**真 Bug 修复**——⇄ 切换布局会退出（根因：CSSOM 分数像素归一化 vs 引擎原串比较 → sameMargin 数值容差 <0.5px + syncAnchor 重挂让位观察器（N1 落实））；⑤**真 Bug 修复**——拖边线退出（同根因）；⑨截断修复——applyMargin 不再写 marginTop（对话窗保持整高，composer 完全可见实测）；⑥✕/⇄ 28×28 醒目；⑦抽屉卡片**直达创作台**（openCtl 单一事实源收口 NvConsole.openBook/抽屉/DrawerBookCard；发现并修复第二竞态：管理台令牌吞掉分栏豁免 → novelSplit.pluginOpenTokens 独立集）；⑧点其他 session 退出（splitCurrent 联动+脏稿守卫）；smoke 107→113 | UX-013 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-030；探针 28/29（唯一未过=采样元素取错，同断言另轮通过）+10/11（宿主UI残差）；根因实测取证（CSSOM 表/0.6875px 案例/marginTop 30px 取证）；目检通过；新增 5 个探针空白会话待用户清理) |
 | **P1** | UX-015 | 创作工作台细节（用户批注 5 点）：①标题栏**加高**（38px）+ 内部图标文字放大（标题 14px/⇄✕ 32×32/徽标 13px）；②章节列表**显示章节名**（meta 无 name 查证 → 宿主 chapterList/readChapter 增量 name 字段：meta 优先进化留口 + 解析首行 `# ` 剥「第N章」前缀，缓存复用 wordsCache 键策略零额外 IO）；③章节列**默认 160px + 可拖宽 120-360 持久化**（dsh.novel.split.v1 增 chapterW；拖拽不触 viewArea 边距实测安全）；④抽屉卡片小一档（13/12px/6/8/gap4，管理台卡片零改动保层级）；⑤聊天正常回归确认；smoke 113→122 | UX-014 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-031；探针 24/26（2 项=宿主旧包无 name 字段，**需重启 DSH 生效**——负回退已实机验证）；拖宽 200px 持久化实测；目检通过) |
+| **P1** | UX-016 | 小窗口聊天截断修复（用户实测「首次进入还是截断」；Coordinator 1078×593 复现取证：引擎为保中窗最小 420 把聊天压至 ~223px，hero 折行+输入框裁切）：chat 默认=clamp(round(colW×0.45), 300, max(300, colW−128−320))、chat 最小 300、左窗最小 128、中窗最小 320（共享常量收口，原 0.34 魔法数清除）；存档超界自动收敛；**实测**：1078×593→chatW 350（hero 单行/输入框 right≤1078/composer 可见）、1400×900→504；拖宽/⇄/拖拽退出回归不劣化；smoke 122→123 | UX-015 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-032；探针 24/25（唯一未过=探针会话行采样 CSS hash 未命中，产品无关）；双尺寸实测+目检通过；注：规范初稿「默认 390/480 封顶」为计划性表述，实际公式以本行+代码为准) |
 
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 
