@@ -9,10 +9,13 @@
  *       排序钮/无「▶ 打开」+ UX-013 工作区对话框去会话创建/卡片两钮/首次开卡
  *       自动链/抽屉字形/BindDialog 既有能力/删除链绑定清理 mutate unset +
  *       UX-015 章节名数据链（宿主解析/meta 优先/缓存失效）与客户端标题栏
- *       放大/章节名渲染/列宽持久化拖拽/抽屉小档 四源码面 + UX-016 小窗聊天
- *       优先钳制重分配 + UX-017 再宽一档（120/300/320/0.50 公式）与可见
- *       版本徽标 CLIENT_TAG（.nv-tag 双挂载点）+ UX-018 双压修复（applyMargin
- *       margin+width=chatW / savedWidth 记录·恢复 / 双压根因注释在位）。
+ *       放大/章节名渲染/抽屉小档 四源码面 + UX-016 小窗聊天
+ *       优先钳制重分配 + UX-017 再宽一档（120/300/320/0.50 公式）+
+ *       UX-018 双压修复（applyMargin margin+width=chatW / savedWidth
+ *       记录·恢复 / 双压根因注释在位）+ UX-019 收尾（版本徽标撤离负断言 /
+ *       章节行仅号+名去字数 / 列表 overflow:auto）+ UX-020 用户修正
+ *       （章节名校准：中文数字/冒号/BOM 容错/无标题负回退；客户端章节列
+ *       拖宽条恢复：.nv-chdiv + pointer 拖拽 + chapterW 持久化 120–360px）。
  */
 import { mkdtempSync, writeFileSync, mkdirSync, readFileSync, rmSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -286,6 +289,12 @@ check('UX-015 章节名提取（首行 # 剥「第N章」前缀 / 无标题行 /
     && svc.chapterNameOf('# 第1章\n正文随便写。') === ''
     && svc.chapterNameOf('# 第12章 终局之战') === '终局之战'
 })(), 'ux015 chapterNameOf missing')
+check('UX-020 章节名校准（中文数字「第十章 第七号放映厅」/ 冒号变体「第18章：老福宾馆」/ 无标题行→空串 / BOM 标题容错）', (() => {
+  return svc.chapterNameOf('# 第十章 第七号放映厅') === '第七号放映厅'
+    && svc.chapterNameOf('# 第18章：老福宾馆') === '老福宾馆'
+    && svc.chapterNameOf('这里没有标题行\n正文随便写。') === ''
+    && svc.chapterNameOf('\uFEFF# 第12章 终局之战') === '终局之战'
+})(), 'ux020 chapterNameOf calibrated')
 writeFileSync(join(proj, '07-content', 'chapter-002.md'), '无标题行正文。\n', 'utf8')
 const clName = svc.chapterList(novel)
 check('UX-015 chapterList 每项补 name（第1章=无名骸骨；无标题行=空串回退）', (() => {
@@ -739,9 +748,9 @@ check('客户端源码面：UX-014⑧ 创作台会话联动关闭分栏（splitC
 // UX-015（用户实机批注 5 点）：
 //  ①标题栏加高放大（.nv-bar 30→38px / padding 0 14px / .nv-bar-title 14px / .nv-badge 13px /
 //    .nv-bar .nv-mini 24px / .nv-bar-ctl 32×32·18px·600 / TITLE_BAR_H=38 / ▶ 启动钮 padding 5px 14px）
-//  ②章节列表行显示章节名（中窗左列 = 「第N章 · 名称 · M字」；名称独立 span ellipsis；空名称回退「第N章 M字」）
-//  ③章节列默认 160px + 手动拖宽（chapterW 持久化 dsh.novel.split.v1；120–360px；.nv-chdiv 拖拽；
-//    只改列宽不动 viewArea 边距——让位观察器/几何引擎不受影响）
+//  ②章节列表行显示章节名（中窗左列；UX-019 定案 = 仅「第N章 · 名称」/空名称「第N章」，无字数）
+//  ③章节列 160px + 直排滚动（.nv-chlist overflow:auto）；UX-020（用户实机反馈修正
+//    UX-019③）恢复 UX-015③ 拖宽条：.nv-chdiv pointer 拖拽 120–360px + chapterW 持久化
 //  ④抽屉小一档（.nv-card 13/12px、6·8px padding、4px 间隙、点 8px、空态随动；控制台卡片不动）
 //  ⑤聊天区正常 = UX-014⑨ 回归（marginTop 不写断言在位）
 check('客户端源码面：UX-015① 标题栏加高放大（38px 高 / 14px 标题 / 13px 徽标 / 32×32·18px / 14px 内边距 / TITLE_BAR_H=38）', (() => {
@@ -763,24 +772,35 @@ check('客户端源码面：UX-015① 标题栏加高放大（38px 高 / 14px �
     && barMini.includes('width:24px') && barMini.includes('height:24px')
     && launch.includes('padding:5px 14px')
 })(), 'ux015 bar missing')
-check('客户端源码面：UX-015② 章节列表行渲染章节名（第N章 · 名称 · M字；ellipsis；空名称负回退）', (() => {
+check('客户端源码面：UX-019② 章节行仅「第N章 + 名称」（去字数；有名称「第N章 · 名称」/空名称回退「第N章」；ellipsis 沿用）', (() => {
   return clientSrc.includes("const cName = typeof c.name === 'string' ? c.name : ''")
-    && clientSrc.includes('`第${c.num}章 ${c.words}${marks}`')   // 空名称回退格式（第N章 M字）
-    && clientSrc.includes('`· ${c.words}${marks}`')              // 有名称：· M字 尾段
+    && clientSrc.includes('`第${c.num}章${marks}`')        // 无名称回退格式（第N章 + 标记）
+    && clientSrc.includes("el('span', { key: 'no'")       // 有名称：第N章 span
+    && clientSrc.includes("el('span', { key: 'sep'")      // 有名称：· 分隔 span
+    && clientSrc.includes("el('span', { key: 'nm'")       // 有名称：名称 ellipsis span
+    && !clientSrc.includes('${c.words}')                  // 章节行无任何字数渲染（去字数）
+    && !clientSrc.includes('`· ${c.words}${marks}`')
+    && !clientSrc.includes('`第${c.num}章 ${c.words}${marks}`')
     && clientSrc.includes("textOverflow: 'ellipsis'")
-    && clientSrc.includes("key: 'nm'") && clientSrc.includes("key: 'no'")
     && clientSrc.includes("className: 'nv-chlist'")
-})(), 'ux015 chapter name row missing')
-check('客户端源码面：UX-015③ 章节列宽持久化 + 拖拽分隔线（chapterW 120–360 / 默认 160 / load·persist / .nv-chdiv）', (() => {
-  return clientSrc.includes('CHAPTER_W_MIN = 120') && clientSrc.includes('CHAPTER_W_MAX = 360')
-    && clientSrc.includes('CHAPTER_W_DEFAULT = 160')
-    && clientSrc.includes('chapterW: Number.isFinite(s.chapterW)')      // loadSplitSaved 扩展
-    && clientSrc.includes('chapterW: state.chapterW')                   // persistSplit 扩展
-    && clientSrc.includes('setChapterW(w) {')
-    && clientSrc.includes('clampNum(Math.round(w), CHAPTER_W_MIN, CHAPTER_W_MAX)')
-    && clientSrc.includes("className: 'nv-chdiv'") && clientSrc.includes("role: 'separator'")
-    && clientSrc.includes('props.onChapterW(init.w + (ev.clientX - init.x))')
-})(), 'ux015 chapter width missing')
+})(), 'ux019 chapter name row missing')
+check('客户端源码面：UX-020 章节列拖宽条恢复为 UX-015③ 原始样式（.nv-chdiv 元素+pointer 拖拽 / CHAPTER_W 120–360 常量 / chapterW 持久化读写 / 列宽随 snap.chapterW / .nv-chlist overflow:auto 滚动 / i18n 键恢复 / 4px 实底分隔条样式）', (() => {
+  return clientSrc.includes("className: 'nv-chdiv'")                                    // 正：拖宽条元素
+    && clientSrc.includes("onPointerDown: chapterDividerHandler")                       // 正：pointer 拖拽入口
+    && clientSrc.includes('target.setPointerCapture(e.pointerId)')
+    && clientSrc.includes('const CHAPTER_W_MIN = 120') && clientSrc.includes('const CHAPTER_W_MAX = 360')
+    && clientSrc.includes('const CHAPTER_W_DEFAULT = 160')
+    && clientSrc.includes('chapterW: Number.isFinite(s.chapterW) ? s.chapterW : null')  // 读存档
+    && clientSrc.includes('chapterW: state.chapterW')                                   // 写存档
+    && clientSrc.includes('setChapterW(w)') && clientSrc.includes('onChapterW: (w) => novelSplit.setChapterW(w)')
+    && clientSrc.includes('this.chapterW = clampNum(Math.round(w), CHAPTER_W_MIN, CHAPTER_W_MAX)')
+    && clientSrc.includes('clampNum(saved.chapterW, CHAPTER_W_MIN, CHAPTER_W_MAX)')
+    && clientSrc.includes("width: chapterW + 'px'")                                     // 列宽随章列状态
+    && clientSrc.includes('title: t(\'resizeChlist\')') && clientSrc.includes('resizeChlist:')
+    && clientSrc.includes('.nv-chlist{flex:none;min-height:0;overflow:auto}')           // 滚动（UX-015③ 原样）
+    && clientSrc.includes('.nv-chdiv{flex:none;width:4px;align-self:stretch;cursor:col-resize;background:var(--dsw-alias-border-l2,#3a4150);border-radius:2px;touch-action:none}')  // UX-015③ 原始 4px 实底
+    && clientSrc.includes('.nv-chdiv:hover{background:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
+})(), 'ux020 chapter drag restored to ux015 original')
 check('客户端源码面：UX-015④ 抽屉小一档（13/12px + 6·8px + 4px 间隙 + 8px 点 + 空态随动；控制台卡片不动）', (() => {
   const css = (cls) => {
     const m = new RegExp(cls.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{([^}]*)\\}').exec(clientSrc)
@@ -815,16 +835,13 @@ check('客户端源码面：UX-016/017 小窗聊天钳制重分配（LEFT_MIN=12
     && !clientSrc.includes('const LEFT_MIN = 128') && !clientSrc.includes('const CENTER_MIN = 320')
     && !clientSrc.includes('const CHAT_MIN = 300') && !clientSrc.includes('CHAT_DEFAULT_RATIO = 0.45')
 })(), 'ux016/017 chat min reassign missing')
-check('客户端源码面：UX-017 可见版本徽标 CLIENT_TAG=v4（.nv-tag 样式 + 分栏标题栏/控制台头部双挂载点）', (() => {
-  const tag = /\.nv-tag\{([^}]*)\}/.exec(clientSrc)
-  const mounts = clientSrc.match(/el\('span', \{ className: 'nv-tag' \}, CLIENT_TAG\)/g) ?? []
-  return clientSrc.includes("const CLIENT_TAG = 'v4'")
-    && mounts.length === 2
-    && clientSrc.includes("className: 'nv-bar-title'") && clientSrc.includes("className: 'nv-console-title'")
-    && tag !== null && tag[1].includes('font-size:9px') && tag[1].includes('line-height:14px')
-    && tag[1].includes('padding:0 5px') && tag[1].includes('border-radius:8px')
-    && tag[1].includes('letter-spacing:.04em')
-})(), 'ux017 client tag missing')
+check('客户端源码面：UX-019① 可见版本徽标撤离（无 CLIENT_TAG 常量 / 无 .nv-tag 渲染与样式 / 无 nv-tag 字符串残留）', (() => {
+  return !clientSrc.includes('CLIENT_TAG')
+    && !clientSrc.includes('nv-tag')
+    && !clientSrc.includes('.nv-tag{')
+    && (clientSrc.match(/className: 'nv-console-title'/g) ?? []).length === 1   // 标题节点仍在（仅徽标撤离）
+    && (clientSrc.match(/className: 'nv-bar-title'/g) ?? []).length === 1
+})(), 'ux019 client tag removed')
 // UX-018（用户实机截图「聊天窗渲染异常」——根因已闭合：margin 不改变元素 content-box
 //  尺寸，宿主响应式布局（hero「探索未至之境」居中定位）靠自身尺寸变化（ResizeObserver/
 //  宽度重算）触发重排；真实时序「先全宽挂载、后加 margin」无尺寸事件 → 不重排 → hero
