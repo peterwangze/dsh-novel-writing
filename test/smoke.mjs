@@ -837,9 +837,10 @@ check('客户端源码面：UX-034 文件显示复用章节内容列（fileSel �
     && (clientSrc.match(/if \(props\.fileSel !== null && typeof props\.onFileClose === 'function'\) props\.onFileClose\(\)/g) ?? []).length === 2   // UX-035 点章节/点编辑退出文件视图
 })(), 'ux034 file view reuses chapter column')
 check('客户端源码面：UX-036 工作流状态迁左窗（左窗=纵向分栏：文件树 flex:1 + 工作流状态 46%〔nv-scroll 滚动+顶边线〕；中窗页签去「工作流」且不再渲染 WorkflowPanel；WorkflowPanel 仅在左窗渲染一次）', (() => {
-  return clientSrc.includes("['chapters', t('chapters')], ['data', t('data')], ['publish', t('publish')], ['requests', t('requests')]")
+  return clientSrc.includes("['data', t('data')], ['publish', t('publish')], ['requests', t('requests')]")
+    && !clientSrc.includes("'chapters', t('chapters')]")                                  // UX-042 章节不再页签（常驻上半区）
     && !clientSrc.includes("'workflow', t('workflow')]")
-    && !clientSrc.includes("tab === 'workflow'")
+    && clientSrc.includes("flex: '0 0 46%', minHeight: 0, display: 'flex', flexDirection: 'column', borderTop")   // UX-042 中窗下半区工作台
     && clientSrc.includes("flex: '0 0 auto', maxHeight: '78%'")                            // 工作流容器随内容自适应（UX-039：不固定 60%、无下方空白）
     && !clientSrc.includes("maxHeight: '220px', overflow: 'auto' }")                        // 清单卡取消内部滚动（全部展开——上面不再滚动）
     && clientSrc.includes("el(WorkflowPanel, { t, novel: detail })")
@@ -873,8 +874,8 @@ check('客户端源码面：UX-022 两个「拖动条」（滚动条）默认隐
     && (clientSrc.match(/className: 'nv-scroll'/g) ?? []).length === 6                    // 六个滚动容器（正文阅读区/编辑 textarea/正文列/左窗树/页签外层/左窗工作流状态）
     && clientSrc.includes("className: 'nv-scroll', style: { border: '1px solid ' + TK.line")   // 正文阅读区容器纳入（UX-023）
     && clientSrc.includes('value: draft') && clientSrc.includes('onKeyDown: (e) =>')           // 编辑 textarea 同链（类在五项计数内）
-    && clientSrc.includes("{ display: tab === 'chapters' ? 'block' : 'none', height: '100%', overflow: 'hidden' }")  // 高度链修复
-    && clientSrc.includes("className: 'nv-scroll', style: { flex: 1, minWidth: 0, overflow: 'auto' }")
+    && clientSrc.includes("el('div', { style: { height: '100%', overflow: 'hidden' } }")  // 高度链（UX-042 章节区常驻包装）
+    && clientSrc.includes("className: 'nv-scroll', style: { flex: 1, minHeight: 0, overflow: 'auto' }")            // UX-042 下半区工作台内容滚动容器
     && clientSrc.includes('{ style: { display: \'flex\', height: \'100%\' } }')                                        // 命中区紧贴列边缘（UX-032 去 gap）
     && clientSrc.includes("className: 'nv-scroll', style: { flex: 1, minWidth: 0, overflow: 'auto', paddingLeft: '12px' } }")  // 内容列 paddingLeft 保留间距（UX-032）
 })(), 'ux022 scrollbars hidden + scroll isolated + ux024 auto reveal')

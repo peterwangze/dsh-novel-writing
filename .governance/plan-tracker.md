@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 52 | 48 | 0 | 2 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 53 | 49 | 0 | 2 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -106,6 +106,7 @@
 | **P1** | UX-039 | 工作流面板内容流式化（用户「下面空这么多，上面还要滚动，是什么设计？」——清单卡内部 maxHeight:220 滚动截断内容 + 容器固定 60% 内容装不满=上下两头都错）：修复=①**清单卡取消内部滚动**（19 项阶段全部展开）②容器**随内容自适应**（flex:0 0 auto + maxHeight 78%——内容多高占多高、超才容器级滚动、树保底 22%）；smoke（ux036 检查断言 auto+78% + maxHeight:220 负断言） | UX-038 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-055；node --check 通过；smoke 133/133；零宿主依赖保持) |
 | **P1** | UX-040 | 阶段徽标+统计信息迁移（用户改判「标题栏内，挪动居中位置」——首次误测为"移到左窗工作流"，用户「我都箭头给你指定位置了，你还是自作主张」纠正）：**标题栏居中「阶段+统计」横幅**——`.nv-bar` position:relative + 绝对居中组（left 50%/translateX -50%，pointerEvents none）：本地化阶段名徽标（NOVEL_STAGES 共用常量）+ 绑定状态点 ○ + `N 章 · M 字` 整体统计；左窗工作流面板不重复；标题栏左侧仍为书名（截断保底）；smoke（ux036/030 检查断言同步：relative+居中/统计/NOVEL_STAGES/WorkflowPanel 无 dot 恢复） | UX-039 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-056；node --check 通过；smoke 133/133；零宿主依赖保持) |
 | **P1** | UX-041 | 标题栏横幅「阶段：」前缀（用户「你就不能加个「阶段：」在阶段的文字之前吗？」——居中横幅阶段徽标文本加 `阶段：` 前缀：`${t('stage')}：${titleStageName}`）；smoke（ux036 检查补前缀断言） | UX-040 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-056；node --check 通过；smoke 133/133；零宿主依赖保持) |
+| **P1** | UX-042 | 中窗下半区数据/发布/请求工作台（用户「将当前红框的区域调整为工作台，将上面的数据/发布/请求页签都迁移过来」——中窗改上下两个工作台）：**上部=章节工作台常驻**（章节区不再页签：`el('div',{height:'100%',overflow:'hidden'})` 包装 ChapterPanel，保活保留）；**下部=数据/发布/请求工作台**（flex:0 0 46% + borderTop 分隔线 + 内部 nv-tabs〔数据/发布/请求〕+ 内容 nv-scroll 滚动——页签与 DataPanel/PublishPanel/RequestPanel 从顶部迁入）；tab 初始 'data'；smoke（ux036/022 检查断言同步：tabs 无 chapters、下半区容器/滚动容器断言、高度链串更新） | UX-041 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-058；node --check 通过；smoke 133/133；零宿主依赖保持) |
 
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 
