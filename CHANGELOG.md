@@ -28,6 +28,7 @@
 - **滚动条行为定案（UX-024，用户两次纠正「滚动时自动显示」「停止一段时间后自动隐藏，不应解除后一直出现」）**：撤除悬停即显规则（悬停常驻违背"停止后隐藏"）；改为**滚动事件驱动**——SplitWorkspace 挂 `document` 捕获 `scroll` 监听，滚动容器（`.nv-chlist`/`.nv-scroll`）滚动时加 `.nv-scl`（thumb 显现 border-l2），**1.5s 无滚动自动撤除**（初稿 600ms，用户实测后按需调长至 1.5s；拖动拇指期间 scroll 连续→保持；`:active` 高亮保留）；卸载清监听与计时器。CDP 实测：滚动前隐藏→滚动中显现→停止 1s 隐藏→再滚再显；smoke 131/131；零宿主依赖。
 - **界面优化（UX-025，用户「分割线调细一些……太突兀了」「参考比较成熟的网页端界面设计，对两级工作台界面进行一次优化」）**：①**三分隔线 4px 实底 → 1px 细线**——`.nv-vdiv`/`.nv-chdiv`/`.nv-chatdiv` 改 `width:4px` 透明抓握区 + `border-right:1px solid border-l2` + hover `border-right-color:accent`（VS Code/Linear 式：细线克制、可拖性保留——4px 命中区不变），与宿主细分隔线风格协调；②**章节列浅底侧栏感**（`fill-l1` 0.02 浅底 + 章节行 hover 过渡 0.12s）；③页签 hover 浅底 + 背景/字色/border 过渡统一（控制台卡片已有玻璃拟态/hover/过渡属成熟形态，本轮不动）。全部宿主令牌/插件自身元素/零宿主依赖；探针 computed 实测 1px/bg transparent/4px/浅底 + 目检协调；smoke 131/131。
 - **区域分割线提清晰（UX-026，用户「各个区域的分割线……你看我圈出来的这个，你能看清吗？」——标题栏底边 border-l1 #262b36 近不可见，上轮「其他分割线不明显」诉求被遗漏）**：工作台**区域分割线 border-l1 → border-l2 #3a4150**——标题栏底边 `.nv-bar`、左窗右缘 `.nv-left`、工作台外框 `.nv-split` 三处；与三条 1px 细拖线（border-l2 + hover accent）同层级，区域分隔一眼可辨；拖线保持 UX-025 细线不变；smoke 131/131。
+- **聊天边界两根线去重（UX-027，用户放大截图「我放大了看，这里为何是两根线」）**：UX-026 提亮外框后，外框右缘 `.nv-split` border-right 与聊天窗拖线 `.nv-chatdiv` 相距仅 ~2px、放大成两根线——修复=外框 `border-right:none`，聊天边界唯一线=1px 拖线（hover accent 保持）；外框左/上/下边线提亮保留；smoke 131/131。
 
 ## [0.3.0] - Unreleased
 
