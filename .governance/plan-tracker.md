@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 30 | 24 | 0 | 2 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 32 | 25 | 0 | 2 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -81,6 +81,8 @@
 | **P1** | UX-014 | 创作工作台精修（用户批注 8 点）：①二级台**去掉工作区行+书目列表**（左窗仅文件树）；②标题显示书名（保持核验）；③文件树**目录默认折叠**（collectDirPaths+collapseInitRef，用户展开态不被轮询重置）；④**真 Bug 修复**——⇄ 切换布局会退出（根因：CSSOM 分数像素归一化 vs 引擎原串比较 → sameMargin 数值容差 <0.5px + syncAnchor 重挂让位观察器（N1 落实））；⑤**真 Bug 修复**——拖边线退出（同根因）；⑨截断修复——applyMargin 不再写 marginTop（对话窗保持整高，composer 完全可见实测）；⑥✕/⇄ 28×28 醒目；⑦抽屉卡片**直达创作台**（openCtl 单一事实源收口 NvConsole.openBook/抽屉/DrawerBookCard；发现并修复第二竞态：管理台令牌吞掉分栏豁免 → novelSplit.pluginOpenTokens 独立集）；⑧点其他 session 退出（splitCurrent 联动+脏稿守卫）；smoke 107→113 | UX-013 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-030；探针 28/29（唯一未过=采样元素取错，同断言另轮通过）+10/11（宿主UI残差）；根因实测取证（CSSOM 表/0.6875px 案例/marginTop 30px 取证）；目检通过；新增 5 个探针空白会话待用户清理) |
 | **P1** | UX-015 | 创作工作台细节（用户批注 5 点）：①标题栏**加高**（38px）+ 内部图标文字放大（标题 14px/⇄✕ 32×32/徽标 13px）；②章节列表**显示章节名**（meta 无 name 查证 → 宿主 chapterList/readChapter 增量 name 字段：meta 优先进化留口 + 解析首行 `# ` 剥「第N章」前缀，缓存复用 wordsCache 键策略零额外 IO）；③章节列**默认 160px + 可拖宽 120-360 持久化**（dsh.novel.split.v1 增 chapterW；拖拽不触 viewArea 边距实测安全）；④抽屉卡片小一档（13/12px/6/8/gap4，管理台卡片零改动保层级）；⑤聊天正常回归确认；smoke 113→122 | UX-014 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-031；探针 24/26（2 项=宿主旧包无 name 字段，**需重启 DSH 生效**——负回退已实机验证）；拖宽 200px 持久化实测；目检通过) |
 | **P1** | UX-016 | 小窗口聊天截断修复（用户实测「首次进入还是截断」；Coordinator 1078×593 复现取证：引擎为保中窗最小 420 把聊天压至 ~223px，hero 折行+输入框裁切）：chat 默认=clamp(round(colW×0.45), 300, max(300, colW−128−320))、chat 最小 300、左窗最小 128、中窗最小 320（共享常量收口，原 0.34 魔法数清除）；存档超界自动收敛；**实测**：1078×593→chatW 350（hero 单行/输入框 right≤1078/composer 可见）、1400×900→504；拖宽/⇄/拖拽退出回归不劣化；smoke 122→123 | UX-015 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-032；探针 24/25（唯一未过=探针会话行采样 CSS hash 未命中，产品无关）；双尺寸实测+目检通过；注：规范初稿「默认 390/480 封顶」为计划性表述，实际公式以本行+代码为准) |
+| **P1** | UX-017 | 聊天宽度再调+版本徽标（用户侧仍见窄聊天的定案手段）：①CHAT_DEFAULT_RATIO 0.45→0.5 / CHAT_MIN 300→320 / LEFT_MIN 128→120 / CENTER_MIN 320→300（cap=colW−420 共享常量五处同步；**实测**：1078×593→chatW 378（hero 底部行 4 控件全可见）、1400×900→560；存档 300→320/900→378 收敛）②CLIENT_TAG='v4' 可见徽标（控制台头部+分栏标题栏，判定浏览器包版本；分栏标题栏窄栏下徽标视觉被裁——判定以控制台头部为准）；smoke 123→124 | UX-016 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-033；探针 23/23 全绿+双尺寸目检；发现 probe 环境旧存档 270（收敛验证→新包 320+）；用户浏览器包版本以 v4 徽标定案——徽标为诊断用，确认修复后移除（用户指示不交付）) |
+| **P1** | UX-018 | 聊天窗渲染异常真修复（用户重述：「不是截断，是右边对话框渲染异常」「一半首次进入会出现，刷新就好了」→ 根因闭合：**margin 挤压不改 content-box 尺寸→宿主无尺寸事件不重排**——先全宽挂载后挤压=hero 停在旧坐标=右缘碎片；先挤压后挂载=正常；另探针抓住第二缺陷：sessions.open 换目标后宿主重渲染**替换 viewArea 节点**、旧 syncAnchor 卡在旧锚点挤不到活动视图）：修复=**margin+width 双压**（width=chatWpx，open/applyMargin/syncAnchor/close 记录-恢复 savedWidth）+ syncAnchor 重锚定与 open 同口径（ok 根即锚）且快路径以 root/header/viewArea 三元同恒为门槛；smoke 124→128；探针 **47/47**（A 先挂载后挤压=378 完整 / B 先挤压后挂载=378 完整 / E 存档 270→320 完整 / C 关闭 width+margin 全复原往返 / D 拖宽⇄不退出）；目检通过 | UX-017 | v0.4.0 | open | 🔄 修复就绪待用户实机复验（先会话页→开创作台 ×2-3；过则移除 v4 徽标交付） |
 
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 

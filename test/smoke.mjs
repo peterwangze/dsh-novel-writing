@@ -10,7 +10,9 @@
  *       自动链/抽屉字形/BindDialog 既有能力/删除链绑定清理 mutate unset +
  *       UX-015 章节名数据链（宿主解析/meta 优先/缓存失效）与客户端标题栏
  *       放大/章节名渲染/列宽持久化拖拽/抽屉小档 四源码面 + UX-016 小窗聊天
- *       优先钳制重分配（128/320/300/0.45 公式）。
+ *       优先钳制重分配 + UX-017 再宽一档（120/300/320/0.50 公式）与可见
+ *       版本徽标 CLIENT_TAG（.nv-tag 双挂载点）+ UX-018 双压修复（applyMargin
+ *       margin+width=chatW / savedWidth 记录·恢复 / 双压根因注释在位）。
  */
 import { mkdtempSync, writeFileSync, mkdirSync, readFileSync, rmSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -801,13 +803,67 @@ check('客户端源码面：UX-015④ 抽屉小一档（13/12px + 6·8px + 4px �
 //  hero 折行 + 输入框裁切。修复 = 最小预留重分配——左 160→128、中 420→320、聊天 240→300；
 //  无存档默认 = clamp(round(colW*0.45), 300, max(300, colW−128−320))（聊天优先 45%，
 //  上限 colW−448 保证左 128+中 320 预留；colW<748 上下限收敛 300）；存档超界收敛同钳。
-check('客户端源码面：UX-016 小窗聊天优先（LEFT_MIN=128 / CENTER_MIN=320 / CHAT_MIN=300 / 0.45 默认公式）', (() => {
-  return clientSrc.includes('const LEFT_MIN = 128') && clientSrc.includes('const CENTER_MIN = 320')
-    && clientSrc.includes('const CHAT_MIN = 300') && clientSrc.includes('CHAT_DEFAULT_RATIO = 0.45')
+// UX-017（用户强刷后仍见窄聊天——旧包或 300 下 hero 输入行临界溢出未分辨；Coordinator 定案）：
+//  宽度再让一档——CHAT_MIN 300→320、LEFT_MIN 128→120、CENTER_MIN 320→300（cap=colW−420）；
+//  默认比例 0.45→0.50；存档收敛同按新上下限。常量新值正/负断言都在（旧值不得残留）。
+check('客户端源码面：UX-016/017 小窗聊天钳制重分配（LEFT_MIN=120 / CENTER_MIN=300 / CHAT_MIN=320 / 0.50 默认公式 / 存档钳制共享）', (() => {
+  return clientSrc.includes('const LEFT_MIN = 120') && clientSrc.includes('const CENTER_MIN = 300')
+    && clientSrc.includes('const CHAT_MIN = 320') && clientSrc.includes('CHAT_DEFAULT_RATIO = 0.50')
     && clientSrc.includes('Math.round(colW0 * CHAT_DEFAULT_RATIO)')
     && clientSrc.includes('clampNum(saved.chatW, CHAT_MIN, Math.max(CHAT_MIN, colW0 - LEFT_MIN - CENTER_MIN))')
     && !clientSrc.includes('Math.round(colW0 * 0.34)')
-})(), 'ux016 chat min reassign missing')
+    && !clientSrc.includes('const LEFT_MIN = 128') && !clientSrc.includes('const CENTER_MIN = 320')
+    && !clientSrc.includes('const CHAT_MIN = 300') && !clientSrc.includes('CHAT_DEFAULT_RATIO = 0.45')
+})(), 'ux016/017 chat min reassign missing')
+check('客户端源码面：UX-017 可见版本徽标 CLIENT_TAG=v4（.nv-tag 样式 + 分栏标题栏/控制台头部双挂载点）', (() => {
+  const tag = /\.nv-tag\{([^}]*)\}/.exec(clientSrc)
+  const mounts = clientSrc.match(/el\('span', \{ className: 'nv-tag' \}, CLIENT_TAG\)/g) ?? []
+  return clientSrc.includes("const CLIENT_TAG = 'v4'")
+    && mounts.length === 2
+    && clientSrc.includes("className: 'nv-bar-title'") && clientSrc.includes("className: 'nv-console-title'")
+    && tag !== null && tag[1].includes('font-size:9px') && tag[1].includes('line-height:14px')
+    && tag[1].includes('padding:0 5px') && tag[1].includes('border-radius:8px')
+    && tag[1].includes('letter-spacing:.04em')
+})(), 'ux017 client tag missing')
+// UX-018（用户实机截图「聊天窗渲染异常」——根因已闭合：margin 不改变元素 content-box
+//  尺寸，宿主响应式布局（hero「探索未至之境」居中定位）靠自身尺寸变化（ResizeObserver/
+//  宽度重算）触发重排；真实时序「先全宽挂载、后加 margin」无尺寸事件 → 不重排 → hero
+//  保持全宽坐标（输入框中心 ~667），挤压后仅露右缘碎片 =「渲染异常」；反之时序
+//  「先挤压后挂载」（无头复现/刷新重开）页面以窄宽挂载 → 容器居中 → 正常）。修复 =
+//  双压：applyMargin 在 marginLeft/marginRight 之外显式 width=clamp 后 chatW →
+//  border-box 真变小 → 宿主必然重排，两种时序统一；原 width 记 savedWidth，
+//  恢复点 = close + syncAnchor 换根（各一处）；marginTop 仍不写（UX-014⑨）。
+check('客户端源码面：UX-018 双压注释（根因 margin 不改 content-box + 显式 width 触发宿主重排 + savedWidth 记录恢复点）', (() => {
+  const recordWidth = (clientSrc.match(/this\.savedWidth = viewArea\.style\.width/g) ?? []).length
+  const restoreWidth = (clientSrc.match(/this\.viewArea\.style\.width = this\.savedWidth/g) ?? []).length
+  return clientSrc.includes('UX-018 双压')
+    && clientSrc.includes('content-box')
+    && clientSrc.includes('两种挂载时序统一')
+    && recordWidth === 2   // open + syncAnchor 换根
+    && restoreWidth === 2  // close + syncAnchor 换根
+})(), 'ux018 double-squeeze restore missing')
+check('客户端源码面：UX-018 applyMargin 写 width = clamp 后 chatW（margin+width 双压；marginTop 仍不写）', (() => {
+  const writes = (clientSrc.match(/viewArea\.style\.width = this\.chatW \+ 'px'/g) ?? []).length
+  return writes === 1
+    && clientSrc.includes('viewArea.style.marginLeft = this.lastMarginLeft')
+    && clientSrc.includes('viewArea.style.marginRight = this.lastMarginRight')
+    && !clientSrc.includes('viewArea.style.marginTop = this.lastMarginTop')
+})(), 'ux018 applyMargin width write missing')
+check('客户端源码面：UX-018 边界（无根/几何缺失不写 width；视图区内联 width 覆盖后关闭恢复）', (() => {
+  return clientSrc.includes('if (viewArea === null || g === null) return')
+    && clientSrc.includes('this.savedWidth = viewArea.style.width')
+    && clientSrc.includes('this.viewArea.style.width = this.savedWidth')
+    && clientSrc.includes('this.savedMarginLeft = viewArea.style.marginLeft')
+})(), 'ux018 boundary missing')
+// UX-018 探针驱动的引擎健壮性修正：会话切换（卡片打开链 sessions.open）后目标视图以
+//  phase='hero' 稳定挂载、宿主重渲染可能替换 viewArea 子节点——原「仅接受 active + 根同
+//  即快路径」把引擎永久卡在旧锚点（live viewArea 永不接受挤压）。修正 = 与 open() 同口径
+//  有根即锚 + 快路径以 header/viewArea 三元同恒为门槛（子节点被替换走完整重锚定）。
+check('客户端源码面：UX-018 syncAnchor 重锚定修正（hero 相位接受 + 根同但子节点替换走完整重锚）', (() => {
+  return clientSrc.includes("phase='hero'")
+    && clientSrc.includes('next === this.root && header === this.header && viewArea === this.viewArea')
+    && !clientSrc.includes("next.dataset.phase !== 'active'")
+})(), 'ux018 syncAnchor re-anchor missing')
 let renderErr = ''
 check('各注册面 render 可调用（组件体可求值；关闭态浮层输出 null 合法）', (() => {
   for (const r of slotRegs) {
