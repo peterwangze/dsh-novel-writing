@@ -603,9 +603,11 @@ check('客户端源码面：UX-013 卡片两钮（➤ 启动钮退役：onLaunch
     && clientSrc.includes("t('autoBindDone'")
 })(), 'ux013 card buttons missing')
 check('客户端源码面：UX-013 首次开卡自动链（workspaceId/cwd → create → 预设 → bind → open；无 prompt）', (() => {
-  return clientSrc.includes('openBookCreate')
-    && clientSrc.includes("if (st === 'none') { openBookCreate(novel); return }")
-    && clientSrc.includes('hit.workspaceId') && clientSrc.includes('joinNovelRoot(wsRoot, novel.id)')
+  // UX-014⑦：链收口为 openCtl.autoCreate 单一事实源（控制台卡片与抽屉卡片共用）
+  return clientSrc.includes('openCtl')
+    && clientSrc.includes('autoCreate(novel, ctx)')
+    && clientSrc.includes("if (st === 'none') { await openCtl.autoCreate(novel, ctx); return }")
+    && clientSrc.includes('hit.workspaceId') && clientSrc.includes('joinNovelRoot(ctx.wsRoot, novel.id)')
     && clientSrc.includes("api.agentPresets.select({ sessionId, agentPreset: 'novel-writing' })")
     && clientSrc.includes('launcher.bindSession(novel.id, sessionId)')
     && clientSrc.includes('launcher.open(sessionId)')
@@ -645,6 +647,60 @@ check('客户端源码面：UX-013 删除链绑定清理走 settings.mutate unse
     && clientSrc.includes("launcher.apiHas('settings', 'mutate')")
     && clientSrc.includes('delete next[novel.id]')         // 回退路径保留（旧宿主）
 })(), 'ux013 delete binding mutate missing')
+// UX-014（用户实机批注 8 点 + 2 真 Bug）：
+//  ①左窗去工作区行（WorkspaceRootEditor 退役）与书目列表（LeftNavBookRow 退役），仅文件树 + 树头「文件」
+//  ③目录默认折叠（collectDirPaths 全目录集初始化 + 切书 key 重挂独立初始化）
+//  ④⑤真 Bug：让位观察器 CSSOM 归一化自伤修复（sameMargin 容差）+ 重锚定重挂观察器（N1）
+//  ⑥⇄/✕ 28×28 醒目钮（.nv-bar-ctl 同管理台 ✕ 变体）；⑦抽屉卡片直达创作台（openCtl 单链）
+//  ⑧SplitWorkspace 会话 current 联动关闭（对齐管理台；脏稿守卫）；⑨applyMargin 去 marginTop 推下
+check('客户端源码面：UX-014 左窗仅文件树（无工作区行/书目列表 + 「文件」树头 + 目录默认折叠）', (() => {
+  return clientSrc.includes('function LeftNav(props)')
+    && clientSrc.includes("head('文件')")
+    && !clientSrc.includes('LeftNavBookRow') && !clientSrc.includes('WorkspaceRootEditor')
+    && !clientSrc.includes("head('书目（'") && !clientSrc.includes("head('文件（novel-project）')")
+    && !clientSrc.includes('更改工作区根目录')
+    && clientSrc.includes('collectDirPaths') && clientSrc.includes('collapseInitRef')
+    && clientSrc.includes('setCollapsed(new Set(dirs))')
+    && clientSrc.includes('key: selectedId, t, detail, selectedId')
+})(), 'ux014 left pane missing')
+check('客户端源码面：UX-014④⑤ 让位观察器容差比较 + 重锚定重挂（CSSOM ≤6 位有效数字归一化自伤修复）', (() => {
+  const disconnects = (clientSrc.match(/this\.yieldObserver\.disconnect\(\)/g) ?? []).length
+  return clientSrc.includes('function sameMargin') && clientSrc.includes('Math.abs(pa - pb) < 0.5')
+    && clientSrc.includes('sameMargin(this.viewArea.style.marginLeft, this.lastMarginLeft)')
+    && clientSrc.includes('sameMargin(this.viewArea.style.marginRight, this.lastMarginRight)')
+    && disconnects >= 2 && clientSrc.includes('this.yieldObserver.observe(viewArea, { attributes: true, attributeFilter: [\'style\'] })')
+})(), 'ux014 yield fix missing')
+check('客户端源码面：UX-014⑨ 挤法不再推下对话窗（applyMargin 不写 marginTop；对话窗保持整高）', (() => {
+  return clientSrc.includes('viewArea.style.marginRight = this.lastMarginRight')
+    && !clientSrc.includes('viewArea.style.marginTop = this.lastMarginTop')
+    && !clientSrc.includes('this.lastMarginTop = TITLE_BAR_H')
+    && clientSrc.includes("this.lastMarginRight = this.chatSide === 'left' ? contentW + 'px' : ''")
+})(), 'ux014 marginTop fix missing')
+check('客户端源码面：UX-014⑥ 标题栏 ⇄/✕ 28×28 醒目钮（.nv-bar-ctl 与管理台 ✕ 同型：28px/边框/16px/600）', (() => {
+  const css = (cls) => {
+    const m = new RegExp(cls.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{([^}]*)\\}').exec(clientSrc)
+    return m !== null ? m[1] : ''
+  }
+  const ctl = css('.nv-bar-ctl')
+  const count = (clientSrc.match(/className: 'nv-bar-ctl'/g) ?? []).length
+  return ctl.includes('width:28px') && ctl.includes('height:28px') && ctl.includes('border:1px solid')
+    && ctl.includes('border-radius:8px') && ctl.includes('font-size:16px') && ctl.includes('font-weight:600')
+    && count === 2
+})(), 'ux014 bar ctl missing')
+check('客户端源码面：UX-014⑦ 抽屉卡片直达创作工作台（openCtl 单链；不再打开控制台聚焦）', (() => {
+  return clientSrc.includes('const openCtl = {')
+    && clientSrc.includes('onOpen: (id, st) => {')
+    && clientSrc.includes('openCtl.open(novel, st, {')
+    && clientSrc.includes('const openBook = (novel, st) => openCtl.open(novel, st, {')
+    && !clientSrc.includes('onOpen: (id) => openConsole(t, id)')
+    && !clientSrc.includes('点击 = 打开控制台并聚焦该书')
+})(), 'ux014 drawer direct missing')
+check('客户端源码面：UX-014⑧ 创作台会话联动关闭分栏（splitCurrent + 基准守卫 + 独立豁免令牌 + closeWorkbench 脏稿守卫）', (() => {
+  return clientSrc.includes('splitCurrent') && clientSrc.includes('splitSeededRef') && clientSrc.includes('splitPrevRef')
+    && clientSrc.includes('novelSplit.pluginOpenTokens.has(splitCurrent)')
+    && clientSrc.includes('novelSplit.pluginOpenTokens.add(sessionId)')
+    && clientSrc.includes('if (snap.active === true) closeWorkbench(t)')
+})(), 'ux014 split linkage missing')
 let renderErr = ''
 check('各注册面 render 可调用（组件体可求值；关闭态浮层输出 null 合法）', (() => {
   for (const r of slotRegs) {
