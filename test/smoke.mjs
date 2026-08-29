@@ -732,7 +732,7 @@ check('客户端源码面：UX-014⑥ 标题栏 ⇄/✕ 28×28 醒目钮（.nv-b
   const count = (clientSrc.match(/className: 'nv-bar-ctl'/g) ?? []).length
   return ctl.includes('width:32px') && ctl.includes('height:32px') && ctl.includes('border:1px solid')
     && ctl.includes('border-radius:8px') && ctl.includes('font-size:18px') && ctl.includes('font-weight:600')
-    && count === 2
+    && count === 3
 })(), 'ux014 bar ctl missing')
 check('客户端源码面：UX-014⑦ 抽屉卡片直达创作工作台（openCtl 单链；不再打开控制台聚焦）', (() => {
   return clientSrc.includes('const openCtl = {')
@@ -862,6 +862,15 @@ check('客户端源码面：UX-047 中窗上下工作台分隔线可拖（.nv-mi
     && clientSrc.includes('clampNum(Math.round(init.h + (init.y - ev.clientY)), 120, max)')
     && clientSrc.includes('resizeMid: \'拖拽调整下方工作台高度\'') && clientSrc.includes('resizeMid: \'Drag to resize bottom workbench height\'')
 })(), 'ux047 mid divider draggable')
+check('客户端源码面：UX-048 当前布局固化为默认（☆ nv-bar-ctl 按钮：saveAsDefaults 写 dsh.novel.defaults.v1 默认槽；loadSplitSaved 无存档时回退默认槽〔parseSplitSaved 抽取〕否则内置默认；open() 回读 midH——持久化值重开生效；i18n saveAsDefault/savedDefault 成对）', (() => {
+  return clientSrc.includes('DEFAULTS_PERSIST_KEY')
+    && clientSrc.includes("localStorage.setItem(DEFAULTS_PERSIST_KEY, JSON.stringify({ leftW: this.leftW, chatW: this.chatW, chapterW: this.chapterW, midH: this.midH, chatSide: this.chatSide }))")
+    && clientSrc.includes("const defRaw = localStorage.getItem(DEFAULTS_PERSIST_KEY)\n        if (defRaw !== null) return parseSplitSaved(defRaw)")
+    && clientSrc.includes('function parseSplitSaved(raw)')
+    && clientSrc.includes("this.midH = saved !== null && saved.midH !== null ? saved.midH : null")
+    && clientSrc.includes("title: t('saveAsDefault')")
+    && clientSrc.includes('savedDefault: \'已将当前布局设为默认\'') && clientSrc.includes('savedDefault: \'Saved as default layout\'')
+})(), 'ux048 save current layout as default')
     && clientSrc.includes("const NOVEL_STAGES = [")
     && (clientSrc.match(/el\(TitleDot, \{ useSessions: props\.useSessions, boundId, t \}\)/g) ?? []).length === 1   // 状态点回到标题栏（仅一处）
     && clientSrc.includes('`${t(\'stage\')}：${titleStageName}`')                          // UX-041b 阶段前缀「阶段：」

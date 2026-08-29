@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 57 | 53 | 0 | 2 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 58 | 54 | 0 | 2 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -110,7 +110,8 @@
 | **P1** | UX-044 | 底部工作台高度修正（用户「我是刷太高了——是说太高了，你把章节名列表放出来干啥」——UX-043 把「宽」误读为横行改宽/章节列全高、方向全错被纠正）：回退 UX-043（ChapterPanel 回简单内容列），维持 UX-042 全宽布局但**高度 46%→30%**（太高）；章节列表回上部区（不占全高）；smoke（46%→30% + 顶部常驻断言更新） | UX-042 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-059；node --check 通过；smoke 133/133；零宿主依赖保持) |
 | **P1** | UX-045 | 底部工作台分隔线横贯全宽（用户「你那个分割线又是一样的问题」——中窗列 `padding:10px` 使 wb 顶边 borderTop 两侧各停 10px、右端离面板边线 10px 悬空=历史同款"线没接上"）：修复=列 padding 归零（分隔线直抵左缘/右缘面板边线 T 型相接），内边距下放（顶部区 padding 10 10 0；wb padding 8 10 0——页签/内容保持 10px 呼吸）；探针几何（wb 顶线满宽）+4x 放大目检（线-边相交无悬空）；smoke（顶部区 padding 断言） | UX-044 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-060；node --check 通过；smoke 133/133；探针+目检通过；零宿主依赖保持) |
 | **P1** | UX-046 | 分隔线左端相接（用户「右边连起来了，左边没有」——nv-main 流内 vdiv 4px 空隙使列左缘 525 vs 左窗边线 521，分隔线左端悬空 4px）：修复=**vdiv 改绝对定位悬浮命中区**（`position:absolute; left:leftW-2; top:0; bottom:0`，不占流；覆盖左窗右缘边界仍可拖/可高亮）；中窗列紧贴左窗（521 起）——分隔线左端 521 与左窗边线 T 型相接（两端皆连）；探针实测：leftEdge 右缘 521=column 左缘 521（flush）、vdiv [519,4]、tabs 531-747；smoke 133/133 | UX-045 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-061；node --check 通过；smoke 133/133；探针实测通过；零宿主依赖保持) |
-| **P1** | UX-047 | 中窗上下工作台分隔线可拖（用户「把这个分割线也修改成可调节的，你的布局比例做的不行，就让用户有可操作的空间吧」）：新增 `.nv-middiv` 水平分隔线（4px row-resize 命中区 + hover/active accent 高亮）——**下半区高度 120px–60% bodyH 拖拽可调**（midDividerHandler pointer 捕获，拖起增大/拖下减小；默认 30%），**持久化 midH**（loadSplitSaved/persistSplit/novelSplit.setMidH 同构扩展）；i18n resizeMid 成对；smoke 133（新增 ux047 检查） | UX-046 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-062；node --check 通过；smoke 133/133；零宿主依赖保持) |
+| **P1** | UX-047 | 中窗上下工作台分隔线可拖（用户「把这个分割线也修改成可调节的，你的布局比例做的不行，就让用户有可操作的空间吧」）：新增 `.nv-middiv` 水平分隔线（4px row-resize 命中区 + hover/active accent 高亮）——**下半区高度 120px–60% bodyH 拖拽可调**（midDividerHandler pointer 捕获，拖起增大/拖下减小；默认 30%），**持久化 midH**（loadSplitSaved/persistSplit/novelSplit.setMidH 同构扩展）；i18n resizeMid 成对；smoke 133（新增 ux047 检查）；**修复**：snapshot() 缺 midH 致拖不动（EVD-063） | UX-046 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-062/063；node --check 通过；smoke 133/133；CDP 拖拽实测 166→120+持久化；零宿主依赖保持) |
+| **P1** | UX-048 | 当前布局固化为默认（用户「把当前的布局作为默认布局吧」——非重置回内置值）：新增 **☆ 标题栏按钮「将当前布局设为默认」**——`novelSplit.saveAsDefaults()` 写**默认布局槽** `dsh.novel.defaults.v1`（leftW/chatW/chapterW/midH/chatSide），保存成功提示条（savedDefault）；`loadSplitSaved()` 无当前存档时**回退默认槽**（parseSplitSaved 抽取复用），再无槽→内置默认；**修复同款 bug**：open() 未回读 midH（持久化值重开丢失——现补 `this.midH = saved…`）；i18n saveAsDefault/savedDefault 成对；smoke 133（新增 ux048 检查；ux014 检查 nv-bar-ctl 计数 2→3） | UX-047 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-064；node --check 通过；smoke 133/133；零宿主依赖保持) |
 
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 
