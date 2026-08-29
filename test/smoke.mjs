@@ -842,8 +842,12 @@ check('客户端源码面：UX-036 工作流状态迁左窗（左窗=纵向分�
     && !clientSrc.includes("tab === 'workflow'")
     && clientSrc.includes("flex: '0 0 auto', maxHeight: '78%'")                            // 工作流容器随内容自适应（UX-039：不固定 60%、无下方空白）
     && !clientSrc.includes("maxHeight: '220px', overflow: 'auto' }")                        // 清单卡取消内部滚动（全部展开——上面不再滚动）
-    && clientSrc.includes("el(WorkflowPanel, { t, novel: detail })")
-    && (clientSrc.match(/el\(WorkflowPanel, \{ t, novel: detail \}\)/g) ?? []).length === 1
+    && clientSrc.includes("el(WorkflowPanel, { t, novel: detail, dot:")
+    && (clientSrc.match(/el\(WorkflowPanel, \{ t, novel: detail, dot:/g) ?? []).length === 1
+    && !clientSrc.includes("el('span', { className: 'nv-badge' }")                        // UX-040 标题栏阶段徽标迁出
+    && (clientSrc.match(/el\(TitleDot, \{ useSessions: props\.useSessions, boundId, t \}\)/g) ?? []).length === 1   // 状态点仅 WorkflowPanel 一处（标题栏迁出）
+    && clientSrc.includes('stats.total_words ?? 0} ${t(\'words\')}')                      // UX-040 整体统计（字数）
+    && clientSrc.includes('const stageName = (stages.find(([id]) => id === currentStage) ?? [])[1] ?? currentStage ?? \'—\'')  // 本地化阶段名
     && !clientSrc.includes("${t('stage')}：${state.current_stage ?? '—'}")                // UX-037 阶段信息卡已删（阶段逻辑由清单图标承载）
     && clientSrc.includes("${t('gates')}：")                                              // 门禁/清单卡恢复保留
     && clientSrc.includes("${t('requests')}：")
