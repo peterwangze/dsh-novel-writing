@@ -830,7 +830,7 @@ check('客户端源码面：UX-022 两个「拖动条」（滚动条）默认隐
     && clientSrc.includes("el.classList.add('nv-scl')") && clientSrc.includes("el.classList.remove('nv-scl')")   // 滚动显示/空闲撤除
     && clientSrc.includes('document.addEventListener(\'scroll\', onScroll, true)')
     && clientSrc.includes('document.removeEventListener(\'scroll\', onScroll, true)')
-    && clientSrc.includes('setTimeout(() => { el.classList.remove(\'nv-scl\'); timers.delete(el) }, 600)')        // 600ms 自动隐藏
+    && clientSrc.includes('setTimeout(() => { el.classList.remove(\'nv-scl\'); timers.delete(el) }, 1500)')        // 1.5s 自动隐藏（用户调长）
     && clientSrc.includes('for (const t of timers.values()) clearTimeout(t)')                                     // 卸载清理
     && clientSrc.includes('.nv-scroll{overscroll-behavior:contain}')
     && clientSrc.includes("className: 'nv-scroll'")                                    // 五个滚动容器（正文阅读区/编辑 textarea/正文列/左窗/页签外层）
