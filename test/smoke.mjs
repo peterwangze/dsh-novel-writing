@@ -822,7 +822,7 @@ check('客户端源码面：UX-025 三分隔线 1px 细线（vdiv/chdiv/chatdiv�
     && clientSrc.includes('transition:background .12s ease,color .12s ease,border-color .12s ease')                     // 页签过渡
     && clientSrc.includes('.nv-tab:hover{color:var(--dsw-alias-label-primary,#e6e8eb);background:var(--dsw-alias-fill-l1,rgba(255,255,255,.05))}')
     && clientSrc.includes('.nv-bar{flex:none;display:flex;align-items:center;gap:8px;height:38px;padding:0 14px;box-sizing:border-box;border-bottom:1px solid var(--dsw-alias-border-l2,#3a4150)')  // UX-026 标题栏底边线清晰
-    && clientSrc.includes('.nv-left{flex:none;min-height:0;overflow:auto;padding:8px;box-sizing:border-box;border-right:1px solid var(--dsw-alias-border-l2,#3a4150)}')                                         // UX-026 左窗右缘线清晰
+    && clientSrc.includes('.nv-left{flex:none;min-height:0;overflow:auto;padding:8px;box-sizing:border-box}')                                                 // UX-028 树窗右缘线由 vdiv 拖线承担（免双线）
     && clientSrc.includes('.nv-split{position:fixed;display:flex;flex-direction:column;box-sizing:border-box;border:1px solid var(--dsw-alias-border-l2,#3a4150);border-right:none;')      // UX-026 外框 border-l2 + UX-027 右缘与拖线去重
     && clientSrc.match(/\.nv-split\{[^}]*border:1px solid var\(--dsw-alias-border-l1,/) === null  // 无 border-l1 残留
 })(), 'ux025 thin dividers + polish + ux026 visible area dividers + ux027 single chat edge')

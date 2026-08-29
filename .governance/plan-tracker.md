@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 39 | 34 | 0 | 2 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 40 | 35 | 0 | 2 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -92,6 +92,7 @@
 | **P1** | UX-025 | 界面优化（用户：「三个分割线可以稍微调整的细一些……太突兀了，你可以参考比较成熟的网页端界面设计，对我们当前两级工作台的界面进行一次优化」）：①**三条可拖分割条 4px 实底 → 1px 细线**（VS Code/Linear 式：`width:4px` 透明抓握区保留可拖性 + `border-right:1px solid border-l2` + hover accent——与宿主细分割线协调，`border-radius:2px` 旧实底条移除）；②**章节列表列浅底侧栏感**（`background:fill-l1(rgba(255,255,255,.02))`——成熟 UI 层级靠浅底而非粗线）+ 章节行 hover 过渡 `0.12s`；③页签 hover 浅底 + 背景/字色/border 过渡统一；控制台（玻璃卡片/hover/过渡已成熟化）本轮不动；全部宿主令牌/插件自身元素/零宿主依赖；smoke 131（ux022 常驻断言改写为 ux025 细线断言）+截图目检 | UX-024 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-041；node --check 通过；smoke 131/131；探针 computed 样式实测（1px/border-l2/4px 抓握区/浅底）+目检通过；novel-001 只读零写；零宿主依赖保持) |
 | **P1** | UX-026 | 区域分割线提清晰（用户：「各个区域的分割线……其他分割线非常不明显都快看不清」+红框指认标题栏底边线「你能看清吗？」——认领本轮遗漏）：工作台**区域分割线 border-l1(#262b36,近不可见) → border-l2(#3a4150,清晰可见)**——①标题栏底边（`.nv-bar` border-bottom）②左窗右缘（`.nv-left` border-right）③工作台外框（`.nv-split` border）；与三条 1px 细拖线（border-l2+hover accent）同层级，区域分隔一眼可辨；三条拖线保持 UX-025 细线；smoke 131（ux025 检查补三条 border-l2 正断言+外框 border-l1 负断言） | UX-025 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-042；node --check 通过；smoke 131/131；零宿主依赖保持) |
 | **P1** | UX-027 | 聊天边界两根线去重（用户放大截图「这里为何是两根线」——UX-026 提亮外框后：工作台外框右缘 `.nv-split` border-right（border-l2 1px）+ 聊天窗拖线 `.nv-chatdiv` border-right（border-l2 1px）相距仅 ~2px，放大成两根线）：修复=外框 `border-right:none`——聊天边界唯一线 = 拖线（1px 细线+hover accent，UX-025 风格保持）；外框左/上/下边线保留（UX-026 提亮不变）；smoke 131（ux025 检查补外框 border-right:none 正断言） | UX-026 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-043；node --check 通过；smoke 131/131；零宿主依赖保持) |
+| **P1** | UX-028 | 界面设计规范调研落地（用户：「先调研好的 web 开源项目的页面设计，再优化，别自造轮子」——P-08 检视）：调研=①VS Code `sash.css`（开源工作台分割条范本：`--vscode-sash-size:4px` 透明命中区 + 1px 可见线 + hover accent）②参考项目 dsh-worktable styles/split（4px 分割条 + 1px 分隔线体系）→ 落地：**一处边界一条线**——`.nv-left` 右缘线移除（由 vdiv 拖线承担；与 UX-027 聊天边界同原则），消除 树|章节列 双线；其余经核验已与该规范一致（4px 区+1px 线+hover accent＝VS Code sash 语义；分割条 border-l2 为 user-driven 偏差〔参考用 l1 但用户屏幕近不可见〕；滚动条 overlay 行为［滚动中显/1.5s 隐］＝Win11 惯例；外框无右缘线）；smoke 131（断言 sync） | UX-027 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-044；node --check 通过；smoke 131/131；零宿主依赖保持) |
 
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 

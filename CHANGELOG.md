@@ -29,6 +29,7 @@
 - **界面优化（UX-025，用户「分割线调细一些……太突兀了」「参考比较成熟的网页端界面设计，对两级工作台界面进行一次优化」）**：①**三分隔线 4px 实底 → 1px 细线**——`.nv-vdiv`/`.nv-chdiv`/`.nv-chatdiv` 改 `width:4px` 透明抓握区 + `border-right:1px solid border-l2` + hover `border-right-color:accent`（VS Code/Linear 式：细线克制、可拖性保留——4px 命中区不变），与宿主细分隔线风格协调；②**章节列浅底侧栏感**（`fill-l1` 0.02 浅底 + 章节行 hover 过渡 0.12s）；③页签 hover 浅底 + 背景/字色/border 过渡统一（控制台卡片已有玻璃拟态/hover/过渡属成熟形态，本轮不动）。全部宿主令牌/插件自身元素/零宿主依赖；探针 computed 实测 1px/bg transparent/4px/浅底 + 目检协调；smoke 131/131。
 - **区域分割线提清晰（UX-026，用户「各个区域的分割线……你看我圈出来的这个，你能看清吗？」——标题栏底边 border-l1 #262b36 近不可见，上轮「其他分割线不明显」诉求被遗漏）**：工作台**区域分割线 border-l1 → border-l2 #3a4150**——标题栏底边 `.nv-bar`、左窗右缘 `.nv-left`、工作台外框 `.nv-split` 三处；与三条 1px 细拖线（border-l2 + hover accent）同层级，区域分隔一眼可辨；拖线保持 UX-025 细线不变；smoke 131/131。
 - **聊天边界两根线去重（UX-027，用户放大截图「我放大了看，这里为何是两根线」）**：UX-026 提亮外框后，外框右缘 `.nv-split` border-right 与聊天窗拖线 `.nv-chatdiv` 相距仅 ~2px、放大成两根线——修复=外框 `border-right:none`，聊天边界唯一线=1px 拖线（hover accent 保持）；外框左/上/下边线提亮保留；smoke 131/131。
+- **界面设计规范调研落地（UX-028，用户「是不是可以先调研好的 web 开源项目的页面设计再优化……你自己造轮子也造不好」——P-08 检视）**：调研两个源头——①VS Code `sash.css`（分割条范本：`--vscode-sash-size:4px` 透明命中区 + 1px 可见线 + hover accent）②参考项目 dsh-worktable（`DIVIDER=4` 分割条 + 1px 分隔线体系）→ **核验结论：现有四条 1px 线（4px 抓握区 + hover accent）即 VS Code sash 规范**；滚动条 overlay 行为（滚动中显/1.5s 隐）＝成熟 OS 惯例；层级靠浅底与字重。**修正**：一处边界一条线——树窗右缘线移除（由 vdiv 拖线承担，与聊天边界同原则），消除 树|章节列 双线；分割条用 border-l2 为 user-driven 偏差（参考用 border-l1 但用户屏幕近不可见，可见性优先，已记录）。smoke 131/131。
 
 ## [0.3.0] - Unreleased
 
