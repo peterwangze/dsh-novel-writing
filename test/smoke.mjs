@@ -732,7 +732,7 @@ check('客户端源码面：UX-014⑥ 标题栏 ⇄/✕ 28×28 醒目钮（.nv-b
   const count = (clientSrc.match(/className: 'nv-bar-ctl'/g) ?? []).length
   return ctl.includes('width:32px') && ctl.includes('height:32px') && ctl.includes('border:1px solid')
     && ctl.includes('border-radius:8px') && ctl.includes('font-size:18px') && ctl.includes('font-weight:600')
-    && count === 3
+    && count === 4
 })(), 'ux014 bar ctl missing')
 check('客户端源码面：UX-014⑦ 抽屉卡片直达创作工作台（openCtl 单链；不再打开控制台聚焦）', (() => {
   return clientSrc.includes('const openCtl = {')
@@ -870,7 +870,10 @@ check('客户端源码面：UX-048 当前布局固化为默认（☆ nv-bar-ctl 
     && clientSrc.includes("this.midH = saved !== null && saved.midH !== null ? saved.midH : null")
     && clientSrc.includes("title: t('saveAsDefault')")
     && clientSrc.includes('savedDefault: \'已将当前布局设为默认\'') && clientSrc.includes('savedDefault: \'Saved as default layout\'')
-})(), 'ux048 save current layout as default')
+    && clientSrc.includes("localStorage.removeItem(SPLIT_PERSIST_KEY)")                  // UX-049 恢复默认：清当前存档→回默认槽/内置
+    && clientSrc.includes("title: t('resetLayout')")
+    && clientSrc.includes('resetLayoutDone: \'已恢复默认布局\'') && clientSrc.includes('resetLayoutDone: \'Default layout restored\'')
+})(), 'ux048 save current layout as default + ux049 restore default')
     && clientSrc.includes("const NOVEL_STAGES = [")
     && (clientSrc.match(/el\(TitleDot, \{ useSessions: props\.useSessions, boundId, t \}\)/g) ?? []).length === 1   // 状态点回到标题栏（仅一处）
     && clientSrc.includes('`${t(\'stage\')}：${titleStageName}`')                          // UX-041b 阶段前缀「阶段：」

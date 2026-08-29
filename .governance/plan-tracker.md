@@ -39,7 +39,8 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 58 | 54 | 0 | 2 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 59 | 55 | 0 | 2 | G5 passed-with-conditions | — |
+| **P1** | UX-049 | 恢复默认布局按钮（用户「有恢复默认布局的按键吗」——UX-048 收尾补全）：标题栏新增 **⟳ 按钮「恢复默认布局」**——`novelSplit.resetSplit()`：清除当前存档（removeItem SPLIT_PERSIST_KEY）后按 loadSplitSaved()（默认槽 ☆ 固化 → 内置兜底）即时重置 leftW/chapterW/chatSide/midH/chatW（clamp，applyMargin+notify），成功提示条；i18n resetLayout/resetLayoutDone 成对；smoke 133/133（ux048 检查并入恢复断言；ux014 计数 3→4） | UX-048 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-065；node --check 通过；smoke 133/133；零宿主依赖保持) |
 
 ## 当前活跃事项
 
