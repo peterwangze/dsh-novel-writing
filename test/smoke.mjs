@@ -826,7 +826,8 @@ check('客户端源码面：UX-022 两个「拖动条」（滚动条）默认隐
   return clientSrc.includes('.nv-chlist::-webkit-scrollbar,.nv-scroll::-webkit-scrollbar{width:8px;background:transparent}')
     && clientSrc.includes('.nv-chlist::-webkit-scrollbar-thumb,.nv-scroll::-webkit-scrollbar-thumb{background:transparent}')
     && clientSrc.includes('.nv-scl::-webkit-scrollbar-thumb{background:var(--dsw-alias-border-l2,#3a4150)}')   // UX-024 滚动触发显现
-    && clientSrc.includes('.nv-chlist::-webkit-scrollbar-thumb:hover,.nv-scroll::-webkit-scrollbar-thumb:hover,.nv-scl::-webkit-scrollbar-thumb:active{background:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
+    && clientSrc.includes('.nv-scl::-webkit-scrollbar-thumb:active{background:var(--dsw-alias-state-accent-primary,#4f8ef7)}')   // UX-031 仅拖动拇指时高亮
+    && !clientSrc.includes('::-webkit-scrollbar-thumb:hover')                                                // UX-031 无悬停即显/高亮（用户只允许滚动时显示）
     && !clientSrc.includes('.nv-scroll:hover::-webkit-scrollbar-thumb')                                          // 无悬停常驻（UX-024 撤除）
     && !clientSrc.includes('.nv-chlist:hover::-webkit-scrollbar-thumb')
     && clientSrc.includes("el.classList.add('nv-scl')") && clientSrc.includes("el.classList.remove('nv-scl')")   // 滚动显示/空闲撤除
