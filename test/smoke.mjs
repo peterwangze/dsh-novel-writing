@@ -15,7 +15,8 @@
  *       记录·恢复 / 双压根因注释在位）+ UX-019 收尾（版本徽标撤离负断言 /
  *       章节行仅号+名去字数 / 列表 overflow:auto）+ UX-020 用户修正
  *       （章节名校准：中文数字/冒号/BOM 容错/无标题负回退；客户端章节列
- *       拖宽条恢复：.nv-chdiv + pointer 拖拽 + chapterW 持久化 120–360px）。
+ *       拖宽条恢复：.nv-chdiv + pointer 拖拽 + chapterW 持久化 120–360px）+
+ *       UX-021 用户批注（行去装饰圆点 / 三条可拖分隔线默认透明·悬停定位·拖动 accent）。
  */
 import { mkdtempSync, writeFileSync, mkdirSync, readFileSync, rmSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -772,11 +773,11 @@ check('客户端源码面：UX-015① 标题栏加高放大（38px 高 / 14px �
     && barMini.includes('width:24px') && barMini.includes('height:24px')
     && launch.includes('padding:5px 14px')
 })(), 'ux015 bar missing')
-check('客户端源码面：UX-019② 章节行仅「第N章 + 名称」（去字数；有名称「第N章 · 名称」/空名称回退「第N章」；ellipsis 沿用）', (() => {
+check('客户端源码面：UX-019② 章节行仅「第N章 + 名称」（去字数+去装饰圆点〔UX-021〕；有名称「第N章 名称」/空名称回退「第N章」；ellipsis 沿用）', (() => {
   return clientSrc.includes("const cName = typeof c.name === 'string' ? c.name : ''")
     && clientSrc.includes('`第${c.num}章${marks}`')        // 无名称回退格式（第N章 + 标记）
     && clientSrc.includes("el('span', { key: 'no'")       // 有名称：第N章 span
-    && clientSrc.includes("el('span', { key: 'sep'")      // 有名称：· 分隔 span
+    && !clientSrc.includes("key: 'sep'")                  // 无装饰圆点「·」（UX-021 负断言）
     && clientSrc.includes("el('span', { key: 'nm'")       // 有名称：名称 ellipsis span
     && !clientSrc.includes('${c.words}')                  // 章节行无任何字数渲染（去字数）
     && !clientSrc.includes('`· ${c.words}${marks}`')
@@ -784,7 +785,7 @@ check('客户端源码面：UX-019② 章节行仅「第N章 + 名称」（去�
     && clientSrc.includes("textOverflow: 'ellipsis'")
     && clientSrc.includes("className: 'nv-chlist'")
 })(), 'ux019 chapter name row missing')
-check('客户端源码面：UX-020 章节列拖宽条恢复为 UX-015③ 原始样式（.nv-chdiv 元素+pointer 拖拽 / CHAPTER_W 120–360 常量 / chapterW 持久化读写 / 列宽随 snap.chapterW / .nv-chlist overflow:auto 滚动 / i18n 键恢复 / 4px 实底分隔条样式）', (() => {
+check('客户端源码面：UX-020 章节列拖宽条（.nv-chdiv 元素+pointer 拖拽 / CHAPTER_W 120–360 常量 / chapterW 持久化读写 / 列宽随 snap.chapterW / .nv-chlist overflow:auto 滚动 / i18n 键恢复 / 4px 几何保持〔UX-021 默认透明三态〕）', (() => {
   return clientSrc.includes("className: 'nv-chdiv'")                                    // 正：拖宽条元素
     && clientSrc.includes("onPointerDown: chapterDividerHandler")                       // 正：pointer 拖拽入口
     && clientSrc.includes('target.setPointerCapture(e.pointerId)')
@@ -798,9 +799,26 @@ check('客户端源码面：UX-020 章节列拖宽条恢复为 UX-015③ 原始�
     && clientSrc.includes("width: chapterW + 'px'")                                     // 列宽随章列状态
     && clientSrc.includes('title: t(\'resizeChlist\')') && clientSrc.includes('resizeChlist:')
     && clientSrc.includes('.nv-chlist{flex:none;min-height:0;overflow:auto}')           // 滚动（UX-015③ 原样）
-    && clientSrc.includes('.nv-chdiv{flex:none;width:4px;align-self:stretch;cursor:col-resize;background:var(--dsw-alias-border-l2,#3a4150);border-radius:2px;touch-action:none}')  // UX-015③ 原始 4px 实底
-    && clientSrc.includes('.nv-chdiv:hover{background:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
-})(), 'ux020 chapter drag restored to ux015 original')
+    && clientSrc.includes('.nv-chdiv{flex:none;width:4px;align-self:stretch;cursor:col-resize;background:transparent;border-radius:2px;touch-action:none}')  // 4px 几何保持；默认透明（UX-021）
+    && clientSrc.includes('.nv-chdiv:hover{background:var(--dsw-alias-border-l2,#3a4150)}')
+    && clientSrc.includes('.nv-chdiv:active{background:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
+})(), 'ux020 chapter drag restored')
+check('客户端源码面：UX-021 所有拖动图标默认隐藏（vdiv/chatdiv/chdiv 三条可拖线默认 background:transparent + hover 显 border-l2 定位 + :active 拖动 accent；无旧常驻实底线残留）', (() => {
+  const divider = (cls) => {
+    const m = new RegExp('\\.' + cls + '\\{([^}]*)\\}').exec(clientSrc)
+    return m !== null ? m[1] : ''
+  }
+  return divider('nv-vdiv').includes('background:transparent')
+    && divider('nv-chatdiv').includes('background:transparent')
+    && divider('nv-chdiv').includes('background:transparent')
+    && clientSrc.includes('.nv-vdiv:hover{background:var(--dsw-alias-border-l2,#3a4150)}')
+    && clientSrc.includes('.nv-chatdiv:hover{background:var(--dsw-alias-border-l2,#3a4150)}')
+    && clientSrc.includes('.nv-chdiv:hover{background:var(--dsw-alias-border-l2,#3a4150)}')
+    && clientSrc.includes('.nv-vdiv:active{background:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
+    && clientSrc.includes('.nv-chatdiv:active{background:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
+    && clientSrc.includes('.nv-chdiv:active{background:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
+    && !clientSrc.includes('background:var(--dsw-alias-border-l2,#3a4150);touch-action:none}')   // 旧常驻实底线（vdiv 形态）已无
+})(), 'ux021 dividers hidden by default')
 check('客户端源码面：UX-015④ 抽屉小一档（13/12px + 6·8px + 4px 间隙 + 8px 点 + 空态随动；控制台卡片不动）', (() => {
   const css = (cls) => {
     const m = new RegExp(cls.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{([^}]*)\\}').exec(clientSrc)
