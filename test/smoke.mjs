@@ -840,7 +840,8 @@ check('客户端源码面：UX-036 工作流状态迁左窗（左窗=纵向分�
   return clientSrc.includes("['data', t('data')], ['publish', t('publish')], ['requests', t('requests')]")
     && !clientSrc.includes("'chapters', t('chapters')]")                                  // UX-042 章节不再页签（常驻上半区）
     && !clientSrc.includes("'workflow', t('workflow')]")
-    && clientSrc.includes("flex: '0 0 46%', minHeight: 0, display: 'flex', flexDirection: 'column', borderTop")   // UX-042 中窗下半区工作台
+    && clientSrc.includes("flex: '0 0 30%', minHeight: 0, display: 'flex', flexDirection: 'column', borderTop")   // UX-044 底部工作台全宽+30% 高（46% 太高）
+    && clientSrc.includes('detail !== null ? midFooter : null')                           // UX-044 底部工作台为顶区兄弟（章节列不占全高）
     && clientSrc.includes("flex: '0 0 auto', maxHeight: '78%'")                            // 工作流容器随内容自适应（UX-039：不固定 60%、无下方空白）
     && !clientSrc.includes("maxHeight: '220px', overflow: 'auto' }")                        // 清单卡取消内部滚动（全部展开——上面不再滚动）
     && clientSrc.includes("el(WorkflowPanel, { t, novel: detail })")
@@ -873,8 +874,8 @@ check('客户端源码面：UX-022 两个「拖动条」（滚动条）默认隐
     && clientSrc.includes("className: 'nv-scroll'")                                    // 五个滚动容器（正文阅读区/编辑 textarea/正文列/左窗/页签外层）
     && (clientSrc.match(/className: 'nv-scroll'/g) ?? []).length === 6                    // 六个滚动容器（正文阅读区/编辑 textarea/正文列/左窗树/页签外层/左窗工作流状态）
     && clientSrc.includes("className: 'nv-scroll', style: { border: '1px solid ' + TK.line")   // 正文阅读区容器纳入（UX-023）
-    && clientSrc.includes('value: draft') && clientSrc.includes('onKeyDown: (e) =>')           // 编辑 textarea 同链（类在五项计数内）
-    && clientSrc.includes("el('div', { style: { height: '100%', overflow: 'hidden' } }")  // 高度链（UX-042 章节区常驻包装）
+    && clientSrc.includes('onKeyDown: (e) =>')                                            // 编辑 textarea 同链（类在五项计数内）
+    && clientSrc.includes("el('div', { style: { flex: 1, minHeight: 0, overflow: 'hidden' } }")  // 章节工作台常驻顶部（UX-044）
     && clientSrc.includes("className: 'nv-scroll', style: { flex: 1, minHeight: 0, overflow: 'auto' }")            // UX-042 下半区工作台内容滚动容器
     && clientSrc.includes('{ style: { display: \'flex\', height: \'100%\' } }')                                        // 命中区紧贴列边缘（UX-032 去 gap）
     && clientSrc.includes("className: 'nv-scroll', style: { flex: 1, minWidth: 0, overflow: 'auto', paddingLeft: '12px' } }")  // 内容列 paddingLeft 保留间距（UX-032）
