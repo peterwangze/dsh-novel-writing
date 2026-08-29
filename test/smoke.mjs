@@ -647,16 +647,29 @@ check('客户端源码面：UX-059 工作流控制条（标题栏 ▶ 启动钮�
     && clientSrc.includes('.nv-bar-note')                       // 三态提示条（ok/err/info）保留
     && !clientSrc.includes("className: 'nv-bar-launch'")        // 标题栏启动钮已删除（迁移负断言）
 })(), 'ux059 wf ctl missing')
-check('客户端源码面：UX-059 工作流控制条全链（迁移+停止/继续形态切换+压缩上下文+绑定新会话+i18n 11 键成对）', (() => {
+check('客户端源码面：UX-059 底部行左右拆分（左=工作流控制与章节列表列等宽·右=工作台右移）', (() => {
   const css = (cls) => {
     const m = new RegExp(cls.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{([^}]*)\\}').exec(clientSrc)
     return m !== null ? m[1] : ''
   }
   const stop = css('.nv-wfctl-btn[data-mode=stop]')
-  return clientSrc.includes("className: 'nv-wfctl'")                  // 控制条容器（nv-tabs 之前）
+  const btn = css('.nv-wfctl-btn')
+  const btn2 = css('.nv-wfctl-btn2')
+  return clientSrc.includes("className: 'nv-wfctl'")                  // 控制条容器（左块）
     && clientSrc.includes("className: 'nv-wfctl-btn'") && clientSrc.includes('.nv-wfctl-btn{')
     && clientSrc.includes("'data-mode': wfRunning === true ? 'stop' : 'go'")  // 形态切换
     && stop.includes('background:var(--dsw-alias-state-danger')       // 运行中=⏹ 停止 danger 实底
+    // UX-059 布局结构：底部行水平左右拆分——左=工作流控制面板（与章节列表列等宽 wfW/右缘可见线/同像素列），右=工作台右移收窄
+    && clientSrc.includes('function resolveChapterW(')                // 模块级解析单一事实源（P-05：ChapterPanel/左块共用）
+    && clientSrc.includes("const wfW = resolveChapterW(snap.chapterW)")  // 左块宽 = chapterW（同解析函数，拖章节列联动）
+    && clientSrc.includes("const cw = resolveChapterW(props.chapterW)")  // ChapterPanel 同函数（行为等价，兜底不变）
+    && clientSrc.includes("flex: '0 0 ' + wfW + 'px'")                // 左块 flex = wfW（与章节列表列等宽，拖章节列联动）
+    && clientSrc.includes("paddingLeft: '10px'")                      // 底行容器左缘 10px——wfctl 与 chlist 盒左缘同位
+    && css('.nv-chlist').includes('box-sizing:border-box')            // R3：两条边界线同垂线且同像素列（边框计入宽内，无 1px 错位）
+    && clientSrc.includes("flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', padding: '8px 10px 0 10px'")  // 右块右缘 10px 内缩恢复（与上部区呼吸一致）
+    && clientSrc.includes("borderRight: '1px solid var(--dsw-alias-border-l2,#3a4150)'")  // 左块右缘可见线（面板自身边缘线）
+    && btn.includes('width:100%') && btn2.includes('width:100%')        // 主/次按钮满宽（左面板纵向排列）
+    && btn.includes('text-overflow:ellipsis') && btn2.includes('text-overflow:ellipsis')  // 窄宽（chapterW=120）超宽省略号兜底（不横向滚动）
     && clientSrc.includes('sessions.cancel') && clientSrc.includes("apiHas('sessions', 'cancel')")  // 停止（队列保留）
     && clientSrc.includes("text: '/compact'") && clientSrc.includes('compactBusyHint') && clientSrc.includes('compactSent')  // 压缩上下文
     && clientSrc.includes("t('bindNewSession')") && clientSrc.includes('bindNewDone') && clientSrc.includes('bindNewSessionCtl')  // 绑定新会话（链唯一函数名，不自动打开）
@@ -861,9 +874,9 @@ check('客户端源码面：UX-020 章节列拖宽条（.nv-chdiv 元素+pointer
     && clientSrc.includes('setChapterW(w)') && clientSrc.includes('onChapterW: (w) => novelSplit.setChapterW(w)')
     && clientSrc.includes('this.chapterW = clampNum(Math.round(w), CHAPTER_W_MIN, CHAPTER_W_MAX)')
     && clientSrc.includes('clampNum(saved.chapterW, CHAPTER_W_MIN, CHAPTER_W_MAX)')
-    && clientSrc.includes("width: chapterW + 'px'")                                     // 列宽随章列状态
+    && clientSrc.includes("width: cw + 'px'")                                            // 列宽随章列状态（cw=resolveChapterW 单一事实源）
     && clientSrc.includes('title: t(\'resizeChlist\')') && clientSrc.includes('resizeChlist:')
-    && clientSrc.includes('.nv-chlist{flex:none;min-height:0;overflow-y:auto;overscroll-behavior:contain;background:var(--dsw-alias-fill-l1,rgba(255,255,255,.02));border-right:1px solid var(--dsw-alias-border-l2,#3a4150)}')           // 独立滚动+浅底+右缘边线（UX-022/025/030）
+    && clientSrc.includes('.nv-chlist{box-sizing:border-box;flex:none;min-height:0;overflow-y:auto;overscroll-behavior:contain;background:var(--dsw-alias-fill-l1,rgba(255,255,255,.02));border-right:1px solid var(--dsw-alias-border-l2,#3a4150)}')           // 独立滚动+浅底+右缘边线（UX-022/025/030；R3 border-box 与左块同像素列）
     && clientSrc.includes('.nv-chdiv{flex:none;width:4px;align-self:stretch;cursor:col-resize;background:transparent;touch-action:none}')  // 透明命中区（UX-030——可见线=列自身边线）
 })(), 'ux020 chapter drag restored')
 check('客户端源码面：UX-030 边界线体系化（VS Code sash 语义——可见线=面板/列自身边缘线：.nv-split 全框 1px border-l2〔右缘恢复，全高〕/ .nv-left 右缘 / .nv-chlist 右缘，全部边界 0 偏移、标题栏横线与边缘线 T 型直角相接；三个可拖区=纯透明命中区〔vdiv/chdiv/chatdiv 无边框无 hover 线〕；chatdiv 命中区 -2 居中）', (() => {
