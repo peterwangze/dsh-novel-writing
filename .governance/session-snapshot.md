@@ -9,7 +9,7 @@
 - **current_stage**: 6/11 development（开发实现）
 - **current_gate**: G5 (passed-with-conditions，条件项 DOC-001 跟踪)
 - **trigger_mode**: always-on / **permission_mode**: maximum-autonomy
-- **项目总览**: 35 任务 / 29 已完成 / 0 阻塞 / 关键风险 2（RISK-002、RISK-003）
+- **项目总览**: 36 任务 / 30 已完成 / 0 阻塞 / 关键风险 2（RISK-002、RISK-003）
 - **版本**: v0.3.0（发布卫生线，进行中）+ v0.4.0（工作台重构线，进行中——UX-011~022 代码完成；UX-018 用户实机确认修复生效；UX-019/020/021/022 本轮交付待实机复验）
 
 ## 本轮完成（增量）
@@ -22,6 +22,7 @@
   - 验证：node --check ×3 通过；validate-preset 29/29；smoke **129/129**（128→129）；real novel-001 38 章直测 004→质检员 7 号 / 005→考勤，还是判决 / 010→第七号放映厅 / 018→老福宾馆，空名=0，只读零写；清理临时文件 .tmp-check-name.mjs / .tmp-ux015-client.patch
 - **UX-021 创作台双批注（EVD-036）**：①章节行去「·」装饰圆点（行=「第N章 名称」）；②三条可拖分隔线（vdiv/chdiv/chatdiv）默认透明、悬停显 border-l2、拖动 :active accent；③章节列拖宽单独生效；④**章节名异常根因取证**：novel-001 38 章只读核对=13 章 BOM（001-012/018）+24 章冒号变体（014+）→ 旧宿主模拟=12 空名+24「：」前缀，与截图逐行吻合——修复在 ba38681 宿主代码（剥 BOM+变体正则），**重启 DSH 生效**；smoke 130/130
 - **UX-022 术语定案 + 滚动隔离（EVD-037）**：用户红框两张定案——「分割条」（三条可拖分隔线）=拖了改布局→**常驻可见**（撤 UX-021 ② 误透明化）；「拖动条」（滚动条）=拖了滚内容→**默认隐藏**（webkit track/thumb 透明 + 容器 hover/thumb hover 显）；**滚动隔离**：探针取证 .nv-chlist 高 1587px（章节页签包装层 display:block 破坏高度链）→ 外层页签容器整体滚动带正文（滑章节名→正文上滑）；修复=包装层 height:100%+overflow:hidden + 正文列/左窗/页签外层独立 overflow:auto（.nv-scroll）+ overscroll-behavior:contain；CDP 真实滚轮实测：列表 st 0→618、正文 0 不变；smoke 131/131；**用户约束入册：全部改动限插件自身元素，零宿主选择器依赖/零宿主源码改动**
+- **UX-023 补充（EVD-038）**：正文阅读区 `renderContent` 容器（maxHeight 560 + overflow auto）与编辑 textarea 纳入 `.nv-scroll`——共 5 个滚动容器全部默认隐藏+悬停显示（用户实测「两个滚动条只有一个能隐藏/滚动时不自动出现」的根因）；smoke 断言修正（`.className:` 多圆点假失败→逐段插桩定位）；**UX-024 待用户实机复验**（三分割线常驻/所有滚动条隐藏悬停显/滑章节名不带正文/正文滚动条滚动中可见）
 - **git 状态**：HEAD=524ae72（UX-021，已推送 origin/main）；本轮 UX-022 待提交推送
 
 ## 遗留任务

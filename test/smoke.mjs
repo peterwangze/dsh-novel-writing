@@ -820,13 +820,15 @@ check('客户端源码面：UX-022 三条「分割条」常驻可见（vdiv/chdi
     && !divider('nv-chdiv').includes('background:transparent')
     && !clientSrc.includes('.nv-vdiv:active{') && !clientSrc.includes('.nv-chatdiv:active{') && !clientSrc.includes('.nv-chdiv:active{')
 })(), 'ux022 dividers always visible')
-check('客户端源码面：UX-022 两个「拖动条」（滚动条）默认隐藏 + 滚动隔离（-webkit-scrollbar track/thumb 透明、容器 hover 才显；.nv-chlist/.nv-scroll 带 overscroll-behavior:contain；高度链=章节页签包装层 height:100%+overflow:hidden、正文列/左窗/页签外层均为 nv-scroll 独立滚动容器——章节列 1587px 撑开整体联动问题修复）', (() => {
+check('客户端源码面：UX-022 两个「拖动条」（滚动条）默认隐藏 + 滚动隔离（-webkit-scrollbar track/thumb 透明、容器 hover 才显；.nv-chlist/.nv-scroll 带 overscroll-behavior:contain；高度链=章节页签包装层 height:100%+overflow:hidden、正文列/左窗/页签外层均为 nv-scroll 独立滚动容器——章节列 1587px 撑开整体联动问题修复；正文阅读区容器与编辑 textarea 亦纳入 UX-023 补充）', (() => {
   return clientSrc.includes('.nv-chlist::-webkit-scrollbar,.nv-scroll::-webkit-scrollbar{width:8px;background:transparent}')
     && clientSrc.includes('.nv-chlist::-webkit-scrollbar-thumb,.nv-scroll::-webkit-scrollbar-thumb{background:transparent}')
     && clientSrc.includes('.nv-chlist:hover::-webkit-scrollbar-thumb,.nv-scroll:hover::-webkit-scrollbar-thumb{background:var(--dsw-alias-border-l2,#3a4150)}')
     && clientSrc.includes('.nv-scroll{overscroll-behavior:contain}')
-    && clientSrc.includes("className: 'nv-scroll'")                                    // 三个滚动容器（正文列/左窗/页签外层）
-    && (clientSrc.match(/className: 'nv-scroll'/g) ?? []).length === 3
+    && clientSrc.includes("className: 'nv-scroll'")                                    // 五个滚动容器（正文阅读区/编辑 textarea/正文列/左窗/页签外层）
+    && (clientSrc.match(/className: 'nv-scroll'/g) ?? []).length === 5
+    && clientSrc.includes("className: 'nv-scroll', style: { border: '1px solid ' + TK.line")   // 正文阅读区容器纳入（UX-023）
+    && clientSrc.includes('value: draft') && clientSrc.includes('onKeyDown: (e) =>')           // 编辑 textarea 同链（类在五项计数内）
     && clientSrc.includes("{ display: tab === 'chapters' ? 'block' : 'none', height: '100%', overflow: 'hidden' }")  // 高度链修复
     && clientSrc.includes("className: 'nv-scroll', style: { flex: 1, minWidth: 0, overflow: 'auto' }")
 })(), 'ux022 scrollbars hidden + scroll isolated')
