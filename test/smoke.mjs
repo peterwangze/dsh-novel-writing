@@ -800,26 +800,28 @@ check('客户端源码面：UX-020 章节列拖宽条（.nv-chdiv 元素+pointer
     && clientSrc.includes('clampNum(saved.chapterW, CHAPTER_W_MIN, CHAPTER_W_MAX)')
     && clientSrc.includes("width: chapterW + 'px'")                                     // 列宽随章列状态
     && clientSrc.includes('title: t(\'resizeChlist\')') && clientSrc.includes('resizeChlist:')
-    && clientSrc.includes('.nv-chlist{flex:none;min-height:0;overflow-y:auto;overscroll-behavior:contain}')           // 独立滚动（UX-022）
-    && clientSrc.includes('.nv-chdiv{flex:none;width:4px;align-self:stretch;cursor:col-resize;background:var(--dsw-alias-border-l2,#3a4150);border-radius:2px;touch-action:none}')  // 分割条常驻实底（UX-022 恢复）
-    && clientSrc.includes('.nv-chdiv:hover{background:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
+    && clientSrc.includes('.nv-chlist{flex:none;min-height:0;overflow-y:auto;overscroll-behavior:contain;background:var(--dsw-alias-fill-l1,rgba(255,255,255,.02))}')           // 独立滚动+浅底侧栏（UX-022/025）
+    && clientSrc.includes('.nv-chdiv{flex:none;width:4px;align-self:stretch;cursor:col-resize;background:transparent;border-right:1px solid var(--dsw-alias-border-l2,#3a4150);touch-action:none}')  // 1px 细分隔线（UX-025；4px 抓握区保留）
+    && clientSrc.includes('.nv-chdiv:hover{border-right-color:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
 })(), 'ux020 chapter drag restored')
-check('客户端源码面：UX-022 三条「分割条」常驻可见（vdiv/chdiv/chatdiv 拖了改布局——border-l2 实底 + hover accent；无透明化残留）', (() => {
+check('客户端源码面：UX-025 三分隔线 1px 细线（vdiv/chdiv/chatdiv——4px 抓握区 + border-right 1px border-l2 + hover accent；与宿主细分割线协调；无 4px 实底残留）', (() => {
   const divider = (cls) => {
     const m = new RegExp('\\.' + cls + '\\{([^}]*)\\}').exec(clientSrc)
     return m !== null ? m[1] : ''
   }
-  return divider('nv-vdiv').includes('background:var(--dsw-alias-border-l2')
-    && divider('nv-chatdiv').includes('background:var(--dsw-alias-border-l2')
-    && divider('nv-chdiv').includes('background:var(--dsw-alias-border-l2')
-    && clientSrc.includes('.nv-vdiv:hover{background:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
-    && clientSrc.includes('.nv-chatdiv:hover{background:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
-    && clientSrc.includes('.nv-chdiv:hover{background:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
-    && !divider('nv-vdiv').includes('background:transparent')
-    && !divider('nv-chatdiv').includes('background:transparent')
-    && !divider('nv-chdiv').includes('background:transparent')
-    && !clientSrc.includes('.nv-vdiv:active{') && !clientSrc.includes('.nv-chatdiv:active{') && !clientSrc.includes('.nv-chdiv:active{')
-})(), 'ux022 dividers always visible')
+  return divider('nv-vdiv').includes('border-right:1px solid var(--dsw-alias-border-l2')
+    && divider('nv-chatdiv').includes('border-right:1px solid var(--dsw-alias-border-l2')
+    && divider('nv-chdiv').includes('border-right:1px solid var(--dsw-alias-border-l2')
+    && divider('nv-vdiv').includes('background:transparent') && divider('nv-chatdiv').includes('background:transparent') && divider('nv-chdiv').includes('background:transparent')
+    && clientSrc.includes('.nv-vdiv:hover{border-right-color:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
+    && clientSrc.includes('.nv-chatdiv:hover{border-right-color:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
+    && clientSrc.includes('.nv-chdiv:hover{border-right-color:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
+    && !divider('nv-vdiv').includes('background:var(--dsw-alias-border-l2') && !divider('nv-chdiv').includes('background:var(--dsw-alias-border-l2') && !divider('nv-chatdiv').includes('background:var(--dsw-alias-border-l2')
+    && !clientSrc.includes('border-radius:2px;touch-action:none')                                                       // 旧 4px 实底圆角条无残留
+    && clientSrc.includes('.nv-chlist button{transition:background .12s ease}')                                          // 交互过渡统一（成熟 UI）
+    && clientSrc.includes('transition:background .12s ease,color .12s ease,border-color .12s ease')                     // 页签过渡
+    && clientSrc.includes('.nv-tab:hover{color:var(--dsw-alias-label-primary,#e6e8eb);background:var(--dsw-alias-fill-l1,rgba(255,255,255,.05))}')
+})(), 'ux025 thin dividers + polish')
 check('客户端源码面：UX-022 两个「拖动条」（滚动条）默认隐藏 + 滚动隔离（-webkit-scrollbar track/thumb 透明；UX-024 滚动中显示/停止 600ms 自动隐藏——.nv-scl 滚动事件驱动、无悬停常驻；.nv-chlist/.nv-scroll 带 overscroll-behavior:contain；高度链=章节页签包装层 height:100%+overflow:hidden、正文列/左窗/页签外层均为 nv-scroll 独立滚动容器——章节列 1587px 撑开整体联动问题修复；正文阅读区容器与编辑 textarea 亦纳入 UX-023 补充；共 5 个 nv-scroll）', (() => {
   return clientSrc.includes('.nv-chlist::-webkit-scrollbar,.nv-scroll::-webkit-scrollbar{width:8px;background:transparent}')
     && clientSrc.includes('.nv-chlist::-webkit-scrollbar-thumb,.nv-scroll::-webkit-scrollbar-thumb{background:transparent}')

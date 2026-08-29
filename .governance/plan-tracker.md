@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 36 | 31 | 0 | 2 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 37 | 32 | 0 | 2 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -89,6 +89,7 @@
 | **P1** | UX-022 | 用户术语定案 + 滚动隔离（红框图两张：「分割条」=点击拖动改页面布局的三条分隔线→**常驻可见**；「拖动条」=拖动滚动窗口内容的滚动条→**默认隐藏**）：①三条「分割条」（.nv-vdiv/.nv-chdiv/.nv-chatdiv）恢复 border-l2 常驻实底+hover accent——UX-021 ② 误透明化撤除；②「拖动条」（滚动条）默认隐藏——.nv-chlist + 三个 .nv-scroll 容器（页签外层/正文列/左窗）webkit track/thumb 透明、容器 hover 显 border-l2、thumb hover 显 accent；③**滚动隔离**——无头探针取证 .nv-chlist 渲染高 1587px（章节页签包装层 display:block 破坏 height:100% 高度链）→ 章节列不自滚、外层页签滚动容器整体带动（滑章节名→正文同滑）；修复=包装层 height:100%+overflow:hidden + 正文列/左窗/页签外层各自 overflow:auto（.nv-scroll）+ 全链 overscroll-behavior:contain；④**CDP 真实滚轮实测**：滚轮在章节列 → .nv-chlist scrollTop 0→618、正文列容器 scrollTop=0 不变；列表内部滚动（scrollH 1091/clientH 473）；目检：4px 常驻分隔线可见、滚动条默认不可见；smoke 130→131 | UX-021 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-037；node --check 通过；smoke 131/131；CDP 滚轮实测+目检通过；novel-001 只读零写；**兼容性声明（用户约束）**：全部改动仅插件自身元素（.nv-*），零宿主选择器依赖/零宿主源码改动——宿主升级无兼容问题) |
 | **P1** | UX-023 | UX-022 补充（用户实测「两个滚动条只有一个可以隐藏，而且滚动当前内容页的时候不会自动出现」）：**正文阅读区内部还有一个独立滚动容器**（renderContent 容器，`maxHeight:560 + overflow:auto`——无类名，经典样式滚动条常驻可见、无悬停显示逻辑）未被 UX-022 覆盖；修复=该容器与编辑 textarea（`onKeyDown` Ctrl+S 链）一并加 `className:'nv-scroll'`——滚动条纳入默认隐藏 + 容器 hover/thumb hover 显示；与正文列/左窗/页签外层共 5 个 nv-scroll 容器（smoke 断言 count=5 修正——首版误写 `.className:` 多一个点导致断言假失败，已修正）；smoke（断言修正后）131/131 | UX-022 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-038；node --check 通过；smoke 131/131（断言修正）；纯插件自身元素——零宿主依赖保持) |
 | **P1** | UX-024 | 滚动条「滚动中显示、停止后自动隐藏」（用户两次纠正：①鼠标在滚动控制区域滚动时**自动显示**滚动条 ②滚动停止**一段时间后自动隐藏**、不得因解除隐藏后一直出现）：撤除悬停即显规则（`:hover::-webkit-scrollbar-thumb` 删除——悬停常驻违背"停止后隐藏"）；实现=SplitWorkspace 挂 document 捕获 scroll 监听 → 滚动容器（.nv-chlist/.nv-scroll）发生滚动时加 `.nv-scl`（thumb 显现）→ **1.5s 无滚动自动撤除**（初稿 600ms，用户实测后调长；拖动拇指期间 scroll 连续→保持显现；`:active` 高亮保留）；监听/计时器随组件卸载清理；**CDP 实测**：滚动前无类/滚动 120ms 有类/停止 1s 无类/再滚再有类（scrollTop 480 随滚）；smoke 131/131（断言：.nv-scl 规则在位、悬停常驻负断言、add/remove/1500ms/清理链） | UX-023 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-039/040；node --check 通过；smoke 131/131；CDP 滚动显现/自动隐藏实测通过；纯插件自身元素——零宿主依赖保持) |
+| **P1** | UX-025 | 界面优化（用户：「三个分割线可以稍微调整的细一些……太突兀了，你可以参考比较成熟的网页端界面设计，对我们当前两级工作台的界面进行一次优化」）：①**三条可拖分割条 4px 实底 → 1px 细线**（VS Code/Linear 式：`width:4px` 透明抓握区保留可拖性 + `border-right:1px solid border-l2` + hover accent——与宿主细分割线协调，`border-radius:2px` 旧实底条移除）；②**章节列表列浅底侧栏感**（`background:fill-l1(rgba(255,255,255,.02))`——成熟 UI 层级靠浅底而非粗线）+ 章节行 hover 过渡 `0.12s`；③页签 hover 浅底 + 背景/字色/border 过渡统一；控制台（玻璃卡片/hover/过渡已成熟化）本轮不动；全部宿主令牌/插件自身元素/零宿主依赖；smoke 131（ux022 常驻断言改写为 ux025 细线断言）+截图目检 | UX-024 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-041；node --check 通过；smoke 131/131；探针 computed 样式实测（1px/border-l2/4px 抓握区/浅底）+目检通过；novel-001 只读零写；零宿主依赖保持) |
 
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 
