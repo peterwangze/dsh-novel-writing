@@ -175,3 +175,5 @@
 | REVIEW-UX-057-R1 | UX-057 | 治理记录 | review-record CLI 机器写入 review 结论记录（round 1） | 事实依据：review-record 输出摘要（机器写入） | docs/review/UX-057-R1.md; review-UX-057-R1.md | Code Reviewer | 2026-08-29 | G11 | APPROVED_WITH_NOTES | unresolved_blockers=0 |
 
 | REVIEW-UX-057-R2 | UX-057 | 治理记录 | review-record CLI 机器写入 review 结论记录（round 2） | 事实依据：review-record 输出摘要（机器写入） | docs/review/UX-057-R2.md; review-UX-057-R2.md | Code Reviewer | 2026-08-29 | G11 | APPROVED_WITH_NOTES | unresolved_blockers=0 |
+
+| TRIAGE-UX-058 | UX-058 | 变更控制 | change-triage CLI 机器写入 triage 记录（依赖/优先级/冲突/版本/执行副作用五步分析） | 事实依据：change-triage 输出摘要（机器写入；命令输出 JSON 快照见 change-triage/UX-058.json） | UX-058.json | change-triage | 2026-08-29 | G11 | TRIAGED |
