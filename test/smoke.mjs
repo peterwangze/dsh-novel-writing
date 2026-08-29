@@ -875,7 +875,7 @@ check('客户端源码面：UX-022 两个「拖动条」（滚动条）默认隐
     && (clientSrc.match(/className: 'nv-scroll'/g) ?? []).length === 6                    // 六个滚动容器（正文阅读区/编辑 textarea/正文列/左窗树/页签外层/左窗工作流状态）
     && clientSrc.includes("className: 'nv-scroll', style: { border: '1px solid ' + TK.line")   // 正文阅读区容器纳入（UX-023）
     && clientSrc.includes('onKeyDown: (e) =>')                                            // 编辑 textarea 同链（类在五项计数内）
-    && clientSrc.includes("el('div', { style: { flex: 1, minHeight: 0, overflow: 'hidden' } }")  // 章节工作台常驻顶部（UX-044）
+    && clientSrc.includes("padding: '10px 10px 0', boxSizing: 'border-box' }")               // 章节工作台常驻顶部（UX-044/045 内边距下放——分隔线横贯至面板边）
     && clientSrc.includes("className: 'nv-scroll', style: { flex: 1, minHeight: 0, overflow: 'auto' }")            // UX-042 下半区工作台内容滚动容器
     && clientSrc.includes('{ style: { display: \'flex\', height: \'100%\' } }')                                        // 命中区紧贴列边缘（UX-032 去 gap）
     && clientSrc.includes("className: 'nv-scroll', style: { flex: 1, minWidth: 0, overflow: 'auto', paddingLeft: '12px' } }")  // 内容列 paddingLeft 保留间距（UX-032）

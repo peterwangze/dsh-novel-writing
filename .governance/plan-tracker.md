@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 54 | 50 | 0 | 2 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 56 | 52 | 0 | 2 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -108,6 +108,8 @@
 | **P1** | UX-041 | 标题栏横幅「阶段：」前缀（用户「你就不能加个「阶段：」在阶段的文字之前吗？」——居中横幅阶段徽标文本加 `阶段：` 前缀：`${t('stage')}：${titleStageName}`）；smoke（ux036 检查补前缀断言） | UX-040 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-056；node --check 通过；smoke 133/133；零宿主依赖保持) |
 | **P1** | UX-042 | 中窗下半区数据/发布/请求工作台（用户「将当前红框的区域调整为工作台，将上面的数据/发布/请求页签都迁移过来」——中窗改上下两个工作台）：**上部=章节工作台常驻**（章节区不再页签：`el('div',{height:'100%',overflow:'hidden'})` 包装 ChapterPanel，保活保留）；**下部=数据/发布/请求工作台**（flex:0 0 46% + borderTop 分隔线 + 内部 nv-tabs〔数据/发布/请求〕+ 内容 nv-scroll 滚动——页签与 DataPanel/PublishPanel/RequestPanel 从顶部迁入）；tab 初始 'data'；smoke（ux036/022 检查断言同步：tabs 无 chapters、下半区容器/滚动容器断言、高度链串更新） | UX-041 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-058；node --check 通过；smoke 133/133；零宿主依赖保持) |
 | **P1** | UX-044 | 底部工作台高度修正（用户「我是刷太高了——是说太高了，你把章节名列表放出来干啥」——UX-043 把「宽」误读为横行改宽/章节列全高、方向全错被纠正）：回退 UX-043（ChapterPanel 回简单内容列），维持 UX-042 全宽布局但**高度 46%→30%**（太高）；章节列表回上部区（不占全高）；smoke（46%→30% + 顶部常驻断言更新） | UX-042 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-059；node --check 通过；smoke 133/133；零宿主依赖保持) |
+| **P1** | UX-045 | 底部工作台分隔线横贯全宽（用户「你那个分割线又是一样的问题」——中窗列 `padding:10px` 使 wb 顶边 borderTop 两侧各停 10px、右端离面板边线 10px 悬空=历史同款"线没接上"）：修复=列 padding 归零（分隔线直抵左缘/右缘面板边线 T 型相接），内边距下放（顶部区 padding 10 10 0；wb padding 8 10 0——页签/内容保持 10px 呼吸）；探针几何（wb 顶线满宽）+4x 放大目检（线-边相交无悬空）；smoke（顶部区 padding 断言） | UX-044 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-060；node --check 通过；smoke 133/133；探针+目检通过；零宿主依赖保持) |
+| **P1** | UX-046 | 分隔线左端相接（用户「右边连起来了，左边没有」——nv-main 流内 vdiv 4px 空隙使列左缘 525 vs 左窗边线 521，分隔线左端悬空 4px）：修复=**vdiv 改绝对定位悬浮命中区**（`position:absolute; left:leftW-2; top:0; bottom:0`，不占流；覆盖左窗右缘边界仍可拖/可高亮）；中窗列紧贴左窗（521 起）——分隔线左端 521 与左窗边线 T 型相接（两端皆连）；探针实测：leftEdge 右缘 521=column 左缘 521（flush）、vdiv [519,4]、tabs 531-747；smoke 133/133 | UX-045 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-061；node --check 通过；smoke 133/133；探针实测通过；零宿主依赖保持) |
 
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 
