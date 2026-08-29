@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 64 | 60 | 0 | 2 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 65 | 61 | 0 | 2 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -119,6 +119,7 @@
 | **P1** | UX-053 | 工作台视觉设计重构（用户需求：已初步优化但简陋缺设计感——保持当前基础布局，做页面视觉呈现优化重构；素材与思路从开源社区获取不造轮子 P-08）：管理台+创作台**统一设计语言**（DEC-019 定案）；调研开源设计模式（VS Code workbench/Linear/shadcn 等成熟模式）复用落地；素材政策放宽（DEC-019）=允许**内联 MIT 开源 SVG 图标**（Lucide/Feather 源码内嵌，零 npm 依赖/零运行时网络/零宿主选择器依赖保持）；范围=管理台（控制台/抽屉/卡片/弹窗/搜索）+创作台（分栏/文件树/章节列/数据/发布/请求/工作流面板）；**布局零改动**（UX-042~048 布局基线+默认槽保持）；smoke/README/CHANGELOG 同步 | UX-052 | v0.4.0 | closed | ✅ 完成 (2026-08-29，EVD-069；方向 B+A 点缀 DEC-020；调研 docs/research/UX-053-visual-design-research.md；NV_ICONS 21 图标+焦点双环+光效收敛+选中态类化+color-mix 令牌化；node --check/validate-preset 29/29/smoke 137/137（133+4）；Code Reviewer R1 NEEDS_CHANGE（P0=2）→返工→R2 **APPROVED_WITH_NOTES unresolved_blockers=0**；布局红线/兼容红线/文案红线 Reviewer 逐项核对通过；**用户实机目检 V7 待强刷确认**；遗留项收敛 UX-054) |
 | **P2** | UX-054 | 视觉重构遗留项批次（Code Reviewer R1/R2 备注收敛，非阻塞）：F3 React key ×3（key 警告）/ F4 文件行图标间隙 / F5 门禁卡·状态行 ✓✗ 文本标记图标化 / F7 «» 折叠钮图标化 / F8 ＋磁贴字重 / F9 drawer caret 尺寸（12 vs 研究 10px）/ F10 页签角标 bell（现 triangle-alert）/ F11 .nv-cinput 12→13px（研究 V6）/ F12 .nv-bar-note 图标前缀 / G1 .nv-chrow:focus-visible 焦点环被 [data-sel] box-shadow 覆盖（调序或合并声明）| UX-053 | v0.4.0 | open | ⏳ 待执行（发布卫生批次；用户实机目检后按需裁剪；**F5 已并入 UX-055**——DEC-022 状态文案授权） |
 | **P1** | UX-055 | 工作台视觉 V2（用户 V7 反馈「变化不大」+方法论批评驱动——真实截图差距分析：Coordinator 原生目检+vision 子代理+像素采样+代码核验三角化）：**全量令牌派生主题无关自适应**（DEC-021 修订版：不假设主题/跟随宿主与自定义主题/亮暗仅为采样点/表面 tint 一律 color-mix 前景令牌派生禁白黑 alpha 硬编码/合成自定义主题注入测试）；①字阶悬崖（页标题 20px/书卡标题 17-18px/统计数字 18px tabular-nums/meta 11px——令牌化派生）②书卡构成重构（monogram 首字色块+分区+数据 chips）③空态英雄区（图标+大字+CTA）④状态文案组件化（✓✗→状态点+chip，DEC-022 定向文案授权）⑤正文阅读排版（15px/1.75 行距）⑥稀疏居中（≤2 本居中，DEC-022 授权）；几何不变；smoke/README/CHANGELOG 同步 | UX-053 | v0.4.0 | closed | ✅ 完成 (2026-08-29，EVD-070；smoke 145/145；复审链 R1 NOTES→R2 NEEDS_CHANGE（P0 新回归）→R3 通过→R4 快审通过（横幅守卫 saga：交付验证发现真碰撞→A ref 未绑→B 阈值漏判→**A-prime 精确测量**双探针实证）；DEC-021 三主题验证通过（亮/暗/合成注入）；V1→V2 vision 复评 console 可感知/split 弱（页级差距→UX-056 候选）；遗留：R4-P1 deps 书名变化窗口（卫生批次）+ 0 本渲染树断言) |
+| **P1** | UX-057 | 绑定会话弹窗三修（用户截图红字 2026-08-29）：①「新建会话并绑定」按钮置顶（bindPick 副标题后、会话列表前——现沉底）②列表只显示**当前工作区**会话（按 overview.root 归一化匹配 workspace.path——现全工作区泄露：tmp/dsh-reasoning-level 组实锤；匹配失败回退全分组防锁死）③会话分组**默认折叠**点击展开（open 时重置折叠态；折叠头显示工作区名+会话数 chevron）| UX-055 | v0.4.0 | closed | ✅ 完成 (2026-08-29，EVD-071；smoke 146/146；CDP 探针三验：置顶 DOM 序/仅 writing 组零泄露/默认折叠+键盘可达（原生 button Tab/Enter 实证）+normPath 唯一键；R1 NOTES（P2×2 裁定修）→R2 通过；遗留 P3×4 记录性——P3-4 注释漂移下次顺带) |
 
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 

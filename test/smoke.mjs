@@ -1198,6 +1198,32 @@ check('客户端源码面：交付验证最终修复 标题栏横幅碰撞防护
     && !clientSrc.includes('bannerNarrow')                                      // B 方案状态名无残留
     && clientSrc.includes("position: 'absolute', left: '50%', transform: 'translateX(-50%)'") // 横幅既有居中几何未动（宽窗零变化）
 })(), 'banner collision guard missing')
+// UX-057（用户截图红字反馈——绑定会话弹窗三修）：
+//  ①「新建会话并绑定」accent 主按钮从列表尾部移到 bindPick 副标题之后、会话列表之前（视线第一落点）
+//  ②只显示当前工作区的会话（meta.root 与 workspace.path 经 normPath 归一化匹配；无命中回退既有全分组）
+//  ③会话分组默认折叠（折叠集 useState + open 重置 + chevron 旋转过渡 + 右侧会话数 i18n zh/en 成对）
+check('客户端源码面：UX-057 绑定弹窗三修（bindNew 置顶 + normPath 当前工作区过滤/回退 + 分组默认折叠/chevron/会话数 i18n）', (() => {
+  const pickIdx = clientSrc.indexOf("el('div', { style: hint }, t('bindPick'))")
+  const btnIdx = clientSrc.indexOf("onClick: createAndBind")
+  const listIdx = clientSrc.indexOf("wsList.loading ? el('div', { style: hint }, t('loading'))")
+  return pickIdx !== -1 && btnIdx > pickIdx && btnIdx < listIdx                        // ① 按钮序：副标题后、列表前
+    && clientSrc.includes("gap: '8px', margin: '8px 0'")                               // ① 新置顶按钮行
+    && !clientSrc.includes("gap: '8px', marginTop: '10px'")                            // ① 旧尾部按钮行移除
+    && clientSrc.includes(String.raw`const normPath = (p) => String(p ?? '').replace(/[\\/]+/g, '/').replace(/\/+$/, '').toLowerCase()`)  // ② 归一化（/ \ 统一+大小写不敏感+去尾分隔）
+    && clientSrc.includes('const curWs = curRoot !== \'\' ? wsList.items.find((w) => normPath(w.path) === curRoot) : undefined')
+    && clientSrc.includes('if (curWs !== undefined)')                                  // ② 只渲染当前工作区分支
+    && clientSrc.includes('UX-057② 回退保护') && clientSrc.includes("t('bindOther')")    // ② 回退全分组保留
+    && clientSrc.includes('const [expanded, setExpanded] = useState(new Set())')       // ③ 展开例外集（空 = 默认全折叠，早退之前）
+    && clientSrc.includes('setExpanded(new Set())')                                    // ③ open 重置为全折叠（清空展开集）
+    && clientSrc.includes("className: 'nv-group nv-bgroup'") && clientSrc.includes('onClick: () => toggleGroup(g.key)')
+    && clientSrc.includes("el('button', { type: 'button', className: 'nv-group nv-bgroup'")  // R1 P2-1：分组头原生 button（键盘可达）
+    && clientSrc.includes('key: normPath(curWs.path)') && clientSrc.includes('key: normPath(w.path)') && clientSrc.includes("key: '@others'")  // R1 P2-2：展开键唯一化
+    && clientSrc.includes("transform: gOpen ? 'rotate(90deg)' : 'none'")               // ③ chevron 旋转过渡
+    && clientSrc.includes("t('bindSessionsCount', g.sessions.length)")
+    && clientSrc.includes('bindSessionsCount: (n) => `${n} 个会话`')                    // ③ i18n zh
+    && clientSrc.includes('bindSessionsCount: (n) => `${n} sessions`')                 // ③ i18n en
+    && clientSrc.includes('.nv-bgroup:hover{') && clientSrc.includes('.nv-bgroup-glyph{') && clientSrc.includes('.nv-bgroup-count{')  // ③ 可点击头样式
+})(), 'ux057 bind dialog fixes missing')
 let renderErr = ''
 check('各注册面 render 可调用（组件体可求值；关闭态浮层输出 null 合法）', (() => {
   for (const r of slotRegs) {
