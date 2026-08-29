@@ -800,33 +800,28 @@ check('客户端源码面：UX-020 章节列拖宽条（.nv-chdiv 元素+pointer
     && clientSrc.includes('clampNum(saved.chapterW, CHAPTER_W_MIN, CHAPTER_W_MAX)')
     && clientSrc.includes("width: chapterW + 'px'")                                     // 列宽随章列状态
     && clientSrc.includes('title: t(\'resizeChlist\')') && clientSrc.includes('resizeChlist:')
-    && clientSrc.includes('.nv-chlist{flex:none;min-height:0;overflow-y:auto;overscroll-behavior:contain;background:var(--dsw-alias-fill-l1,rgba(255,255,255,.02))}')           // 独立滚动+浅底侧栏（UX-022/025）
-    && clientSrc.includes('.nv-chdiv{flex:none;width:4px;align-self:stretch;cursor:col-resize;background:transparent;border-right:1px solid var(--dsw-alias-border-l2,#3a4150);touch-action:none}')  // 1px 细分隔线（UX-025；4px 抓握区保留）
-    && clientSrc.includes('.nv-chdiv:hover{border-right-color:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
+    && clientSrc.includes('.nv-chlist{flex:none;min-height:0;overflow-y:auto;overscroll-behavior:contain;background:var(--dsw-alias-fill-l1,rgba(255,255,255,.02));border-right:1px solid var(--dsw-alias-border-l2,#3a4150)}')           // 独立滚动+浅底+右缘边线（UX-022/025/030）
+    && clientSrc.includes('.nv-chdiv{flex:none;width:4px;align-self:stretch;cursor:col-resize;background:transparent;touch-action:none}')  // 透明命中区（UX-030——可见线=列自身边线）
 })(), 'ux020 chapter drag restored')
-check('客户端源码面：UX-025 三分隔线 1px 细线（vdiv/chdiv/chatdiv——4px 抓握区 + border-right 1px border-l2 + hover accent；与宿主细分割线协调；无 4px 实底残留）', (() => {
+check('客户端源码面：UX-030 边界线体系化（VS Code sash 语义——可见线=面板/列自身边缘线：.nv-split 全框 1px border-l2〔右缘恢复，全高〕/ .nv-left 右缘 / .nv-chlist 右缘，全部边界 0 偏移、标题栏横线与边缘线 T 型直角相接；三个可拖区=纯透明命中区〔vdiv/chdiv/chatdiv 无边框无 hover 线〕；chatdiv 命中区 -2 居中）', (() => {
   const divider = (cls) => {
     const m = new RegExp('\\.' + cls + '\\{([^}]*)\\}').exec(clientSrc)
     return m !== null ? m[1] : ''
   }
-  return divider('nv-vdiv').includes('border-right:1px solid var(--dsw-alias-border-l2')
-    && divider('nv-chatdiv').includes('border-right:1px solid var(--dsw-alias-border-l2')
-    && divider('nv-chdiv').includes('border-right:1px solid var(--dsw-alias-border-l2')
-    && divider('nv-vdiv').includes('background:transparent') && divider('nv-chatdiv').includes('background:transparent') && divider('nv-chdiv').includes('background:transparent')
-    && clientSrc.includes('.nv-vdiv:hover{border-right-color:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
-    && clientSrc.includes('.nv-chatdiv:hover{border-right-color:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
-    && clientSrc.includes('.nv-chdiv:hover{border-right-color:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
-    && !divider('nv-vdiv').includes('background:var(--dsw-alias-border-l2') && !divider('nv-chdiv').includes('background:var(--dsw-alias-border-l2') && !divider('nv-chatdiv').includes('background:var(--dsw-alias-border-l2')
-    && !clientSrc.includes('border-radius:2px;touch-action:none')                                                       // 旧 4px 实底圆角条无残留
+  return !divider('nv-vdiv').includes('border') && !divider('nv-chdiv').includes('border') && !divider('nv-chatdiv').includes('border')   // 拖区无可见线
+    && divider('nv-vdiv').includes('background:transparent') && divider('nv-chdiv').includes('background:transparent')
+    && clientSrc.includes('.nv-left{flex:none;min-height:0;overflow:auto;padding:8px;box-sizing:border-box;border-right:1px solid var(--dsw-alias-border-l2,#3a4150)}')   // 树窗右缘=自身边线
+    && clientSrc.includes('background:var(--dsw-alias-fill-l1,rgba(255,255,255,.02));border-right:1px solid var(--dsw-alias-border-l2,#3a4150)}')                       // 章节列右缘=自身边线
+    && clientSrc.includes('.nv-split{position:fixed;display:flex;flex-direction:column;box-sizing:border-box;border:1px solid var(--dsw-alias-border-l2,#3a4150);border-radius:0;')  // 外框全边线（直角）
+    && clientSrc.includes("(snap.chatSide === 'left' ? g.left : x + contentW) - 2) + 'px'")                            // 聊天命中区居中于右缘
+    && !clientSrc.includes('.nv-vdiv:hover{border') && !clientSrc.includes('.nv-chdiv:hover{border') && !clientSrc.includes('.nv-chatdiv:hover{border')  // 无 hover 线残留
+    && clientSrc.match(/\.nv-split\{[^}]*border-right:none/) === null                                    // 外框右缘已恢复全高边线（旧去重方案无残留）
+    && clientSrc.match(/\.nv-split\{[^}]*border:1px solid var\(--dsw-alias-border-l1,/) === null  // 无 border-l1 残留
     && clientSrc.includes('.nv-chlist button{transition:background .12s ease}')                                          // 交互过渡统一（成熟 UI）
     && clientSrc.includes('transition:background .12s ease,color .12s ease,border-color .12s ease')                     // 页签过渡
     && clientSrc.includes('.nv-tab:hover{color:var(--dsw-alias-label-primary,#e6e8eb);background:var(--dsw-alias-fill-l1,rgba(255,255,255,.05))}')
-    && clientSrc.includes('.nv-bar{flex:none;display:flex;align-items:center;gap:8px;height:38px;padding:0 14px;box-sizing:border-box;border-bottom:1px solid var(--dsw-alias-border-l2,#3a4150)')  // UX-026 标题栏底边线清晰
-    && clientSrc.includes('.nv-left{flex:none;min-height:0;overflow:auto;padding:8px;box-sizing:border-box}')                                                 // UX-028 树窗右缘线由 vdiv 拖线承担（免双线）
-    && clientSrc.includes('.nv-split{position:fixed;display:flex;flex-direction:column;box-sizing:border-box;border:1px solid var(--dsw-alias-border-l2,#3a4150);border-right:none;border-radius:0;')      // UX-026/027/029：外框 border-l2+右缘去重+直角（连接处线线相接）
-    && clientSrc.includes("(snap.chatSide === 'left' ? g.left : x + contentW) - 3) + 'px'")                            // UX-029：拖线右缘对齐（水平线顶到边/拖线从边起）
-    && clientSrc.match(/\.nv-split\{[^}]*border:1px solid var\(--dsw-alias-border-l1,/) === null  // 无 border-l1 残留
-})(), 'ux025 thin dividers + polish + ux026 visible area dividers + ux027 single chat edge + ux029 square junction')
+    && clientSrc.includes('.nv-bar{flex:none;display:flex;align-items:center;gap:8px;height:38px;padding:0 14px;box-sizing:border-box;border-bottom:1px solid var(--dsw-alias-border-l2,#3a4150)')  // 标题栏底边线清晰
+})(), 'ux030 coherent boundary lines')
 check('客户端源码面：UX-022 两个「拖动条」（滚动条）默认隐藏 + 滚动隔离（-webkit-scrollbar track/thumb 透明；UX-024 滚动中显示/停止 600ms 自动隐藏——.nv-scl 滚动事件驱动、无悬停常驻；.nv-chlist/.nv-scroll 带 overscroll-behavior:contain；高度链=章节页签包装层 height:100%+overflow:hidden、正文列/左窗/页签外层均为 nv-scroll 独立滚动容器——章节列 1587px 撑开整体联动问题修复；正文阅读区容器与编辑 textarea 亦纳入 UX-023 补充；共 5 个 nv-scroll）', (() => {
   return clientSrc.includes('.nv-chlist::-webkit-scrollbar,.nv-scroll::-webkit-scrollbar{width:8px;background:transparent}')
     && clientSrc.includes('.nv-chlist::-webkit-scrollbar-thumb,.nv-scroll::-webkit-scrollbar-thumb{background:transparent}')

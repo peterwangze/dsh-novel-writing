@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 41 | 36 | 0 | 2 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 42 | 37 | 0 | 2 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -94,6 +94,7 @@
 | **P1** | UX-027 | 聊天边界两根线去重（用户放大截图「这里为何是两根线」——UX-026 提亮外框后：工作台外框右缘 `.nv-split` border-right（border-l2 1px）+ 聊天窗拖线 `.nv-chatdiv` border-right（border-l2 1px）相距仅 ~2px，放大成两根线）：修复=外框 `border-right:none`——聊天边界唯一线 = 拖线（1px 细线+hover accent，UX-025 风格保持）；外框左/上/下边线保留（UX-026 提亮不变）；smoke 131（ux025 检查补外框 border-right:none 正断言） | UX-026 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-043；node --check 通过；smoke 131/131；零宿主依赖保持) |
 | **P1** | UX-028 | 界面设计规范调研落地（用户：「是不是可以先调研好的 web 开源项目的页面设计，再优化，别自造轮子」——P-08 检视）：调研=①VS Code `sash.css`（开源工作台分割条范本：`--vscode-sash-size:4px` 透明命中区 + 1px 可见线 + hover accent）②参考项目 dsh-worktable styles/split（`DIVIDER=4` 分割条 + 1px 分隔线体系）→ 核验现有实现即该规范（4px 区+1px 线+hover accent＝VS Code sash 语义；滚动条 overlay 行为＝Win11 惯例；层级靠浅底与字重）；落地：**一处边界一条线**——`.nv-left` 右缘线移除（由 vdiv 拖线承担，与 UX-027 聊天边界同原则），消除 树|章节列 双线；分割条 border-l2 为 user-driven 偏差（参考用 border-l1 但用户屏幕近不可见——可见性优先，已记录）；smoke 131（断言 sync） | UX-027 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-044；node --check 通过；smoke 131/131；零宿主依赖保持) |
 | **P1** | UX-029 | 连接处直角化（用户放大「这个线的连接处怎么这么奇怪」——单容器共享边线布局下 `border-radius:8px` 是病根：顶部横线在圆角处截断 + 右缘无框线 + 拖线偏 2-3px = 断头连接；参考项目的圆角属独立卡片布局〔每卡独立边框+4px 间隙〕，不适用于共享边线单容器）：修复=外框 `border-radius:0`（直角——VS Code 工作区惯例）+ 聊天拖线定位 `-2→-3`（border 与右缘逼近对齐，顶部与标题栏下边线直角相接）；computed 实测（radius 0 / border-top 1px / border-right 0 / chatdiv top=38 从标题栏底起）+目检通过；smoke 131（断言 sync：radius:0 + -3 正断言） | UX-028 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-045；node --check 通过；smoke 131/131；computed+目检通过；零宿主依赖保持) |
+| **P1** | UX-030 | 边界线体系化（用户再次放大指认连接线并批评「没有完整的页面设计逻辑」——根因=拖线自带 1px border 且定位 -2/-3 偏移，边界线永远与面板边缘有 1-2px 台阶）：按 **VS Code sash 语义**重构——**可拖分区=纯透明命中区（vdiv/chdiv/chatdiv：无边框、无 hover 线、4px、col-resize）；可见线=面板/列自身边缘线（.nv-split 恢复全框 1px border-l2 右缘【全高】/ .nv-left border-right / .nv-chlist border-right）——全部边界 0 偏移、标题栏横线/内容线与边缘线 T 型直角相接**；chatdiv 命中区定位 -2 居中；smoke 断言重构（拖区无 border 负断言 + 三边线正断言 + 旧方案无残留）；探针 rect 实测（bar 右缘 757 = split 内容缘、border-right 757-758））+4x 放大目检（全高边线/T 相接/无台阶） | UX-029 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-046；node --check 通过；smoke 131/131；computed+4x 目检通过；零宿主依赖保持) |
 
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 
