@@ -810,7 +810,7 @@ check('客户端源码面：UX-030 边界线体系化（VS Code sash 语义—�
   }
   return !divider('nv-vdiv').includes('border') && !divider('nv-chdiv').includes('border') && !divider('nv-chatdiv').includes('border')   // 拖区无可见线
     && divider('nv-vdiv').includes('background:transparent') && divider('nv-chdiv').includes('background:transparent')
-    && clientSrc.includes('.nv-left{flex:none;min-height:0;overflow:auto;padding:8px;box-sizing:border-box;border-right:1px solid var(--dsw-alias-border-l2,#3a4150)}')   // 树窗右缘=自身边线
+    && clientSrc.includes('.nv-left{flex:none;min-height:0;display:flex;flex-direction:column;overflow:hidden;padding:8px;box-sizing:border-box;border-right:1px solid var(--dsw-alias-border-l2,#3a4150)}')   // 树窗右缘=自身边线（UX-036 纵向分栏容器）
     && clientSrc.includes('background:var(--dsw-alias-fill-l1,rgba(255,255,255,.02));border-right:1px solid var(--dsw-alias-border-l2,#3a4150)}')                       // 章节列右缘=自身边线
     && clientSrc.includes('.nv-split{position:fixed;display:flex;flex-direction:column;box-sizing:border-box;border:1px solid var(--dsw-alias-border-l2,#3a4150);border-radius:0;')  // 外框全边线（直角）
     && clientSrc.includes("(snap.chatSide === 'left' ? g.left : x + contentW) - 2) + 'px'")                            // 聊天命中区居中于右缘
@@ -836,6 +836,15 @@ check('客户端源码面：UX-034 文件显示复用章节内容列（fileSel �
     && clientSrc.includes('fileSel, onFileClose: () => setFileSel(null)')
     && (clientSrc.match(/if \(props\.fileSel !== null && typeof props\.onFileClose === 'function'\) props\.onFileClose\(\)/g) ?? []).length === 2   // UX-035 点章节/点编辑退出文件视图
 })(), 'ux034 file view reuses chapter column')
+check('客户端源码面：UX-036 工作流状态迁左窗（左窗=纵向分栏：文件树 flex:1 + 工作流状态 46%〔nv-scroll 滚动+顶边线〕；中窗页签去「工作流」且不再渲染 WorkflowPanel；WorkflowPanel 仅在左窗渲染一次）', (() => {
+  return clientSrc.includes("['chapters', t('chapters')], ['data', t('data')], ['publish', t('publish')], ['requests', t('requests')]")
+    && !clientSrc.includes("'workflow', t('workflow')]")
+    && !clientSrc.includes("tab === 'workflow'")
+    && clientSrc.includes("flex: '0 0 46%'")
+    && clientSrc.includes("el(WorkflowPanel, { t, novel: detail })")
+    && (clientSrc.match(/el\(WorkflowPanel, \{ t, novel: detail \}\)/g) ?? []).length === 1
+    && clientSrc.includes('flexDirection: \'column\', flex: 1, minHeight: 0, overflow: \'auto\' } }')   // 树窗 flex:1（左窗分栏）
+})(), 'ux036 workflow state in left column')
 check('客户端源码面：UX-022 两个「拖动条」（滚动条）默认隐藏 + 滚动隔离（-webkit-scrollbar track/thumb 透明；UX-024 滚动中显示/停止 600ms 自动隐藏——.nv-scl 滚动事件驱动、无悬停常驻；.nv-chlist/.nv-scroll 带 overscroll-behavior:contain；高度链=章节页签包装层 height:100%+overflow:hidden、正文列/左窗/页签外层均为 nv-scroll 独立滚动容器——章节列 1587px 撑开整体联动问题修复；正文阅读区容器与编辑 textarea 亦纳入 UX-023 补充；共 5 个 nv-scroll）', (() => {
   return clientSrc.includes('.nv-chlist::-webkit-scrollbar,.nv-scroll::-webkit-scrollbar{width:8px;background:transparent}')
     && clientSrc.includes('.nv-chlist::-webkit-scrollbar-thumb,.nv-scroll::-webkit-scrollbar-thumb{background:transparent}')
@@ -851,7 +860,7 @@ check('客户端源码面：UX-022 两个「拖动条」（滚动条）默认隐
     && clientSrc.includes('for (const t of timers.values()) clearTimeout(t)')                                     // 卸载清理
     && clientSrc.includes('.nv-scroll{overscroll-behavior:contain}')
     && clientSrc.includes("className: 'nv-scroll'")                                    // 五个滚动容器（正文阅读区/编辑 textarea/正文列/左窗/页签外层）
-    && (clientSrc.match(/className: 'nv-scroll'/g) ?? []).length === 5
+    && (clientSrc.match(/className: 'nv-scroll'/g) ?? []).length === 6                    // 六个滚动容器（正文阅读区/编辑 textarea/正文列/左窗树/页签外层/左窗工作流状态）
     && clientSrc.includes("className: 'nv-scroll', style: { border: '1px solid ' + TK.line")   // 正文阅读区容器纳入（UX-023）
     && clientSrc.includes('value: draft') && clientSrc.includes('onKeyDown: (e) =>')           // 编辑 textarea 同链（类在五项计数内）
     && clientSrc.includes("{ display: tab === 'chapters' ? 'block' : 'none', height: '100%', overflow: 'hidden' }")  // 高度链修复

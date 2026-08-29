@@ -35,6 +35,7 @@
 - **UX-033（EVD-049）**：拖线选中高亮——三拖区 :hover/:active box-shadow 1px accent（VS Code sash hoverBorder 范本）；默认干净无抖动；smoke 131/131
 - **UX-034（EVD-050）**：文件显示复用章节界面——fileSel 提升受控，文件在中窗内容列（同一 nv-scroll 阅读区、整列滚动无截断、✕ 返回）；左窗仅树选择；探针实测+smoke 132/132
 - **UX-035（EVD-051）**：文件视图点章节跳转——select/startEdit 退出文件视图；smoke 132/132
+- **UX-036（EVD-052）**：工作流状态迁左窗——左窗纵向分栏（树 flex:1 + 工作流状态 46% 滚动+顶边线）；中窗去「工作流」页签；smoke 133/133
 - **git 状态**：HEAD=524ae72（UX-021，已推送 origin/main）；本轮 UX-022 待提交推送
 
 ## 遗留任务
