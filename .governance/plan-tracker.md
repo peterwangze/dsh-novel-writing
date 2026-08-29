@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 46 | 41 | 0 | 2 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 47 | 42 | 0 | 2 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -99,6 +99,7 @@
 | **P1** | UX-032 | 分割线命中区与可见线齐平（用户「分割线无法选中，但是红框的位置才能点击调整页面宽度，这个是啥意思？」——章节面板行 `gap:12px` 使拖拽命中区（chdiv 4px）与可见分割线（chlist 右缘 border-right 1px）隔开 12px：抓"线"命中不了（空档），只有 12px 外侧不可见 4px 区可拖——不可预期的命中区；参照 VS Code sash：命中区紧贴面板边缘）：修复=章节面板行去 `gap:12px`（命中区与列右缘齐平）+ 内容列 `paddingLeft:12px` 保留间距；探针实测 chlistRight=696=chdivLeft（flush:true）、elementFromPoint(线+2px)=nv-chdiv（抓线即命中）；smoke 断言（行无 gap + paddingLeft 正断言） | UX-031 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-048；node --check 通过；smoke 131/131；探针齐平实测+命中验证；零宿主依赖保持) |
 | **P1** | UX-033 | 拖线选中高亮（用户「可以拖动调整布局的线不能在选中的时候高亮一下吗？一点都不明显」——VS Code sash hover 反馈〔sash.hoverBorder〕）：三个拖区 vdiv/chdiv/chatdiv 保持纯透明命中区，**悬停/按住（:hover/:active）box-shadow inset 1px 0 0 0 accent** 在边界画 1px 高亮线——选中反馈明显且无布局抖动（content-box 尺寸不变）；默认仍完全干净；smoke 断言（三 hover/active box-shadow 正断言） | UX-032 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-049；node --check 通过；smoke 131/131；零宿主依赖保持) |
 | **P1** | UX-034 | 文件显示复用章节界面（用户批注「将文件的显示调整成复用章节显示界面」——左窗下部 FilePreview 小卡片〔300px 截断/嵌卡〕与中窗章节阅读界面割裂）：**fileSel 提升到 SplitWorkspace 受控**——左窗文件树仅选择（不再渲染 FilePreview），中窗**内容列**（与章节共用同一 nv-scroll 阅读区）在 fileSel!==null 时渲染 FilePreview（头部=📄 路径+✕ 关闭；内容整列滚动、无 maxHeight 截断；返回即关闭回章节视图）；切书（selectedId 变化）自动复位 fileSel；smoke 131→132；探针实测：点文件 → 内容列出现「📄 .temp-…」文件头、左窗无预览卡、章节头被替换 | UX-033 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-050；node --check 通过；smoke 132/132；探针实测通过；零宿主依赖保持) |
+| **P1** | UX-035 | 文件视图点章节跳转修复（用户「在呈现文件内容的时候，我点击小说某个章节，不会跳到具体章节的显示」——fileSel 优先渲染文件，点章节只改章节状态不生效）：修复=ChapterPanel `select(num)` 与 `startEdit()` 动作内：文件视图打开时调用 `props.onFileClose()`（退出文件视图→章节显示/编辑）；smoke（ux034 检查补两处 onFileClose 计数断言） | UX-034 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-051；node --check 通过；smoke 132/132；零宿主依赖保持) |
 
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 
