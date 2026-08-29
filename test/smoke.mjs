@@ -511,11 +511,14 @@ check('抽屉无按钮组（⚙/＋/🔗/▶ 文本缺席）', (() => {
   return hasHeadBtn && !joined.includes('⚙') && !joined.includes('＋') && !joined.includes('🔗') && !joined.includes('▶')
 })(), 'head=' + 'n/a')
 // UX-008（DEC-017）：控制台树断言——经抽屉标题行 onClick 置 store.consoleOpen，再渲染 nv-console 取组件树
-check('控制台树：底部搜索行 + ＋ 磁贴居末 + 排序两态钮 + 无「▶ 打开」', (() => {
+//  UX-055③+ P1-2（R1 修复）：mock 渲染为加载中初始态（poll.data=null）→ **主体留白**（无英雄/无空态/无网格
+//  ——不闪现误导性空态），工具行/搜索行维持；hero 门控为源码级断言（poll.data !== null && novels.length === 0）；
+//  P1-1（R1 修复）：稀疏居中条件模板与 ≥3 本类模板差异为源码级断言（两分支模板）。
+let ux008diag = ''
+check('控制台树：底部搜索行 + 加载中主体留白（无 hero/无空态/无网格——P1-2 门控）+ 无「▶ 打开」', (() => {
   const dr = slotRegs.find((r) => r.id === 'novel-drawer')
   const con = slotRegs.find((r) => r.id === 'nv-console')
-  if (dr === undefined || con === undefined) return false
-  // 1) 点抽屉标题行（真实入口路径）打开控制台
+  if (dr === undefined || con === undefined) return false  // 1) 点抽屉标题行（真实入口路径）打开控制台
   let headBtn = null
   const findHead = (n) => {
     if (n === null || n === undefined || typeof n !== 'object') return
@@ -526,13 +529,13 @@ check('控制台树：底部搜索行 + ＋ 磁贴居末 + 排序两态钮 + 无
   findHead(dr.render({ wide: true }))
   if (headBtn === null || typeof headBtn.props.onClick !== 'function') return false
   headBtn.props.onClick() // toggleConsole → store.set({consoleOpen:true})
-  // 2) 渲染控制台取树（open 态全量输出）
+  // 2) 渲染控制台取树（open 态全量输出；mock usePoll 初始 data=null = 加载中态）
   const root = con.render({})
   if (root === null || typeof root !== 'object') return false
   const clsCount = {}
   const texts = []
-  let gridKids = null
   let footHasSearch = false
+  let gridKids = null
   const walk = (n, inFoot) => {
     if (n === null || n === undefined) return
     if (typeof n === 'string') { texts.push(n); return }
@@ -546,14 +549,30 @@ check('控制台树：底部搜索行 + ＋ 磁贴居末 + 排序两态钮 + 无
     if (Array.isArray(n.children)) for (const c of n.children) walk(c, inFoot)
   }
   walk(root, false)
-  const lastCn = gridKids !== null && gridKids.length > 0 && gridKids[gridKids.length - 1].props !== undefined ? gridKids[gridKids.length - 1].props.className : ''
+  const joined = texts.join('')
+  // 源码级（P1-1/P1-2）：hero 门控 = poll.data !== null && novels.length === 0；
+  // 稀疏居中 = ≤2 本模板 repeat(auto-fit,minmax(320px,420px)) + justify-content:center；
+  // ≥3 本恢复类模板 repeat(auto-fill,minmax(320px,1fr))——两分支模板差异断言。
+  const heroGateIdx = clientSrc.indexOf('poll.data !== null && novels.length === 0')
+  const sparseIdx = clientSrc.indexOf("style: novels.length >= 1 && novels.length <= 2 ? { gridTemplateColumns: 'repeat(auto-fit,minmax(320px,420px))', justifyContent: 'center' } : undefined")
+  const gridGateIdx = clientSrc.indexOf("poll.data === null || novels.length === 0")
+  ux008diag = JSON.stringify({ hero: clsCount['nv-hero'] ?? 0, empty: clsCount['nv-empty'] ?? 0, grid: clsCount['nv-cgrid'] ?? 0, sort: clsCount['nv-csortbtn'] ?? 0, joined: texts.join('').slice(0, 120), heroGateIdx, sparseIdx, gridGateIdx })
   return footHasSearch === true                     // ② 搜索行移到容器底部（nv-cfoot 内）
-    && lastCn === 'nv-cplus'                        // ③ ＋ 虚线磁贴在网格末尾
-    && (clsCount['nv-csortbtn'] ?? 0) === 2         // ④ 排序 默认/手动 两态钮
-    && (clsCount['nv-cact'] ?? 0) === 0             // ③ 卡内「▶ 打开」文本钮消失（类整体移除）
-    && !texts.join('').includes('▶ 打开')
+    && (clsCount['nv-hero'] ?? 0) === 0             // P1-2：加载中（poll.data=null）不渲染英雄区
+    && (clsCount['nv-empty'] ?? 0) === 0            // P1-2：加载中不渲染空态框（noMatch/加载空态）
+    && (clsCount['nv-cgrid'] ?? 0) === 0            // P1-2：加载中不渲染网格（不闪现空网格+磁贴）
+    && (clsCount['nv-csortbtn'] ?? 0) === 2          // ④ 排序 默认/手动 两态钮（与书量/加载态无关）
+    && !joined.includes('从第一本书开始')            // 加载中无英雄文案
+    && heroGateIdx > -1                              // P1-2：hero 门控源码在位
+    && gridGateIdx > -1                              // P0-0（R2）：grid 双门控源码在位（加载中/0 本均不渲染网格）
+    && gridGateIdx < sparseIdx                       // P0-0：grid 双门控在稀疏分支之前（同分支同门控）
+    && sparseIdx > -1                                // P1-1：稀疏居中条件模板+justify-content 在位
+    && clientSrc.indexOf("key: 'nv-cplus'") > sparseIdx // 磁贴居末（cplus 在网格声明之后；源码级——0 本树无网格可验）
+    && clientSrc.includes('.nv-cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr))') // ≥3 本类模板不变（两分支差异）
+    && (clsCount['nv-cact'] ?? 0) === 0              // ③ 卡内「▶ 打开」文本钮消失（类整体移除）
+    && !joined.includes('▶ 打开')
     && !clientSrc.includes('openBtn')               // i18n 键同步清理
-})(), 'console tree mismatch')
+})(), 'console tree mismatch :: ' + ux008diag)
 check('控制台源码面：拖拽排序持久化 + 3 列网格 + 药丸搜索样式', clientSrc.includes('dsh.novel.order.v1')
   && clientSrc.includes('draggable: props.draggable') && clientSrc.includes('minmax(320px,1fr)')
   && clientSrc.includes('nv-cplus{') && clientSrc.includes('border-radius:999px'), 'order-persist/drag/grid/pill missing')
@@ -577,8 +596,9 @@ check('控制台源码面：UX-010 批注（✕ 醒目变体/排序 pill 13px/18
     && sort.includes('font-size:13px') && sort.includes('padding:7px 14px')
     && css('.nv-csort').includes('gap:8px')
     && card.includes('min-height:180px') && tile.includes('min-height:180px') && grid.includes('gap:20px')
-    && css('.nv-ccard-name').includes('font-size:16px') && css('.nv-ccard-status').includes('font-size:13px')
-    && css('.nv-ccard-data').includes('font-size:13px') && css('.nv-cmeta').includes('font-size:12px')
+    // UX-055①：字号随字阶常量演进——书卡标题 17px（TYPO.cardTitle）、状态行/meta 11px（TYPO.meta）
+    && css('.nv-ccard-name').includes('TYPO.cardTitle') && css('.nv-ccard-status').includes('TYPO.meta')
+    && css('.nv-ccard-data').includes('font-size:13px') && css('.nv-cmeta').includes('TYPO.meta')
 })(), 'ux010 tokens missing')
 check('控制台源码面：UX-010④ current 联动（s.current 订阅 + ref 基准守卫 + 插件切换豁免）',
   clientSrc.includes('s.current') && clientSrc.includes('currentSeededRef') && clientSrc.includes('prevCurrentRef')
@@ -678,7 +698,7 @@ check('客户端源码面：UX-013 抽屉字形（width 100% 对齐 + 13px/📖1
     && title.includes('font-size:13px') && title.includes('font-weight:600') && title.includes('letter-spacing:.06em')
     && ico.includes('font-size:16px')
     && card.includes('padding:6px 8px') && card.includes('border-radius:10px') && card.includes('margin:4px 0')
-    && ct.includes('font-size:13px') && ct.includes('font-weight:600')
+    && ct.includes('TYPO.smallTitle') && ct.includes('font-weight:600')    // UX-055⑥：抽屉卡标题 13→13.5px/600（小一档保层级）
     && cs.includes('font-size:12px')
     && dot.includes('width:9px') && dot.includes('height:9px')      // 基型 9px（标题栏状态点）
     && cardDot.includes('width:8px') && cardDot.includes('height:8px') // 抽屉卡小一档 8px
@@ -771,7 +791,7 @@ check('客户端源码面：UX-015① 标题栏加高放大（38px 高 / 14px �
   const launch = css('.nv-bar-launch')
   return clientSrc.includes('const TITLE_BAR_H = 38')
     && bar.includes('height:38px') && bar.includes('padding:0 14px')
-    && bt.includes('font-size:14px') && bt.includes('font-weight:600')
+    && bt.includes('TYPO.page') && bt.includes('font-weight:600') && bt.includes('letter-spacing:-.015em') // UX-055①：书名 14→20px/600（字阶第一级）
     && badge.includes('font-size:13px')
     && ctl.includes('width:32px') && ctl.includes('height:32px') && ctl.includes('font-size:18px') && ctl.includes('font-weight:600')
     && barMini.includes('width:24px') && barMini.includes('height:24px')
@@ -919,7 +939,7 @@ check('客户端源码面：UX-015④ 抽屉小一档（13/12px + 6·8px + 4px �
   const empty = css('.nv-drawer .nv-empty')
   const ccard = css('.nv-ccard')
   return card.includes('padding:6px 8px') && card.includes('margin:4px 0')
-    && ct.includes('font-size:13px') && cs.includes('font-size:12px')
+    && ct.includes('TYPO.smallTitle') && cs.includes('font-size:12px')   // UX-055⑥：抽屉卡标题 13→13.5px/600（管理台卡 17px 保层级）
     && cardDot.includes('width:8px') && cardDot.includes('height:8px')
     && empty.includes('padding:6px 8px')
     && ccard.includes('min-height:180px') && ccard.includes('padding:16px') // 管理层卡片不动（层级感=抽屉小于控制台）
@@ -1028,15 +1048,16 @@ check('客户端源码面：UX-053 焦点双环统一（Vercel 模式：2px bg �
     && !clientSrc.includes('.nv-csearch:focus-within{border-color:var(--dsw-alias-state-accent-primary,#4f8ef7);box-shadow:0 0 0 3px')   // 旧搜索 3px 光圈无残留（nv-dot 25% 光晕同为 3px 环——用完整规则前缀区分）
     && !clientSrc.includes('0 0 16px rgba(79,142,247,.25)')    // 旧卡片 16px 光晕无残留
 })(), 'ux053 focus ring missing')
-check('客户端源码面：UX-053 光效收敛（.nv-csweep 扫光清除负断言 / glow = 中性边框+顶部 2px 状态条 color-mix 70% / 卡片渐变峰值 .05+阴影 0 1px 3px / nv-dot 微光收敛）', (() => {
+check('客户端源码面：UX-053 光效收敛（.nv-csweep 扫光清除负断言 / glow = 中性边框+顶部 2px 状态条 color-mix 70% / nv-dot 微光收敛）', (() => {
   return !clientSrc.includes('.nv-csweep') && !clientSrc.includes('nv-sweep') && !clientSrc.includes('nv-csweep')
     && clientSrc.includes(".nv-ccard[data-glow=need]{border-color:var(--dsw-alias-border-l2,#3a4150);box-shadow:inset 0 2px 0 0 rgba(210,153,34,.7);box-shadow:inset 0 2px 0 0 color-mix(in srgb,var(--dsw-alias-state-warning,#d29922) 70%,transparent)}")
     && clientSrc.includes(".nv-ccard[data-glow=done]{border-color:var(--dsw-alias-border-l2,#3a4150);box-shadow:inset 0 2px 0 0 rgba(63,185,80,.7);box-shadow:inset 0 2px 0 0 color-mix(in srgb,var(--dsw-alias-state-success,#3fb950) 70%,transparent)}")
     && clientSrc.includes(".nv-ccard[data-glow=busy]{border-color:var(--dsw-alias-border-l2,#3a4150);box-shadow:inset 0 2px 0 0 rgba(79,142,247,.7);box-shadow:inset 0 2px 0 0 color-mix(in srgb,var(--dsw-alias-state-accent-primary,#4f8ef7) 70%,transparent)}")
-    && clientSrc.includes('linear-gradient(135deg,rgba(255,255,255,.05),rgba(255,255,255,.02) 55%,rgba(0,0,0,.03))')  // 渐变峰值 .07→.05
+    // UX-055③（DEC-021 修订版）：卡片渐变白 alpha 写死 → color-mix(label-primary) 派生（见 ux055 负断言）
+    && clientSrc.includes('background:linear-gradient(135deg,color-mix(in srgb,var(--dsw-alias-label-primary,#e6e8eb) 4%,transparent),transparent 55%)')
     && !clientSrc.includes('rgba(255,255,255,.07),rgba(255,255,255,.02) 45%')   // 旧峰值/45% stop 无残留
     && clientSrc.includes('box-shadow:0 1px 3px rgba(0,0,0,.15)')              // 阴影收紧
-    && !clientSrc.includes('0 0 22px rgba(210,153,34') && !clientSrc.includes('0 0 24px rgba(79,142,247')  // 大辉光无残留
+    && !clientSrc.includes('0 0 22px rgba(210,153,34') && !clientSrc.includes('box-shadow:0 0 24px rgba(79,142,247')  // 大辉光无残留（卡面 box-shadow 域；UX-055 hero 为 drop-shadow 光晕不冲突）
 })(), 'ux053 glow converge missing')
 check('客户端源码面：UX-053 令牌化与其它（color-mix + rgba 兜底双声明 / 字重三档 700→600 / 选中态类化 .nv-ft-row[data-sel]/.nv-chrow[data-sel] / 空态 flex 图标 / 弹窗双层阴影 / 排序 pill 8% 底 + 徽标 pill 999）', (() => {
   const cm = 'color-mix(in srgb,var(--dsw-alias-state-accent-primary,#4f8ef7)'
@@ -1055,6 +1076,128 @@ check('客户端源码面：UX-053 令牌化与其它（color-mix + rgba 兜底�
     && clientSrc.includes('color-mix(in srgb,var(--dsw-alias-state-warning,#d29922) 25%,transparent)')  // nv-dot 微光 token 化
     && clientSrc.includes('.nv-ft-glyph{') && clientSrc.includes('rotate(90deg)')                        // 目录箭头 rotate 过渡
 })(), 'ux053 tokens missing')
+// UX-055（DEC-021 修订版——主题无关自适应 + DEC-022 定向授权；V7 真实截图差距分析驱动：
+//  字阶无对比/书卡纯文本堆叠无构成/70% 空白零处理/✓✗ 无色彩语义/正文无节奏）：
+//  ①字阶悬崖（TYPO 单点常量：page 20/cardTitle 17/stat 18/body 15·1.75/meta 11/empty 28——参照 5.8 倍极差）
+//  ②书卡构成重构（monogram 40×40 accent 14% 色块 + 标题 17px + 1px 分隔 + 数据 chips 6%/9% 派生 + 底部状态带）
+//  ③空态英雄区（48px 图标 accent 20% + 光晕 + 28px 大字 + 主按钮；0 本书隐藏网格/磁贴）+ 稀疏居中（≤2 本 justify-content:center）
+//  ④状态文案组件化（.nv-chip data-tone ok/warn/danger/muted——状态色 tint 双声明；发布记录 ✓/✗→6px 圆点；noData 新值）
+//  ⑤正文阅读排版（15px/1.75/段距 .75em/章节标题 16px+分隔线；编辑 textarea 同步）
+//  ⑥细节统一（抽屉小卡 13.5px/当前阶段行 accent 8%+左缘条/排序 pill 600/tabular-nums 数字/＋磁贴 label-primary 15% 虚线）
+check('客户端源码面：UX-055① 字阶悬崖（TYPO 单点常量关键值 + page/cardTitle/body/bodyLh 引用面 + 无旧值残留）', (() => {
+  return clientSrc.includes('const TYPO = {')
+    && clientSrc.includes('page: 20') && clientSrc.includes('cardTitle: 17')
+    && clientSrc.includes('stat: 18') && clientSrc.includes('body: 15')
+    && clientSrc.includes('bodyLh: 1.75') && clientSrc.includes('meta: 11') && clientSrc.includes('empty: 28')
+    && clientSrc.includes('TYPO.page')        // 页面标题（管理台标题/创作台书名 20px）
+    && clientSrc.includes('TYPO.cardTitle')   // 书卡标题 17px
+    && clientSrc.includes('TYPO.stat')        // 统计数字 18px + tabular-nums
+    && clientSrc.includes('TYPO.body') && clientSrc.includes('TYPO.bodyLh')   // 正文 15px/1.75
+    && clientSrc.includes('TYPO.meta')        // meta 11px
+    && clientSrc.includes('TYPO.empty')       // 空态 28px
+    && clientSrc.includes('fontVariantNumeric: \'tabular-nums\'')             // 统计数字/正文标题 tabular
+    && !clientSrc.includes('font-size:16px;font-weight:600;color:var(--dsw-alias-label-primary,#e6e8eb);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}')  // 旧书卡标题 16px 无残留
+    && !clientSrc.includes('.nv-console-title{flex:none;display:inline-flex;align-items:center;gap:6px;font-size:16px')
+})(), 'ux055 typography missing')
+check('客户端源码面：UX-055② 书卡构成重构（monogram 色块 40×40 + accent 14% color-mix 派生 + 数据 chips 6%/9% + 1px 分隔线 label-primary 8%）', (() => {
+  return clientSrc.includes('.nv-ccard-mono{') && clientSrc.includes('width:40px;height:40px')
+    && clientSrc.includes('border-radius:10px')
+    && clientSrc.includes('background:rgba(79,142,247,.14);background:color-mix(in srgb,var(--dsw-alias-state-accent-primary,#4f8ef7) 14%,transparent)') // 先 rgba 兜底后 color-mix
+    && clientSrc.includes("className: 'nv-ccard-mono'")
+    && clientSrc.includes('.nv-ccard-sep{') && clientSrc.includes('color-mix(in srgb,var(--dsw-alias-label-primary,#e6e8eb) 8%,transparent)')
+    && clientSrc.includes('.nv-ccard-chips{') && clientSrc.includes('.nv-ccard-chip{')
+    && clientSrc.includes('color-mix(in srgb,var(--dsw-alias-label-primary,#e6e8eb) 6%,transparent)')  // chip 底 6%
+    && clientSrc.includes('color-mix(in srgb,var(--dsw-alias-label-primary,#e6e8eb) 9%,transparent)')  // chip 边 9%
+    && clientSrc.includes('padding:2px 8px;border-radius:6px')                 // 数据 chip 规格
+    && clientSrc.includes("className: 'nv-ccard-chip'")                        // 数据 chip 渲染（章/字/信号）
+    && clientSrc.includes("const mono = titleStr.length > 0 ? [...titleStr][0] : '?'") // 首字提取（surrogate-safe）
+})(), 'ux055 card composition missing')
+check('客户端源码面：UX-055③ 白 alpha 渐变清零（卡片背景无 rgba(255,255,255 渐变残留——令牌化完成）', (() => {
+  // 硬门槛：渐变中白 alpha 硬编码 = 0；所有 rgba(255,255,255 仅允许 var(--dsw-alias-*) 兜底位
+  const naked = clientSrc.match(/(?<!var\(--dsw-alias-[a-z0-9-]+[,)])\blinear-gradient\([^)]*rgba\(255,\s*255,\s*255/g)
+  return (naked ?? []).length === 0
+    && !clientSrc.includes('linear-gradient(135deg,rgba(255,255,255')
+    && clientSrc.includes('.nv-ccard:hover{') && clientSrc.includes('color-mix(in srgb,var(--dsw-alias-label-primary,#e6e8eb) 7%,transparent)') // hover 7% 同步令牌化
+})(), 'ux055 white-alpha gradient cleared')
+check('客户端源码面：UX-055④ 状态 chip 组件（.nv-chip + data-tone ok/warn/danger/muted 四态 color-mix 派生 + 卡片/门禁 chip 化 + noData 新值 zh/en + 发布记录状态点）', (() => {
+  const tones = ['ok', 'warn', 'danger', 'muted']
+  return tones.every((tn) => clientSrc.includes(".nv-chip[data-tone=" + tn + "]{"))
+    && clientSrc.includes('.nv-chip[data-tone=danger]{background:rgba(229,72,77,.12);background:color-mix(in srgb,var(--dsw-alias-state-danger,#e5484d) 12%,transparent);border:1px solid rgba(229,72,77,.25)') // 规格例：danger 12% 底 + 25% 边
+    && clientSrc.includes('className: \'nv-chip\', \'data-tone\': novel.releaseAllowed === true ? \'ok\' : \'danger\'')   // 卡片发布 chip（已发布 ok / 未发布 danger）
+    && clientSrc.includes("pubOn: '已发布'") && clientSrc.includes("pubOff: '未发布'")   // 卡片 meta 行文案
+    && clientSrc.includes("monOff: '未开通变现'") && clientSrc.includes("monOn: '已开通变现'")
+    && clientSrc.includes("pubOn: 'Published'") && clientSrc.includes("pubOff: 'Not published'") && clientSrc.includes("monOn: 'Monetized'") && clientSrc.includes("monOff: 'Not monetized'")
+    && clientSrc.includes("noData: '尚无数据信号'") && clientSrc.includes("noData: 'No signals yet'")  // DEC-022 授权占位文案
+    && clientSrc.includes("guardrails.release_allowed === true ? 'ok' : 'danger'")        // 门禁卡 chip
+    && clientSrc.includes('.nv-status-dot{') && clientSrc.includes('.nv-status-dot[data-ok=true]{')   // 发布记录行 6px 圆点
+    && clientSrc.includes("'aria-hidden': true, style: { marginLeft: '4px' } })")                   // 行尾状态点渲染
+    && !clientSrc.includes("`${t('rel')}${relFlag}`") && !clientSrc.includes('relFlag')              // ✓/✗ 文本标记退役
+})(), 'ux055 status chips missing')
+check('客户端源码面：UX-055③⑥ 空态英雄区 + 稀疏居中（hero 门控 poll.data!==null && 0 本；grid 双门控 poll.data===null || 0 本——两分支互斥；≤2 本 auto-fit 420 模板+居中；＋磁贴 label-primary 15% 虚线 + 20px muted 图标）', (() => {
+  return clientSrc.includes('className: \'nv-hero\'')
+    && clientSrc.includes('poll.data !== null && novels.length === 0')              // P1-2：加载中/错误不闪现英雄区
+    && clientSrc.includes('poll.data === null || novels.length === 0')              // P0-0（R2）：grid 双门控（加载中/0 本均不渲染网格——与 hero 同构互斥）
+    && clientSrc.includes('.nv-hero{') && clientSrc.includes('.nv-hero-icon{')
+    && clientSrc.includes('color:rgba(79,142,247,.2);color:color-mix(in srgb,var(--dsw-alias-state-accent-primary,#4f8ef7) 20%,transparent)')  // accent 20% 图标（先 rgba 后 color-mix）
+    && clientSrc.includes('drop-shadow(0 0 24px ')                                                    // 光晕
+    && clientSrc.includes('TYPO.empty') && clientSrc.includes('.nv-hero-title{')
+    && clientSrc.includes("t('heroStart')") && clientSrc.includes("heroStart: '从第一本书开始'") && clientSrc.includes("heroStart: 'Start your first novel'")
+    && clientSrc.includes("className: 'nv-cbtn-accent nv-hero-btn'")                               // 主按钮（accent 实底 = 现有新建链）
+    && clientSrc.includes("novels.length >= 1 && novels.length <= 2 ? { gridTemplateColumns: 'repeat(auto-fit,minmax(320px,420px))', justifyContent: 'center' } : undefined")  // P1-1：稀疏真居中（条件模板 + justify-content）
+    && clientSrc.includes('.nv-cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr))')                    // ≥3 本类模板不变（两分支差异）
+    && clientSrc.includes('color-mix(in srgb,var(--dsw-alias-label-primary,#e6e8eb) 15%,transparent)')  // ＋磁贴 label-primary 15% 虚线
+    && clientSrc.includes('.nv-cplus-icon{font-size:20px')                                        // ＋图标 20px muted
+    && clientSrc.includes('.nv-cplus:hover{background:rgba(230,232,235,.04);background:color-mix(in srgb,var(--dsw-alias-label-primary,#e6e8eb) 4%,transparent)') // hover 4% 底
+})(), 'ux055 hero + sparse missing')
+check('客户端源码面：UX-055⑤ 正文阅读排版（15px/1.75 类 + .nv-content + 章节标题 TYPO.chapter 分隔线 + textarea 15px/1.75 同步 + tabular-nums 数字面）', (() => {
+  return clientSrc.includes(".nv-content{font-size:' + TYPO.body + 'px;line-height:' + TYPO.bodyLh")
+    && clientSrc.includes('.nv-content p{margin:.75em 0')
+    && clientSrc.includes(".nv-content h2{font-size:' + TYPO.chapter")             // P2-2：TYPO 引用面（非硬编码 16px 字面）
+    && clientSrc.includes('.nv-chapter-sep{')
+    && clientSrc.includes("className: 'nv-content'")
+    && clientSrc.includes("fontSize: TYPO.chapter + 'px'")                    // 阅读区章节标题 16px/600 + tabular
+    && clientSrc.includes("fontSize: TYPO.body + 'px', lineHeight: TYPO.bodyLh")  // textarea 同步 15px/1.75
+    && clientSrc.includes("'.nv-chip{flex:none;display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;box-sizing:border-box;font-size:' + TYPO.meta") // P2-1：.nv-chip 11px→TYPO.meta 引用面
+})(), 'ux055 body typography missing')
+check('客户端源码面：UX-055⑥ 细节统一（抽屉小卡 13.5px / 当前阶段行 accent 8% 底+左缘条 / 排序 pill 选中 600 / 数据/表格 tabular-nums / mono 首字块渲染）', (() => {
+  return clientSrc.includes('TYPO.smallTitle')
+    && clientSrc.includes('.nv-wf-row[data-cur=true]{background:rgba(79,142,247,.08);background:color-mix(in srgb,var(--dsw-alias-state-accent-primary,#4f8ef7) 8%,transparent);box-shadow:inset 2px 0 0 0 var(--dsw-alias-state-accent-primary,#4f8ef7)')
+    && clientSrc.includes(".nv-csortbtn[data-on=true]{border-color:var(--dsw-alias-state-accent-primary,#4f8ef7);color:var(--dsw-alias-state-accent-primary,#4f8ef7);font-weight:600")
+    && clientSrc.includes('fontVariantNumeric: \'tabular-nums\'')
+    && clientSrc.includes('font-variant-numeric:tabular-nums')                       // 数据 chip/cmeta/正文标题
+    && clientSrc.includes("'data-cur': current ? 'true' : undefined")                 // 当前阶段行 data-cur
+})(), 'ux055 detail unify missing')
+// 交付验证最终修复（A-prime——精确测量；两轮经验合并：A 根因①barRef 未绑定 .nv-bar→监听全未注册
+//  ②右检「r.left > b.right」过滤重叠控件；B 残余缺陷=固定阈值 960 覆盖不了「960≤barW<~1300+书名宽」
+//  组合）：leftClear = 书名 span 自然宽（rect.left + scrollWidth——不受 flex 裁剪/ellipsis 影响）+M(8)
+//   ≤ 横幅左缘；rightClear = 横幅右缘 +M ≤ 右簇首个可见控件 min-left（launch/ctl/note；无重叠过滤）；
+//  任一不满足 → data-hidden（visibility:hidden 元素保留可测量）；RO 观察 bar/banner/title 三元素 +
+//  window resize 兜底 + 切书名（scrollWidth 不触发 RO）deps 含 snap.novelId；BANNER_MIN_WIDTH 已删。
+check('客户端源码面：交付验证最终修复 标题栏横幅碰撞防护（A-prime 精确测量：scrollWidth 自然宽 + 右簇 min-left 无重叠过滤 + 三元素 RO + BANNER_MIN_WIDTH 删除）', (() => {
+  return clientSrc.includes("const [bannerCollides, setBannerCollides] = useState(false)")
+    && clientSrc.includes("title.scrollWidth + M")                              // 书名自然宽（scrollWidth——不受 flex 裁剪）
+    && clientSrc.includes("const t = title.getBoundingClientRect()")             // 标题 span rect（左缘基线）
+    && clientSrc.includes('Math.min(rightStart, r.left)')                       // 右簇最小 left（天然覆盖重叠控件——无 r.left > b.right 过滤）
+    && !clientSrc.includes('r.left > b.right')                                  // A 方案右检过滤形态负断言（注释已回避字面）
+    && clientSrc.includes("querySelectorAll('.nv-bar-launch, .nv-bar-ctl, .nv-bar-note')")
+    && clientSrc.includes('const M = 8')                                        // 安全边距 8px
+    && clientSrc.includes('{ ref: barRef, className: \'nv-bar\' }')             // barRef 绑定 .nv-bar（A 根因①修复）
+    && clientSrc.includes('ref: bannerRef') && clientSrc.includes('ref: titleTextRef')  // 测量 refs 全绑定
+    && clientSrc.includes("if (snap.active !== true || barRef.current === null || bannerRef.current === null || titleTextRef.current === null) return undefined")
+    && clientSrc.includes('new ResizeObserver(measure)')
+    && clientSrc.includes('ro.observe(bannerRef.current)')                      // 三元素观察（bar/banner/title）
+    && clientSrc.includes('ro.observe(titleTextRef.current)')
+    && clientSrc.includes("window.addEventListener('resize', measure)")
+    && clientSrc.includes("window.removeEventListener('resize', measure)")     // 监听器清理防泄漏
+    && clientSrc.includes('if (ro !== null) ro.disconnect()')
+    && clientSrc.includes('}, [snap.active, snap.novelId])')                    // 切书名重测（scrollWidth 不触发 RO）
+    && clientSrc.includes("className: 'nv-bar-banner'")
+    && clientSrc.includes("'data-hidden': bannerCollides === true ? 'true' : undefined")
+    && clientSrc.includes('.nv-bar-banner[data-hidden=true]{visibility:hidden}')
+    && !clientSrc.includes('BANNER_MIN_WIDTH')                                  // 固定阈值已删（B 残余缺陷方案弃用）
+    && !clientSrc.includes('bannerNarrow')                                      // B 方案状态名无残留
+    && clientSrc.includes("position: 'absolute', left: '50%', transform: 'translateX(-50%)'") // 横幅既有居中几何未动（宽窗零变化）
+})(), 'banner collision guard missing')
 let renderErr = ''
 check('各注册面 render 可调用（组件体可求值；关闭态浮层输出 null 合法）', (() => {
   for (const r of slotRegs) {

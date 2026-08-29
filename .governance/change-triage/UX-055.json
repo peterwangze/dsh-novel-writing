@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "task_id": "UX-055",
+  "title": "工作台视觉 V2（真实截图差距分析驱动）：字阶悬崖/书卡构成重构/空态英雄区/状态文案组件化/正文阅读排版/稀疏居中——全量令牌派生双主题自适应（DEC-021/022）",
+  "priority": "P1",
+  "target_version": "0.4.0",
+  "depends_on": [],
+  "files": [
+    "lib/client.js",
+    "test/smoke.mjs",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "reason": "用户 V7 目检反馈「变化不大」+ 方法论批评（未真实看图/未用视觉子agent）→ V7 轮真实截图差距分析（Coordinator 原生目检+vision 子代理+像素采样+代码核验三角化）定案 V2 全量方案；三项用户授权已取得（DEC-022）；吸收 UX-054 F5（✓✗ 标记）重叠项",
+  "created_at": "2026-08-29",
+  "tool": "change-triage",
+  "tool_version": "0.77.0",
+  "analysis": {
+    "dependency": {
+      "unblocked": [
+        "REL-002",
+        "DOC-001",
+        "SYSGAP-001",
+        "CLEAN-003",
+        "CLEAN-004",
+        "UX-054"
+      ],
+      "blocked": [],
+      "blocked_by": [],
+      "unknown_deps": [],
+      "cycles": [],
+      "cycle_warning": false,
+      "new_task_cycle": false
+    },
+    "priority_context": {
+      "proposed": "P1",
+      "in_flight": {
+        "P0": 0,
+        "P1": 0,
+        "P2": 6
+      },
+      "version_chain": []
+    },
+    "conflicts": [
+      {
+        "task_id": "UX-054",
+        "files": [
+          "lib/client.js",
+          "test/smoke.mjs"
+        ],
+        "overlap": [
+          "lib/client.js",
+          "test/smoke.mjs"
+        ]
+      }
+    ],
+    "version": {
+      "target": "0.4.0",
+      "current": "",
+      "planned_next": null,
+      "issues": []
+    },
+    "side_effect": {
+      "detected": false,
+      "touches_real_env": false,
+      "requires_r1": false,
+      "declared": "",
+      "blast_radius": [],
+      "review_conditions": [],
+      "issues": []
+    }
+  },
+  "snapshot": {
+    "tool": "task-priority-analysis",
+    "module_version": "0.71.0",
+    "report_json": {
+      "total": 71,
+      "completed": [
+        "ONBOARD-001",
+        "DEV-001",
+        "REL-001",
+        "QUAL-001",
+        "GATE-005",
+        "UX-001",
+        "CLEAN-001",
+        "UX-002",
+        "CLEAN-002",
+        "GOV-001",
+        "GOV-002",
+        "GOV-003",
+        "UX-003",
+        "UX-004",
+        "UX-005",
+        "INST-001",
+        "BUG-001",
+        "BUG-002",
+        "UX-006",
+        "UX-007",
+        "UX-008",
+        "UX-009",
+        "UX-010",
+        "UX-011",
+        "UX-012",
+        "UX-013",
+        "UX-014",
+        "UX-015",
+        "UX-016",
+        "UX-017",
+        "UX-018",
+        "UX-019",
+        "UX-020",
+        "UX-021",
+        "UX-022",
+        "UX-023",
+        "UX-024",
+        "UX-025",
+        "UX-026",
+        "UX-027",
+        "UX-028",
+        "UX-029",
+        "UX-030",
+        "UX-031",
+        "UX-032",
+        "UX-033",
+        "UX-034",
+        "UX-035",
+        "UX-036",
+        "UX-037",
+        "UX-038",
+        "UX-039",
+        "UX-040",
+        "UX-041",
+        "UX-042",
+        "UX-044",
+        "UX-045",
+        "UX-046",
+        "UX-047",
+        "UX-048",
+        "UX-049",
+        "UX-050",
+        "UX-051",
+        "UX-052",
+        "UX-053"
+      ],
+      "blocked": [],
+      "unblocked": [
+        "REL-002",
+        "DOC-001",
+        "SYSGAP-001",
+        "CLEAN-003",
+        "CLEAN-004",
+        "UX-054"
+      ],
+      "recommended_next": [
+        "CLEAN-003",
+        "DOC-001",
+        "REL-002",
+        "SYSGAP-001",
+        "CLEAN-004",
+        "UX-054"
+      ],
+      "non_executable": [],
+      "cycles": [],
+      "cycle_warning": false
+    },
+    "report_text": "# Task Priority Analysis\n\nTotal: **71** tasks — 65 completed, 6 unblocked, 0 blocked, 0 non-executable.\n\n## Recommended next\n\n**Top pick: `CLEAN-003` [P2]**\n\n- `CLEAN-003` [P2] v=v0.3.0 status=⏳ 待执行 deps=[—]  [refs: UX-005]\n- `DOC-001` [P2] v=v0.3.0 status=⏳ 待执行 deps=[—]  [refs: GATE-005]\n- `REL-002` [P2] v=v0.3.0 status=⏳ 待执行 deps=[REL-001]\n- `SYSGAP-001` [P2] v=v0.3.0 status=⏳ 待执行 deps=[—]  [refs: RISK-002]\n- `CLEAN-004` [P2] v=v0.4.0 status=⏳ 待执行 deps=[—]  [refs: UX-006, UX-007]\n- `UX-054` [P2] v=v0.4.0 status=⏳ 待执行 deps=[—]  [refs: UX-053]\n\n## Unblocked (ready to work)\n\n- `REL-002` [P2] v=v0.3.0 status=⏳ 待执行 deps=[REL-001]\n- `DOC-001` [P2] v=v0.3.0 status=⏳ 待执行 deps=[—]  [refs: GATE-005]\n- `SYSGAP-001` [P2] v=v0.3.0 status=⏳ 待执行 deps=[—]  [refs: RISK-002]\n- `CLEAN-003` [P2] v=v0.3.0 status=⏳ 待执行 deps=[—]  [refs: UX-005]\n- `CLEAN-004` [P2] v=v0.4.0 status=⏳ 待执行 deps=[—]  [refs: UX-006, UX-007]\n- `UX-054` [P2] v=v0.4.0 status=⏳ 待执行 deps=[—]  [refs: UX-053]\n\n## Excluded (non-executable status)\n\n_None._\n\n## Blocked\n\n_None._\n\n## Completed\n\n- `ONBOARD-001` [P1] v=v0.2.2 status=✅ 完成 deps=[—]\n- `DEV-001` [P1] v=v0.3.0 status=✅ 完成 deps=[—]\n- `REL-001` [P1] v=v0.3.0 status=✅ 完成 deps=[—]\n- `QUAL-001` [P1] v=v0.3.0 status=✅ 完成 deps=[—]  [refs: RISK-001]\n- `GATE-005` [P2] v=v0.3.0 status=✅ 完成 deps=[—]\n- `UX-001` [P1] v=v0.3.0 status=✅ 完成 deps=[—]\n- `CLEAN-001` [P2] v=v0.3.0 status=✅ 完成 deps=[—]  [refs: UX-001]\n- `UX-002` [P1] v=v0.3.0 status=✅ 完成 deps=[—]  [refs: UX-001, CLEAN-001]\n- `CLEAN-002` [P2] v=v0.3.0 status=✅ ①完成 · ②被取代 deps=[—]  [refs: UX-002]\n- `GOV-001` [P2] v=v0.3.0 status=✅ 完成 deps=[—]\n- `GOV-002` [P2] v=v0.4.0 status=✅ 完成 deps=[—]\n- `GOV-003` [P2] v=v0.4.0 status=✅ 完成 deps=[—]\n- `UX-003` [P1] v=v0.3.0 status=✅ 完成 deps=[—]  [refs: UX-002]\n- `UX-004` [P1] v=v0.3.0 status=✅ 被 UX-005 取代 deps=[—]  [refs: UX-003]\n- `UX-005` [P1] v=v0.3.0 status=✅ 完成 deps=[—]  [refs: UX-002, UX-003]\n- `INST-001` [P1] v=v0.3.0 status=✅ 完成 deps=[—]\n- `BUG-001` [P2] v=v0.3.0 status=✅ 完成 deps=[—]  [refs: INST-001]\n- `BUG-002` [P1] v=v0.3.0 status=✅ 完成 deps=[—]  [refs: UX-005]\n- `UX-006` [P1] v=v0.4.0 status=✅ 完成 deps=[—]  [refs: UX-005]\n- `UX-007` [P1] v=v0.4.0 status=✅ 完成 deps=[—]  [refs: UX-006]\n_...and 45 more (see plan-tracker.md)._\n"
+  }
+}

@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 63 | 59 | 0 | 2 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 64 | 60 | 0 | 2 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -117,7 +117,8 @@
 | **P1** | UX-051 | 数据页紧凑化（用户「信息太散了，这么点信息占那么多空间高度」〔前两轮误读为工作台高度已纠正〕）：重做 DataPanel 为**紧凑单流**——去大标题/三卡堆叠：①录入**单行**（日期 108px + 完读/读完/追读/收藏/收益 短标签紧凑输入 50-58px + 入库钮 + notice 内联）②信号一行式（空态一句 11.5px 灰）③记录表瘦身（11.5px/padding 2 6）+横向滚动 ④脚注一行；整体高度≈3-4 行（原三卡约 6-8 行）；底部工作台高度随内容自适应（UX-042 语境：默认内容高） | UX-050 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-067；node --check 通过；smoke 133/133；零宿主依赖保持) |
 | **P1** | UX-052 | 数据页布局紧凑化（只改布局不改内容——用户「让你改布局，没让你改内容啊，你为什么老是自作主张」纠正 UX-051 越界）：**全部文案恢复原文**（页标题「数据」/「数据（每日一行）」/字段全名「完读率%/读完率%/追读%/日增收藏/收益」/「最近记录（新→旧，最多 7 行）」/「暂无信号（入库后自动检测）」/长脚注全文）；布局保留：表单**单行紧凑排布**（原 2 列 grid 标签上置→一行内联、输入 60-110px、flexWrap 兜底）+ 卡内边距收紧（10→8px/边距 8→6px）；smoke 133 | UX-051 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-068；node --check 通过；smoke 133/133；零宿主依赖保持) |
 | **P1** | UX-053 | 工作台视觉设计重构（用户需求：已初步优化但简陋缺设计感——保持当前基础布局，做页面视觉呈现优化重构；素材与思路从开源社区获取不造轮子 P-08）：管理台+创作台**统一设计语言**（DEC-019 定案）；调研开源设计模式（VS Code workbench/Linear/shadcn 等成熟模式）复用落地；素材政策放宽（DEC-019）=允许**内联 MIT 开源 SVG 图标**（Lucide/Feather 源码内嵌，零 npm 依赖/零运行时网络/零宿主选择器依赖保持）；范围=管理台（控制台/抽屉/卡片/弹窗/搜索）+创作台（分栏/文件树/章节列/数据/发布/请求/工作流面板）；**布局零改动**（UX-042~048 布局基线+默认槽保持）；smoke/README/CHANGELOG 同步 | UX-052 | v0.4.0 | closed | ✅ 完成 (2026-08-29，EVD-069；方向 B+A 点缀 DEC-020；调研 docs/research/UX-053-visual-design-research.md；NV_ICONS 21 图标+焦点双环+光效收敛+选中态类化+color-mix 令牌化；node --check/validate-preset 29/29/smoke 137/137（133+4）；Code Reviewer R1 NEEDS_CHANGE（P0=2）→返工→R2 **APPROVED_WITH_NOTES unresolved_blockers=0**；布局红线/兼容红线/文案红线 Reviewer 逐项核对通过；**用户实机目检 V7 待强刷确认**；遗留项收敛 UX-054) |
-| **P2** | UX-054 | 视觉重构遗留项批次（Code Reviewer R1/R2 备注收敛，非阻塞）：F3 React key ×3（key 警告）/ F4 文件行图标间隙 / F5 门禁卡·状态行 ✓✗ 文本标记图标化 / F7 «» 折叠钮图标化 / F8 ＋磁贴字重 / F9 drawer caret 尺寸（12 vs 研究 10px）/ F10 页签角标 bell（现 triangle-alert）/ F11 .nv-cinput 12→13px（研究 V6）/ F12 .nv-bar-note 图标前缀 / G1 .nv-chrow:focus-visible 焦点环被 [data-sel] box-shadow 覆盖（调序或合并声明）| UX-053 | v0.4.0 | open | ⏳ 待执行（发布卫生批次；用户实机目检后按需裁剪） |
+| **P2** | UX-054 | 视觉重构遗留项批次（Code Reviewer R1/R2 备注收敛，非阻塞）：F3 React key ×3（key 警告）/ F4 文件行图标间隙 / F5 门禁卡·状态行 ✓✗ 文本标记图标化 / F7 «» 折叠钮图标化 / F8 ＋磁贴字重 / F9 drawer caret 尺寸（12 vs 研究 10px）/ F10 页签角标 bell（现 triangle-alert）/ F11 .nv-cinput 12→13px（研究 V6）/ F12 .nv-bar-note 图标前缀 / G1 .nv-chrow:focus-visible 焦点环被 [data-sel] box-shadow 覆盖（调序或合并声明）| UX-053 | v0.4.0 | open | ⏳ 待执行（发布卫生批次；用户实机目检后按需裁剪；**F5 已并入 UX-055**——DEC-022 状态文案授权） |
+| **P1** | UX-055 | 工作台视觉 V2（用户 V7 反馈「变化不大」+方法论批评驱动——真实截图差距分析：Coordinator 原生目检+vision 子代理+像素采样+代码核验三角化）：**全量令牌派生主题无关自适应**（DEC-021 修订版：不假设主题/跟随宿主与自定义主题/亮暗仅为采样点/表面 tint 一律 color-mix 前景令牌派生禁白黑 alpha 硬编码/合成自定义主题注入测试）；①字阶悬崖（页标题 20px/书卡标题 17-18px/统计数字 18px tabular-nums/meta 11px——令牌化派生）②书卡构成重构（monogram 首字色块+分区+数据 chips）③空态英雄区（图标+大字+CTA）④状态文案组件化（✓✗→状态点+chip，DEC-022 定向文案授权）⑤正文阅读排版（15px/1.75 行距）⑥稀疏居中（≤2 本居中，DEC-022 授权）；几何不变；smoke/README/CHANGELOG 同步 | UX-053 | v0.4.0 | closed | ✅ 完成 (2026-08-29，EVD-070；smoke 145/145；复审链 R1 NOTES→R2 NEEDS_CHANGE（P0 新回归）→R3 通过→R4 快审通过（横幅守卫 saga：交付验证发现真碰撞→A ref 未绑→B 阈值漏判→**A-prime 精确测量**双探针实证）；DEC-021 三主题验证通过（亮/暗/合成注入）；V1→V2 vision 复评 console 可感知/split 弱（页级差距→UX-056 候选）；遗留：R4-P1 deps 书名变化窗口（卫生批次）+ 0 本渲染树断言) |
 
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 

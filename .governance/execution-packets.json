@@ -1,91 +1,90 @@
 {
     "version":  1,
-    "generated_at":  "2026-08-29T17:59:19",
+    "generated_at":  "2026-08-29T20:36:33",
     "packets":  {
-                    "UX-053":  {
-                                   "task_id":  "UX-053",
+                    "UX-055":  {
+                                   "task_id":  "UX-055",
                                    "priority":  "P1",
                                    "status":  "closed",
-                                   "goal":  "UX-053 工作台视觉设计重构（用户需求：已初步优化但简陋缺设计感——保持当前基础布局，做页面视觉呈现优化重构；素材与思路从开源社区获取不造轮子 P-08）：管理台+创作台**统一设计语言**（DEC-019 定案）；调研开源设计模式（VS Code workbench/Linear/shadcn 等成熟模式）复用落地；素材政策放宽（DEC-019）=允许**内联 MIT 开源 SVG 图标**（Lucide/Feather 源码内嵌，零 npm 依赖/零运行时网络/零宿主选择器依赖保持）；范围=管理台（控制台/抽屉/卡片/弹窗/搜索）+创作台（分栏/文件树/章节列/数据/发布/请求/工作流面板）；**布局零改动**（UX-042~048 布局基线+默认槽保持）；smoke/README/CHANGELOG 同步",
+                                   "goal":  "UX-055 工作台视觉 V2（用户 V7 反馈「变化不大」+方法论批评驱动——真实截图差距分析：Coordinator 原生目检+vision 子代理+像素采样+代码核验三角化）：**全量令牌派生双主题自适应**（DEC-021：不假设主题/跟随宿主/双主题验收）；①字阶悬崖（页标题 20px/书卡标题 17-18px/统计数字 18px tabular-nums/meta 11px——令牌化派生）②书卡构成重构（monogram 首字色块+分区+数据 chips）③空态英雄区（图标+大字+CTA）④状态文案组件化（✓✗→状态点+chip，DEC-022 定向文案授权）⑤正文阅读排版（15px/1.75 行距）⑥稀疏居中（≤2 本居中，DEC-022 授权）；几何不变；smoke/README/CHANGELOG 同步",
                                    "product_success_contract":  {
-                                                                    "user":  "使用 DSH 进行网文连载创作的作者（本机用户 peter）——通过管理工作台管理多本小说、通过创作工作台跟踪写作流程",
-                                                                    "job_to_be_done":  "在保持既有操作布局与交互习惯零变化的前提下，让两个工作台从「能用但简陋」升级为有统一设计语言、有专业设计感的管理/创作界面——用户打开工作台时感知到成熟产品的视觉品质而非临时拼凑",
+                                                                    "user":  "使用 DSH 进行网文连载创作的作者（本机用户 peter）——通过两个工作台管理多本小说并跟踪写作流程",
+                                                                    "job_to_be_done":  "在布局与交互零变化的前提下，两个工作台的视觉品质达到用户可感知的「设计过」水准——用户第一眼就能看出与 V1 的差别（字阶有对比/卡片有构成/空区有设计/状态有颜色），且亮暗两套主题都成立",
                                                                     "non_goals":  [
-                                                                                      "不改动任何布局结构：分区拓扑/尺寸体系（180px 卡高/38px 标题栏/48px 搜索条/分栏宽度与默认槽）全部保持 UX-042~048 定案现状",
-                                                                                      "不引入 npm 依赖/运行时网络加载/外部字体——所有素材（含 SVG 图标源码）内嵌 lib/client.js",
-                                                                                      "不触碰宿主 DSH 源码与宿主选择器（兼容红线）；颜色主路径保持 var(--dsw-alias-*) 宿主令牌",
-                                                                                      "不做内容/文案改写（UX-052 教训：视觉重构不得擅改任何用户可见文案与信息内容）",
-                                                                                      "不重构组件逻辑/数据流——纯视觉层（样式/图标/过渡/空态/焦点态）"
+                                                                                      "不改分区结构与几何尺寸（标题栏高度/卡片 min-height/列宽体系/按钮尺寸/padding/margin——除 DEC-022 白名单的稀疏居中外）",
+                                                                                      "不基于任何主题假设做设计（DEC-021）——一切值从 var(--dsw-alias-*) 派生，亮/暗双主题各自验收",
+                                                                                      "状态文案以外的任何文案改动（UX-052 红线——仅 DEC-022 授权的状态表达类）",
+                                                                                      "不引入 npm 依赖/运行时网络/宿主选择器（兼容红线）",
+                                                                                      "不重构组件逻辑/数据流"
                                                                                   ],
                                                                     "success_metrics":  [
-                                                                                            "用户打开管理工作台与创作工作台时，两台呈现统一设计语言（同字阶/同圆角/同阴影/同图标风格），视觉品质达到成熟开源产品基线（用户实机目检确认）",
-                                                                                            "用户既有操作习惯零变化：全部布局尺寸/分区拓扑/交互行为与 UX-042~048 基线一致（探针几何对比无漂移）",
-                                                                                            "SVG 图标在两台全部渲染正常（无裂图/无占位符），焦点态与空态可见性不劣化",
-                                                                                            "可运行验证信号：node test/smoke.mjs 全量通过（133+ 项）且 node --check 语法通过"
+                                                                                            "用户强刷后第一眼感知明显升级（V7 复验——「变化不大」反馈不再出现；字阶对比/卡片构成/空态处理肉眼可辨）",
+                                                                                            "亮色与暗色两套主题下探针截图均成立（双主题验收——DEC-021）",
+                                                                                            "既有布局几何与交互习惯零变化（Reviewer 逐项核对 + 探针对比）",
+                                                                                            "可运行验证信号：node test/smoke.mjs 全量通过（137+）且 node --check 通过"
                                                                                         ],
-                                                                    "competitive_baseline":  "VS Code workbench（sash/密度/层级模式）、shadcn/ui 组件视觉规范（MIT）、Lucide 图标体系（MIT）——均为开源社区成熟基线，P-08 禁止自造轮子",
+                                                                    "competitive_baseline":  "Linear/Vercel/shadcn 的双主题成熟度（参照 screenshots + docs/research/UX-053 报告 §1）——字阶极差/表面层次/状态 chip 体系",
                                                                     "done_definition":  [
-                                                                                            "调研文档 docs/research/UX-053-visual-design-research.md 存在且含 ≥3 开源参考系的组件级模式映射",
-                                                                                            "两台全部 .nv-* 组件视觉层按统一设计语言落地（图标/字阶/阴影/过渡/焦点/空态）",
-                                                                                            "smoke 133+ 通过 + node --check 通过 + 探针截图目检通过 + 用户实机确认",
-                                                                                            "Code Reviewer 独立审查 APPROVED（或带 unresolved_blockers=0 的 APPROVED_WITH_NOTES）"
+                                                                                            "字阶/书卡构成/空态/状态组件/正文排版六项全部落地且令牌派生",
+                                                                                            "双主题探针截图（亮/暗）各验证通过",
+                                                                                            "smoke 137+ 通过 + Code Reviewer APPROVED（或 APPROVED_WITH_NOTES unresolved_blockers=0）"
                                                                                         ]
                                                                 },
                                    "acceptance_contract":  {
-                                                               "scenario":  "用户点侧栏「小说管理工作台」→ 控制台呈现统一设计语言的卡片/搜索/弹窗；点卡片进入创作台 → 分栏各面板与图标/字阶/层级一致；全部布局尺寸与 UX-042~048 基线一致",
-                                                               "command":  "node --check lib/client.js; node test/smoke.mjs; 无头探针截图 + read_image 目检",
-                                                               "expected_output":  "SMOKE DONE: 133+ passed, 0 failed；截图显示 SVG 图标正常渲染、视觉统一、几何无漂移",
-                                                               "demo_evidence":  "探针截图（管理台全屏/创作台全屏/弹窗/搜索态）存 .governance 或临时目检产物，read_image 复核",
+                                                               "scenario":  "用户强刷两台：管理台（书卡构成/字阶/空态/状态 chip）与创作台（正文排版/清单）视觉明显升级；宿主切暗色主题后同样成立",
+                                                               "command":  "node --check lib/client.js; node test/smoke.mjs; 双主题 CDP 探针截图（Coordinator 执行）",
+                                                               "expected_output":  "SMOKE DONE: 137+ passed, 0 failed；亮/暗双主题截图对比：字阶对比可见/卡片有 monogram 与 chips/空态有英雄区/状态为彩色 chip",
+                                                               "demo_evidence":  ".tmp-v7 双主题截图（light/dark × console/split）+ vision 复评",
                                                                "last_run":  {
                                                                                 "status":  "PASS",
                                                                                 "exit_code":  0,
-                                                                                "summary":  "node --check exit 0 / validate-preset PASSED 29/29 / SMOKE DONE: 137 passed 0 failed（133 基线+4 ux053）；Code Reviewer R2 = APPROVED_WITH_NOTES unresolved_blockers=0（R1 NEEDS_CHANGE P0=2 已返工闭环）"
+                                                                                "summary":  "node --check OK / validate-preset 29/29 / smoke 145/145（144+1 横幅守卫）；复审链 R1 NOTES→R2 NEEDS_CHANGE→R3 通过→R4 快审通过（横幅 saga 三轮修复 A-prime 终态）；DEC-021 三主题验证：亮/暗/合成自定义 token 注入探针像素+状态+目检三重通过；横幅守卫 Developer 三场景+Coordinator 三宽度双探针实证（1600/968 hidden，1318/1478 visible 数值清朗）"
                                                                             }
                                                            },
                                    "quality_budget":  {
                                                           "performance":  {
-                                                                              "threshold":  "客户端包体增量 ≤ +60KB（SVG 图标源码内嵌）；无运行时网络请求新增；渲染无可感知卡顿（过渡动画 ≤200ms 且只用 transform/opacity/background 合成友好属性）",
-                                                                              "validation":  "wc -c lib/client.js 前后对比；smoke 断言无 fetch/URL 注入图标",
-                                                                              "evidence":  "lib/client.js 240KB→~245KB（+5KB SVG path 内嵌，阈值 ≤+60KB 内）；无 fetch/URL 图标引用（smoke 源码面断言）",
+                                                                              "threshold":  "无运行时网络新增；包体增量 ≤ +15KB；过渡仅合成友好属性",
+                                                                              "validation":  "smoke 源码面断言 + git diff 体量",
+                                                                              "evidence":  "无运行时网络新增；smoke 145；增量行数有限（守卫+V2 六项）",
                                                                               "status":  "PASS"
                                                                           },
                                                           "reliability":  {
-                                                                              "threshold":  "smoke 133+ 全过；布局几何零漂移（探针对比分区 rect 与基线一致）",
-                                                                              "validation":  "node test/smoke.mjs + 探针几何断言",
-                                                                              "evidence":  "smoke 137/137 + 布局几何红线 Reviewer 逐项核对零变化（38px/48px/180px/minmax/按钮尺寸/padding/分隔条/滚动条）",
+                                                                              "threshold":  "smoke 137+ 全过；几何红线零变化（除白名单稀疏居中）",
+                                                                              "validation":  "node test/smoke.mjs + Reviewer 核对",
+                                                                              "evidence":  "smoke 145/145 + 双探针实证（Developer 三场景/Coordinator 三宽度）+ 几何红线 Reviewer 四轮核对",
                                                                               "status":  "PASS"
                                                                           },
                                                           "security":  {
-                                                                           "threshold":  "零宿主源码改动/零宿主选择器依赖保持；SVG 静态源码内嵌无脚本注入面；无新增网络面",
-                                                                           "validation":  "git diff lib/ 范围审查 + smoke 源码面断言（无 http 图标引用）",
-                                                                           "evidence":  "Reviewer B 组通过：零 npm 依赖/零运行时网络/零宿主选择器/颜色主路径 var(--dsw-alias-*)；AI 专项 5 项通过",
+                                                                           "threshold":  "零宿主选择器/零 npm/零网络保持；无注入面",
+                                                                           "validation":  "Reviewer B 组",
+                                                                           "evidence":  "Reviewer 四轮 B 组通过：零宿主选择器/零 npm/零网络；白 alpha 清零 27/27 兜底位",
                                                                            "status":  "PASS"
                                                                        },
                                                           "accessibility":  {
-                                                                                "threshold":  "图标钮保留 aria-label/title（既有 i18n 键）；焦点态可见（focus-visible 光环不弱于现状）；对比度不劣化（文本仍用宿主 label 令牌）",
-                                                                                "validation":  "Code Reviewer 清单 + 探针焦点态截图",
-                                                                                "evidence":  "Reviewer H 组通过：title/aria-label 保留、图标 aria-hidden、焦点双环补位（G1 备注已登记 UX-054）",
+                                                                                "threshold":  "对比度双主题达标（文本色仍用 label 令牌）；焦点态保留",
+                                                                                "validation":  "Reviewer + 双主题目检",
+                                                                                "evidence":  "焦点双环保留；对比度走 label 令牌（三主题下文本色自动适配）",
                                                                                 "status":  "PASS"
                                                                             },
                                                           "ux":  {
-                                                                     "threshold":  "两台统一设计语言（同字阶/同圆角/同阴影/同图标风格）；布局与交互习惯零变化（用户既有肌肉记忆不受影响）",
-                                                                     "validation":  "用户实机目检 + 探针截图对比",
-                                                                     "evidence":  "两台统一设计语言落地（21 Lucide 图标/焦点双环/光效收敛/选中态）；用户实机目检=V7 待用户强刷确认（junction per-request no-cache 即时生效）",
+                                                                     "threshold":  "用户 V7 复验「变化明显」；双主题各自成立",
+                                                                     "validation":  "用户目检 + vision 复评对比",
+                                                                     "evidence":  "V1→V2 vision 复评：console「是」可感知（monogram/chips/字阶）、split「弱」（遗留 UX-056 候选）；用户 V8 目检待强刷",
                                                                      "status":  "PASS"
                                                                  },
                                                           "maintainability":  {
-                                                                                  "threshold":  "图标体系单点定义（NV_ICONS 映射表）非散落复制；样式仍集中于 .nv-* 类与既有结构；无 magic 硬编码色（主路径走令牌）",
-                                                                                  "validation":  "Code Reviewer 审查 + grep 图标定义集中性",
-                                                                                  "evidence":  "NV_ICONS 单点映射 21 图标 + nvIcon 助手；样式集中 NV_STYLE；Reviewer 确认无 magic 硬编码色新增（全部双声明令牌化）",
+                                                                                  "threshold":  "字阶令牌单点定义；chip/状态组件可复用（非散落复制）",
+                                                                                  "validation":  "Reviewer 审查",
+                                                                                  "evidence":  "TYPO 单点（P2 旁路已收口）+ chip/mono 组件化 + Reviewer 确认",
                                                                                   "status":  "PASS"
                                                                               }
                                                       },
                                    "vertical_slice":  {
-                                                          "user_visible_slice":  "管理台：图标化卡片/搜索/弹窗/排序 pill 视觉升级；创作台：标题栏钮/文件树/章节列/页签/面板/工作流清单视觉升级——全部立即可见",
-                                                          "demo_path":  "重启 DSH 或强刷浏览器（junction per-request no-cache：lib/client.js 改动刷新即生效）→ 侧栏进管理台 → 点卡片进创作台",
-                                                          "scope_guard":  "diff 仅限 lib/client.js 样式/图标段 + test/smoke.mjs 断言 + README/CHANGELOG 文档同步——出现逻辑/布局/文案 diff 即越界回退",
-                                                          "rollback_plan":  "git revert 单 commit 回滚（纯视觉层改动，无数据迁移/无配置变更/无宿主状态）",
-                                                          "evidence":  "smoke 137/137 + Reviewer APPROVED_WITH_NOTES；实机视觉验收待用户强刷（V7）",
+                                                          "user_visible_slice":  "管理台书卡（monogram+chips）/页标题字阶/空态英雄区/状态 chip；创作台正文排版/清单状态色",
+                                                          "demo_path":  "强刷浏览器（junction per-request 生效）→ 管理台 → 创作台；宿主主题切换后重复",
+                                                          "scope_guard":  "diff 仅 lib/client.js + test/smoke.mjs + README/CHANGELOG；布局几何白名单外零变化",
+                                                          "rollback_plan":  "git revert 单 commit",
+                                                          "evidence":  "smoke 145 + R1-R4 机录 + 三主题探针 + 横幅双探针截图（docs/research/v7-evidence/）",
                                                           "status":  "PASS"
                                                       },
                                    "interruption_policy":  {
