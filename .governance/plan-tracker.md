@@ -39,7 +39,8 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 59 | 55 | 0 | 2 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 60 | 56 | 0 | 2 | G5 passed-with-conditions | — |
+| **P1** | UX-050 | 数据页字体/布局协调（用户「调整数据页面的字体大小和布局，当前很不协调」——DataPanel 11/12/14px 混用、表格 6 列 11px 挤窄、表单标签内联+90px 定宽输入条）：统一 12px 基准——表头 12px/600、表体 12px/行高 1.6/padding 4px 8px/nowrap+横向滚动兜底、信号行 12px/1.7、表单改**标签上置+输入条满宽**（11.5px 标签 secondary/100% 宽/gap 10 12）、页脚说明弱化 11.5px text3 note；smoke 133 | UX-049 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-066；node --check 通过；smoke 133/133；零宿主依赖保持) |
 | **P1** | UX-049 | 恢复默认布局按钮（用户「有恢复默认布局的按键吗」——UX-048 收尾补全）：标题栏新增 **⟳ 按钮「恢复默认布局」**——`novelSplit.resetSplit()`：清除当前存档（removeItem SPLIT_PERSIST_KEY）后按 loadSplitSaved()（默认槽 ☆ 固化 → 内置兜底）即时重置 leftW/chapterW/chatSide/midH/chatW（clamp，applyMargin+notify），成功提示条；i18n resetLayout/resetLayoutDone 成对；smoke 133/133（ux048 检查并入恢复断言；ux014 计数 3→4） | UX-048 | v0.4.0 | closed | ✅ 完成 (2026-08-28，EVD-065；node --check 通过；smoke 133/133；零宿主依赖保持) |
 
 ## 当前活跃事项
