@@ -33,6 +33,7 @@
 - **UX-031（EVD-047）**：滚动条悬停即显取消——删除 `::-webkit-scrollbar-thumb:hover`（仅 .nv-scl 滚动驱动显示 + :active 拖动高亮；悬停完全不显，边界拖区可正常抓取）；smoke 131/131
 - **UX-032（EVD-048）**：分割线命中区与可见线齐平——章节面板行去 gap:12px（命中区与列右缘齐平，抓线即拖）+ 内容列 paddingLeft 12px；探针 flush+命中实测；smoke 131/131
 - **UX-033（EVD-049）**：拖线选中高亮——三拖区 :hover/:active box-shadow 1px accent（VS Code sash hoverBorder 范本）；默认干净无抖动；smoke 131/131
+- **UX-034（EVD-050）**：文件显示复用章节界面——fileSel 提升受控，文件在中窗内容列（同一 nv-scroll 阅读区、整列滚动无截断、✕ 返回）；左窗仅树选择；探针实测+smoke 132/132
 - **git 状态**：HEAD=524ae72（UX-021，已推送 origin/main）；本轮 UX-022 待提交推送
 
 ## 遗留任务

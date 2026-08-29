@@ -825,6 +825,16 @@ check('客户端源码面：UX-030 边界线体系化（VS Code sash 语义—�
     && clientSrc.includes('.nv-tab:hover{color:var(--dsw-alias-label-primary,#e6e8eb);background:var(--dsw-alias-fill-l1,rgba(255,255,255,.05))}')
     && clientSrc.includes('.nv-bar{flex:none;display:flex;align-items:center;gap:8px;height:38px;padding:0 14px;box-sizing:border-box;border-bottom:1px solid var(--dsw-alias-border-l2,#3a4150)')  // 标题栏底边线清晰
 })(), 'ux030 coherent boundary lines')
+check('客户端源码面：UX-034 文件显示复用章节内容列（fileSel 提升到 SplitWorkspace 受控：左窗树仅选择、内容列 fileSel!==null 渲染 FilePreview〔复用章节 nv-scroll 阅读区——无 maxHeight 截断/无左窗内嵌小卡〕；切书复位 fileSel）', (() => {
+  return clientSrc.includes("const [fileSel, setFileSel] = useState(null)")
+    && clientSrc.includes("useEffect(() => { setFileSel(null) }, [selectedId])")        // 切书复位
+    && !clientSrc.includes('fileSel !== null ? el(FilePreview, { novelId: selectedId, path: fileSel, onClose: () => setFileSel(null) }) : null')   // 左窗旧内嵌已除
+    && clientSrc.includes("props.fileSel !== null") && clientSrc.includes("el(FilePreview, { novelId: props.novelId, path: props.fileSel")   // 内容列复用渲染
+    && !clientSrc.includes("maxHeight: '300px'")                                        // 文件内容不再 300px 截断（整列滚动复用）
+    && !clientSrc.includes("borderTop: '1px solid ' + TK.line, marginTop: '8px'")       // 无左窗嵌卡样式残留
+    && clientSrc.includes('fileSel, onFileSel: setFileSel')                             // 左窗受控选择
+    && clientSrc.includes('fileSel, onFileClose: () => setFileSel(null)')
+})(), 'ux034 file view reuses chapter column')
 check('客户端源码面：UX-022 两个「拖动条」（滚动条）默认隐藏 + 滚动隔离（-webkit-scrollbar track/thumb 透明；UX-024 滚动中显示/停止 600ms 自动隐藏——.nv-scl 滚动事件驱动、无悬停常驻；.nv-chlist/.nv-scroll 带 overscroll-behavior:contain；高度链=章节页签包装层 height:100%+overflow:hidden、正文列/左窗/页签外层均为 nv-scroll 独立滚动容器——章节列 1587px 撑开整体联动问题修复；正文阅读区容器与编辑 textarea 亦纳入 UX-023 补充；共 5 个 nv-scroll）', (() => {
   return clientSrc.includes('.nv-chlist::-webkit-scrollbar,.nv-scroll::-webkit-scrollbar{width:8px;background:transparent}')
     && clientSrc.includes('.nv-chlist::-webkit-scrollbar-thumb,.nv-scroll::-webkit-scrollbar-thumb{background:transparent}')
