@@ -11,6 +11,7 @@
 - **版本**: v0.3.0（发布卫生线）+ v0.4.0（工作台重构线——UX-053 V1 + UX-055 V2 代码+审查+探针验证完成，待用户 V8 目检）
 
 ## 本轮完成（增量）
+- **REL-003 发布 v0.3.0+v0.4.0 两连发**（EVD-072）：tag 06c7737/fbff776 已推远程；package.json 0.4.0；路线图/里程碑更新；归档检测跳过（解析边缘）；check-release CLI 超时未用（SYSGAP-001 家族）
 - **UX-057 绑定弹窗三修**（EVD-071）：新建置顶/当前工作区过滤（normPath）/默认折叠+键盘可达；smoke 146/146；R1→R2 通过；探针三验（用户截图红字逐条落实）
 - **UX-053 V1 视觉重构**（EVD-069）：Lucide 21 图标/焦点双环/光效收敛/color-mix 令牌化；R1 NEEDS_CHANGE→R2 APPROVED_WITH_NOTES
 - **用户 V7 批评与方法论修正**：①「变化不大」②「没真实看图」③「视觉子agent 没用」→ 修正：CDP 无头探针截真实界面（~9223 headless Edge + node WebSocket 直连）+ Linear/Vercel/shadcn 参照 + vision 子代理三角化 + 像素采样
