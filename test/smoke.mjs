@@ -7,7 +7,9 @@
  *       lib/client.js 挂载契约（UX-006 注册面/退役面/可逆清理 + UX-007 控制台
  *       注册与抽屉无按钮组，无 DOM 降级 + UX-008 控制台树：底部搜索行/＋ 磁贴/
  *       排序钮/无「▶ 打开」+ UX-013 工作区对话框去会话创建/卡片两钮/首次开卡
- *       自动链/抽屉字形/BindDialog 既有能力/删除链绑定清理 mutate unset）。
+ *       自动链/抽屉字形/BindDialog 既有能力/删除链绑定清理 mutate unset +
+ *       UX-015 章节名数据链（宿主解析/meta 优先/缓存失效）与客户端标题栏
+ *       放大/章节名渲染/列宽持久化拖拽/抽屉小档 四源码面）。
  */
 import { mkdtempSync, writeFileSync, mkdirSync, readFileSync, rmSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -271,6 +273,31 @@ await svc.saveChapter(novel, 1000, '# 第1000章 终章\n\n正文结尾钩子？
 const statsAfter = svc.readState(novel).statistics
 check('千章保存后计数=文件数', statsAfter.total_chapters === thousandList.length && statsAfter.total_words > 0, JSON.stringify(statsAfter))
 rmSync(join(proj, '07-content', 'chapter-1000.md'), { force: true })
+
+// ── UX-015（批注②）：章节名数据链——查证：meta.json chapters 条目无 name 字段
+// （gate/words/updatedAt/reviewScore/published/forced…），宿主从章节文件首个
+// `# ` 标题行解析（剥「第N章」前缀）；meta.chapters[*].name 为纯增量优先字段。──────
+check('UX-015 章节名提取（首行 # 剥「第N章」前缀 / 无标题行 / 剥后为空 负回退）', (() => {
+  return svc.chapterNameOf('# 第1章 关于你明天的死亡，规则如下\n\n正文') === '关于你明天的死亡，规则如下'
+    && svc.chapterNameOf('没有标题行\n正文随便写。') === ''
+    && svc.chapterNameOf('# 第1章\n正文随便写。') === ''
+    && svc.chapterNameOf('# 第12章 终局之战') === '终局之战'
+})(), 'ux015 chapterNameOf missing')
+writeFileSync(join(proj, '07-content', 'chapter-002.md'), '无标题行正文。\n', 'utf8')
+const clName = svc.chapterList(novel)
+check('UX-015 chapterList 每项补 name（第1章=无名骸骨；无标题行=空串回退）', (() => {
+  const c1 = clName.find((c) => c.num === 1)
+  const c2 = clName.find((c) => c.num === 2)
+  return c1 !== undefined && c1.name === '无名骸骨' && c2 !== undefined && c2.name === ''
+})(), JSON.stringify(clName.map((c) => [c.num, c.name])))
+check('UX-015 readChapter 补 name（与列表一致；API 契约纯增量）', svc.readChapter(novel, 1).name === '无名骸骨')
+writeFileSync(join(proj, '07-content', 'chapter-002.md'), '# 第2章 更名重写\n正文。\n', 'utf8')
+check('UX-015 章节名缓存按 size/mtime 失效（改文件后重新解析）', svc.chapterList(novel).find((c) => c.num === 2)?.name === '更名重写')
+svc.writeMeta(novel, { chapters: { '001': { name: '元数据优先名' } } })
+check('UX-015 meta.chapters[*].name 增量字段优先（不存在才回退解析）', (() => {
+  const c1 = svc.chapterList(novel).find((c) => c.num === 1)
+  return c1 !== undefined && c1.name === '元数据优先名'
+})(), 'meta name precedence')
 
 // review 规则回归（服务层零容忍）
 let reviewRejected = false
@@ -614,6 +641,9 @@ check('客户端源码面：UX-013 首次开卡自动链（workspaceId/cwd → c
     && !clientSrc.includes("content: [{ type: 'text', text: START_MSG }]")
 })(), 'ux013 auto chain missing')
 check('客户端源码面：UX-013 抽屉字形（width 100% 对齐 + 13px/📖16px/14px/12.5px/9px 点/l2 分隔线/8px 留白）', (() => {
+  // UX-015（批注④）调整：卡片 title 14→13px、sub 12.5→12px、padding 8/10→6/8px、
+  // 卡间 gap 6→4px（margin 4px 0）、状态点 9→8px（.nv-card .nv-dot 作用域）、空态随动、
+  // 提示行 margin 随动；抽屉标题行 13px 不动（与管理台层级区分）；控制台卡片不动
   const css = (cls) => {
     const m = new RegExp(cls.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{([^}]*)\\}').exec(clientSrc)
     return m !== null ? m[1] : ''
@@ -625,14 +655,16 @@ check('客户端源码面：UX-013 抽屉字形（width 100% 对齐 + 13px/📖1
   const ct = css('.nv-card-title')
   const cs = css('.nv-card-sub')
   const dot = css('.nv-dot')
+  const cardDot = css('.nv-card .nv-dot')
   const sep = css('.nv-sep')
   return drawer.includes('width:100%') && drawer.includes('margin:2px 0 8px')
     && title.includes('font-size:13px') && title.includes('font-weight:600') && title.includes('letter-spacing:.06em')
     && ico.includes('font-size:16px')
-    && card.includes('padding:8px 10px') && card.includes('border-radius:10px') && card.includes('margin:6px 0')
-    && ct.includes('font-size:14px') && ct.includes('font-weight:600')
-    && cs.includes('font-size:12.5px')
-    && dot.includes('width:9px') && dot.includes('height:9px')
+    && card.includes('padding:6px 8px') && card.includes('border-radius:10px') && card.includes('margin:4px 0')
+    && ct.includes('font-size:13px') && ct.includes('font-weight:600')
+    && cs.includes('font-size:12px')
+    && dot.includes('width:9px') && dot.includes('height:9px')      // 基型 9px（标题栏状态点）
+    && cardDot.includes('width:8px') && cardDot.includes('height:8px') // 抽屉卡小一档 8px
     && sep.includes('--dsw-alias-border-l2')
 })(), 'ux013 drawer typography missing')
 check('客户端源码面：UX-013 BindDialog 既有能力核验（新建会话并绑定 + 按工作区分组关联既有）', (() => {
@@ -676,15 +708,15 @@ check('客户端源码面：UX-014⑨ 挤法不再推下对话窗（applyMargin 
     && !clientSrc.includes('this.lastMarginTop = TITLE_BAR_H')
     && clientSrc.includes("this.lastMarginRight = this.chatSide === 'left' ? contentW + 'px' : ''")
 })(), 'ux014 marginTop fix missing')
-check('客户端源码面：UX-014⑥ 标题栏 ⇄/✕ 28×28 醒目钮（.nv-bar-ctl 与管理台 ✕ 同型：28px/边框/16px/600）', (() => {
+check('客户端源码面：UX-014⑥ 标题栏 ⇄/✕ 28×28 醒目钮（.nv-bar-ctl 与管理台 ✕ 同型；UX-015① 放大 32×32/18px/600）', (() => {
   const css = (cls) => {
     const m = new RegExp(cls.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{([^}]*)\\}').exec(clientSrc)
     return m !== null ? m[1] : ''
   }
   const ctl = css('.nv-bar-ctl')
   const count = (clientSrc.match(/className: 'nv-bar-ctl'/g) ?? []).length
-  return ctl.includes('width:28px') && ctl.includes('height:28px') && ctl.includes('border:1px solid')
-    && ctl.includes('border-radius:8px') && ctl.includes('font-size:16px') && ctl.includes('font-weight:600')
+  return ctl.includes('width:32px') && ctl.includes('height:32px') && ctl.includes('border:1px solid')
+    && ctl.includes('border-radius:8px') && ctl.includes('font-size:18px') && ctl.includes('font-weight:600')
     && count === 2
 })(), 'ux014 bar ctl missing')
 check('客户端源码面：UX-014⑦ 抽屉卡片直达创作工作台（openCtl 单链；不再打开控制台聚焦）', (() => {
@@ -701,6 +733,68 @@ check('客户端源码面：UX-014⑧ 创作台会话联动关闭分栏（splitC
     && clientSrc.includes('novelSplit.pluginOpenTokens.add(sessionId)')
     && clientSrc.includes('if (snap.active === true) closeWorkbench(t)')
 })(), 'ux014 split linkage missing')
+// UX-015（用户实机批注 5 点）：
+//  ①标题栏加高放大（.nv-bar 30→38px / padding 0 14px / .nv-bar-title 14px / .nv-badge 13px /
+//    .nv-bar .nv-mini 24px / .nv-bar-ctl 32×32·18px·600 / TITLE_BAR_H=38 / ▶ 启动钮 padding 5px 14px）
+//  ②章节列表行显示章节名（中窗左列 = 「第N章 · 名称 · M字」；名称独立 span ellipsis；空名称回退「第N章 M字」）
+//  ③章节列默认 160px + 手动拖宽（chapterW 持久化 dsh.novel.split.v1；120–360px；.nv-chdiv 拖拽；
+//    只改列宽不动 viewArea 边距——让位观察器/几何引擎不受影响）
+//  ④抽屉小一档（.nv-card 13/12px、6·8px padding、4px 间隙、点 8px、空态随动；控制台卡片不动）
+//  ⑤聊天区正常 = UX-014⑨ 回归（marginTop 不写断言在位）
+check('客户端源码面：UX-015① 标题栏加高放大（38px 高 / 14px 标题 / 13px 徽标 / 32×32·18px / 14px 内边距 / TITLE_BAR_H=38）', (() => {
+  const css = (cls) => {
+    const m = new RegExp(cls.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{([^}]*)\\}').exec(clientSrc)
+    return m !== null ? m[1] : ''
+  }
+  const bar = css('.nv-bar')
+  const bt = css('.nv-bar-title')
+  const badge = css('.nv-badge')
+  const ctl = css('.nv-bar-ctl')
+  const barMini = css('.nv-bar .nv-mini')
+  const launch = css('.nv-bar-launch')
+  return clientSrc.includes('const TITLE_BAR_H = 38')
+    && bar.includes('height:38px') && bar.includes('padding:0 14px')
+    && bt.includes('font-size:14px') && bt.includes('font-weight:600')
+    && badge.includes('font-size:13px')
+    && ctl.includes('width:32px') && ctl.includes('height:32px') && ctl.includes('font-size:18px') && ctl.includes('font-weight:600')
+    && barMini.includes('width:24px') && barMini.includes('height:24px')
+    && launch.includes('padding:5px 14px')
+})(), 'ux015 bar missing')
+check('客户端源码面：UX-015② 章节列表行渲染章节名（第N章 · 名称 · M字；ellipsis；空名称负回退）', (() => {
+  return clientSrc.includes("const cName = typeof c.name === 'string' ? c.name : ''")
+    && clientSrc.includes('`第${c.num}章 ${c.words}${marks}`')   // 空名称回退格式（第N章 M字）
+    && clientSrc.includes('`· ${c.words}${marks}`')              // 有名称：· M字 尾段
+    && clientSrc.includes("textOverflow: 'ellipsis'")
+    && clientSrc.includes("key: 'nm'") && clientSrc.includes("key: 'no'")
+    && clientSrc.includes("className: 'nv-chlist'")
+})(), 'ux015 chapter name row missing')
+check('客户端源码面：UX-015③ 章节列宽持久化 + 拖拽分隔线（chapterW 120–360 / 默认 160 / load·persist / .nv-chdiv）', (() => {
+  return clientSrc.includes('CHAPTER_W_MIN = 120') && clientSrc.includes('CHAPTER_W_MAX = 360')
+    && clientSrc.includes('CHAPTER_W_DEFAULT = 160')
+    && clientSrc.includes('chapterW: Number.isFinite(s.chapterW)')      // loadSplitSaved 扩展
+    && clientSrc.includes('chapterW: state.chapterW')                   // persistSplit 扩展
+    && clientSrc.includes('setChapterW(w) {')
+    && clientSrc.includes('clampNum(Math.round(w), CHAPTER_W_MIN, CHAPTER_W_MAX)')
+    && clientSrc.includes("className: 'nv-chdiv'") && clientSrc.includes("role: 'separator'")
+    && clientSrc.includes('props.onChapterW(init.w + (ev.clientX - init.x))')
+})(), 'ux015 chapter width missing')
+check('客户端源码面：UX-015④ 抽屉小一档（13/12px + 6·8px + 4px 间隙 + 8px 点 + 空态随动；控制台卡片不动）', (() => {
+  const css = (cls) => {
+    const m = new RegExp(cls.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{([^}]*)\\}').exec(clientSrc)
+    return m !== null ? m[1] : ''
+  }
+  const card = css('.nv-card')
+  const ct = css('.nv-card-title')
+  const cs = css('.nv-card-sub')
+  const cardDot = css('.nv-card .nv-dot')
+  const empty = css('.nv-drawer .nv-empty')
+  const ccard = css('.nv-ccard')
+  return card.includes('padding:6px 8px') && card.includes('margin:4px 0')
+    && ct.includes('font-size:13px') && cs.includes('font-size:12px')
+    && cardDot.includes('width:8px') && cardDot.includes('height:8px')
+    && empty.includes('padding:6px 8px')
+    && ccard.includes('min-height:180px') && ccard.includes('padding:16px') // 管理层卡片不动（层级感=抽屉小于控制台）
+})(), 'ux015 drawer small missing')
 let renderErr = ''
 check('各注册面 render 可调用（组件体可求值；关闭态浮层输出 null 合法）', (() => {
   for (const r of slotRegs) {
