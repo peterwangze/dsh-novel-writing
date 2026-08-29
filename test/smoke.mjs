@@ -820,10 +820,18 @@ check('客户端源码面：UX-022 三条「分割条」常驻可见（vdiv/chdi
     && !divider('nv-chdiv').includes('background:transparent')
     && !clientSrc.includes('.nv-vdiv:active{') && !clientSrc.includes('.nv-chatdiv:active{') && !clientSrc.includes('.nv-chdiv:active{')
 })(), 'ux022 dividers always visible')
-check('客户端源码面：UX-022 两个「拖动条」（滚动条）默认隐藏 + 滚动隔离（-webkit-scrollbar track/thumb 透明、容器 hover 才显；.nv-chlist/.nv-scroll 带 overscroll-behavior:contain；高度链=章节页签包装层 height:100%+overflow:hidden、正文列/左窗/页签外层均为 nv-scroll 独立滚动容器——章节列 1587px 撑开整体联动问题修复；正文阅读区容器与编辑 textarea 亦纳入 UX-023 补充）', (() => {
+check('客户端源码面：UX-022 两个「拖动条」（滚动条）默认隐藏 + 滚动隔离（-webkit-scrollbar track/thumb 透明；UX-024 滚动中显示/停止 600ms 自动隐藏——.nv-scl 滚动事件驱动、无悬停常驻；.nv-chlist/.nv-scroll 带 overscroll-behavior:contain；高度链=章节页签包装层 height:100%+overflow:hidden、正文列/左窗/页签外层均为 nv-scroll 独立滚动容器——章节列 1587px 撑开整体联动问题修复；正文阅读区容器与编辑 textarea 亦纳入 UX-023 补充；共 5 个 nv-scroll）', (() => {
   return clientSrc.includes('.nv-chlist::-webkit-scrollbar,.nv-scroll::-webkit-scrollbar{width:8px;background:transparent}')
     && clientSrc.includes('.nv-chlist::-webkit-scrollbar-thumb,.nv-scroll::-webkit-scrollbar-thumb{background:transparent}')
-    && clientSrc.includes('.nv-chlist:hover::-webkit-scrollbar-thumb,.nv-scroll:hover::-webkit-scrollbar-thumb{background:var(--dsw-alias-border-l2,#3a4150)}')
+    && clientSrc.includes('.nv-scl::-webkit-scrollbar-thumb{background:var(--dsw-alias-border-l2,#3a4150)}')   // UX-024 滚动触发显现
+    && clientSrc.includes('.nv-chlist::-webkit-scrollbar-thumb:hover,.nv-scroll::-webkit-scrollbar-thumb:hover,.nv-scl::-webkit-scrollbar-thumb:active{background:var(--dsw-alias-state-accent-primary,#4f8ef7)}')
+    && !clientSrc.includes('.nv-scroll:hover::-webkit-scrollbar-thumb')                                          // 无悬停常驻（UX-024 撤除）
+    && !clientSrc.includes('.nv-chlist:hover::-webkit-scrollbar-thumb')
+    && clientSrc.includes("el.classList.add('nv-scl')") && clientSrc.includes("el.classList.remove('nv-scl')")   // 滚动显示/空闲撤除
+    && clientSrc.includes('document.addEventListener(\'scroll\', onScroll, true)')
+    && clientSrc.includes('document.removeEventListener(\'scroll\', onScroll, true)')
+    && clientSrc.includes('setTimeout(() => { el.classList.remove(\'nv-scl\'); timers.delete(el) }, 600)')        // 600ms 自动隐藏
+    && clientSrc.includes('for (const t of timers.values()) clearTimeout(t)')                                     // 卸载清理
     && clientSrc.includes('.nv-scroll{overscroll-behavior:contain}')
     && clientSrc.includes("className: 'nv-scroll'")                                    // 五个滚动容器（正文阅读区/编辑 textarea/正文列/左窗/页签外层）
     && (clientSrc.match(/className: 'nv-scroll'/g) ?? []).length === 5
@@ -831,7 +839,7 @@ check('客户端源码面：UX-022 两个「拖动条」（滚动条）默认隐
     && clientSrc.includes('value: draft') && clientSrc.includes('onKeyDown: (e) =>')           // 编辑 textarea 同链（类在五项计数内）
     && clientSrc.includes("{ display: tab === 'chapters' ? 'block' : 'none', height: '100%', overflow: 'hidden' }")  // 高度链修复
     && clientSrc.includes("className: 'nv-scroll', style: { flex: 1, minWidth: 0, overflow: 'auto' }")
-})(), 'ux022 scrollbars hidden + scroll isolated')
+})(), 'ux022 scrollbars hidden + scroll isolated + ux024 auto reveal')
 check('客户端源码面：UX-015④ 抽屉小一档（13/12px + 6·8px + 4px 间隙 + 8px 点 + 空态随动；控制台卡片不动）', (() => {
   const css = (cls) => {
     const m = new RegExp(cls.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{([^}]*)\\}').exec(clientSrc)
