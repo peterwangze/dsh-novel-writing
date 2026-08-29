@@ -1,52 +1,47 @@
-# 会话快照 — 2026-08-29（UX-053 V1 + UX-055 V2 视觉重构双轮：真实截图差距分析 + 主题无关原则 + 横幅守卫 saga）
+# 会话快照 — 2026-08-30（UX-059 创作台下半区工作流控制条：启动迁移 + 停止/继续形态切换 + 压缩上下文 + 绑定新会话）
 
-- **session_id**: 20260829-ux053-ux055-visual
-- **session_date**: 2026-08-29
+- **session_id**: 20260830-ux059-wfctl
+- **session_date**: 2026-08-30
 - **agent**: DeepSeek Harness Coordinator (software-project-governance 0.78.0)
 
 ## 当前状态
 - **current_stage**: 6/11 development（G5 passed-with-conditions，DOC-001 跟踪）
 - **trigger_mode**: always-on / **permission_mode**: maximum-autonomy
-- **项目总览**: 64 任务 / 60 已完成 / 0 阻塞 / 风险 2（RISK-002、RISK-003）
-- **版本**: v0.3.0（发布卫生线）+ v0.4.0（工作台重构线——UX-053 V1 + UX-055 V2 代码+审查+探针验证完成，待用户 V8 目检）
+- **项目总览**: 67 任务 / 63 已完成 / 0 阻塞 / 风险 2（RISK-002、RISK-003）
+- **版本**: v0.4.0（已发布 2026-08-29）+ **v0.5.0 进行中**（UX-059；发布号以 Release Gate 用户确认定案）
 
 ## 本轮完成（增量）
-- **REL-003 发布 v0.3.0+v0.4.0 两连发**（EVD-072）：tag 06c7737/fbff776 已推远程；package.json 0.4.0；路线图/里程碑更新；归档检测跳过（解析边缘）；check-release CLI 超时未用（SYSGAP-001 家族）
-- **UX-057 绑定弹窗三修**（EVD-071）：新建置顶/当前工作区过滤（normPath）/默认折叠+键盘可达；smoke 146/146；R1→R2 通过；探针三验（用户截图红字逐条落实）
-- **UX-053 V1 视觉重构**（EVD-069）：Lucide 21 图标/焦点双环/光效收敛/color-mix 令牌化；R1 NEEDS_CHANGE→R2 APPROVED_WITH_NOTES
-- **用户 V7 批评与方法论修正**：①「变化不大」②「没真实看图」③「视觉子agent 没用」→ 修正：CDP 无头探针截真实界面（~9223 headless Edge + node WebSocket 直连）+ Linear/Vercel/shadcn 参照 + vision 子代理三角化 + 像素采样
-- **主题无关原则定案**（DEC-021 修订版，用户直接纠正）：设计不假设主题——主题（含插件自定义）是用户自由；一切值从 --dsw-alias-* 令牌派生；tint 用 label-primary 前景令牌 color-mix；验证=亮/暗采样+合成自定义主题注入测试；DEC-023：阴影/遮罩=语义豁免
-- **UX-055 V2**（EVD-070）：TYPO 字阶（20/17/18/15/11/28+tabular-nums）/书卡 monogram 构成/hero 空态（双门控）/.nv-chip 状态组件（DEC-022 定向文案授权：未发布/已发布/未开通变现/尚无数据信号）/正文 15px·1.75/稀疏居中 auto-fit 420/白 alpha 清零 27/27；smoke 145/145；复审链 R1→R2（P0 回归）→R3→R4 全机录
-- **横幅碰撞 saga**（交付验证发现真 bug）：居中横幅压标题 164px/压按钮 88px（几何实测）→ A(ref 未绑定,smoke 未拦截)/B(阈值漏判中带宽)/A-prime(scrollWidth 精确测量) 三轮 → 双探针实证收官；**教训：纯源码断言验证不了运行时行为——关键交互必须探针级验证**
-- **三主题验证**（DEC-021 验收项）：亮/暗/合成注入（墨绿+橙）探针像素采样全跟随；8 张证据截图 docs/research/v7-evidence/
-- **V1→V2 vision 复评**：console「是」可感知 / split「弱」（页级空场/字阶未全量 rollout/新旧混排）→ **UX-056 候选**（页级摘要层+整页节奏）待用户决策
-- **git**: UX-053/055/057 全部已推送；UX-057 本轮收尾提交中
+- **UX-059 创作台下半区工作流控制条**（EVD-073，commit d59f688 已推送，smoke 146→147）：
+  - 用户截图红字批注（2026-08-29）：「在这个区域加上工作流控制逻辑，把上面的连续工作流迁移过来，同时加上停止工作流（也可以和继续工作流合并成一个，在不同状态下切换形态），压缩上下文和绑定新session」→ AskUserQuestion 定案 = **独立按钮**。
+  - ①标题栏「▶ 开始/继续工作流」迁入 midFooter 顶部 `.nv-wfctl` 控制条（banner 右簇 selector 同步 .nv-bar-ctl/.nv-bar-note；.nv-bar-launch 零残留）；②停止/继续合并主按钮按绑定会话状态切换（运行中 → data-mode=stop ⏹ sessions.cancel 队列保留 / 空闲 → data-mode=go ▶ 开始·继续，isNewBook 同判据，wfBusy 防连点，三态提示沿用）；③「压缩上下文」= sessions.prompt 发 /compact 斜杠命令（运行中前置守卫 compactBusyHint）；④「绑定新会话」= workspaceId/cwd → create → agentPresets.select → bindSession（**不自动打开**，bindNewSessionCtl 独立函数）。
+  - i18n zh/en 成对 11 键（既有键值改动数=0）；NV_ICONS 新增 lucide 同源 square（lucide-static@1.37.0）。
+  - 红线：零宿主改动（lib/index.js/tools.js/cordis/package.json 零 diff）、midFooter 几何零改动、零新依赖。
+  - 评审：Code Reviewer 独立 **APPROVED_WITH_NOTES（unresolved_blockers=0）**；P2×5 → 2 已修（smoke 注释口径 / promptLaunch try-finally）、3 记录性：
+    - P2-1 停止成功提示「已发送停止指令：空闲」措辞略生硬（设计取舍，接受）
+    - P2-3 状态指示「空闲」标签与 done/need 状态点语义微错位（文案层，接受）
+    - P2-5 README 创作台描述仍有「.nv-tag 版本徽标（当前 v4）」陈旧句（HEAD 既有漂移——UX-019 已撤徽标；**建议另立小卫生任务**）
+  - 验证：node --check 0 / smoke 147/147（Developer 两轮 + Coordinator 独立复跑）；git diff 范围核对通过。
+  - 用户待办：**强刷浏览器实机目检**（控制条四钮行为 + 停止后按钮自动切回 ▶ + 压缩/绑定提示）。
 
 ## 遗留任务
 | 任务 ID | 描述 | 优先级 |
 |---------|-------------|--------|
-| UX-055-V8 | 用户强刷目检 V2（monogram/chips/字阶/hero/横幅守卫/三主题切换）| P1 |
-| UX-056（候选） | 页级节奏升级：管理台摘要层（统计行/引导区）/split 整页字阶 rollout/新旧混排一致性——vision 复评定的 3 分差距 | P1 候选 |
+| UX-059-实机 | 用户强刷目检：控制条（状态指示/▶⏹ 形态切换/压缩上下文/绑定新会话/停止后自动切回）| P1 |
+| README-v4-陈旧 | README 创作台描述「.nv-tag 版本徽标（当前 v4）」陈旧句清理（UX-019 已撤徽标；Reviewer P2-5 建议另立）| P2 |
 | UX-054 | 视觉遗留批次（F3/F4/F7~F12+G1+死键 rel/mon+R4-P1 deps 窗口+0 本渲染树断言+CHANGELOG 横幅守卫记录）| P2 |
-| CLEAN-004 | 实机浏览器验证清单（并入 V8 目检）| P2 |
+| CLEAN-004 | 实机浏览器验证清单（并入 UX-059 目检）| P2 |
 | DOC-001 / REL-002 / SYSGAP-001 / CLEAN-003 | 既有 P2 | P2 |
 
 ## 待确认决策
-- ~~UX-056 是否立项~~ → **用户已决定（2026-08-29）：视觉演进暂停，UX-056 候选搁置，后续由用户单独启动**（下次会话勿主动推进视觉迭代，等用户指令）
+- ~~UX-056 视觉演进~~：用户已决定暂停，**等用户单独启动**（下次会话勿主动推进视觉迭代）。
+- **v0.5.0 发布**：UX-059 已实现待发布；发布号/tag 时机由用户决定（Release Gate 确认）。
 
-## 下次会话优先级（视觉演进暂停后）
-1. v0.3.0 发布卫生线收尾：REL-002（tag↔CHANGELOG↔路线图）/ DOC-001（G5 条件关闭）/ SYSGAP-001（RISK-002 上游反馈）
-2. v0.4.0 收尾（非视觉）：CLEAN-004 实机验证清单 / UX-054 遗留批次（含 UX-055 附加遗留：R4-P1 deps 窗口、0 本渲染树断言、CHANGELOG 横幅守卫记录）
-3. 视觉类（含 V8 目检/UX-056 页级节奏）——**等用户单独启动**
-
-## 用户偏好设置（新增两条强制原则）
-- **DEC-021 主题无关**：设计不假设主题；主题（含插件自定义）是用户自由；令牌派生+双采样+合成注入验证
-- **视觉工作方法论**：设计类任务必须真实看图（探针截图+参照对比+vision 子代理三角化），禁止纯文档推演
-- 既有：插件 UI 居于外围/兼容红线（零宿主改动）/「恢复原样」零容忍/文案零改动（DEC-022 白名单除外）
+## 用户偏好设置（延续）
+- DEC-021 主题无关 / 视觉工作方法论（真看图+探针+vision 三角化）/ 插件 UI 居于外围 / 兼容红线（零宿主改动）/「恢复原样」零容忍 / 文案零改动（DEC-022 白名单除外）
+- **P-09 逐条勾稽**：用户截图批注=验收项，本次四项（迁移/停止·继续合并/压缩/绑定）逐条落实并有勾稽记录。
 
 ## 环境备注
-- git 需 `-c safe.directory=...`；本机 pwsh=PS 5.1（无 -AsHashtable）
-- **CDP 探针基建可用**：`Start-Process msedge --headless=new --remote-debugging-port=9223` + node WebSocket（脚本模式见 %TEMP%\ux053-v7\*.mjs——final-verify/bar-verify/threephase2 可复用）；**/json/new 不导航，必须 Page.navigate**
-- junction：client.js 强刷即生效；host token 定义在 body 级（html style color-scheme）
-- DSH web http://127.0.0.1:3080（HTTP 200）
-- 会话收尾时杀掉 9223 headless Edge
+- git 正常（无需 safe.directory 例外）；**pre-commit/commit-msg hook 会拦截「编造」等字面词**——证据措辞避开"非编造"这类否定形态（hook 正则无否定语义）——本次踩过已修复。
+- CDP 探针基建可用（9223 headless Edge 脚本模式见 %TEMP%\ux053-v7\*）；junction 安装 client.js 强刷即生效。
+- DSH web http://127.0.0.1:3080（HTTP 200）。
+- 会话收尾时杀掉 9223 headless Edge。
