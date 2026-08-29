@@ -823,7 +823,7 @@ check('客户端源码面：UX-030 边界线体系化（VS Code sash 语义—�
     && clientSrc.includes('.nv-chlist button{transition:background .12s ease}')                                          // 交互过渡统一（成熟 UI）
     && clientSrc.includes('transition:background .12s ease,color .12s ease,border-color .12s ease')                     // 页签过渡
     && clientSrc.includes('.nv-tab:hover{color:var(--dsw-alias-label-primary,#e6e8eb);background:var(--dsw-alias-fill-l1,rgba(255,255,255,.05))}')
-    && clientSrc.includes('.nv-bar{flex:none;display:flex;align-items:center;gap:8px;height:38px;padding:0 14px;box-sizing:border-box;border-bottom:1px solid var(--dsw-alias-border-l2,#3a4150)')  // 标题栏底边线清晰
+    && clientSrc.includes('.nv-bar{flex:none;position:relative;display:flex;align-items:center;gap:8px;height:38px;padding:0 14px;box-sizing:border-box;border-bottom:1px solid var(--dsw-alias-border-l2,#3a4150)')  // 标题栏底边线清晰（UX-041 居中横幅需 relative）
 })(), 'ux030 coherent boundary lines')
 check('客户端源码面：UX-034 文件显示复用章节内容列（fileSel 提升到 SplitWorkspace 受控：左窗树仅选择、内容列 fileSel!==null 渲染 FilePreview〔复用章节 nv-scroll 阅读区——无 maxHeight 截断/无左窗内嵌小卡〕；切书复位 fileSel）', (() => {
   return clientSrc.includes("const [fileSel, setFileSel] = useState(null)")
@@ -842,12 +842,15 @@ check('客户端源码面：UX-036 工作流状态迁左窗（左窗=纵向分�
     && !clientSrc.includes("tab === 'workflow'")
     && clientSrc.includes("flex: '0 0 auto', maxHeight: '78%'")                            // 工作流容器随内容自适应（UX-039：不固定 60%、无下方空白）
     && !clientSrc.includes("maxHeight: '220px', overflow: 'auto' }")                        // 清单卡取消内部滚动（全部展开——上面不再滚动）
-    && clientSrc.includes("el(WorkflowPanel, { t, novel: detail, dot:")
-    && (clientSrc.match(/el\(WorkflowPanel, \{ t, novel: detail, dot:/g) ?? []).length === 1
-    && !clientSrc.includes("el('span', { className: 'nv-badge' }")                        // UX-040 标题栏阶段徽标迁出
-    && (clientSrc.match(/el\(TitleDot, \{ useSessions: props\.useSessions, boundId, t \}\)/g) ?? []).length === 1   // 状态点仅 WorkflowPanel 一处（标题栏迁出）
-    && clientSrc.includes('stats.total_words ?? 0} ${t(\'words\')}')                      // UX-040 整体统计（字数）
-    && clientSrc.includes('const stageName = (stages.find(([id]) => id === currentStage) ?? [])[1] ?? currentStage ?? \'—\'')  // 本地化阶段名
+    && clientSrc.includes("el(WorkflowPanel, { t, novel: detail })")
+    && (clientSrc.match(/el\(WorkflowPanel, \{ t, novel: detail \}\)/g) ?? []).length === 1
+    // UX-041：标题栏居中「阶段+统计」横幅（用户箭头指定：标题栏内挪动居中 + 整体统计 + 呈现升级）
+    && clientSrc.includes("position: 'absolute', left: '50%', transform: 'translateX(-50%)'")
+    && clientSrc.includes("const titleStageName = (NOVEL_STAGES.find(([id]) => id === curStage) ?? [])[1] ?? curStage")
+    && clientSrc.includes("detail.state?.statistics?.total_words ?? 0} ${t('words')}")
+    && clientSrc.includes("const NOVEL_STAGES = [")
+    && (clientSrc.match(/el\(TitleDot, \{ useSessions: props\.useSessions, boundId, t \}\)/g) ?? []).length === 1   // 状态点回到标题栏（仅一处）
+    && clientSrc.includes('`${t(\'stage\')}：${titleStageName}`')                          // UX-041b 阶段前缀「阶段：」
     && !clientSrc.includes("${t('stage')}：${state.current_stage ?? '—'}")                // UX-037 阶段信息卡已删（阶段逻辑由清单图标承载）
     && clientSrc.includes("${t('gates')}：")                                              // 门禁/清单卡恢复保留
     && clientSrc.includes("${t('requests')}：")
