@@ -55,7 +55,7 @@
 
 - **绑定会话弹窗三修（UX-057，用户截图红字反馈）**：①**「新建会话并绑定」主按钮置顶**——accent 实底按钮从会话列表尾部移到 `bindPick` 副标题之后、列表之前（弹窗内容首行——用户视线第一落点；busy/meta.loading 禁用逻辑不变）；②**只显示当前工作区的会话**——`meta.root`（overview 返回的小说工作区根）与 `workspace.list` 项 `path` 经 `normPath` 归一化比较（`/`/`\` 统一 + 大小写不敏感 + 去尾分隔符）后相等者即当前工作区，列表仅渲染该工作区 sessions（`sessionIds ∩ entries`），其余工作区的会话**完全不渲染**（用户实锤 tmp/dsh-reasoning-level 组泄露）；**回退保护**——归一化无命中（overview 失败 `root=''`、或工作区列表形态异常）保持既有全分组行为（含「其他（未入工作区）」组），不让用户无会话可选（源码注释留痕）；③**会话分组默认折叠**——展开例外集 `useState`（挂载于条件早退之前的 hook 区；open 重置 effect 一并清空为全折叠；展开键用 `normPath` 归一化路径唯一键——R1 P2-2：回退全分组下同名 basename 工作区不连带开合，`bindOther` 组用 `@others` 哨兵），分组头改**原生 button** 整行可点击切换（R1 P2-1 键盘 Tab/Enter 可达——对齐 FileTree row 惯例；`.nv-group nv-bgroup` 基底 + UA 默认样式长手法重置保留 fill-l1 底/accent 左条/12px + cursor:pointer + hover 提亮 `label-primary 4%` color-mix 派生 + 150ms 过渡；chevron-right 12px 展开 rotate 90° 过渡——复用 NV_ICONS 既有图标，与文件树 `.nv-ft-glyph` 同款交互语言）+ 折叠头右侧会话数「N 个会话 / N sessions」（i18n zh/en 成对新增 `bindSessionsCount`；**UX-052 文案红线：除该新增键外零文案改动**）；零宿主依赖/零 npm/颜色令牌派生（DEC-021）；本任务只动 BindDialog 弹窗内部与配套样式/i18n/smoke（布局零改动红线例外范围声明成立）。冒烟 145 → **146 项**（新增 UX-057 源码面断言：按钮置顶 DOM 序〔bindNew 索引位于 bindPick 之后 loading 行之前〕+ 旧尾部按钮行负断言 + normPath/回退特征串 + 折叠 useState/重置/chevron/会话数 i18n 与 `.nv-bgroup` 三件套样式）；CDP 无头探针实机验证（bindNew 在会话列表前 DOM 序 / 分组仅当前工作区无 tmp/dsh-reasoning-level 泄露 / 默认折叠→点组头展开）。
 
-## [0.3.0] - Unreleased
+## [0.3.0] - 2026-08-29
 
 ### 客户端
 - **新会话初始窗口工作台入口（UX-001）**：blank/hero 状态下 `conversation.view`（小说工作台标签）与 `composer.dock`（原预设兜底条）均不渲染，初始窗口无任何工作台入口——兜底条迁移至 `conversation.input.dock`（hero/active 均渲染，standardProps 含 inputActions），并新增「📖 小说工作台」入口行：书目列表 + ▶ 开始/继续工作流（`completedStages`/`totalChapters` 判定）+ 一键新建并开工；启动走按需挂载预设（blank 会话原位 select novel-writing 后注入），预设作为工作台附属组件对用户零感知。
