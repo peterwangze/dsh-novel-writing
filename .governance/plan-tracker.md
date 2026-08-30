@@ -124,6 +124,8 @@
 | **P1** | REL-003 | 发布 v0.3.0+v0.4.0 两连发（用户确认策略）：①CHANGELOG 两段 Unreleased→各自日期 ②package.json 0.2.2→0.4.0 ③git tag v0.3.0+v0.4.0 推送 ④路线图 v0.3.0/v0.4.0 行标已发布+里程碑更新 ⑤归档触发检测（archive.py dry-run）⑥REL-002 三方一致性达成（随发布）| UX-057 | v0.4.0 | closed | ✅ 完成 (2026-08-29，EVD-072；两连发 v0.3.0=06c7737/v0.4.0=fbff776 均已推送远程；check-release CLI 超时未用——按 v0.2.2 既有模式执行，工具链边缘记 SYSGAP-001 家族) |
 | **P1** | UX-059 | 创作台下半区工作流控制条（用户截图红字 2026-08-29：「在这个区域加上工作流控制逻辑，把上面的连续工作流迁移过来，同时加上停止工作流（也可以和继续工作流合并成一个，在不同状态下切换形态），压缩上下文和绑定新session」；设计定案 AskUserQuestion=独立按钮）：①标题栏「▶ 开始/继续工作流」**迁入**中窗下半区（标题栏不再放启动钮，banner 右簇 selector 同步）②停止/继续**合并单按钮**按绑定会话状态切换形态（运行中→⏹停止〔api.sessions.cancel，队列保留〕/ 空闲→▶开始·继续〔isNewBook 同判据〕，busy 防连点，未绑定/失效/降级三态提示沿用）③「压缩上下文」独立按钮（空闲时经 sessions.prompt 斜杠命令 `/compact`；运行中→提示先停止）④「绑定新会话」独立按钮（create〔workspaceId/cwd 同 autoCreate 链〕→ agentPresets.select → bindSession；不自动打开）；i18n zh/en 成对（stopWorkflow/compactWorkflow/bindNewSession/wfRunning/compactBusyHint/cancelSentPrefix/compactSent/cancelFailPrefix/compactFailPrefix/bindNewDone）；smoke 断言迁移+新增；**布局定案（用户两次实机纠正）**：底部行**左右拆分**——左=工作流控制面板（**与章节列表列等宽 chapterW 联动**、左缘对齐 10px、右缘 1px 可见线），右=数据/发布/请求工作台**右移收窄**；README/CHANGELOG/novel-studio SKILL 同步；版本归属 v0.5.0（发布号以 Release Gate 用户确认定案） | — | v0.5.0 | closed | ✅ 完成 (2026-08-30，EVD-073/074；Developer+Code Reviewer 分离执行；smoke 147/147；评审链 v1 APPROVED_WITH_NOTES→布局修正轮 R1 APPROVED_WITH_NOTES→R2 NEEDS_CHANGE(左缘10px)→修复→R3 确认；**用户实机验收通过**〔「联动没问题，可以」〕；零宿主改动/既有 i18n 值 0 改动；v1 条带版（d59f688）被布局修正轮替代——以最后提交为准) |
 
+| **P1** | REL-004 | 发布 v0.5.0（用户「发送版本承载修改」）：①CHANGELOG [Unreleased]→[0.5.0] 2026-08-30 ②package.json 0.4.0→0.5.0 ③git tag v0.5.0 推送 ④路线图 v0.5.0 行标已发布+里程碑更新 ⑤EVD-075 | UX-059 | v0.5.0 | closed | ✅ 完成 (2026-08-30，EVD-075；发布前三件套全绿 0/29 PASS/147 0 failed；按 v0.2.2/REL-003 既有模式执行；tag↔CHANGELOG↔路线图三方一致性人工核验) |
+
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 
 ## 版本规划
@@ -140,7 +142,7 @@
 | v0.2.2 | 已发布 | 2026-08-22 | 配置边界重构：业务配置归一工作台，设置页只留插件级开关 | REL-001（补录） | git tag v0.2.2 + CHANGELOG [0.2.2]（补录） |
 | v0.3.0 | 已发布 | 2026-08-29 | 发布卫生 + 质量加固（DEC-008 + DEC-012 追加）：CHANGELOG 0.2.2 补录 / CI 观察收尾 / 发布一致性自检 / 初始窗口工作台入口（UX-001，DEC-009）/ install.ps1 BOM 修复（BUG-001） | REL-001, QUAL-001, REL-002, UX-001, UX-002, BUG-001 | git tag v0.3.0（06c7737）+ CHANGELOG [0.3.0] 2026-08-29 |
 | v0.4.0 | 已发布 | 2026-08-29 | 工作台重构（DEC-013）+ 视觉统一设计语言（UX-053/055，DEC-019~023）+ 绑定弹窗三修（UX-057）：分栏工作区/绑定会话/侧栏抽屉/令牌迁移/视觉 V1+V2/主题无关自适应 | UX-006~057 系列 | git tag v0.4.0（fbff776）+ CHANGELOG [0.4.0] 2026-08-29 |
-| v0.5.0 | 进行中 | — | 工作流控制条（UX-059）：标题栏启动钮迁入创作台下半区 + 停止/继续合并形态切换 + 压缩上下文 + 绑定新会话（用户截图批注直接触发） | UX-059 | 待实现（Release Gate 用户确认后定案 tag） |
+| v0.5.0 | 已发布 | 2026-08-30 | 工作流控制面板（UX-059）：标题栏启动钮迁入创作台中窗下半区左侧（与章节列表列等宽联动）+ 停止/继续合并形态切换 + 压缩上下文 + 绑定新会话（用户截图批注触发；布局两次实机纠正定案） | UX-059 | git tag v0.5.0（2c0caf1）+ CHANGELOG [0.5.0] 2026-08-30 |
 
 ### 版本里程碑
 
@@ -151,6 +153,7 @@
 | v0.3.0 发布 | v0.3.0 | 2026-08-29 | 达成（REL-003，tag 06c7737） |
 | v0.4.0 范围确认 | v0.4.0 | 2026-08-28 | 达成（DEC-013，UX-006 入账） |
 | v0.4.0 发布 | v0.4.0 | 2026-08-29 | 达成（REL-003，tag fbff776；CLEAN-004 实机验证不阻塞——用户确认） |
+| v0.5.0 发布 | v0.5.0 | 2026-08-30 | 达成（REL-004，tag v0.5.0） |
 
 ### 版本 Gate 检查项
 

@@ -1,7 +1,7 @@
 {
   "name": "dsh-novel-writing",
   "description": "DSH (DeepSeek Harness) 自动化小说写作发布流水线插件：项目管理 + Agent 预设 + 可视化工作台 + 多平台发布配置与数据闭环",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "license": "MIT",
   "type": "module",
   "main": "lib/index.js",
