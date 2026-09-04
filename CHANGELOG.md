@@ -2,6 +2,11 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 格式；版本号语义化（0.x 阶段以次要版本承载功能批，补丁号承载修复）。
 
+## [Unreleased]
+
+### 修复
+- 兼容 dsh 0.1.2-rc.1：`@deepseek-ai/dsh-settings` 移除 `settingsNamespace` 具名导出，本插件导入即触发 ESM SyntaxError，`dsh web` 启动崩溃（plugin tree failed to load）。设置命名空间改为普通字符串常量 `'novel-writing'`（新版 `settings.register/get` 收普通字符串并自带命名空间格式校验），移除对该导出的依赖。（BUG-003）
+
 ## [0.5.0] - 2026-08-30
 
 ### 新增

@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 66 | 62 | 0 | 2 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 68 | 64 | 0 | 2 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -125,6 +125,8 @@
 | **P1** | UX-059 | 创作台下半区工作流控制条（用户截图红字 2026-08-29：「在这个区域加上工作流控制逻辑，把上面的连续工作流迁移过来，同时加上停止工作流（也可以和继续工作流合并成一个，在不同状态下切换形态），压缩上下文和绑定新session」；设计定案 AskUserQuestion=独立按钮）：①标题栏「▶ 开始/继续工作流」**迁入**中窗下半区（标题栏不再放启动钮，banner 右簇 selector 同步）②停止/继续**合并单按钮**按绑定会话状态切换形态（运行中→⏹停止〔api.sessions.cancel，队列保留〕/ 空闲→▶开始·继续〔isNewBook 同判据〕，busy 防连点，未绑定/失效/降级三态提示沿用）③「压缩上下文」独立按钮（空闲时经 sessions.prompt 斜杠命令 `/compact`；运行中→提示先停止）④「绑定新会话」独立按钮（create〔workspaceId/cwd 同 autoCreate 链〕→ agentPresets.select → bindSession；不自动打开）；i18n zh/en 成对（stopWorkflow/compactWorkflow/bindNewSession/wfRunning/compactBusyHint/cancelSentPrefix/compactSent/cancelFailPrefix/compactFailPrefix/bindNewDone）；smoke 断言迁移+新增；**布局定案（用户两次实机纠正）**：底部行**左右拆分**——左=工作流控制面板（**与章节列表列等宽 chapterW 联动**、左缘对齐 10px、右缘 1px 可见线），右=数据/发布/请求工作台**右移收窄**；README/CHANGELOG/novel-studio SKILL 同步；版本归属 v0.5.0（发布号以 Release Gate 用户确认定案） | — | v0.5.0 | closed | ✅ 完成 (2026-08-30，EVD-073/074；Developer+Code Reviewer 分离执行；smoke 147/147；评审链 v1 APPROVED_WITH_NOTES→布局修正轮 R1 APPROVED_WITH_NOTES→R2 NEEDS_CHANGE(左缘10px)→修复→R3 确认；**用户实机验收通过**〔「联动没问题，可以」〕；零宿主改动/既有 i18n 值 0 改动；v1 条带版（d59f688）被布局修正轮替代——以最后提交为准) |
 
 | **P1** | REL-004 | 发布 v0.5.0（用户「发送版本承载修改」）：①CHANGELOG [Unreleased]→[0.5.0] 2026-08-30 ②package.json 0.4.0→0.5.0 ③git tag v0.5.0 推送 ④路线图 v0.5.0 行标已发布+里程碑更新 ⑤EVD-075 | UX-059 | v0.5.0 | closed | ✅ 完成 (2026-08-30，EVD-075；发布前三件套全绿 0/29 PASS/147 0 failed；commit ce047d0 + annotated tag v0.5.0 已推送——远程 ls-remote 实证 v0.5.0→ce047d0、main→ddacb8d；推送曾因 github.com:443 瞬时故障阻断，网络恢复后补推成功；按 v0.2.2/REL-003 既有模式执行；tag↔CHANGELOG↔路线图三方一致性人工核验) |
+
+| **P0** | BUG-003 | dsh 0.1.2-rc.1 兼容性启动失败（用户 2026-09-04 报障）：`@deepseek-ai/dsh-settings` 0.1.2-rc.1 移除 `settingsNamespace` 导出 → 本插件 lib/index.js:18 ESM 具名导入失败 → plugin tree load SyntaxError → `npx @deepseek-ai/dsh web` 启动崩溃。修复 = 去除该导入、命名空间改普通字符串常量 `'novel-writing'`（新 API `register/get` 均收普通字符串并自带 `/^[a-z][a-z0-9-]*$/` 校验，'novel-writing' 合规）；其余 peer 依赖（cordis 4.0.2 Service/ctx.get、schemastery 默认导出、dsh-home-paths resolveDshHome、dsh-tools defineTool）逐项核验兼容；smoke 同步回归（修复前 smoke 因同一导入失败——天然回归基线）；版本归属 v0.5.1（发布号待 Release Gate 用户确认） | — | v0.5.1 | closed | ✅ 完成 (2026-09-04，EVD-076；smoke 147/147 双跑一致；Code Reviewer APPROVED 无 blocker；实机 npx dsh web 启动成功 + /novel-writing/api/overview HTTP 200 返回真实书目；CHANGELOG [Unreleased] 入账；发布时机待用户定案) |
 
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 

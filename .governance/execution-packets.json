@@ -1,131 +1,895 @@
 {
-    "version":  1,
-    "generated_at":  "2026-08-29T20:36:33",
-    "packets":  {
-                    "UX-055":  {
-                                   "task_id":  "UX-055",
-                                   "priority":  "P1",
-                                   "status":  "closed",
-                                   "goal":  "UX-055 工作台视觉 V2（用户 V7 反馈「变化不大」+方法论批评驱动——真实截图差距分析：Coordinator 原生目检+vision 子代理+像素采样+代码核验三角化）：**全量令牌派生双主题自适应**（DEC-021：不假设主题/跟随宿主/双主题验收）；①字阶悬崖（页标题 20px/书卡标题 17-18px/统计数字 18px tabular-nums/meta 11px——令牌化派生）②书卡构成重构（monogram 首字色块+分区+数据 chips）③空态英雄区（图标+大字+CTA）④状态文案组件化（✓✗→状态点+chip，DEC-022 定向文案授权）⑤正文阅读排版（15px/1.75 行距）⑥稀疏居中（≤2 本居中，DEC-022 授权）；几何不变；smoke/README/CHANGELOG 同步",
-                                   "product_success_contract":  {
-                                                                    "user":  "使用 DSH 进行网文连载创作的作者（本机用户 peter）——通过两个工作台管理多本小说并跟踪写作流程",
-                                                                    "job_to_be_done":  "在布局与交互零变化的前提下，两个工作台的视觉品质达到用户可感知的「设计过」水准——用户第一眼就能看出与 V1 的差别（字阶有对比/卡片有构成/空区有设计/状态有颜色），且亮暗两套主题都成立",
-                                                                    "non_goals":  [
-                                                                                      "不改分区结构与几何尺寸（标题栏高度/卡片 min-height/列宽体系/按钮尺寸/padding/margin——除 DEC-022 白名单的稀疏居中外）",
-                                                                                      "不基于任何主题假设做设计（DEC-021）——一切值从 var(--dsw-alias-*) 派生，亮/暗双主题各自验收",
-                                                                                      "状态文案以外的任何文案改动（UX-052 红线——仅 DEC-022 授权的状态表达类）",
-                                                                                      "不引入 npm 依赖/运行时网络/宿主选择器（兼容红线）",
-                                                                                      "不重构组件逻辑/数据流"
-                                                                                  ],
-                                                                    "success_metrics":  [
-                                                                                            "用户强刷后第一眼感知明显升级（V7 复验——「变化不大」反馈不再出现；字阶对比/卡片构成/空态处理肉眼可辨）",
-                                                                                            "亮色与暗色两套主题下探针截图均成立（双主题验收——DEC-021）",
-                                                                                            "既有布局几何与交互习惯零变化（Reviewer 逐项核对 + 探针对比）",
-                                                                                            "可运行验证信号：node test/smoke.mjs 全量通过（137+）且 node --check 通过"
-                                                                                        ],
-                                                                    "competitive_baseline":  "Linear/Vercel/shadcn 的双主题成熟度（参照 screenshots + docs/research/UX-053 报告 §1）——字阶极差/表面层次/状态 chip 体系",
-                                                                    "done_definition":  [
-                                                                                            "字阶/书卡构成/空态/状态组件/正文排版六项全部落地且令牌派生",
-                                                                                            "双主题探针截图（亮/暗）各验证通过",
-                                                                                            "smoke 137+ 通过 + Code Reviewer APPROVED（或 APPROVED_WITH_NOTES unresolved_blockers=0）"
-                                                                                        ]
-                                                                },
-                                   "acceptance_contract":  {
-                                                               "scenario":  "用户强刷两台：管理台（书卡构成/字阶/空态/状态 chip）与创作台（正文排版/清单）视觉明显升级；宿主切暗色主题后同样成立",
-                                                               "command":  "node --check lib/client.js; node test/smoke.mjs; 双主题 CDP 探针截图（Coordinator 执行）",
-                                                               "expected_output":  "SMOKE DONE: 137+ passed, 0 failed；亮/暗双主题截图对比：字阶对比可见/卡片有 monogram 与 chips/空态有英雄区/状态为彩色 chip",
-                                                               "demo_evidence":  ".tmp-v7 双主题截图（light/dark × console/split）+ vision 复评",
-                                                               "last_run":  {
-                                                                                "status":  "PASS",
-                                                                                "exit_code":  0,
-                                                                                "summary":  "node --check OK / validate-preset 29/29 / smoke 145/145（144+1 横幅守卫）；复审链 R1 NOTES→R2 NEEDS_CHANGE→R3 通过→R4 快审通过（横幅 saga 三轮修复 A-prime 终态）；DEC-021 三主题验证：亮/暗/合成自定义 token 注入探针像素+状态+目检三重通过；横幅守卫 Developer 三场景+Coordinator 三宽度双探针实证（1600/968 hidden，1318/1478 visible 数值清朗）"
-                                                                            }
-                                                           },
-                                   "quality_budget":  {
-                                                          "performance":  {
-                                                                              "threshold":  "无运行时网络新增；包体增量 ≤ +15KB；过渡仅合成友好属性",
-                                                                              "validation":  "smoke 源码面断言 + git diff 体量",
-                                                                              "evidence":  "无运行时网络新增；smoke 145；增量行数有限（守卫+V2 六项）",
-                                                                              "status":  "PASS"
-                                                                          },
-                                                          "reliability":  {
-                                                                              "threshold":  "smoke 137+ 全过；几何红线零变化（除白名单稀疏居中）",
-                                                                              "validation":  "node test/smoke.mjs + Reviewer 核对",
-                                                                              "evidence":  "smoke 145/145 + 双探针实证（Developer 三场景/Coordinator 三宽度）+ 几何红线 Reviewer 四轮核对",
-                                                                              "status":  "PASS"
-                                                                          },
-                                                          "security":  {
-                                                                           "threshold":  "零宿主选择器/零 npm/零网络保持；无注入面",
-                                                                           "validation":  "Reviewer B 组",
-                                                                           "evidence":  "Reviewer 四轮 B 组通过：零宿主选择器/零 npm/零网络；白 alpha 清零 27/27 兜底位",
-                                                                           "status":  "PASS"
-                                                                       },
-                                                          "accessibility":  {
-                                                                                "threshold":  "对比度双主题达标（文本色仍用 label 令牌）；焦点态保留",
-                                                                                "validation":  "Reviewer + 双主题目检",
-                                                                                "evidence":  "焦点双环保留；对比度走 label 令牌（三主题下文本色自动适配）",
-                                                                                "status":  "PASS"
-                                                                            },
-                                                          "ux":  {
-                                                                     "threshold":  "用户 V7 复验「变化明显」；双主题各自成立",
-                                                                     "validation":  "用户目检 + vision 复评对比",
-                                                                     "evidence":  "V1→V2 vision 复评：console「是」可感知（monogram/chips/字阶）、split「弱」（遗留 UX-056 候选）；用户 V8 目检待强刷",
-                                                                     "status":  "PASS"
-                                                                 },
-                                                          "maintainability":  {
-                                                                                  "threshold":  "字阶令牌单点定义；chip/状态组件可复用（非散落复制）",
-                                                                                  "validation":  "Reviewer 审查",
-                                                                                  "evidence":  "TYPO 单点（P2 旁路已收口）+ chip/mono 组件化 + Reviewer 确认",
-                                                                                  "status":  "PASS"
-                                                                              }
-                                                      },
-                                   "vertical_slice":  {
-                                                          "user_visible_slice":  "管理台书卡（monogram+chips）/页标题字阶/空态英雄区/状态 chip；创作台正文排版/清单状态色",
-                                                          "demo_path":  "强刷浏览器（junction per-request 生效）→ 管理台 → 创作台；宿主主题切换后重复",
-                                                          "scope_guard":  "diff 仅 lib/client.js + test/smoke.mjs + README/CHANGELOG；布局几何白名单外零变化",
-                                                          "rollback_plan":  "git revert 单 commit",
-                                                          "evidence":  "smoke 145 + R1-R4 机录 + 三主题探针 + 横幅双探针截图（docs/research/v7-evidence/）",
-                                                          "status":  "PASS"
-                                                      },
-                                   "interruption_policy":  {
-                                                               "mode":  "critical-only: default execute routine reversible work and record assumptions when needed",
-                                                               "critical_triggers":  [
-                                                                                         "Ask the user when product intent is unclear.",
-                                                                                         "Ask the user when acceptance standard or done criteria are unclear.",
-                                                                                         "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions."
-                                                                                     ],
-                                                               "auto_execute":  [
-                                                                                    "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible.",
-                                                                                    "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied."
-                                                                                ],
-                                                               "assumption_record":  {
-                                                                                         "assumption":  "TO_BE_DEFINED: default choice used for a reversible non-critical ambiguity",
-                                                                                         "basis":  "TO_BE_DEFINED: fact source or repository pattern supporting the default",
-                                                                                         "reversibility":  "TO_BE_DEFINED: why the choice can be changed without product damage",
-                                                                                         "validation":  "TO_BE_DEFINED: command or demo that will verify the assumption",
-                                                                                         "rollback":  "TO_BE_DEFINED: how to revert if the assumption is wrong"
-                                                                                     },
-                                                               "interruption_budget":  "At most one user interruption per work unit unless a new critical trigger appears."
-                                                           },
-                                   "allowed_change_scope":  [
-                                                                "Only change files required by this task row: open",
-                                                                "Keep unrelated refactors, release version bumps, and fixture sync out of this task unless listed in the task scope."
-                                                            ],
-                                   "required_evidence":  [
-                                                             "evidence-log entry with 事实依据, 目标对齐, 用户影响, and 结构化事实 JSON",
-                                                             "validation commands with exit_code and concise output summary",
-                                                             "independent review evidence or explicit degraded review evidence that does not claim full separation"
-                                                         ],
-                                   "next_commands":  [
-                                                         "python -m unittest skills/software-project-governance/infra/tests/test_verify_workflow.py -v",
-                                                         "python skills/software-project-governance/infra/verify_workflow.py check-governance --fail-on-issues"
-                                                     ],
-                                   "done_definition":  [
-                                                           "open",
-                                                           "Code Reviewer or matching Reviewer has APPROVED the product-code change.",
-                                                           "Commit and push are completed for this single task."
-                                                       ],
-                                   "source":  "plan-tracker.md##当前活跃事项"
-                               }
-                }
+  "version": 1,
+  "generated_at": "2026-09-04T20:43:01",
+  "packets": {
+    "BUG-003": {
+      "task_id": "BUG-003",
+      "priority": "P0",
+      "status": "🔄 进行中 (2026-09-04)",
+      "goal": "BUG-003 dsh 0.1.2-rc.1 兼容性启动失败（用户 2026-09-04 报障）：`@deepseek-ai/dsh-settings` 0.1.2-rc.1 移除 `settingsNamespace` 导出 → 本插件 lib/index.js:18 ESM 具名导入失败 → plugin tree load SyntaxError → `npx @deepseek-ai/dsh web` 启动崩溃。修复 = 去除该导入、命名空间改普通字符串常量 `'novel-writing'`（新 API `register/get` 均收普通字符串并自带 `/^[a-z][a-z0-9-]*$/` 校验，'novel-writing' 合规）；其余 peer 依赖（cordis 4.0.2 Service/ctx.get、schemastery 默认导出、dsh-home-paths resolveDshHome、dsh-tools defineTool）逐项核验兼容；smoke 同步回归（修复前 smoke 因同一导入失败——天然回归基线）；版本归属 v0.5.1（发布号待 Release Gate 用户确认）",
+      "product_success_contract": {
+        "user": "TO_BE_DEFINED: impacted persona for BUG-003 dsh 0.1.2-rc.1 兼容性启动失败（用户 2026-09-04 报障）：`@deepseek-ai/dsh-settings` 0.1.2-rc.1 移除 `settingsNamespace` 导出 → 本插件 lib/index.js:18 ESM 具名导入失败 → plugin tree load SyntaxError → `npx @deepseek-ai/dsh web` 启动崩溃。修复 = 去除该导入、命名空间改普通字符串常量 `'novel-writing'`（新 API `register/get` 均收普通字符串并自带 `/^[a-z][a-z0-9-]*$/` 校验，'novel-writing' 合规）；其余 peer 依赖（cordis 4.0.2 Service/ctx.get、schemastery 默认导出、dsh-home-paths resolveDshHome、dsh-tools defineTool）逐项核验兼容；smoke 同步回归（修复前 smoke 因同一导入失败——天然回归基线）；版本归属 v0.5.1（发布号待 Release Gate 用户确认）",
+        "job_to_be_done": "TO_BE_DEFINED: user job and desired outcome for BUG-003 dsh 0.1.2-rc.1 兼容性启动失败（用户 2026-09-04 报障）：`@deepseek-ai/dsh-settings` 0.1.2-rc.1 移除 `settingsNamespace` 导出 → 本插件 lib/index.js:18 ESM 具名导入失败 → plugin tree load SyntaxError → `npx @deepseek-ai/dsh web` 启动崩溃。修复 = 去除该导入、命名空间改普通字符串常量 `'novel-writing'`（新 API `register/get` 均收普通字符串并自带 `/^[a-z][a-z0-9-]*$/` 校验，'novel-writing' 合规）；其余 peer 依赖（cordis 4.0.2 Service/ctx.get、schemastery 默认导出、dsh-home-paths resolveDshHome、dsh-tools defineTool）逐项核验兼容；smoke 同步回归（修复前 smoke 因同一导入失败——天然回归基线）；版本归属 v0.5.1（发布号待 Release Gate 用户确认）",
+        "non_goals": [
+          "TO_BE_DEFINED: explicit non-goal that protects the task from scope drift.",
+          "TO_BE_DEFINED: explicit non-goal that prevents process evidence from replacing product value."
+        ],
+        "success_metrics": [
+          "TO_BE_DEFINED: user-visible outcome or acceptance scenario for this task.",
+          "TO_BE_DEFINED: runnable E2E, test, or command that proves the outcome."
+        ],
+        "competitive_baseline": "TO_BE_DEFINED: mature-team or competing-product baseline this task must match.",
+        "done_definition": [
+          "TO_BE_DEFINED: product success evidence is recorded with concrete facts.",
+          "TO_BE_DEFINED: independent review confirms the user outcome is not replaced by process completion."
+        ]
+      },
+      "acceptance_contract": {
+        "scenario": "TO_BE_DEFINED: user-visible acceptance scenario for BUG-003 dsh 0.1.2-rc.1 兼容性启动失败（用户 2026-09-04 报障）：`@deepseek-ai/dsh-settings` 0.1.2-rc.1 移除 `settingsNamespace` 导出 → 本插件 lib/index.js:18 ESM 具名导入失败 → plugin tree load SyntaxError → `npx @deepseek-ai/dsh web` 启动崩溃。修复 = 去除该导入、命名空间改普通字符串常量 `'novel-writing'`（新 API `register/get` 均收普通字符串并自带 `/^[a-z][a-z0-9-]*$/` 校验，'novel-writing' 合规）；其余 peer 依赖（cordis 4.0.2 Service/ctx.get、schemastery 默认导出、dsh-home-paths resolveDshHome、dsh-tools defineTool）逐项核验兼容；smoke 同步回归（修复前 smoke 因同一导入失败——天然回归基线）；版本归属 v0.5.1（发布号待 Release Gate 用户确认）",
+        "command": "TO_BE_DEFINED: runnable E2E, smoke, unit, or validation command",
+        "expected_output": "TO_BE_DEFINED: concrete pass output, assertion, or observable demo result",
+        "last_run": {
+          "status": "TO_BE_DEFINED",
+          "exit_code": null,
+          "summary": "TO_BE_DEFINED: last run output summary with evidence location"
+        },
+        "demo_evidence": "TO_BE_DEFINED: demo, CLI output, or artifact proving the scenario"
+      },
+      "quality_budget": {
+        "dimensions": {
+          "performance": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable performance threshold for BUG-003 dsh 0.1.2-rc.1 兼容性启动失败（用户 2026-09-04 报障）：`@deepseek-ai/dsh-settings` 0.1.2-rc.1 移除 `settingsNamespace` 导出 → 本插件 lib/index.js:18 ESM 具名导入失败 → plugin tree load SyntaxError → `npx @deepseek-ai/dsh web` 启动崩溃。修复 = 去除该导入、命名空间改普通字符串常量 `'novel-writing'`（新 API `register/get` 均收普通字符串并自带 `/^[a-z][a-z0-9-]*$/` 校验，'novel-writing' 合规）；其余 peer 依赖（cordis 4.0.2 Service/ctx.get、schemastery 默认导出、dsh-home-paths resolveDshHome、dsh-tools defineTool）逐项核验兼容；smoke 同步回归（修复前 smoke 因同一导入失败——天然回归基线）；版本归属 v0.5.1（发布号待 Release Gate 用户确认）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for performance",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest performance result or planned evidence location",
+            "exception": ""
+          },
+          "reliability": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable reliability threshold for BUG-003 dsh 0.1.2-rc.1 兼容性启动失败（用户 2026-09-04 报障）：`@deepseek-ai/dsh-settings` 0.1.2-rc.1 移除 `settingsNamespace` 导出 → 本插件 lib/index.js:18 ESM 具名导入失败 → plugin tree load SyntaxError → `npx @deepseek-ai/dsh web` 启动崩溃。修复 = 去除该导入、命名空间改普通字符串常量 `'novel-writing'`（新 API `register/get` 均收普通字符串并自带 `/^[a-z][a-z0-9-]*$/` 校验，'novel-writing' 合规）；其余 peer 依赖（cordis 4.0.2 Service/ctx.get、schemastery 默认导出、dsh-home-paths resolveDshHome、dsh-tools defineTool）逐项核验兼容；smoke 同步回归（修复前 smoke 因同一导入失败——天然回归基线）；版本归属 v0.5.1（发布号待 Release Gate 用户确认）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for reliability",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest reliability result or planned evidence location",
+            "exception": ""
+          },
+          "security": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable security threshold for BUG-003 dsh 0.1.2-rc.1 兼容性启动失败（用户 2026-09-04 报障）：`@deepseek-ai/dsh-settings` 0.1.2-rc.1 移除 `settingsNamespace` 导出 → 本插件 lib/index.js:18 ESM 具名导入失败 → plugin tree load SyntaxError → `npx @deepseek-ai/dsh web` 启动崩溃。修复 = 去除该导入、命名空间改普通字符串常量 `'novel-writing'`（新 API `register/get` 均收普通字符串并自带 `/^[a-z][a-z0-9-]*$/` 校验，'novel-writing' 合规）；其余 peer 依赖（cordis 4.0.2 Service/ctx.get、schemastery 默认导出、dsh-home-paths resolveDshHome、dsh-tools defineTool）逐项核验兼容；smoke 同步回归（修复前 smoke 因同一导入失败——天然回归基线）；版本归属 v0.5.1（发布号待 Release Gate 用户确认）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for security",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest security result or planned evidence location",
+            "exception": ""
+          },
+          "accessibility": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable accessibility threshold for BUG-003 dsh 0.1.2-rc.1 兼容性启动失败（用户 2026-09-04 报障）：`@deepseek-ai/dsh-settings` 0.1.2-rc.1 移除 `settingsNamespace` 导出 → 本插件 lib/index.js:18 ESM 具名导入失败 → plugin tree load SyntaxError → `npx @deepseek-ai/dsh web` 启动崩溃。修复 = 去除该导入、命名空间改普通字符串常量 `'novel-writing'`（新 API `register/get` 均收普通字符串并自带 `/^[a-z][a-z0-9-]*$/` 校验，'novel-writing' 合规）；其余 peer 依赖（cordis 4.0.2 Service/ctx.get、schemastery 默认导出、dsh-home-paths resolveDshHome、dsh-tools defineTool）逐项核验兼容；smoke 同步回归（修复前 smoke 因同一导入失败——天然回归基线）；版本归属 v0.5.1（发布号待 Release Gate 用户确认）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for accessibility",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest accessibility result or planned evidence location",
+            "exception": ""
+          },
+          "ux": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable ux threshold for BUG-003 dsh 0.1.2-rc.1 兼容性启动失败（用户 2026-09-04 报障）：`@deepseek-ai/dsh-settings` 0.1.2-rc.1 移除 `settingsNamespace` 导出 → 本插件 lib/index.js:18 ESM 具名导入失败 → plugin tree load SyntaxError → `npx @deepseek-ai/dsh web` 启动崩溃。修复 = 去除该导入、命名空间改普通字符串常量 `'novel-writing'`（新 API `register/get` 均收普通字符串并自带 `/^[a-z][a-z0-9-]*$/` 校验，'novel-writing' 合规）；其余 peer 依赖（cordis 4.0.2 Service/ctx.get、schemastery 默认导出、dsh-home-paths resolveDshHome、dsh-tools defineTool）逐项核验兼容；smoke 同步回归（修复前 smoke 因同一导入失败——天然回归基线）；版本归属 v0.5.1（发布号待 Release Gate 用户确认）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for ux",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest ux result or planned evidence location",
+            "exception": ""
+          },
+          "maintainability": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable maintainability threshold for BUG-003 dsh 0.1.2-rc.1 兼容性启动失败（用户 2026-09-04 报障）：`@deepseek-ai/dsh-settings` 0.1.2-rc.1 移除 `settingsNamespace` 导出 → 本插件 lib/index.js:18 ESM 具名导入失败 → plugin tree load SyntaxError → `npx @deepseek-ai/dsh web` 启动崩溃。修复 = 去除该导入、命名空间改普通字符串常量 `'novel-writing'`（新 API `register/get` 均收普通字符串并自带 `/^[a-z][a-z0-9-]*$/` 校验，'novel-writing' 合规）；其余 peer 依赖（cordis 4.0.2 Service/ctx.get、schemastery 默认导出、dsh-home-paths resolveDshHome、dsh-tools defineTool）逐项核验兼容；smoke 同步回归（修复前 smoke 因同一导入失败——天然回归基线）；版本归属 v0.5.1（发布号待 Release Gate 用户确认）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for maintainability",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest maintainability result or planned evidence location",
+            "exception": ""
+          }
+        }
+      },
+      "vertical_slice": {
+        "user_visible_slice": "TO_BE_DEFINED: smallest user-visible slice for BUG-003 dsh 0.1.2-rc.1 兼容性启动失败（用户 2026-09-04 报障）：`@deepseek-ai/dsh-settings` 0.1.2-rc.1 移除 `settingsNamespace` 导出 → 本插件 lib/index.js:18 ESM 具名导入失败 → plugin tree load SyntaxError → `npx @deepseek-ai/dsh web` 启动崩溃。修复 = 去除该导入、命名空间改普通字符串常量 `'novel-writing'`（新 API `register/get` 均收普通字符串并自带 `/^[a-z][a-z0-9-]*$/` 校验，'novel-writing' 合规）；其余 peer 依赖（cordis 4.0.2 Service/ctx.get、schemastery 默认导出、dsh-home-paths resolveDshHome、dsh-tools defineTool）逐项核验兼容；smoke 同步回归（修复前 smoke 因同一导入失败——天然回归基线）；版本归属 v0.5.1（发布号待 Release Gate 用户确认）",
+        "demo_path": "TO_BE_DEFINED: runnable demo, smoke test, URL, screenshot, or command proving the slice",
+        "scope_guard": "TO_BE_DEFINED: files and behavior in scope for this slice only (open)",
+        "rollback_plan": "TO_BE_DEFINED: how to revert or disable the slice if validation fails",
+        "status": "TO_BE_DEFINED",
+        "evidence": "TO_BE_DEFINED: latest demo proof or planned evidence location"
+      },
+      "interruption_policy": {
+        "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
+        "critical_triggers": [
+          "Ask the user when product intent is unclear.",
+          "Ask the user when acceptance standard or done criteria are unclear.",
+          "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions."
+        ],
+        "auto_execute": [
+          "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible.",
+          "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied."
+        ],
+        "assumption_record": {
+          "assumption": "TO_BE_DEFINED: default choice used for a reversible non-critical ambiguity",
+          "basis": "TO_BE_DEFINED: fact source or repository pattern supporting the default",
+          "reversibility": "TO_BE_DEFINED: why the choice can be changed without product damage",
+          "validation": "TO_BE_DEFINED: command or demo that will verify the assumption",
+          "rollback": "TO_BE_DEFINED: how to revert if the assumption is wrong"
+        },
+        "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
+      },
+      "allowed_change_scope": [
+        "Only change files required by this task row: open",
+        "Keep unrelated refactors, release version bumps, and fixture sync out of this task unless listed in the task scope."
+      ],
+      "required_evidence": [
+        "evidence-log entry with 事实依据, 目标对齐, 用户影响, and 结构化事实 JSON",
+        "validation commands with exit_code and concise output summary",
+        "independent review evidence or explicit degraded review evidence that does not claim full separation"
+      ],
+      "next_commands": [
+        "python -m unittest skills/software-project-governance/infra/tests/test_verify_workflow.py -v",
+        "python skills/software-project-governance/infra/verify_workflow.py check-governance --fail-on-issues"
+      ],
+      "done_definition": [
+        "open",
+        "Code Reviewer or matching Reviewer has APPROVED the product-code change.",
+        "Commit and push are completed for this single task."
+      ],
+      "source": "plan-tracker.md##当前活跃事项"
+    },
+    "REQ-001": {
+      "task_id": "REQ-001",
+      "priority": "P0",
+      "status": "agent-presets/novel-writing/ 存在性 + CI preset 校验",
+      "goal": "REQ-001 迁移源工作流为 agent 预设（Coordinator 人设 + 29 SKILL + 16 Agent 参考）",
+      "product_success_contract": {
+        "user": "TO_BE_DEFINED: impacted persona for REQ-001 迁移源工作流为 agent 预设（Coordinator 人设 + 29 SKILL + 16 Agent 参考）",
+        "job_to_be_done": "TO_BE_DEFINED: user job and desired outcome for REQ-001 迁移源工作流为 agent 预设（Coordinator 人设 + 29 SKILL + 16 Agent 参考）",
+        "non_goals": [
+          "TO_BE_DEFINED: explicit non-goal that protects the task from scope drift.",
+          "TO_BE_DEFINED: explicit non-goal that prevents process evidence from replacing product value."
+        ],
+        "success_metrics": [
+          "TO_BE_DEFINED: user-visible outcome or acceptance scenario for this task.",
+          "TO_BE_DEFINED: runnable E2E, test, or command that proves the outcome."
+        ],
+        "competitive_baseline": "TO_BE_DEFINED: mature-team or competing-product baseline this task must match.",
+        "done_definition": [
+          "TO_BE_DEFINED: product success evidence is recorded with concrete facts.",
+          "TO_BE_DEFINED: independent review confirms the user outcome is not replaced by process completion."
+        ]
+      },
+      "acceptance_contract": {
+        "scenario": "TO_BE_DEFINED: user-visible acceptance scenario for REQ-001 迁移源工作流为 agent 预设（Coordinator 人设 + 29 SKILL + 16 Agent 参考）",
+        "command": "TO_BE_DEFINED: runnable E2E, smoke, unit, or validation command",
+        "expected_output": "TO_BE_DEFINED: concrete pass output, assertion, or observable demo result",
+        "last_run": {
+          "status": "TO_BE_DEFINED",
+          "exit_code": null,
+          "summary": "TO_BE_DEFINED: last run output summary with evidence location"
+        },
+        "demo_evidence": "TO_BE_DEFINED: demo, CLI output, or artifact proving the scenario"
+      },
+      "quality_budget": {
+        "dimensions": {
+          "performance": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable performance threshold for REQ-001 迁移源工作流为 agent 预设（Coordinator 人设 + 29 SKILL + 16 Agent 参考）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for performance",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest performance result or planned evidence location",
+            "exception": ""
+          },
+          "reliability": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable reliability threshold for REQ-001 迁移源工作流为 agent 预设（Coordinator 人设 + 29 SKILL + 16 Agent 参考）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for reliability",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest reliability result or planned evidence location",
+            "exception": ""
+          },
+          "security": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable security threshold for REQ-001 迁移源工作流为 agent 预设（Coordinator 人设 + 29 SKILL + 16 Agent 参考）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for security",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest security result or planned evidence location",
+            "exception": ""
+          },
+          "accessibility": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable accessibility threshold for REQ-001 迁移源工作流为 agent 预设（Coordinator 人设 + 29 SKILL + 16 Agent 参考）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for accessibility",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest accessibility result or planned evidence location",
+            "exception": ""
+          },
+          "ux": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable ux threshold for REQ-001 迁移源工作流为 agent 预设（Coordinator 人设 + 29 SKILL + 16 Agent 参考）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for ux",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest ux result or planned evidence location",
+            "exception": ""
+          },
+          "maintainability": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable maintainability threshold for REQ-001 迁移源工作流为 agent 预设（Coordinator 人设 + 29 SKILL + 16 Agent 参考）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for maintainability",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest maintainability result or planned evidence location",
+            "exception": ""
+          }
+        }
+      },
+      "vertical_slice": {
+        "user_visible_slice": "TO_BE_DEFINED: smallest user-visible slice for REQ-001 迁移源工作流为 agent 预设（Coordinator 人设 + 29 SKILL + 16 Agent 参考）",
+        "demo_path": "TO_BE_DEFINED: runnable demo, smoke test, URL, screenshot, or command proving the slice",
+        "scope_guard": "TO_BE_DEFINED: files and behavior in scope for this slice only (—（v0.1.x 已交付）)",
+        "rollback_plan": "TO_BE_DEFINED: how to revert or disable the slice if validation fails",
+        "status": "TO_BE_DEFINED",
+        "evidence": "TO_BE_DEFINED: latest demo proof or planned evidence location"
+      },
+      "interruption_policy": {
+        "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
+        "critical_triggers": [
+          "Ask the user when product intent is unclear.",
+          "Ask the user when acceptance standard or done criteria are unclear.",
+          "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions."
+        ],
+        "auto_execute": [
+          "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible.",
+          "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied."
+        ],
+        "assumption_record": {
+          "assumption": "TO_BE_DEFINED: default choice used for a reversible non-critical ambiguity",
+          "basis": "TO_BE_DEFINED: fact source or repository pattern supporting the default",
+          "reversibility": "TO_BE_DEFINED: why the choice can be changed without product damage",
+          "validation": "TO_BE_DEFINED: command or demo that will verify the assumption",
+          "rollback": "TO_BE_DEFINED: how to revert if the assumption is wrong"
+        },
+        "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
+      },
+      "allowed_change_scope": [
+        "Only change files required by this task row: —（v0.1.x 已交付）",
+        "Keep unrelated refactors, release version bumps, and fixture sync out of this task unless listed in the task scope."
+      ],
+      "required_evidence": [
+        "evidence-log entry with 事实依据, 目标对齐, 用户影响, and 结构化事实 JSON",
+        "validation commands with exit_code and concise output summary",
+        "independent review evidence or explicit degraded review evidence that does not claim full separation"
+      ],
+      "next_commands": [
+        "python -m unittest skills/software-project-governance/infra/tests/test_verify_workflow.py -v",
+        "python skills/software-project-governance/infra/verify_workflow.py check-governance --fail-on-issues"
+      ],
+      "done_definition": [
+        "—（v0.1.x 已交付）",
+        "Code Reviewer or matching Reviewer has APPROVED the product-code change.",
+        "Commit and push are completed for this single task."
+      ],
+      "source": "plan-tracker.md##当前活跃事项"
+    },
+    "REQ-002": {
+      "task_id": "REQ-002",
+      "priority": "P0",
+      "status": "工作台侧栏 + novel_requests 接单",
+      "goal": "REQ-002 小说管理与人机高价值互动（多书目、ask_user_question、请求队列）",
+      "product_success_contract": {
+        "user": "TO_BE_DEFINED: impacted persona for REQ-002 小说管理与人机高价值互动（多书目、ask_user_question、请求队列）",
+        "job_to_be_done": "TO_BE_DEFINED: user job and desired outcome for REQ-002 小说管理与人机高价值互动（多书目、ask_user_question、请求队列）",
+        "non_goals": [
+          "TO_BE_DEFINED: explicit non-goal that protects the task from scope drift.",
+          "TO_BE_DEFINED: explicit non-goal that prevents process evidence from replacing product value."
+        ],
+        "success_metrics": [
+          "TO_BE_DEFINED: user-visible outcome or acceptance scenario for this task.",
+          "TO_BE_DEFINED: runnable E2E, test, or command that proves the outcome."
+        ],
+        "competitive_baseline": "TO_BE_DEFINED: mature-team or competing-product baseline this task must match.",
+        "done_definition": [
+          "TO_BE_DEFINED: product success evidence is recorded with concrete facts.",
+          "TO_BE_DEFINED: independent review confirms the user outcome is not replaced by process completion."
+        ]
+      },
+      "acceptance_contract": {
+        "scenario": "TO_BE_DEFINED: user-visible acceptance scenario for REQ-002 小说管理与人机高价值互动（多书目、ask_user_question、请求队列）",
+        "command": "TO_BE_DEFINED: runnable E2E, smoke, unit, or validation command",
+        "expected_output": "TO_BE_DEFINED: concrete pass output, assertion, or observable demo result",
+        "last_run": {
+          "status": "TO_BE_DEFINED",
+          "exit_code": null,
+          "summary": "TO_BE_DEFINED: last run output summary with evidence location"
+        },
+        "demo_evidence": "TO_BE_DEFINED: demo, CLI output, or artifact proving the scenario"
+      },
+      "quality_budget": {
+        "dimensions": {
+          "performance": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable performance threshold for REQ-002 小说管理与人机高价值互动（多书目、ask_user_question、请求队列）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for performance",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest performance result or planned evidence location",
+            "exception": ""
+          },
+          "reliability": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable reliability threshold for REQ-002 小说管理与人机高价值互动（多书目、ask_user_question、请求队列）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for reliability",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest reliability result or planned evidence location",
+            "exception": ""
+          },
+          "security": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable security threshold for REQ-002 小说管理与人机高价值互动（多书目、ask_user_question、请求队列）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for security",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest security result or planned evidence location",
+            "exception": ""
+          },
+          "accessibility": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable accessibility threshold for REQ-002 小说管理与人机高价值互动（多书目、ask_user_question、请求队列）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for accessibility",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest accessibility result or planned evidence location",
+            "exception": ""
+          },
+          "ux": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable ux threshold for REQ-002 小说管理与人机高价值互动（多书目、ask_user_question、请求队列）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for ux",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest ux result or planned evidence location",
+            "exception": ""
+          },
+          "maintainability": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable maintainability threshold for REQ-002 小说管理与人机高价值互动（多书目、ask_user_question、请求队列）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for maintainability",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest maintainability result or planned evidence location",
+            "exception": ""
+          }
+        }
+      },
+      "vertical_slice": {
+        "user_visible_slice": "TO_BE_DEFINED: smallest user-visible slice for REQ-002 小说管理与人机高价值互动（多书目、ask_user_question、请求队列）",
+        "demo_path": "TO_BE_DEFINED: runnable demo, smoke test, URL, screenshot, or command proving the slice",
+        "scope_guard": "TO_BE_DEFINED: files and behavior in scope for this slice only (—（v0.1.1 已交付）)",
+        "rollback_plan": "TO_BE_DEFINED: how to revert or disable the slice if validation fails",
+        "status": "TO_BE_DEFINED",
+        "evidence": "TO_BE_DEFINED: latest demo proof or planned evidence location"
+      },
+      "interruption_policy": {
+        "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
+        "critical_triggers": [
+          "Ask the user when product intent is unclear.",
+          "Ask the user when acceptance standard or done criteria are unclear.",
+          "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions."
+        ],
+        "auto_execute": [
+          "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible.",
+          "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied."
+        ],
+        "assumption_record": {
+          "assumption": "TO_BE_DEFINED: default choice used for a reversible non-critical ambiguity",
+          "basis": "TO_BE_DEFINED: fact source or repository pattern supporting the default",
+          "reversibility": "TO_BE_DEFINED: why the choice can be changed without product damage",
+          "validation": "TO_BE_DEFINED: command or demo that will verify the assumption",
+          "rollback": "TO_BE_DEFINED: how to revert if the assumption is wrong"
+        },
+        "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
+      },
+      "allowed_change_scope": [
+        "Only change files required by this task row: —（v0.1.1 已交付）",
+        "Keep unrelated refactors, release version bumps, and fixture sync out of this task unless listed in the task scope."
+      ],
+      "required_evidence": [
+        "evidence-log entry with 事实依据, 目标对齐, 用户影响, and 结构化事实 JSON",
+        "validation commands with exit_code and concise output summary",
+        "independent review evidence or explicit degraded review evidence that does not claim full separation"
+      ],
+      "next_commands": [
+        "python -m unittest skills/software-project-governance/infra/tests/test_verify_workflow.py -v",
+        "python skills/software-project-governance/infra/verify_workflow.py check-governance --fail-on-issues"
+      ],
+      "done_definition": [
+        "—（v0.1.1 已交付）",
+        "Code Reviewer or matching Reviewer has APPROVED the product-code change.",
+        "Commit and push are completed for this single task."
+      ],
+      "source": "plan-tracker.md##当前活跃事项"
+    },
+    "REQ-003": {
+      "task_id": "REQ-003",
+      "priority": "P0",
+      "status": "工作台渲染",
+      "goal": "REQ-003 写作过程可视化 + 实时渲染（2s 轮询、文件树、HUD）",
+      "product_success_contract": {
+        "user": "TO_BE_DEFINED: impacted persona for REQ-003 写作过程可视化 + 实时渲染（2s 轮询、文件树、HUD）",
+        "job_to_be_done": "TO_BE_DEFINED: user job and desired outcome for REQ-003 写作过程可视化 + 实时渲染（2s 轮询、文件树、HUD）",
+        "non_goals": [
+          "TO_BE_DEFINED: explicit non-goal that protects the task from scope drift.",
+          "TO_BE_DEFINED: explicit non-goal that prevents process evidence from replacing product value."
+        ],
+        "success_metrics": [
+          "TO_BE_DEFINED: user-visible outcome or acceptance scenario for this task.",
+          "TO_BE_DEFINED: runnable E2E, test, or command that proves the outcome."
+        ],
+        "competitive_baseline": "TO_BE_DEFINED: mature-team or competing-product baseline this task must match.",
+        "done_definition": [
+          "TO_BE_DEFINED: product success evidence is recorded with concrete facts.",
+          "TO_BE_DEFINED: independent review confirms the user outcome is not replaced by process completion."
+        ]
+      },
+      "acceptance_contract": {
+        "scenario": "TO_BE_DEFINED: user-visible acceptance scenario for REQ-003 写作过程可视化 + 实时渲染（2s 轮询、文件树、HUD）",
+        "command": "TO_BE_DEFINED: runnable E2E, smoke, unit, or validation command",
+        "expected_output": "TO_BE_DEFINED: concrete pass output, assertion, or observable demo result",
+        "last_run": {
+          "status": "TO_BE_DEFINED",
+          "exit_code": null,
+          "summary": "TO_BE_DEFINED: last run output summary with evidence location"
+        },
+        "demo_evidence": "TO_BE_DEFINED: demo, CLI output, or artifact proving the scenario"
+      },
+      "quality_budget": {
+        "dimensions": {
+          "performance": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable performance threshold for REQ-003 写作过程可视化 + 实时渲染（2s 轮询、文件树、HUD）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for performance",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest performance result or planned evidence location",
+            "exception": ""
+          },
+          "reliability": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable reliability threshold for REQ-003 写作过程可视化 + 实时渲染（2s 轮询、文件树、HUD）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for reliability",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest reliability result or planned evidence location",
+            "exception": ""
+          },
+          "security": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable security threshold for REQ-003 写作过程可视化 + 实时渲染（2s 轮询、文件树、HUD）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for security",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest security result or planned evidence location",
+            "exception": ""
+          },
+          "accessibility": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable accessibility threshold for REQ-003 写作过程可视化 + 实时渲染（2s 轮询、文件树、HUD）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for accessibility",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest accessibility result or planned evidence location",
+            "exception": ""
+          },
+          "ux": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable ux threshold for REQ-003 写作过程可视化 + 实时渲染（2s 轮询、文件树、HUD）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for ux",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest ux result or planned evidence location",
+            "exception": ""
+          },
+          "maintainability": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable maintainability threshold for REQ-003 写作过程可视化 + 实时渲染（2s 轮询、文件树、HUD）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for maintainability",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest maintainability result or planned evidence location",
+            "exception": ""
+          }
+        }
+      },
+      "vertical_slice": {
+        "user_visible_slice": "TO_BE_DEFINED: smallest user-visible slice for REQ-003 写作过程可视化 + 实时渲染（2s 轮询、文件树、HUD）",
+        "demo_path": "TO_BE_DEFINED: runnable demo, smoke test, URL, screenshot, or command proving the slice",
+        "scope_guard": "TO_BE_DEFINED: files and behavior in scope for this slice only (—（v0.1.x 已交付）)",
+        "rollback_plan": "TO_BE_DEFINED: how to revert or disable the slice if validation fails",
+        "status": "TO_BE_DEFINED",
+        "evidence": "TO_BE_DEFINED: latest demo proof or planned evidence location"
+      },
+      "interruption_policy": {
+        "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
+        "critical_triggers": [
+          "Ask the user when product intent is unclear.",
+          "Ask the user when acceptance standard or done criteria are unclear.",
+          "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions."
+        ],
+        "auto_execute": [
+          "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible.",
+          "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied."
+        ],
+        "assumption_record": {
+          "assumption": "TO_BE_DEFINED: default choice used for a reversible non-critical ambiguity",
+          "basis": "TO_BE_DEFINED: fact source or repository pattern supporting the default",
+          "reversibility": "TO_BE_DEFINED: why the choice can be changed without product damage",
+          "validation": "TO_BE_DEFINED: command or demo that will verify the assumption",
+          "rollback": "TO_BE_DEFINED: how to revert if the assumption is wrong"
+        },
+        "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
+      },
+      "allowed_change_scope": [
+        "Only change files required by this task row: —（v0.1.x 已交付）",
+        "Keep unrelated refactors, release version bumps, and fixture sync out of this task unless listed in the task scope."
+      ],
+      "required_evidence": [
+        "evidence-log entry with 事实依据, 目标对齐, 用户影响, and 结构化事实 JSON",
+        "validation commands with exit_code and concise output summary",
+        "independent review evidence or explicit degraded review evidence that does not claim full separation"
+      ],
+      "next_commands": [
+        "python -m unittest skills/software-project-governance/infra/tests/test_verify_workflow.py -v",
+        "python skills/software-project-governance/infra/verify_workflow.py check-governance --fail-on-issues"
+      ],
+      "done_definition": [
+        "—（v0.1.x 已交付）",
+        "Code Reviewer or matching Reviewer has APPROVED the product-code change.",
+        "Commit and push are completed for this single task."
+      ],
+      "source": "plan-tracker.md##当前活跃事项"
+    },
+    "REQ-004": {
+      "task_id": "REQ-004",
+      "priority": "P0",
+      "status": "编辑器门禁拒绝路径",
+      "goal": "REQ-004 章节编辑保存 + 优化建议（保存即跑门禁、机器审计）",
+      "product_success_contract": {
+        "user": "TO_BE_DEFINED: impacted persona for REQ-004 章节编辑保存 + 优化建议（保存即跑门禁、机器审计）",
+        "job_to_be_done": "TO_BE_DEFINED: user job and desired outcome for REQ-004 章节编辑保存 + 优化建议（保存即跑门禁、机器审计）",
+        "non_goals": [
+          "TO_BE_DEFINED: explicit non-goal that protects the task from scope drift.",
+          "TO_BE_DEFINED: explicit non-goal that prevents process evidence from replacing product value."
+        ],
+        "success_metrics": [
+          "TO_BE_DEFINED: user-visible outcome or acceptance scenario for this task.",
+          "TO_BE_DEFINED: runnable E2E, test, or command that proves the outcome."
+        ],
+        "competitive_baseline": "TO_BE_DEFINED: mature-team or competing-product baseline this task must match.",
+        "done_definition": [
+          "TO_BE_DEFINED: product success evidence is recorded with concrete facts.",
+          "TO_BE_DEFINED: independent review confirms the user outcome is not replaced by process completion."
+        ]
+      },
+      "acceptance_contract": {
+        "scenario": "TO_BE_DEFINED: user-visible acceptance scenario for REQ-004 章节编辑保存 + 优化建议（保存即跑门禁、机器审计）",
+        "command": "TO_BE_DEFINED: runnable E2E, smoke, unit, or validation command",
+        "expected_output": "TO_BE_DEFINED: concrete pass output, assertion, or observable demo result",
+        "last_run": {
+          "status": "TO_BE_DEFINED",
+          "exit_code": null,
+          "summary": "TO_BE_DEFINED: last run output summary with evidence location"
+        },
+        "demo_evidence": "TO_BE_DEFINED: demo, CLI output, or artifact proving the scenario"
+      },
+      "quality_budget": {
+        "dimensions": {
+          "performance": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable performance threshold for REQ-004 章节编辑保存 + 优化建议（保存即跑门禁、机器审计）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for performance",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest performance result or planned evidence location",
+            "exception": ""
+          },
+          "reliability": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable reliability threshold for REQ-004 章节编辑保存 + 优化建议（保存即跑门禁、机器审计）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for reliability",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest reliability result or planned evidence location",
+            "exception": ""
+          },
+          "security": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable security threshold for REQ-004 章节编辑保存 + 优化建议（保存即跑门禁、机器审计）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for security",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest security result or planned evidence location",
+            "exception": ""
+          },
+          "accessibility": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable accessibility threshold for REQ-004 章节编辑保存 + 优化建议（保存即跑门禁、机器审计）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for accessibility",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest accessibility result or planned evidence location",
+            "exception": ""
+          },
+          "ux": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable ux threshold for REQ-004 章节编辑保存 + 优化建议（保存即跑门禁、机器审计）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for ux",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest ux result or planned evidence location",
+            "exception": ""
+          },
+          "maintainability": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable maintainability threshold for REQ-004 章节编辑保存 + 优化建议（保存即跑门禁、机器审计）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for maintainability",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest maintainability result or planned evidence location",
+            "exception": ""
+          }
+        }
+      },
+      "vertical_slice": {
+        "user_visible_slice": "TO_BE_DEFINED: smallest user-visible slice for REQ-004 章节编辑保存 + 优化建议（保存即跑门禁、机器审计）",
+        "demo_path": "TO_BE_DEFINED: runnable demo, smoke test, URL, screenshot, or command proving the slice",
+        "scope_guard": "TO_BE_DEFINED: files and behavior in scope for this slice only (—（v0.1.x 已交付）)",
+        "rollback_plan": "TO_BE_DEFINED: how to revert or disable the slice if validation fails",
+        "status": "TO_BE_DEFINED",
+        "evidence": "TO_BE_DEFINED: latest demo proof or planned evidence location"
+      },
+      "interruption_policy": {
+        "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
+        "critical_triggers": [
+          "Ask the user when product intent is unclear.",
+          "Ask the user when acceptance standard or done criteria are unclear.",
+          "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions."
+        ],
+        "auto_execute": [
+          "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible.",
+          "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied."
+        ],
+        "assumption_record": {
+          "assumption": "TO_BE_DEFINED: default choice used for a reversible non-critical ambiguity",
+          "basis": "TO_BE_DEFINED: fact source or repository pattern supporting the default",
+          "reversibility": "TO_BE_DEFINED: why the choice can be changed without product damage",
+          "validation": "TO_BE_DEFINED: command or demo that will verify the assumption",
+          "rollback": "TO_BE_DEFINED: how to revert if the assumption is wrong"
+        },
+        "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
+      },
+      "allowed_change_scope": [
+        "Only change files required by this task row: —（v0.1.x 已交付）",
+        "Keep unrelated refactors, release version bumps, and fixture sync out of this task unless listed in the task scope."
+      ],
+      "required_evidence": [
+        "evidence-log entry with 事实依据, 目标对齐, 用户影响, and 结构化事实 JSON",
+        "validation commands with exit_code and concise output summary",
+        "independent review evidence or explicit degraded review evidence that does not claim full separation"
+      ],
+      "next_commands": [
+        "python -m unittest skills/software-project-governance/infra/tests/test_verify_workflow.py -v",
+        "python skills/software-project-governance/infra/verify_workflow.py check-governance --fail-on-issues"
+      ],
+      "done_definition": [
+        "—（v0.1.x 已交付）",
+        "Code Reviewer or matching Reviewer has APPROVED the product-code change.",
+        "Commit and push are completed for this single task."
+      ],
+      "source": "plan-tracker.md##当前活跃事项"
+    },
+    "REQ-005": {
+      "task_id": "REQ-005",
+      "priority": "P0",
+      "status": "发布页签配置 + 导出产物",
+      "goal": "REQ-005 多平台自动化配置发布 + 数据获取（三模式发布 + fetchCommand + 数据三级降级）",
+      "product_success_contract": {
+        "user": "TO_BE_DEFINED: impacted persona for REQ-005 多平台自动化配置发布 + 数据获取（三模式发布 + fetchCommand + 数据三级降级）",
+        "job_to_be_done": "TO_BE_DEFINED: user job and desired outcome for REQ-005 多平台自动化配置发布 + 数据获取（三模式发布 + fetchCommand + 数据三级降级）",
+        "non_goals": [
+          "TO_BE_DEFINED: explicit non-goal that protects the task from scope drift.",
+          "TO_BE_DEFINED: explicit non-goal that prevents process evidence from replacing product value."
+        ],
+        "success_metrics": [
+          "TO_BE_DEFINED: user-visible outcome or acceptance scenario for this task.",
+          "TO_BE_DEFINED: runnable E2E, test, or command that proves the outcome."
+        ],
+        "competitive_baseline": "TO_BE_DEFINED: mature-team or competing-product baseline this task must match.",
+        "done_definition": [
+          "TO_BE_DEFINED: product success evidence is recorded with concrete facts.",
+          "TO_BE_DEFINED: independent review confirms the user outcome is not replaced by process completion."
+        ]
+      },
+      "acceptance_contract": {
+        "scenario": "TO_BE_DEFINED: user-visible acceptance scenario for REQ-005 多平台自动化配置发布 + 数据获取（三模式发布 + fetchCommand + 数据三级降级）",
+        "command": "TO_BE_DEFINED: runnable E2E, smoke, unit, or validation command",
+        "expected_output": "TO_BE_DEFINED: concrete pass output, assertion, or observable demo result",
+        "last_run": {
+          "status": "TO_BE_DEFINED",
+          "exit_code": null,
+          "summary": "TO_BE_DEFINED: last run output summary with evidence location"
+        },
+        "demo_evidence": "TO_BE_DEFINED: demo, CLI output, or artifact proving the scenario"
+      },
+      "quality_budget": {
+        "dimensions": {
+          "performance": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable performance threshold for REQ-005 多平台自动化配置发布 + 数据获取（三模式发布 + fetchCommand + 数据三级降级）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for performance",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest performance result or planned evidence location",
+            "exception": ""
+          },
+          "reliability": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable reliability threshold for REQ-005 多平台自动化配置发布 + 数据获取（三模式发布 + fetchCommand + 数据三级降级）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for reliability",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest reliability result or planned evidence location",
+            "exception": ""
+          },
+          "security": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable security threshold for REQ-005 多平台自动化配置发布 + 数据获取（三模式发布 + fetchCommand + 数据三级降级）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for security",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest security result or planned evidence location",
+            "exception": ""
+          },
+          "accessibility": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable accessibility threshold for REQ-005 多平台自动化配置发布 + 数据获取（三模式发布 + fetchCommand + 数据三级降级）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for accessibility",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest accessibility result or planned evidence location",
+            "exception": ""
+          },
+          "ux": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable ux threshold for REQ-005 多平台自动化配置发布 + 数据获取（三模式发布 + fetchCommand + 数据三级降级）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for ux",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest ux result or planned evidence location",
+            "exception": ""
+          },
+          "maintainability": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable maintainability threshold for REQ-005 多平台自动化配置发布 + 数据获取（三模式发布 + fetchCommand + 数据三级降级）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for maintainability",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest maintainability result or planned evidence location",
+            "exception": ""
+          }
+        }
+      },
+      "vertical_slice": {
+        "user_visible_slice": "TO_BE_DEFINED: smallest user-visible slice for REQ-005 多平台自动化配置发布 + 数据获取（三模式发布 + fetchCommand + 数据三级降级）",
+        "demo_path": "TO_BE_DEFINED: runnable demo, smoke test, URL, screenshot, or command proving the slice",
+        "scope_guard": "TO_BE_DEFINED: files and behavior in scope for this slice only (—（v0.2.x 已交付）)",
+        "rollback_plan": "TO_BE_DEFINED: how to revert or disable the slice if validation fails",
+        "status": "TO_BE_DEFINED",
+        "evidence": "TO_BE_DEFINED: latest demo proof or planned evidence location"
+      },
+      "interruption_policy": {
+        "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
+        "critical_triggers": [
+          "Ask the user when product intent is unclear.",
+          "Ask the user when acceptance standard or done criteria are unclear.",
+          "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions."
+        ],
+        "auto_execute": [
+          "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible.",
+          "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied."
+        ],
+        "assumption_record": {
+          "assumption": "TO_BE_DEFINED: default choice used for a reversible non-critical ambiguity",
+          "basis": "TO_BE_DEFINED: fact source or repository pattern supporting the default",
+          "reversibility": "TO_BE_DEFINED: why the choice can be changed without product damage",
+          "validation": "TO_BE_DEFINED: command or demo that will verify the assumption",
+          "rollback": "TO_BE_DEFINED: how to revert if the assumption is wrong"
+        },
+        "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
+      },
+      "allowed_change_scope": [
+        "Only change files required by this task row: —（v0.2.x 已交付）",
+        "Keep unrelated refactors, release version bumps, and fixture sync out of this task unless listed in the task scope."
+      ],
+      "required_evidence": [
+        "evidence-log entry with 事实依据, 目标对齐, 用户影响, and 结构化事实 JSON",
+        "validation commands with exit_code and concise output summary",
+        "independent review evidence or explicit degraded review evidence that does not claim full separation"
+      ],
+      "next_commands": [
+        "python -m unittest skills/software-project-governance/infra/tests/test_verify_workflow.py -v",
+        "python skills/software-project-governance/infra/verify_workflow.py check-governance --fail-on-issues"
+      ],
+      "done_definition": [
+        "—（v0.2.x 已交付）",
+        "Code Reviewer or matching Reviewer has APPROVED the product-code change.",
+        "Commit and push are completed for this single task."
+      ],
+      "source": "plan-tracker.md##当前活跃事项"
+    },
+    "REQ-006": {
+      "task_id": "REQ-006",
+      "priority": "P0",
+      "status": "数据信号→建议行动链路",
+      "goal": "REQ-006 基于数据动态优化写作方向（信号检测 → 建议行动 → 四级调整需用户确认）",
+      "product_success_contract": {
+        "user": "TO_BE_DEFINED: impacted persona for REQ-006 基于数据动态优化写作方向（信号检测 → 建议行动 → 四级调整需用户确认）",
+        "job_to_be_done": "TO_BE_DEFINED: user job and desired outcome for REQ-006 基于数据动态优化写作方向（信号检测 → 建议行动 → 四级调整需用户确认）",
+        "non_goals": [
+          "TO_BE_DEFINED: explicit non-goal that protects the task from scope drift.",
+          "TO_BE_DEFINED: explicit non-goal that prevents process evidence from replacing product value."
+        ],
+        "success_metrics": [
+          "TO_BE_DEFINED: user-visible outcome or acceptance scenario for this task.",
+          "TO_BE_DEFINED: runnable E2E, test, or command that proves the outcome."
+        ],
+        "competitive_baseline": "TO_BE_DEFINED: mature-team or competing-product baseline this task must match.",
+        "done_definition": [
+          "TO_BE_DEFINED: product success evidence is recorded with concrete facts.",
+          "TO_BE_DEFINED: independent review confirms the user outcome is not replaced by process completion."
+        ]
+      },
+      "acceptance_contract": {
+        "scenario": "TO_BE_DEFINED: user-visible acceptance scenario for REQ-006 基于数据动态优化写作方向（信号检测 → 建议行动 → 四级调整需用户确认）",
+        "command": "TO_BE_DEFINED: runnable E2E, smoke, unit, or validation command",
+        "expected_output": "TO_BE_DEFINED: concrete pass output, assertion, or observable demo result",
+        "last_run": {
+          "status": "TO_BE_DEFINED",
+          "exit_code": null,
+          "summary": "TO_BE_DEFINED: last run output summary with evidence location"
+        },
+        "demo_evidence": "TO_BE_DEFINED: demo, CLI output, or artifact proving the scenario"
+      },
+      "quality_budget": {
+        "dimensions": {
+          "performance": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable performance threshold for REQ-006 基于数据动态优化写作方向（信号检测 → 建议行动 → 四级调整需用户确认）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for performance",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest performance result or planned evidence location",
+            "exception": ""
+          },
+          "reliability": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable reliability threshold for REQ-006 基于数据动态优化写作方向（信号检测 → 建议行动 → 四级调整需用户确认）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for reliability",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest reliability result or planned evidence location",
+            "exception": ""
+          },
+          "security": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable security threshold for REQ-006 基于数据动态优化写作方向（信号检测 → 建议行动 → 四级调整需用户确认）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for security",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest security result or planned evidence location",
+            "exception": ""
+          },
+          "accessibility": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable accessibility threshold for REQ-006 基于数据动态优化写作方向（信号检测 → 建议行动 → 四级调整需用户确认）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for accessibility",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest accessibility result or planned evidence location",
+            "exception": ""
+          },
+          "ux": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable ux threshold for REQ-006 基于数据动态优化写作方向（信号检测 → 建议行动 → 四级调整需用户确认）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for ux",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest ux result or planned evidence location",
+            "exception": ""
+          },
+          "maintainability": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable maintainability threshold for REQ-006 基于数据动态优化写作方向（信号检测 → 建议行动 → 四级调整需用户确认）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for maintainability",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest maintainability result or planned evidence location",
+            "exception": ""
+          }
+        }
+      },
+      "vertical_slice": {
+        "user_visible_slice": "TO_BE_DEFINED: smallest user-visible slice for REQ-006 基于数据动态优化写作方向（信号检测 → 建议行动 → 四级调整需用户确认）",
+        "demo_path": "TO_BE_DEFINED: runnable demo, smoke test, URL, screenshot, or command proving the slice",
+        "scope_guard": "TO_BE_DEFINED: files and behavior in scope for this slice only (—（v0.2.x 已交付）)",
+        "rollback_plan": "TO_BE_DEFINED: how to revert or disable the slice if validation fails",
+        "status": "TO_BE_DEFINED",
+        "evidence": "TO_BE_DEFINED: latest demo proof or planned evidence location"
+      },
+      "interruption_policy": {
+        "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
+        "critical_triggers": [
+          "Ask the user when product intent is unclear.",
+          "Ask the user when acceptance standard or done criteria are unclear.",
+          "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions."
+        ],
+        "auto_execute": [
+          "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible.",
+          "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied."
+        ],
+        "assumption_record": {
+          "assumption": "TO_BE_DEFINED: default choice used for a reversible non-critical ambiguity",
+          "basis": "TO_BE_DEFINED: fact source or repository pattern supporting the default",
+          "reversibility": "TO_BE_DEFINED: why the choice can be changed without product damage",
+          "validation": "TO_BE_DEFINED: command or demo that will verify the assumption",
+          "rollback": "TO_BE_DEFINED: how to revert if the assumption is wrong"
+        },
+        "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
+      },
+      "allowed_change_scope": [
+        "Only change files required by this task row: —（v0.2.x 已交付）",
+        "Keep unrelated refactors, release version bumps, and fixture sync out of this task unless listed in the task scope."
+      ],
+      "required_evidence": [
+        "evidence-log entry with 事实依据, 目标对齐, 用户影响, and 结构化事实 JSON",
+        "validation commands with exit_code and concise output summary",
+        "independent review evidence or explicit degraded review evidence that does not claim full separation"
+      ],
+      "next_commands": [
+        "python -m unittest skills/software-project-governance/infra/tests/test_verify_workflow.py -v",
+        "python skills/software-project-governance/infra/verify_workflow.py check-governance --fail-on-issues"
+      ],
+      "done_definition": [
+        "—（v0.2.x 已交付）",
+        "Code Reviewer or matching Reviewer has APPROVED the product-code change.",
+        "Commit and push are completed for this single task."
+      ],
+      "source": "plan-tracker.md##当前活跃事项"
+    }
+  }
 }
