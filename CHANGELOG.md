@@ -6,6 +6,11 @@
 
 ### 修复
 - 兼容 dsh 0.1.2-rc.1：`@deepseek-ai/dsh-settings` 移除 `settingsNamespace` 具名导出，本插件导入即触发 ESM SyntaxError，`dsh web` 启动崩溃（plugin tree failed to load）。设置命名空间改为普通字符串常量 `'novel-writing'`（新版 `settings.register/get` 收普通字符串并自带命名空间格式校验），移除对该导出的依赖。（BUG-003）
+- 客户端 API 表面迁移到 dsh 0.1.2-rc.1（BUG-004，三项实机报障）：
+  - **症状**：①工作区对话框报「API 不可用（宿主未挂载 webServer 或插件未运行）」、设置页白屏、卡片打开/绑定/切换链全断；②点其他工作区的会话不退出工作台界面；③书目列表为空。
+  - **根因**：①0.1.2-rc.1 客户端 `connection` 服务句柄不再有 `.api` 表面（实证句柄仅 isLoopback/generation/state/rpc/reconnect/registerGenerationSource/start）——宿主 API 迁移到 cordis 服务 `remote.<namespace>`（settings / session〔单数〕/ workspace / agentPresets / directoryPicker，方法为位置参数、返回 `{ok,value|error}` 无 `.result` 包装）+ `workspaces` 快照服务（getSnapshot/subscribe，无 `workspace/list` RPC），本插件 lib/client.js 内 44 处 `apiHas`/`api.<domain>.<method>` 调用面全部落空（SettingsPage 的 effect 内同步 TypeError 即设置页白屏根因）；②会话联动守卫「null 过渡仅刷新基准」把跨工作区切换的 `sessions.current` X→null→Y 形态吞掉；③`workspaceRoot` 指向的旧目录已不存在（见下方指引）。
+  - **修复**：lib/client.js 新增**适配层 `makeHostApi`（单点收口，全文件唯一特性检测点）**——按域惰性 getter 每次访问重解析服务（新表面 `remote.*`/`workspaces` 优先、旧宿主 `connection.api` 域对象回退），后到服务自然接上（无轮询），对外维持插件既有调用约定 `{result:{ok,value,error}}` 与 `{ns,patch}` 单对象入参，44 处调用点零改动；`session.prompt` 按新契约自动铸客户端 `requestId`（对齐宿主 sessions 客户端 randomUUID 用法）；`host.pickDirectory/createDirectory` 的 string 返回值包装回 `{path}`；`workspace.list` 改读 workspaces 快照（pending→ready 经 subscribe 事件等待）；设置页与平台配置编辑器加 api/settings 存在性守卫（缺失走可读错误态，不再抛未捕获 TypeError）；两处会话联动守卫（管理台 NvConsole 与创作台 SplitWorkspace）改 **last-non-null 比较**（null 永不触发关闭也不刷新基准，新非空 ≠ 上一个非空才关——覆盖 X→null→Y 跨工作区与 X→Y 同工作区；豁免令牌语义不变）；`package.json` 的 `dsh.client.inject` 移除 0.1.2-rc.1 已不存在的 `@deepseek-ai/dsh-client-runtime`（保留 locale/ui-settings/api-remotes）。smoke 147 → **179 项**（新增 32 项断言：适配层新表面位置参数映射/`{result}` 包装/prompt requestId 铸造/directoryPicker 值包装/workspaces 快照等待/旧表面透传/双表面皆无降级/联动守卫 last-non-null 五形态/设置页无 api 不抛错/单点收口与包表校验）。
+  - **用户侧指引（workspaceRoot 重指）**：升级后插件设置里的工作区根目录若仍指向旧路径（目录已迁移/改名，例如书稿从 `C:\Users\<你>\novels` 迁到了新位置），书目列表会为空——打开小说管理工作台控制台，点顶部「**切换 / 新建工作区…**」对话框：已配置工作区中**选中新根目录即切换**；若新目录未注册为工作区，用「选择文件夹」或「在其下新建目录」后「创建并采用」。按「一个工作区 = 一批小说」自行决定指向哪一层目录（指向含多本书的父目录则其下每本书一个 `novel-project` 均会被列出）。本修复不在代码中写死任何路径。
 
 ## [0.5.0] - 2026-08-30
 

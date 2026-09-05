@@ -154,14 +154,15 @@ curl -fsSL https://raw.githubusercontent.com/peterwangze/dsh-novel-writing/main/
 ## 兼容性与验证
 
 - **依赖架构**：`@deepseek-ai/*` 全部为 `peerDependencies`，运行时解析到宿主闭包（同一实例）——规避「双闭包」导致的 boot 崩溃与版本漂移失效（详见 [docs/RESEARCH.md](./docs/RESEARCH.md) §3.2）。
+- **客户端 API 双表面**（BUG-004）：浏览器侧经 lib/client.js 内**适配层单点收口**——新宿主（0.1.2-rc.1+）走 `remote.<ns>` 服务（settings/session/workspace/agentPresets/directoryPicker）+ `workspaces`/`sessions` 快照服务；旧宿主回退 `connection.api` 域对象；两者皆缺时按域降级提示（`apiHas` 语义不变）。
 - **能力降级**：宿主行缺席 `webServer` 仅降级 API；工具行缺席 `novel-writing` 服务时注册 0 工具，预设仍可挂载。
-- **兼容矩阵**：实测 DSH `0.1.0-rc.7` 与 `0.1.1-rc.2`；peer 声明为 `*`，向前兼容以实测为准。
+- **兼容矩阵**：实测 DSH `0.1.0-rc.7`、`0.1.1-rc.2` 与 `0.1.2-rc.1`（客户端经双表面适配层）；peer 声明为 `*`，向前兼容以实测为准。
 - **验证管线**（CI 全量执行 + 发版手动隔离 boot）：
 
 ```sh
 node --check lib/index.js && node --check lib/tools.js && node --check lib/client.js
 node test/validate-preset.mjs   # 预设挂载级校验（loader 同源解析 + 逐行模块解析）
-node test/smoke.mjs             # 宿主逻辑 + 挂载契约 86 项断言（状态/门禁/审计/发布/信号/注册面）
+node test/smoke.mjs             # 宿主逻辑 + 挂载契约 179 项断言（状态/门禁/审计/发布/信号/注册面/BUG-004 适配层与联动守卫）
 # 隔离 boot（最接近真实安装路径）：
 $env:DSH_HOME="$env:TEMP\dsh-novel-test"; dsh plugin --profile web add link:<本仓库>
 dsh web --port 3100 --no-open   # 另一终端 curl http://127.0.0.1:3100/novel-writing/api/overview → 200

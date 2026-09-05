@@ -440,7 +440,10 @@ const mockReact = (() => {
   // 逐层执行函数组件的最小 React mock：createElement 对函数类型直接调用（hooks 按帧实现：
   // useState 一帧一值 / useEffect 只收集不执行 / useRef·useMemo 一次求值）——
   // 供 UX-007 抽屉树结构断言取到组件体真实产出（仅单次渲染，不做更新调度）。
+  // BUG-004：useEffect 支持可选收集器（__effectSink.list 非 null 时收集 effect 回调）——
+  // 默认 null = 既有 no-op 行为（147 项断言语义不变）；测试手动 flush 驱动 effect 体。
   let frames = []
+  const effectSink = { list: null }
   const useHook = (init) => {
     const f = frames[frames.length - 1]
     const i = f.i
@@ -448,7 +451,7 @@ const mockReact = (() => {
     if (f.hooks[i] === undefined) f.hooks[i] = typeof init === 'function' ? init() : init
     return f.hooks[i]
   }
-  return {
+  const react = {
     createElement: (type, props, ...children) => {
       if (typeof type === 'function') {
         frames.push({ i: 0, hooks: [] })
@@ -457,10 +460,14 @@ const mockReact = (() => {
       return { __nvEl: true, type, props: props ?? {}, children }
     },
     useState: (v) => { const s = useHook(v); return [s, () => {}] },
-    useEffect: () => {},
+    useEffect: (fn) => { if (effectSink.list !== null) effectSink.list.push(fn) },
     useRef: (v) => ({ current: v }),
     useMemo: (fn) => fn(),
   }
+  react.__effectSink = {
+    setList(list) { effectSink.list = list },
+  }
+  return react
 })()
 let clientExports = null
 let clientFactoryErr = ''
@@ -1294,6 +1301,183 @@ check('apply 返回清理函数（可逆性）', typeof clientCleanup === 'funct
 let clientCleanupErr = ''
 try { if (typeof clientCleanup === 'function') clientCleanup() } catch (e) { clientCleanupErr = e.message }
 check('客户端清理可执行（引擎/监听/style 降级移除）', clientCleanupErr === '', clientCleanupErr)
+
+// ── BUG-004：dsh 0.1.2-rc.1 客户端 API 表面迁移（适配层双表面 + last-non-null 联动）──
+// 背景：0.1.2-rc.1 的 connection 服务无 .api；API 迁至 remote.<ns> 服务（位置参数、
+// {ok,value|error} 无 .result 包装）+ workspaces 快照服务。适配层 makeHostApi 单点收口
+// 特性检测，对外维持 {result:{ok,value,error}} 与单对象入参（44 处调用点零改动）。
+const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
+
+// ① 新表面：remote.settings 位置参数映射 + {result} 包装
+{
+  const calls = []
+  const remoteSettings = {
+    describe: () => { calls.push(['describe']); return Promise.resolve({ ok: true, value: { writable: true, namespaces: [{ ns: 'novel-writing', value: { enabled: true } }] } }) },
+    update: (ns, patch, rev) => { calls.push(['update', ns, patch, rev]); return Promise.resolve({ ok: true, value: { ns } }) },
+    mutate: (ns, ops, rev) => { calls.push(['mutate', ns, ops, rev]); return Promise.resolve({ ok: true, value: { ns } }) },
+  }
+  const api = clientExports.makeHostApi((n) => (n === 'remote.settings' ? remoteSettings : undefined), undefined)
+  const r1 = await api.settings.describe({})
+  check('BUG-004 新表面：settings.describe 无参调用 + {result} 包装', r1.result.ok === true && Array.isArray(r1.result.value.namespaces) && r1.result.value.namespaces[0].ns === 'novel-writing', JSON.stringify(r1))
+  const r2 = await api.settings.update({ ns: 'novel-writing', patch: { enabled: false } })
+  check('BUG-004 新表面：settings.update({ns,patch}) → 位置参数 (ns, patch, undefined)', calls.some((c) => c[0] === 'update' && c[1] === 'novel-writing' && c[2] !== undefined && c[2].enabled === false && c[3] === undefined) && r2.result.ok === true, JSON.stringify(calls))
+  const r3 = await api.settings.mutate({ ns: 'novel-writing', ops: [{ op: 'unset', path: ['bindings', 'x'] }] })
+  check('BUG-004 新表面：settings.mutate({ns,ops}) → 位置参数 (ns, ops, undefined)', calls.some((c) => c[0] === 'mutate' && c[1] === 'novel-writing' && Array.isArray(c[2]) && c[2][0].op === 'unset' && c[3] === undefined) && r3.result.ok === true, JSON.stringify(calls))
+  const r4 = await api.settings.update({ ns: 'novel-writing', patch: { enabled: true } })
+  check('BUG-004 新表面：错误分支透传（{ok:false,error} 原样入 .result）', (() => {
+    remoteSettings.update = () => Promise.resolve({ ok: false, error: { code: 'settings/invalid', message: 'boom' } })
+    return api.settings.update({ ns: 'x', patch: {} }).then((rr) => rr.result.ok === false && rr.result.error.message === 'boom')
+  })() && (await r4).result.ok === true, '')
+  remoteSettings.describe = () => Promise.reject(new Error('wire broke'))
+  const rThrow = await api.settings.describe()
+  check('BUG-004 新表面：底层抛错被捕获为 {ok:false,error}（不冒泡 TypeError）', rThrow.result.ok === false && rThrow.result.error.message === 'wire broke', JSON.stringify(rThrow))
+  check('BUG-004 新表面：无关域缺席返回 undefined（apiHas 既有降级路径不破）', api.sessions === undefined && api.workspace === undefined && api.host === undefined && api.agentPresets === undefined)
+}
+
+// ② 新表面：remote.session（单数）——prompt 自动铸 requestId、create/cancel 直传
+{
+  const calls = []
+  const remoteSession = {
+    create: (req) => { calls.push(['create', req]); return Promise.resolve({ ok: true, value: { sessionId: 's-1', agentPreset: 'novel-writing' } }) },
+    prompt: (req) => { calls.push(['prompt', req]); return Promise.resolve({ ok: true, value: { accepted: true } }) },
+    cancel: (req) => { calls.push(['cancel', req]); return Promise.resolve({ ok: true, value: { accepted: true } }) },
+  }
+  const api = clientExports.makeHostApi((n) => (n === 'remote.session' ? remoteSession : undefined), undefined)
+  const rc = await api.sessions.create({ cwd: 'D:/novels/n1' })
+  check('BUG-004 新表面：sessions.create 请求直传（cwd/workspaceId 兼容）', calls[0][0] === 'create' && calls[0][1].cwd === 'D:/novels/n1' && rc.result.ok === true && rc.result.value.sessionId === 's-1')
+  const p1 = await api.sessions.prompt({ sessionId: 's-1', mode: 'queue', content: [{ type: 'text', text: '开始' }] })
+  const p2 = await api.sessions.prompt({ sessionId: 's-2', mode: 'queue', content: [{ type: 'text', text: '继续' }] })
+  const pcalls = calls.filter((c) => c[0] === 'prompt')
+  check('BUG-004 新表面：sessions.prompt 自动铸 requestId（非空字符串且两次不同）+ 字段映射', pcalls.length === 2
+    && typeof pcalls[0][1].requestId === 'string' && pcalls[0][1].requestId !== '' && pcalls[0][1].requestId !== pcalls[1][1].requestId
+    && pcalls[0][1].sessionId === 's-1' && pcalls[0][1].mode === 'queue' && Array.isArray(pcalls[0][1].content) && pcalls[0][1].content[0].text === '开始'
+    && p1.result.ok === true && p2.result.ok === true, JSON.stringify(pcalls.map((c) => c[1])))
+  const rx = await api.sessions.cancel({ sessionId: 's-1' })
+  check('BUG-004 新表面：sessions.cancel({sessionId}) 直传', calls.some((c) => c[0] === 'cancel' && c[1].sessionId === 's-1') && rx.result.ok === true)
+}
+
+// ③ 新表面：remote.agentPresets.select 位置参数（agentId=sessionId）
+{
+  const calls = []
+  const remotePresets = { select: (agentId, agentPreset) => { calls.push([agentId, agentPreset]); return Promise.resolve({ ok: true, value: 'novel-writing' }) } }
+  const api = clientExports.makeHostApi((n) => (n === 'remote.agentPresets' ? remotePresets : undefined), undefined)
+  const r = await api.agentPresets.select({ sessionId: 's-9', agentPreset: 'novel-writing' })
+  check('BUG-004 新表面：agentPresets.select({sessionId,agentPreset}) → 位置参数 (agentId, agentPreset)', calls.length === 1 && calls[0][0] === 's-9' && calls[0][1] === 'novel-writing' && r.result.ok === true)
+}
+
+// ④ 新表面：remote.directoryPicker —— pick 值→{path}、cancel→value:null、createDirectory 位置参数、list 直传
+{
+  const calls = []
+  let pickValue = 'D:\\AI\\writing'
+  const remotePicker = {
+    pick: () => { calls.push(['pick']); return Promise.resolve({ ok: true, value: pickValue }) },
+    list: (path) => { calls.push(['list', path]); return Promise.resolve({ ok: true, value: { path: 'C:\\Users\\peter', home: 'C:\\Users\\peter', crumbs: [], entries: [], truncated: false } }) },
+    createDirectory: (path, name) => { calls.push(['createDirectory', path, name]); return Promise.resolve({ ok: true, value: path + '\\' + name }) },
+  }
+  const api = clientExports.makeHostApi((n) => (n === 'remote.directoryPicker' ? remotePicker : undefined), undefined)
+  const rp = await api.host.pickDirectory({})
+  check('BUG-004 新表面：host.pickDirectory 值 string → {path} 包装', rp.result.ok === true && rp.result.value.path === 'D:\\AI\\writing')
+  pickValue = null
+  const rpc2 = await api.host.pickDirectory({})
+  check('BUG-004 新表面：host.pickDirectory 取消（value=null）→ value:null（调用点 pickCancel 路径）', rpc2.result.ok === true && rpc2.result.value === null)
+  const rc = await api.host.createDirectory({ path: 'D:\\AI\\writing', name: 'novel-002' })
+  check('BUG-004 新表面：host.createDirectory({path,name}) → 位置参数 + 值 string → {path} 包装', calls.some((c) => c[0] === 'createDirectory' && c[1] === 'D:\\AI\\writing' && c[2] === 'novel-002') && rc.result.ok === true && rc.result.value.path === 'D:\\AI\\writing\\novel-002')
+  const rl = await api.host.listDirectory({})
+  check('BUG-004 新表面：host.listDirectory({}) → directoryPicker.list(undefined) + DirectoryListing 直传（home/path 在位）', calls.some((c) => c[0] === 'list' && c[1] === undefined) && rl.result.ok === true && rl.result.value.home === 'C:\\Users\\peter' && rl.result.value.path === 'C:\\Users\\peter')
+}
+
+// ⑤ 新表面：workspace.list 走 workspaces 快照（含 pending→ready 订阅等待，无轮询）+ create 走 remote.workspace
+{
+  let phase = 'ready'
+  const listeners = new Set()
+  const wsSvc = {
+    list: {
+      getSnapshot: () => ({ items: [{ workspaceId: 'w1', path: 'D:\\AI\\writing', title: 'writing', sessionIds: ['s-1'], createdAt: '', updatedAt: '' }], archivedSessionIds: [], state: 'idle', phase, error: null }),
+      subscribe: (fn) => { listeners.add(fn); return () => listeners.delete(fn) },
+    },
+  }
+  const remoteWorkspace = { create: (req) => Promise.resolve({ ok: true, value: { workspace: { workspaceId: 'w2', path: req.path, title: '', sessionIds: [], createdAt: '', updatedAt: '' }, created: true } }) }
+  const api = clientExports.makeHostApi((n) => (n === 'workspaces' ? wsSvc : n === 'remote.workspace' ? remoteWorkspace : undefined), undefined)
+  const rl = await api.workspace.list({})
+  check('BUG-004 新表面：workspace.list → workspaces 快照 items 包装 {result:{ok,value:{items}}}', rl.result.ok === true && Array.isArray(rl.result.value.items) && rl.result.value.items[0].workspaceId === 'w1' && rl.result.value.items[0].sessionIds.length === 1)
+  phase = 'pending'
+  const waitP = api.workspace.list({})
+  setTimeout(() => { phase = 'ready'; for (const fn of listeners) fn() }, 20)
+  const rw = await waitP
+  check('BUG-004 新表面：workspace.list pending→ready 经 subscribe 等待（事件驱动非轮询）', rw.result.ok === true && rw.result.value.items[0].workspaceId === 'w1')
+  phase = 'ready'
+  const rc = await api.workspace.create({ path: 'D:\\AI\\writing\\novel-002' })
+  check('BUG-004 新表面：workspace.create({path}) 请求直传 + value.workspace 保留', rc.result.ok === true && rc.result.value.workspace.workspaceId === 'w2' && rc.result.value.workspace.path === 'D:\\AI\\writing\\novel-002')
+}
+
+// ⑥ 旧宿主回退：connection.api 各域对象原样透传（引用相等）
+{
+  const legacySettings = { describe: () => {}, update: () => {}, mutate: () => {} }
+  const legacySessions = { create: () => {}, prompt: () => {}, cancel: () => {} }
+  const legacyWorkspace = { list: () => {}, create: () => {} }
+  const legacyHost = { pickDirectory: () => {}, createDirectory: () => {}, listDirectory: () => {} }
+  const legacyPresets = { select: () => {} }
+  const connection = { api: { settings: legacySettings, sessions: legacySessions, workspace: legacyWorkspace, host: legacyHost, agentPresets: legacyPresets } }
+  const api = clientExports.makeHostApi(() => undefined, connection)
+  check('BUG-004 旧表面回退：connection.api 五域对象原样透传（无 remote.* 服务时）', api.settings === legacySettings && api.sessions === legacySessions && api.workspace === legacyWorkspace && api.host === legacyHost && api.agentPresets === legacyPresets)
+}
+
+// ⑦ 双表面皆无：各域 undefined（apiHas 全 false = 既有降级提示路径）
+{
+  const api = clientExports.makeHostApi(() => undefined, undefined)
+  check('BUG-004 双表面皆无：五域全 undefined（apiHas 语义保持）', api.settings === undefined && api.sessions === undefined && api.workspace === undefined && api.host === undefined && api.agentPresets === undefined)
+  const apiNullConn = clientExports.makeHostApi(() => undefined, { isLoopback: true, rpc: {} })
+  check('BUG-004 新宿主 connection 无 .api：各域 undefined（不抛错不误报）', apiNullConn.settings === undefined && apiNullConn.workspace === undefined && apiNullConn.host === undefined)
+}
+
+// ⑧ last-non-null 会话联动守卫：X→null→Y 关、null→X 不关、X→X 不关、X→Y 关
+{
+  const decide = clientExports.shouldCloseOnCurrentChange
+  const step = (states) => {
+    // 模拟组件内 ref 演进：null 基准起步（seed 只记非空基准），逐值驱动守卫
+    let ref = null
+    let closes = 0
+    for (const s of states) {
+      if (decide(ref, s) === true) closes += 1
+      if (s !== null && s !== undefined) ref = s
+    }
+    return closes
+  }
+  check('BUG-004 联动守卫：X→null→Y（跨工作区）触发关闭 1 次', step(['X', null, 'Y']) === 1)
+  check('BUG-004 联动守卫：null→X 首个非空就位不关', step([null, 'X']) === 0)
+  check('BUG-004 联动守卫：X→X 不关', step(['X', 'X']) === 0)
+  check('BUG-004 联动守卫：X→Y（同工作区切换）关闭', step(['X', 'Y']) === 1)
+  check('BUG-004 联动守卫：null 过渡不丢基准（X→null→X 不关）', step(['X', null, 'X']) === 0)
+  check('BUG-004 联动守卫：源码两处守卫均改用 shouldCloseOnCurrentChange', clientSrc.includes('shouldCloseOnCurrentChange(prevCurrentRef.current, sessionsCurrent)') && clientSrc.includes('shouldCloseOnCurrentChange(splitPrevRef.current, splitCurrent)'), 'guard usage missing')
+}
+
+// ⑨ SettingsPage 无 api 不抛错（effect 真执行——守卫走 loadError 可读错误态）
+{
+  const sink = []
+  mockReact.__effectSink.setList(sink)
+  let renderErr2 = ''
+  try {
+    const r = slotRegs.find((x) => x.id === 'novel-writing')
+    r.render({})
+  } catch (e) { renderErr2 = e.message }
+  let effectErr = ''
+  for (const fn of sink) { try { fn() } catch (e) { if (effectErr === '') effectErr = e.message } }
+  mockReact.__effectSink.setList(null)
+  check('BUG-004 SettingsPage 无 api：渲染 + effect 执行均不抛 TypeError（守卫生效）', renderErr2 === '' && effectErr === '', renderErr2 + ' | ' + effectErr)
+  check('BUG-004 SettingsPage 守卫源码面：refresh 前置 api/settings 存在性检查', clientSrc.includes("api.settings === undefined || typeof api.settings.describe !== 'function'"), 'guard literal missing')
+}
+
+// ⑩ 适配层单点收口 + connection.api 唯一引用 + package.json inject 包表
+{
+  // 剥注释后计数（文档注释提及不计——审查口径 = 代码级引用唯一）
+  const noComments = clientSrc.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
+  const connApiCount = (noComments.match(/connection\.api/g) ?? []).length
+  check('BUG-004 单点收口：connection.api 代码级引用仅 1 处（适配层回退分支内）', connApiCount === 1, 'count=' + connApiCount)
+  check('BUG-004 单点收口：makeHostApi 特性检测函数唯一 + apply 经适配层取 api', clientSrc.includes('function makeHostApi(') && clientSrc.includes('makeHostApi((name) => ctx.get(name), connection)'), 'adapter wiring missing')
+  const injectList = pkgJson.dsh?.client?.inject ?? []
+  check('BUG-004 包表：dsh.client.inject 移除不存在的 dsh-client-runtime', !injectList.includes('@deepseek-ai/dsh-client-runtime'), JSON.stringify(injectList))
+  check('BUG-004 包表：保留 locale/ui-settings/api-remotes（0.1.2-rc.1 实存包）', injectList.includes('@deepseek-ai/dsh-client-locale') && injectList.includes('@deepseek-ai/dsh-client-ui-settings') && injectList.includes('@deepseek-ai/dsh-api-remotes'))
+}
 
 console.log(`\nSMOKE DONE: ${passed} passed, ${failed} failed`)
 rmSync(root, { recursive: true, force: true })
