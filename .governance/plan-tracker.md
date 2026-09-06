@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 68 | 64 | 0 | 2 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 69 | 65 | 0 | 2 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -127,6 +127,8 @@
 | **P1** | REL-004 | 发布 v0.5.0（用户「发送版本承载修改」）：①CHANGELOG [Unreleased]→[0.5.0] 2026-08-30 ②package.json 0.4.0→0.5.0 ③git tag v0.5.0 推送 ④路线图 v0.5.0 行标已发布+里程碑更新 ⑤EVD-075 | UX-059 | v0.5.0 | closed | ✅ 完成 (2026-08-30，EVD-075；发布前三件套全绿 0/29 PASS/147 0 failed；commit ce047d0 + annotated tag v0.5.0 已推送——远程 ls-remote 实证 v0.5.0→ce047d0、main→ddacb8d；推送曾因 github.com:443 瞬时故障阻断，网络恢复后补推成功；按 v0.2.2/REL-003 既有模式执行；tag↔CHANGELOG↔路线图三方一致性人工核验) |
 
 | **P0** | BUG-003 | dsh 0.1.2-rc.1 兼容性启动失败（用户 2026-09-04 报障）：`@deepseek-ai/dsh-settings` 0.1.2-rc.1 移除 `settingsNamespace` 导出 → 本插件 lib/index.js:18 ESM 具名导入失败 → plugin tree load SyntaxError → `npx @deepseek-ai/dsh web` 启动崩溃。修复 = 去除该导入、命名空间改普通字符串常量 `'novel-writing'`（新 API `register/get` 均收普通字符串并自带 `/^[a-z][a-z0-9-]*$/` 校验，'novel-writing' 合规）；其余 peer 依赖（cordis 4.0.2 Service/ctx.get、schemastery 默认导出、dsh-home-paths resolveDshHome、dsh-tools defineTool）逐项核验兼容；smoke 同步回归（修复前 smoke 因同一导入失败——天然回归基线）；版本归属 v0.5.1（发布号待 Release Gate 用户确认） | — | v0.5.1 | closed | ✅ 完成 (2026-09-04，EVD-076；smoke 147/147 双跑一致；Code Reviewer APPROVED 无 blocker；实机 npx dsh web 启动成功 + /novel-writing/api/overview HTTP 200 返回真实书目；CHANGELOG [Unreleased] 入账；发布时机待用户定案) |
+
+| **P0** | BUG-004 | dsh 0.1.2-rc.1 客户端 API 表面断裂（用户 2026-09-07 实机报障三症状）：①dsh 0.1.2-rc.1 客户端 `connection` 服务已无 `.api` 表面（实证：仅 isLoopback/generation/state/rpc/reconnect/registerGenerationSource/start），API 迁移至 `remote.<namespace>` 服务（settings/session/workspace/agentPresets/directoryPicker）+ `workspaces`/`sessions` 服务快照 → 插件 client.js 全部 apiHas 检查失败 → 工作区对话框「API 不可用」/设置页 useEffect 内 TypeError 白屏/卡片打开·绑定·切换链全断；②sessions.current 跨工作区切换经 null 过渡被「就位/失联仅刷基准」守卫吞掉 → 点其他工作区会话不退出工作台（NvConsole L2424 与 SplitWorkspace L3075 两处）；③workspaceRoot 指向 C:\Users\peter\novels（已不存在——用户迁至 D:\AI\writing\novel-001\novel-project）→ 书目空。修复 = 客户端 API 适配层（新旧双表面特性检测）+ 会话联动 last-non-null 比较守卫 + manifest dsh.client.inject 包表核对（dsh-client-runtime 已不存在）；TRIAGE-BUG-004 五步 triage 通过（无阻塞无环；与 UX-054/058 文件重叠——均未在执行） | BUG-003 | v0.5.1 | closed | ✅ 完成 (2026-09-07，EVD-077/EVD-077a；commit 55da942——makeHostApi 适配层单点收口 44 调用点零改动 + last-non-null 守卫×2 + SettingsPage 防崩 + manifest 修正；smoke 147→179 全绿〔Coordinator 原生复跑〕；Code Reviewer R1 APPROVED_WITH_NOTES unresolved_blockers=0〔REVIEW-BUG-004-R1；F1 P2=smoke 错误分支断言真空待下轮顺手修，F2-F5 P3 非阻断〕；**实机验收待用户重启 dsh web**——含 workspaceRoot 重指 D:\AI\writing\novel-001) |
 
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 
