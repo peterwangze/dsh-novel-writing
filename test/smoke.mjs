@@ -1324,10 +1324,12 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   const r3 = await api.settings.mutate({ ns: 'novel-writing', ops: [{ op: 'unset', path: ['bindings', 'x'] }] })
   check('BUG-004 新表面：settings.mutate({ns,ops}) → 位置参数 (ns, ops, undefined)', calls.some((c) => c[0] === 'mutate' && c[1] === 'novel-writing' && Array.isArray(c[2]) && c[2][0].op === 'unset' && c[3] === undefined) && r3.result.ok === true, JSON.stringify(calls))
   const r4 = await api.settings.update({ ns: 'novel-writing', patch: { enabled: true } })
-  check('BUG-004 新表面：错误分支透传（{ok:false,error} 原样入 .result）', (() => {
-    remoteSettings.update = () => Promise.resolve({ ok: false, error: { code: 'settings/invalid', message: 'boom' } })
-    return api.settings.update({ ns: 'x', patch: {} }).then((rr) => rr.result.ok === false && rr.result.error.message === 'boom')
-  })() && (await r4).result.ok === true, '')
+  // F1（BUG-004-R1 评审遗留 P2）：原断言把「返回 Promise 的 IIFE」当布尔用（Promise 恒真值
+  // 且未被 await）→ 错误分支从未被验证。改为先 await 再判定（评审建议口径）。
+  remoteSettings.update = () => Promise.resolve({ ok: false, error: { code: 'settings/invalid', message: 'boom' } })
+  const rErr = await api.settings.update({ ns: 'x', patch: {} })
+  check('BUG-004 新表面：错误分支透传（{ok:false,error} 原样入 .result）', r4.result.ok === true
+    && rErr.result.ok === false && rErr.result.error.message === 'boom', JSON.stringify(rErr))
   remoteSettings.describe = () => Promise.reject(new Error('wire broke'))
   const rThrow = await api.settings.describe()
   check('BUG-004 新表面：底层抛错被捕获为 {ok:false,error}（不冒泡 TypeError）', rThrow.result.ok === false && rThrow.result.error.message === 'wire broke', JSON.stringify(rThrow))
@@ -1477,6 +1479,221 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   const injectList = pkgJson.dsh?.client?.inject ?? []
   check('BUG-004 包表：dsh.client.inject 移除不存在的 dsh-client-runtime', !injectList.includes('@deepseek-ai/dsh-client-runtime'), JSON.stringify(injectList))
   check('BUG-004 包表：保留 locale/ui-settings/api-remotes（0.1.2-rc.1 实存包）', injectList.includes('@deepseek-ai/dsh-client-locale') && injectList.includes('@deepseek-ai/dsh-client-ui-settings') && injectList.includes('@deepseek-ai/dsh-api-remotes'))
+}
+
+// ── BUG-005：useSessions 稳定响应式 hook（服务后到自愈 / 撤离回退 / 函数引用恒定）──
+// 旧 makeSessionsHook(svc) 按 apply 时的服务快照冻结：dsh 0.1.2-rc.1 的 sessions 服务由
+// dsh-api-session-controller 提供，其 inject 的 remote.* 命名空间经 dsh-api-remotes **异步**
+// 挂载 → apply 时恒缺席 → hook 恒 null → 全部消费端永久降级（无状态点/无「找到的会话」/
+// 无会话联动退出 = BUG-004 实机遗留根因）。本节用「hooks 跨帧持久 + setter 触发重渲染 +
+// useEffect deps/cleanup」的最小 React 语义 harness 驱动完整生命周期。
+{
+  const createMiniReact = () => {
+    let inst = null
+    let cursor = 0
+    let pending = null
+    let dirty = false
+    let rendering = false
+    let renders = 0
+    const sameDeps = (a, b) => (a === undefined && b === undefined)
+      || (Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((x, i) => Object.is(x, b[i])))
+    const slot = (init) => {
+      const i = cursor++
+      if (!(i in inst.hooks)) inst.hooks[i] = typeof init === 'function' ? init() : init
+      return i
+    }
+    const drain = () => {
+      let out
+      rendering = true
+      try {
+        do {
+          dirty = false
+          cursor = 0
+          renders += 1
+          pending = []
+          out = inst.comp(inst.props)
+          const tasks = pending
+          pending = null
+          for (const s of tasks) { try { s.cleanup = s.run() } catch { /* ignore */ }; s.run = null }
+        } while (dirty)
+      } finally { rendering = false }
+      return out
+    }
+    const react = {
+      createElement: (type, props, ...children) => (typeof type === 'function'
+        ? type({ ...(props ?? {}), children })
+        : { __el: true, type, props: props ?? {}, children }),
+      useState: (init) => {
+        const i = slot(init)
+        const owner = inst
+        return [owner.hooks[i], (next) => {
+          if (inst !== owner) return
+          const prev = owner.hooks[i]
+          const v = typeof next === 'function' ? next(prev) : next
+          if (Object.is(prev, v)) return // React bail-out 语义：同值不重渲染（强制扳机才有意义）
+          owner.hooks[i] = v
+          dirty = true
+          if (!rendering) drain() // 渲染期外的 setState = 调度一次重渲染
+        }]
+      },
+      useRef: (init) => { const i = slot({ current: init }); return inst.hooks[i] },
+      useMemo: (fn) => fn(),
+      useEffect: (fn, deps) => {
+        const i = cursor++
+        const prev = inst.hooks[i]
+        if (prev !== undefined && sameDeps(prev.deps, deps)) return
+        if (prev !== undefined && typeof prev.cleanup === 'function') { try { prev.cleanup() } catch { /* ignore */ } }
+        inst.hooks[i] = { deps, run: fn, cleanup: null }
+        if (pending !== null) pending.push(inst.hooks[i])
+      },
+    }
+    return {
+      react,
+      mount(Component, props) { inst = { hooks: [], comp: Component, props }; renders = 0; return drain() },
+      render(props) { if (props !== undefined) inst.props = props; return drain() },
+      unmount() {
+        for (const h of inst.hooks) { if (h !== null && h !== undefined && typeof h.cleanup === 'function') { try { h.cleanup() } catch { /* ignore */ } } }
+        inst = null
+      },
+      get renders() { return renders },
+    }
+  }
+
+  const mini = createMiniReact()
+  // 服务替身：形状镜像 node_modules 实证契约（sessions.list = getSnapshot/subscribe 快照，
+  // subscribe 返回 disposer——@deepseek-ai/dsh-api-session-controller createSnapshotStore）
+  let sessionsProvided = undefined
+  const fakeCtx = { get: (name) => (name === 'sessions' ? sessionsProvided : undefined) }
+  const mkStore = (snap0) => {
+    let snap = snap0
+    const subs = []
+    return {
+      subs,
+      svc: { list: { getSnapshot: () => snap, subscribe: (fn) => { subs.push(fn); return () => { const k = subs.indexOf(fn); if (k >= 0) subs.splice(k, 1) } } } },
+      set(next) { snap = next; for (const fn of subs.slice()) { try { fn() } catch { /* ignore */ } } },
+    }
+  }
+  const Card = (props) => ({ ids: props.useSessions((s) => (Array.isArray(s.ids) ? s.ids : [])) ?? null })
+  const RefCard = (props) => {
+    seenRefs.push(props.useSessions)
+    return { ids: props.useSessions((s) => (Array.isArray(s.ids) ? s.ids : [])) ?? null }
+  }
+  const FlatCard = (props) => ({ v: props.useSessions(() => null) === undefined ? 'undef' : 'null' })
+  const seenRefs = []
+
+  let ex2 = null
+  let ex2Err = ''
+  try {
+    ex2 = capturedDef.factory((id) => { if (id === 'react') return mini.react; throw new Error('unexpected require: ' + id) })
+  } catch (e) { ex2Err = e.message }
+  check('BUG-005 二次工厂实例（mini-react 注入）可求值并导出 apply', ex2Err === '' && ex2 !== null && typeof ex2.apply === 'function', ex2Err)
+  check('BUG-005 导出：makeSessionsHookReactive 进入纯函数测试面（与 makeHostApi 同口径）',
+    ex2 !== null && typeof ex2.makeSessionsHookReactive === 'function'
+    && typeof ex2.makeHostApi === 'function' && typeof ex2.shouldCloseOnCurrentChange === 'function',
+    ex2 === null ? 'no-ex2' : typeof (ex2 !== null ? ex2.makeSessionsHookReactive : undefined))
+
+  const hook = ex2 !== null && typeof ex2.makeSessionsHookReactive === 'function' ? ex2.makeSessionsHookReactive(fakeCtx) : null
+  check('BUG-005 服务缺席时工厂仍返回函数（旧实现返回 null = 永久降级根因）', typeof hook === 'function', String(hook))
+  check('BUG-005 hook 附 refresh() 通知面（服务增减由 apply 单一监听器转达）', hook !== null && typeof hook.refresh === 'function')
+
+  const st = mkStore({ ids: ['s-1', 's-2'], byId: { 's-1': { id: 's-1', displayTitle: 'Alpha' }, 's-2': { id: 's-2', displayTitle: 'Beta' } }, current: 's-1' })
+
+  // ① 服务缺席挂载：不抛错 + 返回 undefined + 不订阅
+  let absentErr = ''
+  let absentOut = null
+  try { absentOut = mini.mount(RefCard, { useSessions: hook }) } catch (e) { absentErr = e.message }
+  check('BUG-005 服务缺席挂载：hook 返回 undefined 不抛错（消费端 ?? null 容错）', absentErr === '' && absentOut !== null && absentOut.ids === null, absentErr)
+  check('BUG-005 服务缺席挂载：不订阅（无对缺席服务的悬挂订阅）', st.subs.length === 0, 'subs=' + st.subs.length)
+
+  // ② 服务后到：refresh 通知 → 已挂载实例重读 + 订阅（免重启自愈）
+  sessionsProvided = st.svc
+  let arriveErr = ''
+  try { hook.refresh() } catch (e) { arriveErr = e.message }
+  const arrived = mini.render()
+  check('BUG-005 服务后到：已挂载实例经 refresh 重读取到值（React 面自愈）', arriveErr === '' && JSON.stringify(arrived.ids) === '["s-1","s-2"]', arriveErr + ' ids=' + JSON.stringify(arrived.ids))
+  check('BUG-005 服务后到：建立 store 订阅（零轮询）', st.subs.length === 1, 'subs=' + st.subs.length)
+  check('BUG-005 函数引用恒定：缺席→后到全程同一 hook 实例（条件调用形态 hook 数不翻转）',
+    seenRefs.length >= 2 && seenRefs.every((r) => r === hook), 'frames=' + seenRefs.length + ' uniq=' + new Set(seenRefs).size)
+
+  // ③ 快照更新经订阅驱动重读
+  st.set({ ids: ['s-1'], byId: { 's-1': { id: 's-1' } }, current: 's-1' })
+  const pushed = mini.render()
+  check('BUG-005 订阅回调驱动重读：store.set → setValue → 取到新快照', JSON.stringify(pushed.ids) === '["s-1"]', JSON.stringify(pushed.ids))
+
+  // ④ 服务撤离：退订 + 返回回 undefined（消费端容错）
+  sessionsProvided = undefined
+  hook.refresh()
+  const left = mini.render()
+  check('BUG-005 服务撤离：hook 返回回 undefined（不抛错）', left.ids === null, JSON.stringify(left.ids))
+  check('BUG-005 服务撤离：解除订阅（不订阅已撤离服务）', st.subs.length === 0, 'subs=' + st.subs.length)
+
+  // ⑤ 再次到位：换新 store 往返自愈
+  const st2 = mkStore({ ids: ['s-9'], byId: { 's-9': { id: 's-9' } }, current: 's-9' })
+  sessionsProvided = st2.svc
+  hook.refresh()
+  const again = mini.render()
+  check('BUG-005 服务再次到位：切新 store 并重读（缺席→到位往返自愈 + 旧 store 退订）',
+    JSON.stringify(again.ids) === '["s-9"]' && st2.subs.length === 1 && st.subs.length === 0,
+    'ids=' + JSON.stringify(again.ids) + ' subs2=' + st2.subs.length + ' subs1=' + st.subs.length)
+
+  // ⑥ 强制重渲染扳机：派生值不变（selector 恒 null）时服务增减仍须重渲染——
+  //    degraded 派生自非 React 面（launcher.sessions），不重渲染则降级态永不解除
+  mini.unmount()
+  check('BUG-005 卸载清理：解除订阅（组件卸载无泄漏订阅）', st2.subs.length === 0, 'subs=' + st2.subs.length)
+  const flatOut = mini.mount(FlatCard, { useSessions: hook })
+  const afterMount = mini.renders
+  hook.refresh() // 服务未变、派生值不变 → 仅强制扳机能让帧数增长
+  check('BUG-005 派生值不变时服务增减仍触发重渲染（degraded 扳机，防降级卡死）+ 挂载无重渲染风暴',
+    flatOut.v === 'null' && afterMount <= 3 && mini.renders > afterMount,
+    'v=' + flatOut.v + ' mount=' + afterMount + ' after=' + mini.renders)
+  mini.unmount()
+
+  // ⑦ 形状不合格服务 = 缺席（保持既有形状校验口径，不抛错、不订阅）
+  sessionsProvided = { list: { getSnapshot: () => ({ ids: [] }) } }
+  let shapeErr = ''
+  let shapeOut = null
+  try { shapeOut = mini.mount(Card, { useSessions: hook }) } catch (e) { shapeErr = e.message }
+  check('BUG-005 形状不合格服务（list 缺 subscribe）按缺席处理：不抛错、不订阅', shapeErr === '' && shapeOut.ids === null, shapeErr)
+  mini.unmount()
+  sessionsProvided = undefined
+
+  // ⑧ apply 接线（grep 级——**剥注释后**判定，口径同 BUG-004 ⑩「代码级引用唯一」；
+  //    本任务 JSDoc 大量提及旧实现名/消费端条件调用形态，计入会污染回归钉）
+  const codeSrc = clientSrc.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
+  check('BUG-005 apply 接线：hook 面改用 makeSessionsHookReactive(ctx)（不再吃 apply 时服务快照）',
+    codeSrc.includes('const useSessionsH = makeSessionsHookReactive(ctx)')
+    && !/makeSessionsHook\(/.test(codeSrc)
+    && !codeSrc.includes("let sessionsSvc = ctx.get('sessions')"), 'wiring')
+  check('BUG-005 冻结工厂退役：makeSessionsHook（按快照冻结返回 null 的旧实现）不再存在',
+    !/function makeSessionsHook\b/.test(codeSrc) && codeSrc.includes('function makeSessionsHookReactive('))
+  {
+    const at = codeSrc.indexOf("ctx.on('internal/service'")
+    const block = at >= 0 ? codeSrc.slice(at, at + 520) : ''
+    const listenerCount = (codeSrc.match(/ctx\.on\('internal\/service'/g) ?? []).length
+    const setupCount = (codeSrc.match(/launcher\.setup\(\{ api: base\.api, sessions: ctx\.get\('sessions'\) \}\)/g) ?? []).length
+    check('BUG-005 单一 internal/service 监听器同时刷新 launcher 面与 hook 面（合并监听不重复注册）',
+      listenerCount === 1
+      && block.includes("launcher.setup({ api: base.api, sessions: ctx.get('sessions') })")
+      && block.includes('useSessionsH.refresh()') && block.includes("if (name !== 'sessions') return"),
+      'listeners=' + listenerCount + ' block=' + JSON.stringify(block.slice(0, 220)))
+    check('BUG-005 launcher 首装与 hook 同源：apply 期 launcher.setup 直读 ctx.get（无冻结局部变量）',
+      setupCount === 2, 'count=' + setupCount)
+    check('BUG-005 清理路径保持：监听 disposer 仍在 apply 返回函数内移除',
+      codeSrc.includes('if (offServiceEvent !== null)') && codeSrc.includes('offServiceEvent()'))
+  }
+  // ⑨ 消费端与守卫零改动（回归钉：条件调用形态 + degraded 公式 + 联动守卫调用点）
+  const neqCount = (codeSrc.match(/useSessions !== null/g) ?? []).length
+  const eqCount = (codeSrc.match(/useSessions === null/g) ?? []).length
+  const degradedCount = (codeSrc.match(/props\.useSessions === null \|\| launcher\.sessions === null/g) ?? []).length
+  check('BUG-005 消费端零改动：条件调用守卫面恒定（useSessions !== null ×8 / === null ×4）',
+    neqCount === 8 && eqCount === 4, 'neq=' + neqCount + ' eq=' + eqCount)
+  check('BUG-005 守卫/降级判定零改动：degraded 公式 3 处 + 联动守卫两处调用点原样',
+    degradedCount === 3
+    && codeSrc.includes('shouldCloseOnCurrentChange(prevCurrentRef.current, sessionsCurrent)')
+    && codeSrc.includes('shouldCloseOnCurrentChange(splitPrevRef.current, splitCurrent)'), 'degraded=' + degradedCount)
+  check('BUG-005 适配层零改动：makeHostApi 单点收口与 connection.api 唯一引用保持',
+    codeSrc.includes('function makeHostApi(') && codeSrc.includes('makeHostApi((name) => ctx.get(name), connection)')
+    && (codeSrc.match(/connection\.api/g) ?? []).length === 1)
 }
 
 console.log(`\nSMOKE DONE: ${passed} passed, ${failed} failed`)
