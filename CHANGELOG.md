@@ -2,6 +2,11 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 格式；版本号语义化（0.x 阶段以次要版本承载功能批，补丁号承载修复）。
 
+## [Unreleased]
+
+### 修复
+- **兼容 dsh 0.1.5 布局重构——安装脚本版本自适应（BUG-006，安装通道适配）**：dsh 0.1.2-rc.1 → 0.1.5-rc.1 重构了 profile 布局与插件注册机制（每 profile 独立目录：`package.json` + `pnpm-workspace.yaml` + 私有 `node_modules`；官方注册通道 = profile `package.json` 的 `dependencies`（`"dsh-novel-writing": "file:<插件路径>"`）+ `dsh.profile.bundles` 数组追加）。**本插件代码本身对 dsh 0.1.5-rc.1 零改动兼容**（隔离实例全链路实测启动成功），本条为安装脚本适配：install.ps1 / install.sh 自动检测布局版本（`profiles/<Profile>/package.json` 存在 = 0.1.5+ per-profile / 缺省 = 旧版全局）——**新布局** junction 接入 `profiles/<Profile>/node_modules/` + 幂等注册 profile `package.json`（dependencies + `dsh.profile.bundles`，保留既有键与键序、2 空格缩进；install.sh 注册用 `node -e`，无 node 回退 python3，两者皆无降级仅写 patch 行并提示）+ `cordis.patch.yml` insert 行兜底双保险（两条注册路径均独立有效）；**旧布局行为完全不变**（junction 到 `profiles/node_modules` + patch 行）。幂等可重复执行，不产生重复行/重复键/损坏 JSON；README 安装与兼容性说明同步。
+
 ## [0.5.1] - 2026-09-07
 
 ### 修复

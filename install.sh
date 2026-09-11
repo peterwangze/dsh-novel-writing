@@ -3,6 +3,10 @@
 # 在线：curl -fsSL https://raw.githubusercontent.com/peterwangze/dsh-novel-writing/main/install.sh | sh
 # 离线：解压发行包后，在包目录内执行  ./install.sh --local .
 # 环境变量 DSH_HOME 可覆盖配置目录（默认 ~/.dsh）；--profile 指定目标 profile（默认 web）。
+# 自动检测 dsh 布局版本（双通道自适应）：0.1.5+ per-profile（profiles/<Profile>/package.json
+# 存在 → 接入 profile 私有 node_modules 并注册 package.json dependencies + dsh.profile.bundles，
+# 注册用 node -e，无 node 时回退 python3，两者皆无则降级仅写 patch 行并提示）/ 旧版全局（行为不变）；
+# 两种布局均以 cordis.patch.yml 插行兜底。
 set -e
 
 REPO_URL='https://github.com/peterwangze/dsh-novel-writing.git'
@@ -40,8 +44,17 @@ else
   fi
 fi
 
-echo "==> 接入 profiles/node_modules"
-NM="$DSH_HOME/profiles/node_modules"
+# 布局检测（步骤按此分流）：profiles/<Profile>/package.json 存在 = dsh >=0.1.5 新布局
+PDIR="$DSH_HOME/profiles/$PROFILE"
+if [ -f "$PDIR/package.json" ]; then
+  NEW_LAYOUT=1
+  NM="$PDIR/node_modules"
+  echo "==> 检测到 dsh 新布局（>=0.1.5 per-profile）：接入 $NM"
+else
+  NEW_LAYOUT=0
+  NM="$DSH_HOME/profiles/node_modules"
+  echo "==> 检测到 dsh 旧布局（<=0.1.2 全局 node_modules）：接入 $NM"
+fi
 DST="$NM/$PLUGIN"
 mkdir -p "$NM"
 if [ -e "$DST" ]; then
@@ -59,8 +72,120 @@ else
   fi
 fi
 
+# 注册 profile package.json（新布局官方通道：dependencies + dsh.profile.bundles；幂等）
+PKG_REG=0
+if [ "$NEW_LAYOUT" = "1" ]; then
+  echo "==> 注册 profile package.json（dependencies + bundles）"
+  SRC_NORM=$(printf '%s' "$SRC" | sed 's#\\#/#g')
+  # Git Bash / Cygwin：pwd 给出 MSYS 风格路径（/d/...），Windows 原生 pnpm 无法解析——
+  # 归一为 D:/... 混合形式（与 install.ps1 输出形态一致；cygpath 为 Git Bash 自带）。
+  case "$(uname -s)" in
+    MSYS*|MINGW*|CYGWIN*)
+      command -v cygpath >/dev/null 2>&1 && SRC_NORM=$(cygpath -m "$SRC")
+      ;;
+  esac
+  PKG_FILE="$PDIR/package.json"
+  if command -v node >/dev/null 2>&1; then
+    node -e '
+const fs = require("fs");
+const file = process.argv[1], val = process.argv[2], name = process.argv[3];
+let pkg;
+try { pkg = JSON.parse(fs.readFileSync(file, "utf8").replace(/^\uFEFF/, "")); }
+catch (e) { console.error("    解析失败：" + file + "（" + e.message + "）"); process.exit(1); }
+let changed = false;
+const depOk = pkg.dependencies && typeof pkg.dependencies === "object" && !Array.isArray(pkg.dependencies);
+if (!depOk) {
+  const dep = {}; dep[name] = val;
+  const out = {}; let ins = false;
+  for (const k of Object.keys(pkg)) {
+    if (!ins && k === "dsh") { out["dependencies"] = dep; ins = true; }
+    out[k] = pkg[k];
+  }
+  if (!ins) out["dependencies"] = dep;
+  pkg = out; changed = true;
+  console.log("    已写入 dependencies." + name + " = " + val);
+} else if (!Object.prototype.hasOwnProperty.call(pkg.dependencies, name)) {
+  pkg.dependencies[name] = val; changed = true;
+  console.log("    已写入 dependencies." + name + " = " + val);
+} else {
+  console.log("    dependencies." + name + " 已注册，跳过");
+}
+const dshOk = pkg.dsh && typeof pkg.dsh === "object" && !Array.isArray(pkg.dsh);
+if (!dshOk) { pkg.dsh = { profile: { bundles: [name] } }; changed = true; }
+else {
+  const profOk = pkg.dsh.profile && typeof pkg.dsh.profile === "object" && !Array.isArray(pkg.dsh.profile);
+  if (!profOk) { pkg.dsh.profile = { bundles: [name] }; changed = true; }
+  else if (!Array.isArray(pkg.dsh.profile.bundles)) { pkg.dsh.profile.bundles = [name]; changed = true; }
+  else if (pkg.dsh.profile.bundles.indexOf(name) < 0) { pkg.dsh.profile.bundles.push(name); changed = true; }
+}
+if (changed) {
+  fs.writeFileSync(file, JSON.stringify(pkg, null, 2) + "\n");
+  console.log("    已注册 profile dependencies + bundles（dsh >=0.1.5）：" + file);
+} else {
+  console.log("    profile package.json 注册项已齐全，跳过写入");
+}
+' "$PKG_FILE" "file:$SRC_NORM" "$PLUGIN"
+    PKG_REG=1
+  elif command -v python3 >/dev/null 2>&1; then
+    python3 - "$PKG_FILE" "file:$SRC_NORM" "$PLUGIN" <<'PYEOF'
+import json, sys
+path, val, name = sys.argv[1], sys.argv[2], sys.argv[3]
+with open(path, "r", encoding="utf-8-sig") as f:
+    pkg = json.load(f)
+changed = False
+deps = pkg.get("dependencies")
+if not isinstance(deps, dict):
+    dep = {name: val}
+    out = {}
+    ins = False
+    for k in pkg:
+        if not ins and k == "dsh":
+            out["dependencies"] = dep
+            ins = True
+        out[k] = pkg[k]
+    if not ins:
+        out["dependencies"] = dep
+    pkg = out
+    changed = True
+    print("    已写入 dependencies." + name + " = " + val)
+elif name not in deps:
+    deps[name] = val
+    changed = True
+    print("    已写入 dependencies." + name + " = " + val)
+else:
+    print("    dependencies." + name + " 已注册，跳过")
+dsh = pkg.get("dsh")
+if not isinstance(dsh, dict):
+    pkg["dsh"] = {"profile": {"bundles": [name]}}
+    changed = True
+else:
+    prof = dsh.get("profile")
+    if not isinstance(prof, dict):
+        dsh["profile"] = {"bundles": [name]}
+        changed = True
+    else:
+        bundles = prof.get("bundles")
+        if not isinstance(bundles, list):
+            prof["bundles"] = [name]
+            changed = True
+        elif name not in bundles:
+            bundles.append(name)
+            changed = True
+if changed:
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(pkg, f, indent=2, ensure_ascii=False)
+        f.write("\n")
+    print("    已注册 profile dependencies + bundles（dsh >=0.1.5）：" + path)
+else:
+    print("    profile package.json 注册项已齐全，跳过写入")
+PYEOF
+    PKG_REG=1
+  else
+    echo "    提示：未找到 node/python3，跳过 package.json 注册（仅写 cordis.patch.yml 兜底）" >&2
+  fi
+fi
+
 echo "==> 幂等写入 cordis.patch.yml"
-PDIR="$DSH_HOME/profiles/$PROFILE"
 PATCH="$PDIR/cordis.patch.yml"
 mkdir -p "$PDIR"
 if grep -q "name: dsh-novel-writing" "$PATCH" 2>/dev/null; then
@@ -108,5 +233,12 @@ fi
 
 echo ''
 echo "[OK] dsh-novel-writing 安装完成（源码：$SRC；profile：$PROFILE）"
+if [ "$NEW_LAYOUT" = "1" ] && [ "$PKG_REG" = "1" ]; then
+  echo "  已注册 profile dependencies + bundles（dsh >=0.1.5）+ patch 行兜底双保险。"
+elif [ "$NEW_LAYOUT" = "1" ]; then
+  echo "  仅写入 patch 行（未注册 profile package.json——node/python3 均不可用）；建议可用后重跑以启用官方注册通道。"
+else
+  echo "  已接入全局 profiles/node_modules + patch 行（dsh 旧布局）。"
+fi
 echo "  请重启 DSH。然后在预设选择器中选「小说写作工作流」开始创作；"
 echo "  浏览器会话顶部「小说」标签 = 工作台（实时渲染/章节编辑/发布/数据）。"

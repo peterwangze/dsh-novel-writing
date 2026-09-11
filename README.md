@@ -54,6 +54,8 @@ dsh plugin --profile web remove dsh-novel-writing            # 卸载
 
 也支持 npm 包名或本地路径：`add file:/path/to/repo`（内容寻址，升级需 remove+add）、`add link:/path/to/repo`（符号链接，改码即生效，本地开发用）。
 
+> dsh ≥0.1.5：`dsh plugin add` 即注册 profile `package.json`（`dependencies` + `dsh.profile.bundles`）——per-profile pnpm 布局的标准通道，无需手动改文件。Windows 下若该命令报「'dsh' 不是内部或外部命令」，为 dsh 上游 shell 转发问题（非本插件问题）：在 profile 目录（`$DSH_HOME/profiles/<Profile>`）手动执行 `pnpm add <spec>`（如 `pnpm add file:/path/to/repo`）+ 把 `dsh-novel-writing` 追加进 `dsh.profile.bundles` 即等价替代。
+
 安装后：
 
 1. **重启 DSH**（`dsh web`）——bundle 层重启生效；
@@ -80,7 +82,7 @@ curl -fsSL https://raw.githubusercontent.com/peterwangze/dsh-novel-writing/main/
 
 离线：`./install.sh --local .`
 
-脚本幂等可重复执行：接入 `profiles/node_modules` → 写入 profile 组合行 → 同步 agent 预设 → 写默认配置。
+脚本幂等可重复执行：接入 `node_modules` → 写入 profile 组合行 → 同步 agent 预设 → 写默认配置。脚本自动检测 dsh 布局版本（0.1.5+ per-profile / 旧版全局），双通道自适应——新布局接入 `profiles/<Profile>/node_modules` 并注册 profile `package.json`（dependencies + bundles），旧布局接入全局 `profiles/node_modules`（行为不变），两种布局均以 `cordis.patch.yml` 插行兜底。
 
 ## 使用指导
 
@@ -157,6 +159,7 @@ curl -fsSL https://raw.githubusercontent.com/peterwangze/dsh-novel-writing/main/
 - **客户端 API 双表面**（BUG-004）：浏览器侧经 lib/client.js 内**适配层单点收口**——新宿主（0.1.2-rc.1+）走 `remote.<ns>` 服务（settings/session/workspace/agentPresets/directoryPicker）+ `workspaces`/`sessions` 快照服务；旧宿主回退 `connection.api` 域对象；两者皆缺时按域降级提示（`apiHas` 语义不变）。
 - **能力降级**：宿主行缺席 `webServer` 仅降级 API；工具行缺席 `novel-writing` 服务时注册 0 工具，预设仍可挂载。
 - **兼容矩阵**：实测 DSH `0.1.0-rc.7`、`0.1.1-rc.2` 与 `0.1.2-rc.1`（客户端经双表面适配层）；peer 声明为 `*`，向前兼容以实测为准。
+- **dsh 0.1.5-rc.1 布局重构兼容（BUG-006）**：v0.5.1 插件代码零改动全兼容（隔离实例全链路实测启动成功）；dsh ≥0.1.5 的 per-profile 布局（每 profile 独立 `package.json` + `node_modules`）由安装脚本自动适配（profile `dependencies`/`dsh.profile.bundles` 注册 + patch 行双保险）。升级 dsh 后若插件消失 = profile 模板重建重置了注册，重跑安装脚本即恢复。
 - **验证管线**（CI 全量执行 + 发版手动隔离 boot）：
 
 ```sh

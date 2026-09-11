@@ -3,9 +3,15 @@
 # 离线：解压发行包后，在包目录内执行  .\install.ps1 -LocalPath .
 # 环境变量 DSH_HOME 可覆盖配置目录（默认 ~/.dsh）；-Profile 指定目标 profile（默认 web）。
 #
-# 安装内容：
-#   1) 把插件包接入 <DSH_HOME>\profiles\node_modules（junction 优先，失败回退拷贝）；
-#   2) 在 <DSH_HOME>\profiles\<Profile>\cordis.patch.yml 幂等插入一行：
+# 安装内容（自动检测 dsh 布局版本，双通道自适应）：
+#   1) 把插件包接入 node_modules（junction 优先，失败回退拷贝）——
+#      新布局（dsh ≥0.1.5，特征 = <DSH_HOME>\profiles\<Profile>\package.json 存在）：
+#        接入 <DSH_HOME>\profiles\<Profile>\node_modules，并幂等注册 profile package.json
+#        （dependencies.dsh-novel-writing = file:<源码路径> + dsh.profile.bundles 追加，
+#        dsh ≥0.1.5 官方注册通道）；
+#      旧布局（≤0.1.2）：接入 <DSH_HOME>\profiles\node_modules（行为不变）；
+#   2) 在 <DSH_HOME>\profiles\<Profile>\cordis.patch.yml 幂等插入一行（两种布局通用兜底，
+#      已独立验证有效）：
 #        - id: novel-writing
 #          name: dsh-novel-writing
 #      （dual-face 包：宿主小说管理服务 + 浏览器「小说工作台」）；
@@ -25,6 +31,61 @@ $script:PluginName = 'dsh-novel-writing'
 $script:RowId = 'novel-writing'
 
 function Write-Step([string]$text) { Write-Host "==> $text" }
+
+# ── JSON 工具（新布局 profile package.json 幂等注册用；PS 5.1 兼容，保留既有键与键序）──
+function ConvertTo-JsonText([string]$s) {
+  $sb = New-Object System.Text.StringBuilder
+  foreach ($ch in $s.ToCharArray()) {
+    $code = [int]$ch
+    if ($ch -eq '"') { [void]$sb.Append('\"') }
+    elseif ($ch -eq '\') { [void]$sb.Append('\\') }
+    elseif ($code -eq 10) { [void]$sb.Append('\n') }
+    elseif ($code -eq 13) { [void]$sb.Append('\r') }
+    elseif ($code -eq 9) { [void]$sb.Append('\t') }
+    elseif ($code -lt 32) { [void]$sb.AppendFormat('\u{0:x4}', $code) }
+    else { [void]$sb.Append($ch) }
+  }
+  '"' + $sb.ToString() + '"'
+}
+
+function ConvertTo-JsonIndented($value, [int]$indent) {
+  $pad = ' ' * $indent
+  if ($null -eq $value) { return 'null' }
+  if ($value -is [bool]) { if ($value) { return 'true' } else { return 'false' } }
+  if ($value -is [string]) { return (ConvertTo-JsonText $value) }
+  if ($value -is [System.Management.Automation.PSCustomObject]) {
+    $props = @($value.PSObject.Properties)
+    if ($props.Count -eq 0) { return '{}' }
+    $inner = ' ' * ($indent + 2)
+    $parts = New-Object System.Collections.Generic.List[string]
+    foreach ($p in $props) { $parts.Add(($inner + (ConvertTo-JsonText $p.Name) + ': ' + (ConvertTo-JsonIndented $p.Value ($indent + 2)))) }
+    return "{`n" + ($parts -join ",`n") + "`n" + $pad + '}'
+  }
+  if ($value -is [System.Array] -or $value -is [System.Collections.IEnumerable]) {
+    $items = @($value)
+    if ($items.Count -eq 0) { return '[]' }
+    $inner = ' ' * ($indent + 2)
+    $parts = New-Object System.Collections.Generic.List[string]
+    foreach ($item in $items) { $parts.Add(($inner + (ConvertTo-JsonIndented $item ($indent + 2)))) }
+    return "[`n" + ($parts -join ",`n") + "`n" + $pad + ']'
+  }
+  return $value.ToString([System.Globalization.CultureInfo]::InvariantCulture)
+}
+
+function Add-PropertyBefore([object]$obj, [string]$before, [string]$name, $value) {
+  # 在键 $before 之前插入新键 $name（$before 不存在则追加到末尾），其余键序原样保留
+  $new = New-Object psobject
+  $inserted = $false
+  foreach ($p in $obj.PSObject.Properties) {
+    if ((-not $inserted) -and ($p.Name -eq $before)) {
+      Add-Member -InputObject $new -MemberType NoteProperty -Name $name -Value $value
+      $inserted = $true
+    }
+    Add-Member -InputObject $new -MemberType NoteProperty -Name $p.Name -Value $p.Value
+  }
+  if (-not $inserted) { Add-Member -InputObject $new -MemberType NoteProperty -Name $name -Value $value }
+  return $new
+}
 
 $homeRaw = $env:DSH_HOME
 if (-not $homeRaw) { $homeRaw = Join-Path $env:USERPROFILE '.dsh' }
@@ -59,8 +120,18 @@ if ($LocalPath) {
   }
 }
 
-# ── 2. 链接 / 拷贝到 profiles\node_modules ─────────────────────────────
-$nodeModules = Join-Path $dshHome 'profiles\node_modules'
+# ── 布局检测（步骤 2/3 按此分流）：profiles\<Profile>\package.json 存在 = dsh ≥0.1.5 新布局
+$profileDir = Join-Path $dshHome "profiles\$Profile"
+$newLayout = Test-Path (Join-Path $profileDir 'package.json')
+
+# ── 2. 链接 / 拷贝到 node_modules（新布局 = profile 私有；旧布局 = 全局）────────
+if ($newLayout) {
+  $nodeModules = Join-Path $profileDir 'node_modules'
+  Write-Step "检测到 dsh 新布局（≥0.1.5 per-profile）：接入 $nodeModules"
+} else {
+  $nodeModules = Join-Path $dshHome 'profiles\node_modules'
+  Write-Step "检测到 dsh 旧布局（≤0.1.2 全局 node_modules）：接入 $nodeModules"
+}
 $dst = Join-Path $nodeModules $script:PluginName
 New-Item -ItemType Directory -Path $nodeModules -Force | Out-Null
 
@@ -105,8 +176,68 @@ if (-not $linked) {
   Write-Step "拷贝完成：$dst"
 }
 
-# ── 3. 幂等写入 cordis.patch.yml ───────────────────────────────────────
-$profileDir = Join-Path $dshHome "profiles\$Profile"
+# ── 3. 注册插件（新布局：profile package.json dependencies + bundles，官方通道）──
+if ($newLayout) {
+  $pkgFile = Join-Path $profileDir 'package.json'
+  $srcNorm = ($src -replace '\\', '/')
+  $depValue = "file:$srcNorm"
+  try { $pkg = ConvertFrom-Json (([System.IO.File]::ReadAllText($pkgFile)).TrimStart([char]0xFEFF)) }
+  catch { Write-Error "解析失败：$pkgFile（$($_.Exception.Message)）" }
+  $pkgChanged = $false
+
+  # 3a. dependencies.dsh-novel-writing = file:<src>（幂等：已有则跳过，不重复写）
+  $depObj = $pkg.PSObject.Properties['dependencies']
+  if ($null -eq $depObj -or -not ($depObj.Value -is [System.Management.Automation.PSCustomObject])) {
+    $dep = New-Object psobject
+    Add-Member -InputObject $dep -MemberType NoteProperty -Name $script:PluginName -Value $depValue
+    $pkg = Add-PropertyBefore $pkg 'dsh' 'dependencies' $dep
+    $pkgChanged = $true
+    Write-Step "已写入 dependencies.$($script:PluginName) = $depValue"
+  } elseif ($null -eq $depObj.Value.PSObject.Properties[$script:PluginName]) {
+    Add-Member -InputObject $depObj.Value -MemberType NoteProperty -Name $script:PluginName -Value $depValue
+    $pkgChanged = $true
+    Write-Step "已写入 dependencies.$($script:PluginName) = $depValue"
+  } else {
+    Write-Step "dependencies.$($script:PluginName) 已注册，跳过"
+  }
+
+  # 3b. dsh.profile.bundles 追加（幂等：已含则跳过，不重复追加）
+  $dshObj = $pkg.PSObject.Properties['dsh']
+  if ($null -eq $dshObj -or -not ($dshObj.Value -is [System.Management.Automation.PSCustomObject])) {
+    $bundles0 = New-Object psobject
+    Add-Member -InputObject $bundles0 -MemberType NoteProperty -Name 'bundles' -Value @($script:PluginName)
+    $prof = New-Object psobject
+    Add-Member -InputObject $prof -MemberType NoteProperty -Name 'profile' -Value $bundles0
+    Add-Member -InputObject $pkg -MemberType NoteProperty -Name 'dsh' -Value $prof
+    $pkgChanged = $true
+  } else {
+    $profObj = $dshObj.Value.PSObject.Properties['profile']
+    if ($null -eq $profObj -or -not ($profObj.Value -is [System.Management.Automation.PSCustomObject])) {
+      $bundles0 = New-Object psobject
+      Add-Member -InputObject $bundles0 -MemberType NoteProperty -Name 'bundles' -Value @($script:PluginName)
+      Add-Member -InputObject $dshObj.Value -MemberType NoteProperty -Name 'profile' -Value $bundles0
+      $pkgChanged = $true
+    } else {
+      $bundlesObj = $profObj.Value.PSObject.Properties['bundles']
+      if ($null -eq $bundlesObj) {
+        Add-Member -InputObject $profObj.Value -MemberType NoteProperty -Name 'bundles' -Value @($script:PluginName)
+        $pkgChanged = $true
+      } elseif (@($bundlesObj.Value) -notcontains $script:PluginName) {
+        $profObj.Value.bundles = @($bundlesObj.Value) + $script:PluginName
+        $pkgChanged = $true
+      }
+    }
+  }
+
+  if ($pkgChanged) {
+    [System.IO.File]::WriteAllText($pkgFile, ((ConvertTo-JsonIndented $pkg 0) + "`n"), (New-Object System.Text.UTF8Encoding($false)))
+    Write-Step "已注册 profile dependencies + bundles（dsh ≥0.1.5）：$pkgFile"
+  } else {
+    Write-Step "profile package.json 注册项已齐全，跳过写入"
+  }
+}
+
+# ── 3c. 幂等写入 cordis.patch.yml（两种布局通用兜底，已独立验证有效）────────────
 New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
 $patch = Join-Path $profileDir 'cordis.patch.yml'
 
@@ -209,5 +340,10 @@ if (Test-Path $settingsFile) {
 
 Write-Host ''
 Write-Host "[OK] dsh-novel-writing 安装完成（源码：$src；profile：$Profile）"
+if ($newLayout) {
+  Write-Host "  已注册 profile dependencies + bundles（dsh ≥0.1.5）+ patch 行兜底双保险。"
+} else {
+  Write-Host "  已接入全局 profiles\node_modules + patch 行（dsh 旧布局）。"
+}
 Write-Host "  请重启 DSH。然后在预设选择器中选「小说写作工作流」开始创作；"
 Write-Host "  浏览器会话顶部「小说」标签 = 工作台（实时渲染/章节编辑/发布/数据）。"
