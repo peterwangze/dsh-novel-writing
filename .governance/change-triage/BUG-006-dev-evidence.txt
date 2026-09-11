@@ -1,0 +1,161 @@
+BUG-006 产品侧修复 — Developer 自检四项演练证据
+日期：2026-09-11 | 执行者：Developer（sub-agent）| 仓库：D:\AI\agent\deepseek\harness\writing-workflow
+改动文件：install.ps1 / install.sh / README.md / CHANGELOG.md（前次会话已置入主体改动，本次补齐 README 方式一
+Windows 提示与 install.sh Git Bash 路径归一，并完成全部 P-04 自检）
+
+环境：Windows 10 (win32 10.0.26200)，Git Bash（GNU sh）+ PowerShell 5.1，node 在 PATH。
+隔离原则：所有演练 DSH_HOME 均指向 %TEMP% 下临时目录，全程未触碰 C:\Users\peter\.dsh 真实环境；演练后临时目录已全部清理。
+
+═══════════════════════════════════════════════════════════════════
+自检① PowerShell AST 解析 install.ps1 — 零语法错误
+───────────────────────────────────────────────────────────────────
+命令：
+  powershell -NoProfile -Command '$errs = $null;
+    $null = [System.Management.Automation.Language.Parser]::ParseFile(
+      "D:\AI\agent\deepseek\harness\writing-workflow\install.ps1", [ref]$null, [ref]$errs);
+    if ($errs.Count -eq 0) { "AST-PARSE-OK: 0 syntax errors" } else { ...; exit 1 }'
+输出：AST-PARSE-OK: 0 syntax errors
+BOM 复核：install.ps1 头 3 字节 = ef bb bf（UTF-8 BOM 保留，PS 5.1 中文解析依赖完好）
+
+═══════════════════════════════════════════════════════════════════
+自检② sh -n install.sh — 零错误
+───────────────────────────────────────────────────────────────────
+命令：sh -n install.sh && echo "SH-SYNTAX-OK: 0 errors"
+输出：SH-SYNTAX-OK: 0 errors
+（cygpath 归一段补充修改后复跑 sh -n，同样零错误）
+
+═══════════════════════════════════════════════════════════════════
+自检③ 新布局隔离演练（junction/dependencies+bundles 注册/patch 行三件套 + JSON 合法 + 幂等二跑）
+───────────────────────────────────────────────────────────────────
+【3a. install.ps1 — 模板含空 dependencies 键】
+准备：
+  T=%TEMP%\bug006-new；mkdir $T\profiles\web
+  写入 profiles/web/package.json = 任务给定真实模板
+  （name=dsh-profile-web, private, dependencies:{}, dsh.profile.bundles=[@deepseek-ai/dsh-base,
+   @deepseek-ai/dsh-web-app], patchReload=live；2 空格缩进）
+命令（第 1 遍）：
+  DSH_HOME='C:\Users\peter\AppData\Local\Temp\bug006-new' powershell -NoProfile
+    -ExecutionPolicy Bypass -File install.ps1 -LocalPath <仓库路径> -Profile web
+关键输出（EXIT=0）：
+  ==> 检测到 dsh 新布局（≥0.1.5 per-profile）：接入 ...\bug006-new\profiles\web\node_modules
+  ==> 已创建 junction：...\profiles\web\node_modules\dsh-novel-writing -> D:\AI\...\writing-workflow
+  ==> 已写入 dependencies.dsh-novel-writing = file:D:/AI/agent/deepseek/harness/writing-workflow
+  ==> 已注册 profile dependencies + bundles（dsh ≥0.1.5）：...\profiles\web\package.json
+  ==> 创建 ...\profiles\web\cordis.patch.yml
+  [OK] ... 已注册 profile dependencies + bundles（dsh ≥0.1.5）+ patch 行兜底双保险。
+产物验证：
+  - junction：Get-Item → LinkType=Junction, Target=D:\AI\agent\deepseek\harness\writing-workflow
+  - package.json：node -e JSON.parse → JSON-PARSE-OK；
+      keys=name,private,dependencies,dsh（既有键与键序完整保留）
+      dep=file:D:/AI/agent/deepseek/harness/writing-workflow
+      bundles=["@deepseek-ai/dsh-base","@deepseek-ai/dsh-web-app","dsh-novel-writing"]（追加）
+      patchReload=live（既有 dsh 配置无损）；2 空格缩进
+  - cordis.patch.yml：含 "- insert:" / "- id: novel-writing" / "  name: dsh-novel-writing"
+幂等二跑（同命令第 2 遍，EXIT=0）：
+  ==> 链接已存在：...
+  ==> dependencies.dsh-novel-writing 已注册，跳过
+  ==> profile package.json 注册项已齐全，跳过写入
+  ==> cordis.patch.yml 已配置，跳过
+  ==> settings.yaml 已含 novel-writing 节，跳过默认配置写入
+  字节级 diff（run1 vs run2）：package.json PKG-IDENTICAL；cordis.patch.yml PATCH-IDENTICAL
+  计数：package.json 中 "dsh-novel-writing" 恰好 2 处（dependencies 键 + bundles 元素）；
+        patch 中 "name: dsh-novel-writing" 恰好 1 行 → 无重复键/重复行/损坏 JSON
+
+【3b. install.ps1 — 模板无 dependencies 键（幂等创建路径）】
+  T=%TEMP%\bug006-nodeps，模板去掉 dependencies 键，跑同命令 → EXIT=0：
+  ==> 已写入 dependencies.dsh-novel-writing = file:D:/AI/...
+  产物：dependencies 键创建于 private 之后、dsh 之前（键序正确），
+  bundles 追加 dsh-novel-writing，node -e JSON.parse → JSON-PARSE-OK(nodeps)
+
+【3c. install.sh（Git Bash）— 新布局】
+  T=%TEMP%\bug006-newsh，同模板；命令：
+  DSH_HOME=... sh install.sh --local . --profile web → EXIT=0
+  关键输出：
+  ==> 检测到 dsh 新布局（>=0.1.5 per-profile）：接入 .../profiles/web/node_modules
+      已创建符号链接（注：Git Bash 无原生 symlink 权限时 ln -s 深拷贝目录，平台固有行为，
+      非本脚本缺陷；macOS/Linux 上为真符号链接）
+  ==> 注册 profile package.json（dependencies + bundles）
+      已写入 dependencies.dsh-novel-writing = file:D:/AI/agent/deepseek/harness/writing-workflow
+  产物：node -e JSON.parse → JSON-PARSE-OK(sh)；bundles 追加；patchReload=live 保留
+  幂等二跑：已存在跳过 / dependencies 已注册跳过 / 注册项已齐全跳过写入 / patch 已配置跳过；
+  diff run1 vs run2 → PKG-IDENTICAL(sh) + PATCH-IDENTICAL(sh)；计数 2 处 / 1 行，无重复
+【3c-fix. Git Bash 路径归一修复（本次新增改动）】
+  发现：Git Bash 下 pwd 产出 MSYS 路径（/d/AI/...），直接写 file:/d/AI/... 时 Windows 原生
+  pnpm 无法解析（README 声称 Git Bash 支持，会让后续 pnpm install 失败）。
+  修复：install.sh 注册段新增 uname 检测（MSYS*/MINGW*/CYGWIN*）→ cygpath -m 归一为 D:/... 形态
+  （Git Bash 自带 cygpath；与 install.ps1 输出形态一致；非 Windows 平台行为不变）。
+  重跑演练（T=%TEMP%\bug006-newsh2）→ EXIT=0：
+    已写入 dependencies.dsh-novel-writing = file:D:/AI/agent/deepseek/harness/writing-workflow
+    node 验证 dep=file:D:/AI/agent/deepseek/harness/writing-workflow，JSON-PARSE-OK
+  修复后 sh -n 复验：SH-SYNTAX-OK
+
+═══════════════════════════════════════════════════════════════════
+自检④ 旧布局回归 — 行为与改造前等价
+───────────────────────────────────────────────────────────────────
+【4a. install.ps1】T=%TEMP%\bug006-old（profiles/web 存在但无 package.json）
+  输出（EXIT=0）：==> 检测到 dsh 旧布局（≤0.1.2 全局 node_modules）：接入 ...\profiles\node_modules
+  已创建 junction：...\profiles\node_modules\dsh-novel-writing -> D:\AI\...\writing-workflow
+  创建 ...\profiles\web\cordis.patch.yml（无任何 package.json 注册步骤）
+  验证：junction LinkType=Junction @ profiles\node_modules；profiles\web\ 下仅 cordis.patch.yml
+  （NO-PROFILE-PKG-CREATED，未创建/未改动 package.json）；patch 含 insert 行 ×1
+【4b. install.sh】T=%TEMP%\bug006-oldsh → EXIT=0
+  检测到旧布局 → 接入 profiles/node_modules；GLOBAL-NM-ENTRY-OK；NO-PROFILE-PKG(regression)；
+  patch insert 行 ×1
+【4c. 强等价基线对比】git show HEAD:install.ps1（改造前版本）在隔离目录 %TEMP%\bug006-oldbase
+  以同参数跑一遍（EXIT=0），与新脚本旧布局输出树整树 diff：
+  diff -r bug006-old bug006-oldbase → 零差异 → OLD-LAYOUT-TREES-IDENTICAL(new-script vs HEAD-script)
+  （junction、patch、agent 预设、settings.yaml 产物字节级一致 = 旧布局行为与改造前完全等价）
+
+═══════════════════════════════════════════════════════════════════
+约束合规
+───────────────────────────────────────────────────────────────────
+- 未修改 lib/、agent-presets/、test/、package.json、cordis.patch.yml（git status 仅
+  install.ps1/install.sh/README.md/CHANGELOG.md + .governance 治理记录）
+- install.ps1 UTF-8 BOM 保留（ef bb bf 复核通过）；JSON 写回均 UTF-8 无 BOM 2 空格缩进
+- 幂等：重复执行零重复行/零重复键/JSON 始终可解析（见 3a/3c diff 与计数证据）
+- 全程未触碰真实 C:\Users\peter\.dsh；演练临时目录（bug006-*）已全部清理
+- 未执行 git commit（Coordinator 统一收口）
+
+结论：P-04 自检四项全部通过，BUG-006 安装通道适配（install.ps1 + install.sh 双脚本版本自适应、
+幂等注册、旧布局零回归）演练验证完成。
+
+═══════════════════════════════════════════════════════════════════
+返工记录（Code Reviewer NEEDS_CHANGE → 已修复 + 复验，2026-09-11 同日）
+───────────────────────────────────────────────────────────────────
+【P1（blocker）install.ps1「无 dsh 键」分支注册结构错误 → 已修复】
+缺陷：原代码该分支写出两层 dsh={"bundles":[...]}（缺 profile 层），dsh 0.1.5 官方通道
+静默失效；二跑还会产生畸形并存 {"bundles":[...],"profile":{...}}（Reviewer 实证）。
+修复：改为三层创建——$bundles0(bundles 数组) → $prof(profile=$bundles0) → 追加 dsh=$prof，
+与 install.sh node 版 pkg.dsh={profile:{bundles:[name]}} 语义对齐（仅改该分支，其余代码未动）。
+复验（隔离 DSH_HOME=%TEMP%\bug006-nodsh，模板无 dsh 键：name/private/dependencies:{}）：
+  首跑（EXIT=0）产物：
+    "dsh": { "profile": { "bundles": [ "dsh-novel-writing" ] } }
+    node -e 验证：JSON-PARSE-OK；dsh keys=profile（仅一层入口，无并列 bundles 键）；
+    profile keys=bundles；bundles=["dsh-novel-writing"] → 三层结构正确
+  二跑（EXIT=0）：「dependencies.dsh-novel-writing 已注册，跳过」
+    「profile package.json 注册项已齐全，跳过写入」→ diff run1/run2 = PKG-IDENTICAL(nodsh)
+    结构复验 dsh keys=profile 不变 → 无畸形并存，幂等零漂移
+  自检复跑：PowerShell AST 解析 = AST-PARSE-OK: 0 syntax errors；install.ps1 BOM = ef bb bf 保留
+
+【P2-1 install.sh 降级场景尾行文案失实 → 已修复】
+缺陷：node/python3 双缺降级（未注册 package.json）时，完成提示仍打印
+「已注册 profile dependencies + bundles…双保险」——失实。
+修复：注册块加 PKG_REG 状态跟踪（node/python3 任一执行成功置 1），完成提示三分支：
+  注册成功 →「已注册 profile dependencies + bundles（dsh >=0.1.5）+ patch 行兜底双保险。」
+  降级 →「仅写入 patch 行（未注册 profile package.json——node/python3 均不可用）；
+          建议可用后重跑以启用官方注册通道。」
+  旧布局 → 原文案不变
+复验：
+  降级演练（PATH=/usr/bin 剥离 node/python3，DSH_HOME=%TEMP%\bug006-degraded，EXIT=0）：
+    运行日志含「提示：未找到 node/python3，跳过 package.json 注册（仅写 cordis.patch.yml 兜底）」
+    尾行 =「仅写入 patch 行（未注册 profile package.json——node/python3 均不可用）；建议可用后重跑
+    以启用官方注册通道。」；package.json 与原模板 diff = PKG-UNTOUCHED(degraded)
+  正常路径回归（node 可用，DSH_HOME=%TEMP%\bug006-degraded2，EXIT=0）：
+    「已写入 dependencies.dsh-novel-writing = file:D:/AI/agent/deepseek/harness/writing-workflow」
+    尾行 =「已注册 profile dependencies + bundles（dsh >=0.1.5）+ patch 行兜底双保险。」
+    node -e：JSON-PARSE-OK; bundles=["@deepseek-ai/dsh-base","dsh-novel-writing"]
+  自检复跑：sh -n install.sh = SH-SYNTAX-OK: 0 errors
+
+返工约束合规：仅改 install.ps1 无 dsh 键分支 + install.sh PKG_REG 跟踪与尾行文案，
+未触碰其他代码；返工演练临时目录已清理；未 git commit。
+返工结论：P1 blocker 解除（三层结构 + 幂等双跑实证）、P2-1 文案与实际状态一致（降级/正常双路径实证）。

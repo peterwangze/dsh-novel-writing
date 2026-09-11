@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 71 | 67 | 0 | 2 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 72 | 68 | 0 | 2 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -134,6 +134,8 @@
 
 | **P1** | REL-005 | 发布 v0.5.1（BUG-003/004/005 dsh 0.1.2-rc.1 兼容三修承载版本）：①CHANGELOG [Unreleased]→[0.5.1] 定稿 ②package.json 0.5.0→0.5.1 ③git tag v0.5.1 推送 ④路线图 v0.5.1 行入账+标已发布 ⑤EVD-079；发布前发布三件套核验（node --check/smoke 203/validate-preset）；TRIAGE-REL-005 五步 triage 通过（依赖 BUG-003/004/005 全部已完成） | BUG-003,BUG-004,BUG-005 | v0.5.1 | closed | ✅ 完成 (2026-09-07，EVD-079；用户 Release Gate 确认「现在发布」；commit cd1911e（恰 2 文件 2+/2-，三 hooks 实跑）+ annotated tag v0.5.1（7d4d899）；推送成功——远程 ls-remote 实证 tag/main 逐字节一致；三方版本一致（CHANGELOG [0.5.1] 2026-09-07 / package.json 0.5.1 / tag v0.5.1）；发布前三件套全绿 0/203 PASS/29 29；Release Reviewer 后置审查通过〔REVIEW-REL-005-R1 / docs/review/REL-005-R1.md——APPROVED_WITH_NOTES unresolved_blockers=0；P2×1=治理时序校准（本行首写于审查前，已按审查结论补注报告路径）、P3×3=日期口径/回滚未演练（纯文档版可接受）/工作区收尾〕） |
 
+| **P0** | BUG-006 | dsh 0.1.5-rc.1 升级后插件无法接入（用户 2026-09-11 报障）：profile 组装机制重构——布局新增 profiles/<app>/ 子目录，插件注册从「junction+patch 行」迁移为「profile package.json dependencies+dsh.profile.bundles（dsh plugin add/pnpm 通道）」，升级模板重建将旧 patch 行重置为 [] → 插件掉出加载树（dump-config 实证）。本插件 v0.5.1 代码零改动全兼容（3181 隔离实例全链路实证：服务端 overview HTTP 200 真实书目/客户端 bundle/侧栏入口/控制台/分栏 38 章）。修复 = ①环境侧（用户决策改为全部卸载自行安装：回滚 Coordinator 诊断期注册 + 6 插件 junction 清理 + default 预设改 standard）；②产品侧（Developer+Code Reviewer）：install.ps1/install.sh 版本自适应双通道（新布局 junction 至 profiles/<Profile>/node_modules + 幂等注册 dependencies+bundles + patch 行兜底双保险；旧布局行为零变化/强等价验证）+README+CHANGELOG。顺带：dsh plugin add Windows shell 转发 bug（手动 pnpm add 等价，SYSGAP 候选）；P2 遗留 3 项非阻断留档发布卫生批次 | — | v0.5.2 | closed | ✅ 完成 (2026-09-11，EVD-080/081；审查链 R1 NEEDS_CHANGE→返工→R2 APPROVED_WITH_NOTES 0 阻断；演练=隔离 DSH_HOME 双布局+幂等+变体+降级全过；回归门禁 0 错/PASSED/203-0；用户侧自行安装后实机验收) |
+
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 
 ## 版本规划
@@ -152,6 +154,7 @@
 | v0.4.0 | 已发布 | 2026-08-29 | 工作台重构（DEC-013）+ 视觉统一设计语言（UX-053/055，DEC-019~023）+ 绑定弹窗三修（UX-057）：分栏工作区/绑定会话/侧栏抽屉/令牌迁移/视觉 V1+V2/主题无关自适应 | UX-006~057 系列 | git tag v0.4.0（fbff776）+ CHANGELOG [0.4.0] 2026-08-29 |
 | v0.5.0 | 已发布 | 2026-08-30 | 工作流控制面板（UX-059）：标题栏启动钮迁入创作台中窗下半区左侧（与章节列表列等宽联动）+ 停止/继续合并形态切换 + 压缩上下文 + 绑定新会话（用户截图批注触发；布局两次实机纠正定案） | UX-059 | git tag v0.5.0（2c0caf1）+ CHANGELOG [0.5.0] 2026-08-30 |
 | v0.5.1 | 已发布 | 2026-09-07 | dsh 0.1.2-rc.1 兼容三修：BUG-003 服务端启动崩溃（settingsNamespace 移除）+ BUG-004 客户端 API 表面迁移（connection.api→remote.*/workspaces 快照，makeHostApi 适配层 + last-non-null 联动守卫 + 设置页防崩）+ BUG-005 useSessions hook 面服务后到自愈（makeSessionsHookReactive）；smoke 147→203 | BUG-003,BUG-004,BUG-005,REL-005 | git tag v0.5.1（cd1911e）+ CHANGELOG [0.5.1] 2026-09-07 |
+| v0.5.2 | 未发布 | — | dsh 0.1.5-rc.1 安装通道适配（BUG-006）：install.ps1/install.sh 版本自适应双通道（per-profile node_modules + package.json dependencies/bundles 注册 + patch 行兜底；旧布局零回归）+ README/CHANGELOG 同步；插件代码本身对 0.1.5 零改动兼容（隔离实例全链路实证） | BUG-006 | CHANGELOG [Unreleased]（发布号以 Release Gate 用户确认为准） |
 
 ### 版本里程碑
 

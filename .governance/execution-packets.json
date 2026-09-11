@@ -1,135 +1,158 @@
 {
-  "version": 1,
-  "generated_at": "2026-09-06T16:09:23",
-  "packets": {
-    "BUG-005": {
-      "task_id": "BUG-005",
-      "priority": "P0",
-      "status": "🔄 进行中 (2026-09-07 探针确认根因，派发 Developer；探针环境保持：3180 实例 job pwsh-4 + headless Edge CDP 9334 + .probe-bug004.mjs)",
-      "goal": "BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
-      "product_success_contract": {
-        "user": "TO_BE_DEFINED: impacted persona for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
-        "job_to_be_done": "TO_BE_DEFINED: user job and desired outcome for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
-        "non_goals": [
-          "TO_BE_DEFINED: explicit non-goal that protects the task from scope drift.",
-          "TO_BE_DEFINED: explicit non-goal that prevents process evidence from replacing product value."
-        ],
-        "success_metrics": [
-          "TO_BE_DEFINED: user-visible outcome or acceptance scenario for this task.",
-          "TO_BE_DEFINED: runnable E2E, test, or command that proves the outcome."
-        ],
-        "competitive_baseline": "TO_BE_DEFINED: mature-team or competing-product baseline this task must match.",
-        "done_definition": [
-          "TO_BE_DEFINED: product success evidence is recorded with concrete facts.",
-          "TO_BE_DEFINED: independent review confirms the user outcome is not replaced by process completion."
-        ]
-      },
-      "acceptance_contract": {
-        "scenario": "TO_BE_DEFINED: user-visible acceptance scenario for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
-        "command": "TO_BE_DEFINED: runnable E2E, smoke, unit, or validation command",
-        "expected_output": "TO_BE_DEFINED: concrete pass output, assertion, or observable demo result",
-        "last_run": {
-          "status": "TO_BE_DEFINED",
-          "exit_code": null,
-          "summary": "TO_BE_DEFINED: last run output summary with evidence location"
-        },
-        "demo_evidence": "TO_BE_DEFINED: demo, CLI output, or artifact proving the scenario"
-      },
-      "quality_budget": {
-        "dimensions": {
-          "performance": {
-            "threshold": "TO_BE_DEFINED: minimum acceptable performance threshold for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
-            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for performance",
-            "status": "TO_BE_DEFINED",
-            "evidence": "TO_BE_DEFINED: latest performance result or planned evidence location",
-            "exception": ""
-          },
-          "reliability": {
-            "threshold": "TO_BE_DEFINED: minimum acceptable reliability threshold for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
-            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for reliability",
-            "status": "TO_BE_DEFINED",
-            "evidence": "TO_BE_DEFINED: latest reliability result or planned evidence location",
-            "exception": ""
-          },
-          "security": {
-            "threshold": "TO_BE_DEFINED: minimum acceptable security threshold for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
-            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for security",
-            "status": "TO_BE_DEFINED",
-            "evidence": "TO_BE_DEFINED: latest security result or planned evidence location",
-            "exception": ""
-          },
-          "accessibility": {
-            "threshold": "TO_BE_DEFINED: minimum acceptable accessibility threshold for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
-            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for accessibility",
-            "status": "TO_BE_DEFINED",
-            "evidence": "TO_BE_DEFINED: latest accessibility result or planned evidence location",
-            "exception": ""
-          },
-          "ux": {
-            "threshold": "TO_BE_DEFINED: minimum acceptable ux threshold for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
-            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for ux",
-            "status": "TO_BE_DEFINED",
-            "evidence": "TO_BE_DEFINED: latest ux result or planned evidence location",
-            "exception": ""
-          },
-          "maintainability": {
-            "threshold": "TO_BE_DEFINED: minimum acceptable maintainability threshold for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
-            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for maintainability",
-            "status": "TO_BE_DEFINED",
-            "evidence": "TO_BE_DEFINED: latest maintainability result or planned evidence location",
-            "exception": ""
-          }
-        }
-      },
-      "vertical_slice": {
-        "user_visible_slice": "TO_BE_DEFINED: smallest user-visible slice for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
-        "demo_path": "TO_BE_DEFINED: runnable demo, smoke test, URL, screenshot, or command proving the slice",
-        "scope_guard": "TO_BE_DEFINED: files and behavior in scope for this slice only (open)",
-        "rollback_plan": "TO_BE_DEFINED: how to revert or disable the slice if validation fails",
-        "status": "TO_BE_DEFINED",
-        "evidence": "TO_BE_DEFINED: latest demo proof or planned evidence location"
-      },
-      "interruption_policy": {
-        "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
-        "critical_triggers": [
-          "Ask the user when product intent is unclear.",
-          "Ask the user when acceptance standard or done criteria are unclear.",
-          "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions."
-        ],
-        "auto_execute": [
-          "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible.",
-          "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied."
-        ],
-        "assumption_record": {
-          "assumption": "TO_BE_DEFINED: default choice used for a reversible non-critical ambiguity",
-          "basis": "TO_BE_DEFINED: fact source or repository pattern supporting the default",
-          "reversibility": "TO_BE_DEFINED: why the choice can be changed without product damage",
-          "validation": "TO_BE_DEFINED: command or demo that will verify the assumption",
-          "rollback": "TO_BE_DEFINED: how to revert if the assumption is wrong"
-        },
-        "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
-      },
-      "allowed_change_scope": [
-        "lib/client.js（makeSessionsHook 稳定响应式改造 + apply 接线 + 清理路径）",
-        "test/smoke.mjs（新增断言；顺带修 F1 BUG-004 遗留断言真空——1 行 await）",
-        "CHANGELOG.md（[Unreleased] BUG-005 条目）"
-      ],
-      "required_evidence": [
-        "evidence-log entry with 事实依据, 目标对齐, 用户影响, and 结构化事实 JSON",
-        "validation commands with exit_code and concise output summary",
-        "independent review evidence or explicit degraded review evidence that does not claim full separation"
-      ],
-      "next_commands": [
-        "node --check lib/client.js",
-        "node test/smoke.mjs",
-        "node test/validate-preset.mjs"
-      ],
-      "done_definition": [
-        "探针复跑：3180 活实例刷新后控制台搜索出现「找到的会话」section（或等效 sessionsAll 非空证据）",
-        "Code Reviewer or matching Reviewer has APPROVED the product-code change.",
-        "Commit and push are completed for this single task."
-      ],
-      "source": "plan-tracker.md##当前活跃事项"
+ "version": 1,
+ "generated_at": "2026-09-11T09:09:48.652Z",
+ "packets": {
+  "BUG-005": {
+   "task_id": "BUG-005",
+   "priority": "P0",
+   "status": "🔄 进行中 (2026-09-07 探针确认根因，派发 Developer；探针环境保持：3180 实例 job pwsh-4 + headless Edge CDP 9334 + .probe-bug004.mjs)",
+   "goal": "BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
+   "product_success_contract": {
+    "user": "TO_BE_DEFINED: impacted persona for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
+    "job_to_be_done": "TO_BE_DEFINED: user job and desired outcome for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
+    "non_goals": [
+     "TO_BE_DEFINED: explicit non-goal that protects the task from scope drift.",
+     "TO_BE_DEFINED: explicit non-goal that prevents process evidence from replacing product value."
+    ],
+    "success_metrics": [
+     "TO_BE_DEFINED: user-visible outcome or acceptance scenario for this task.",
+     "TO_BE_DEFINED: runnable E2E, test, or command that proves the outcome."
+    ],
+    "competitive_baseline": "TO_BE_DEFINED: mature-team or competing-product baseline this task must match.",
+    "done_definition": [
+     "TO_BE_DEFINED: product success evidence is recorded with concrete facts.",
+     "TO_BE_DEFINED: independent review confirms the user outcome is not replaced by process completion."
+    ]
+   },
+   "acceptance_contract": {
+    "scenario": "TO_BE_DEFINED: user-visible acceptance scenario for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
+    "command": "TO_BE_DEFINED: runnable E2E, smoke, unit, or validation command",
+    "expected_output": "TO_BE_DEFINED: concrete pass output, assertion, or observable demo result",
+    "last_run": {
+     "status": "TO_BE_DEFINED",
+     "exit_code": null,
+     "summary": "TO_BE_DEFINED: last run output summary with evidence location"
+    },
+    "demo_evidence": "TO_BE_DEFINED: demo, CLI output, or artifact proving the scenario"
+   },
+   "quality_budget": {
+    "dimensions": {
+     "performance": {
+      "threshold": "TO_BE_DEFINED: minimum acceptable performance threshold for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
+      "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for performance",
+      "status": "TO_BE_DEFINED",
+      "evidence": "TO_BE_DEFINED: latest performance result or planned evidence location",
+      "exception": ""
+     },
+     "reliability": {
+      "threshold": "TO_BE_DEFINED: minimum acceptable reliability threshold for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
+      "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for reliability",
+      "status": "TO_BE_DEFINED",
+      "evidence": "TO_BE_DEFINED: latest reliability result or planned evidence location",
+      "exception": ""
+     },
+     "security": {
+      "threshold": "TO_BE_DEFINED: minimum acceptable security threshold for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
+      "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for security",
+      "status": "TO_BE_DEFINED",
+      "evidence": "TO_BE_DEFINED: latest security result or planned evidence location",
+      "exception": ""
+     },
+     "accessibility": {
+      "threshold": "TO_BE_DEFINED: minimum acceptable accessibility threshold for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
+      "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for accessibility",
+      "status": "TO_BE_DEFINED",
+      "evidence": "TO_BE_DEFINED: latest accessibility result or planned evidence location",
+      "exception": ""
+     },
+     "ux": {
+      "threshold": "TO_BE_DEFINED: minimum acceptable ux threshold for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
+      "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for ux",
+      "status": "TO_BE_DEFINED",
+      "evidence": "TO_BE_DEFINED: latest ux result or planned evidence location",
+      "exception": ""
+     },
+     "maintainability": {
+      "threshold": "TO_BE_DEFINED: minimum acceptable maintainability threshold for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
+      "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for maintainability",
+      "status": "TO_BE_DEFINED",
+      "evidence": "TO_BE_DEFINED: latest maintainability result or planned evidence location",
+      "exception": ""
+     }
     }
+   },
+   "vertical_slice": {
+    "user_visible_slice": "TO_BE_DEFINED: smallest user-visible slice for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
+    "demo_path": "TO_BE_DEFINED: runnable demo, smoke test, URL, screenshot, or command proving the slice",
+    "scope_guard": "TO_BE_DEFINED: files and behavior in scope for this slice only (open)",
+    "rollback_plan": "TO_BE_DEFINED: how to revert or disable the slice if validation fails",
+    "status": "TO_BE_DEFINED",
+    "evidence": "TO_BE_DEFINED: latest demo proof or planned evidence location"
+   },
+   "interruption_policy": {
+    "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
+    "critical_triggers": [
+     "Ask the user when product intent is unclear.",
+     "Ask the user when acceptance standard or done criteria are unclear.",
+     "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions."
+    ],
+    "auto_execute": [
+     "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible.",
+     "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied."
+    ],
+    "assumption_record": {
+     "assumption": "TO_BE_DEFINED: default choice used for a reversible non-critical ambiguity",
+     "basis": "TO_BE_DEFINED: fact source or repository pattern supporting the default",
+     "reversibility": "TO_BE_DEFINED: why the choice can be changed without product damage",
+     "validation": "TO_BE_DEFINED: command or demo that will verify the assumption",
+     "rollback": "TO_BE_DEFINED: how to revert if the assumption is wrong"
+    },
+    "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
+   },
+   "allowed_change_scope": [
+    "lib/client.js（makeSessionsHook 稳定响应式改造 + apply 接线 + 清理路径）",
+    "test/smoke.mjs（新增断言；顺带修 F1 BUG-004 遗留断言真空——1 行 await）",
+    "CHANGELOG.md（[Unreleased] BUG-005 条目）"
+   ],
+   "required_evidence": [
+    "evidence-log entry with 事实依据, 目标对齐, 用户影响, and 结构化事实 JSON",
+    "validation commands with exit_code and concise output summary",
+    "independent review evidence or explicit degraded review evidence that does not claim full separation"
+   ],
+   "next_commands": [
+    "node --check lib/client.js",
+    "node test/smoke.mjs",
+    "node test/validate-preset.mjs"
+   ],
+   "done_definition": [
+    "探针复跑：3180 活实例刷新后控制台搜索出现「找到的会话」section（或等效 sessionsAll 非空证据）",
+    "Code Reviewer or matching Reviewer has APPROVED the product-code change.",
+    "Commit and push are completed for this single task."
+   ],
+   "source": "plan-tracker.md##当前活跃事项"
+  },
+  "BUG-006": {
+   "task_id": "BUG-006",
+   "priority": "P0",
+   "status": "✅ 完成 (2026-09-11，EVD-080/081；R1 NEEDS_CHANGE→返工→R2 APPROVED_WITH_NOTES 0 阻断；环境侧按用户决策=全部卸载自行安装)",
+   "goal": "dsh 0.1.5-rc.1 升级后插件无法接入（用户 2026-09-11 报障）。根因（Coordinator 隔离实例实证）：dsh 0.1.2→0.1.5 profile 组装机制重构——①profile 布局新增 profiles/<app>/ 子目录（package.json + pnpm-workspace + node_modules + cordis.patch.yml）；②插件注册从「profiles/node_modules junction + profile cordis.patch.yml 手写插行」迁移为「profile package.json dependencies + dsh.profile.bundles（经 dsh plugin add / pnpm 管理）」；③升级时 web profile 模板重建（2026-09-11 16:41 实证 package.json/cordis.yml 时间戳），旧 patch 行被重置为 [] → 插件掉出加载树（dump-config 实证无 novel-writing 层）。本插件 v0.5.1 代码本身零改动全兼容（3181 隔离实例全链路实证：服务端 HTTP 200 overview 真实书目 38 章/客户端 bundle 加载/侧栏入口/控制台渲染/分栏创作台打开/chList 38）。两条注册路径均验证有效：A=dependencies(file:)+bundles（官方通道）；B=仅 cordis.patch.yml insert 行（独立有效）。环境修复已落地：web profile package.json 手写 dependencies+dsh-novel-writing bundle（junction 保留=开发模式）。产品侧缺口=install.ps1/install.sh 仍为旧机制（junction 目标 profiles/node_modules + 仅 patch 行），在 0.1.5 布局下 junction 放错位置且不注册 dependencies。修复=安装脚本版本自适应双通道（检测 profiles/<Profile>/package.json 存在→新布局：junction/copy 到 profiles/<Profile>/node_modules + 幂等写 dependencies+dsh.profile.bundles + patch 行兜底；旧布局→现行为不变）+README 安装节 0.1.5+ 说明+CHANGELOG。顺带发现（SYSGAP 候选）：dsh plugin add 在 Windows shell:true 转发下报「dsh 不是内部或外部命令」（手动 pnpm add 等价可行）；用户另两插件 dsh-agent-router/dsh-reasoning-level 同样掉线（非本仓库范围），router 掉线致 settings.yaml agent-presets.default:governance 失效→宿主初始 workspace 选择失败（每次手动选工作区；本插件链路不受影响——38 章分栏正常打开实证）",
+   "allowed_change_scope": [
+    "install.ps1",
+    "install.sh",
+    "README.md",
+    "CHANGELOG.md"
+   ],
+   "required_evidence": [
+    "node --check 不适用（无 JS 改动）",
+    "install.ps1 语法自检（PSParser/AST parse 零错误）",
+    "install.sh sh -n 语法检查",
+    "隔离 DSH_HOME 双布局演练：新布局（0.1.5 特征 package.json 存在）junction+注册+patch 行三件套幂等；旧布局回归不劣化",
+    "README/CHANGELOG diff 审阅"
+   ],
+   "next_commands": [
+    "读本包→改 install.ps1/install.sh（版本自适应）→README/CHANGELOG→自检验证"
+   ],
+   "done_definition": "安装脚本在 0.1.5 布局下装出可加载的插件（dependencies+bundles+patch 行三注册齐备且幂等），旧布局行为不劣化；文档同步；Code Reviewer 通过"
   }
+ }
 }
