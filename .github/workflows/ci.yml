@@ -13,11 +13,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: 语法检查（宿主/工具/客户端三方）
+      - name: 语法检查（宿主/工具/客户端三方 + 宿主契约 + 表面 fixtures 工具）
         run: |
           node --check lib/index.js
           node --check lib/tools.js
           node --check lib/client.js
+          node --check lib/host-contract.mjs
+          node --check test/fixtures/host-surfaces/extract.mjs
+          node --check test/fixtures/host-surfaces/ci-mock-face.mjs
       - name: 依赖架构守卫（防双闭包陷阱）
         run: |
           node -e "
@@ -34,6 +37,10 @@ jobs:
           "
       - name: 预设挂载级静态校验（loader 同源 + 逐行解析）
         run: node test/validate-preset.mjs
+      # COMPAT-003：宿主替身（mock）导出面 × 宿主表面 fixtures 对齐——mock 多导出宿主已删除的表面
+      # （如 settingsNamespace，BUG-003 根因）会让 CI 假绿而实机崩溃；本步骤把 mock 面钉在 fixtures 实测面上。
+      - name: CI mock 导出面 × 宿主表面 fixtures 对齐（COMPAT-003 F1 面钉）
+        run: node test/fixtures/host-surfaces/ci-mock-face.mjs
       - name: 包结构检查
         run: |
           node -e "

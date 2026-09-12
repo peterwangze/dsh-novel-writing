@@ -1,0 +1,922 @@
+{
+  "schemaVersion": 1,
+  "task": "COMPAT-003",
+  "hostVersion": "0.1.5-rc.2",
+  "source": "host-checkout：npx 缓存闭包 node_modules/@deepseek-ai（@deepseek-ai/dsh 0.1.5-rc.1 的安装闭包，@deepseek-ai/dsh-* 子包实测版本 0.1.5-rc.2；cordis 4.0.2 / schemastery 3.18.2 属独立版本族）——只读静态提取（零写入宿主目录、零动态 import、零执行宿主代码）",
+  "extraction": {
+    "kind": "package-extract（npm pack 真实 tarball 解包闭包 或 已安装宿主闭包只读目录——由 --packed/--checkout 指定）",
+    "tool": "test/fixtures/host-surfaces/extract.mjs",
+    "method": "static-parse（静态解析，零动态 import、零执行宿主代码）",
+    "entryResolution": "package.json exports['.'].import|default ← module ← main ← index.js；子面 './client' 同法",
+    "concerns": [
+      "exportNames",
+      "classInheritance",
+      "classMethodNames",
+      "markers"
+    ],
+    "methodCapPerClass": 60,
+    "packagesRequested": [
+      "cordis",
+      "schemastery",
+      "dsh-settings",
+      "dsh-api-gateway",
+      "dsh-client-modules",
+      "dsh-client-connection",
+      "dsh-home-paths",
+      "dsh-tools"
+    ],
+    "packagesMissing": []
+  },
+  "packages": {
+    "cordis": {
+      "version": "4.0.2",
+      "entryExportKey": ".",
+      "exports": [
+        "Context",
+        "CordisError",
+        "DisposableList",
+        "EventsService",
+        "Fiber",
+        "Inject",
+        "Logger",
+        "LoggerService",
+        "RegistryService",
+        "Service",
+        "ValidationError",
+        "buildOuterStack",
+        "c16",
+        "c256",
+        "composeError",
+        "createCallable",
+        "defaultFormatters",
+        "getPropertyDescriptor",
+        "getTraceable",
+        "isBailed",
+        "isConstructor",
+        "isObject",
+        "joinPrototype",
+        "resolveConfig",
+        "symbols",
+        "withProps"
+      ],
+      "exportCount": 26,
+      "starExports": [],
+      "clientExportKey": null,
+      "clientExports": null,
+      "classes": {
+        "Context": {
+          "extends": null,
+          "extendsFrom": null,
+          "methodNames": [
+            "is",
+            "constructor",
+            "extend",
+            "for",
+            "if",
+            "isolate",
+            "intercept"
+          ],
+          "methodCount": 7
+        },
+        "CordisError": {
+          "extends": "Error",
+          "extendsFrom": null,
+          "methodNames": [
+            "constructor",
+            "super"
+          ],
+          "methodCount": 2
+        },
+        "DisposableList": {
+          "extends": null,
+          "extendsFrom": null,
+          "methodNames": [
+            "length",
+            "push",
+            "return",
+            "delete",
+            "if",
+            "clear"
+          ],
+          "methodCount": 6
+        },
+        "EventsService": {
+          "extends": null,
+          "extendsFrom": null,
+          "methodNames": [
+            "constructor",
+            "defineProperty",
+            "if",
+            "return",
+            "dispatch",
+            "parallel",
+            "emit",
+            "serial",
+            "for",
+            "bail",
+            "waterfall",
+            "register",
+            "unregister",
+            "on",
+            "once",
+            "dispose"
+          ],
+          "methodCount": 16
+        },
+        "Fiber": {
+          "extends": null,
+          "extendsFrom": null,
+          "methodNames": [
+            "constructor",
+            "if",
+            "for",
+            "emitPluginDisposed",
+            "remove",
+            "while",
+            "name",
+            "assertActive",
+            "_execute",
+            "safeCollect",
+            "return",
+            "effect",
+            "removeWrapper",
+            "getEffects",
+            "_getState",
+            "_updateState",
+            "_checkImpl",
+            "_refresh",
+            "_setEpoch",
+            "_resolveConfig",
+            "_reload",
+            "_unload",
+            "await",
+            "restart",
+            "update"
+          ],
+          "methodCount": 25
+        },
+        "Logger": {
+          "extends": null,
+          "extendsFrom": null,
+          "methodNames": [
+            "color",
+            "if",
+            "code",
+            "for",
+            "format",
+            "constructor",
+            "_method",
+            "return"
+          ],
+          "methodCount": 8
+        },
+        "LoggerService": {
+          "extends": null,
+          "extendsFrom": null,
+          "methodNames": [
+            "constructor",
+            "defineProperty",
+            "if",
+            "exporter",
+            "return",
+            "_resolveConfig",
+            "while",
+            "for"
+          ],
+          "methodCount": 8
+        },
+        "RegistryService": {
+          "extends": null,
+          "extendsFrom": null,
+          "methodNames": [
+            "constructor",
+            "defineProperty",
+            "counter",
+            "size",
+            "resolve",
+            "if",
+            "get",
+            "has",
+            "delete",
+            "for",
+            "keys",
+            "values",
+            "entries",
+            "forEach",
+            "inject",
+            "plugin"
+          ],
+          "methodCount": 16
+        },
+        "Service": {
+          "extends": null,
+          "extendsFrom": null,
+          "methodNames": [
+            "constructor",
+            "if",
+            "defineProperty",
+            "while"
+          ],
+          "methodCount": 4
+        },
+        "ValidationError": {
+          "extends": "TypeError",
+          "extendsFrom": null,
+          "methodNames": [
+            "constructor",
+            "super",
+            "if"
+          ],
+          "methodCount": 3
+        }
+      },
+      "classCount": 10,
+      "classAliases": {},
+      "functions": [
+        "buildOuterStack",
+        "composeError",
+        "createCallable",
+        "getPropertyDescriptor",
+        "getTraceable",
+        "Inject",
+        "isBailed",
+        "isConstructor",
+        "isObject",
+        "joinPrototype",
+        "resolveConfig",
+        "withProps"
+      ],
+      "constants": [
+        "c16",
+        "c256",
+        "defaultFormatters",
+        "symbols"
+      ]
+    },
+    "schemastery": {
+      "version": "3.18.2",
+      "entryExportKey": ".",
+      "exports": [
+        "default"
+      ],
+      "exportCount": 1,
+      "starExports": [],
+      "clientExportKey": null,
+      "clientExports": null,
+      "classes": {},
+      "classCount": 0,
+      "classAliases": {},
+      "functions": [],
+      "constants": [
+        "default"
+      ]
+    },
+    "dsh-settings": {
+      "version": "0.1.5-rc.2",
+      "entryExportKey": ".",
+      "exports": [
+        "SettingsConflictError",
+        "SettingsProvider",
+        "default",
+        "redactSecrets"
+      ],
+      "exportCount": 4,
+      "starExports": [],
+      "clientExportKey": null,
+      "clientExports": null,
+      "classes": {
+        "default": {
+          "extends": "Service",
+          "extendsFrom": "@deepseek-ai/cordis",
+          "methodNames": [
+            "isStopped",
+            "constructor",
+            "super",
+            "documentPath",
+            "prepareDocument",
+            "register",
+            "if",
+            "return",
+            "installSection",
+            "describe",
+            "get",
+            "update",
+            "replace",
+            "mutate",
+            "for",
+            "write",
+            "publish",
+            "section",
+            "resolve",
+            "bumpRevision",
+            "emitDocumentUpdated",
+            "commit",
+            "warnWatcherFailure",
+            "warnListenerFailure"
+          ],
+          "methodCount": 24
+        },
+        "SettingsConflictError": {
+          "extends": "Error",
+          "extendsFrom": null,
+          "methodNames": [
+            "constructor",
+            "super"
+          ],
+          "methodCount": 2
+        },
+        "SettingsProvider": {
+          "extends": "Service",
+          "extendsFrom": "@deepseek-ai/cordis",
+          "methodNames": [
+            "isStopped",
+            "constructor",
+            "super",
+            "documentPath",
+            "prepareDocument",
+            "register",
+            "if",
+            "return",
+            "installSection",
+            "describe",
+            "get",
+            "update",
+            "replace",
+            "mutate",
+            "for",
+            "write",
+            "publish",
+            "section",
+            "resolve",
+            "bumpRevision",
+            "emitDocumentUpdated",
+            "commit",
+            "warnWatcherFailure",
+            "warnListenerFailure"
+          ],
+          "methodCount": 24
+        }
+      },
+      "classCount": 3,
+      "classAliases": {},
+      "functions": [
+        "redactSecrets"
+      ],
+      "constants": []
+    },
+    "dsh-api-gateway": {
+      "version": "0.1.5-rc.2",
+      "entryExportKey": ".",
+      "exports": [
+        "TypertGatewayError",
+        "TypertGatewayService",
+        "default"
+      ],
+      "exportCount": 3,
+      "starExports": [],
+      "clientExportKey": "./client",
+      "clientExports": [],
+      "classes": {
+        "default": {
+          "extends": "Service",
+          "extendsFrom": "@deepseek-ai/cordis",
+          "methodNames": [
+            "constructor",
+            "super",
+            "if",
+            "rejectRemoteStreamUpgrade",
+            "unregister",
+            "registerRemoteEvents",
+            "claimsEndpoint",
+            "collectSrcClaims",
+            "for",
+            "invoke",
+            "stream",
+            "dispatchRpc",
+            "openWireStream",
+            "while",
+            "consumeRemoteEvents",
+            "broadcastRemoteEvent",
+            "assertRemoteEventFrame",
+            "startRemoteEvent",
+            "assertRemoteEventName",
+            "dispose",
+            "deliverRemoteEvent",
+            "receiveRemoteEventResult",
+            "removeRemoteEventDelivery",
+            "removeRemoteEventClient",
+            "settleRemoteEvent",
+            "cancelRemoteEvent",
+            "finishRemoteEvent",
+            "closeRemoteEvents",
+            "invokeRpc",
+            "prepareInvocation",
+            "assertExactArguments",
+            "validateBinding",
+            "resolveDescriptor",
+            "resolveSrcDescriptor",
+            "srcDescriptor",
+            "resolveReceiverContext",
+            "resolveParameter"
+          ],
+          "methodCount": 37
+        },
+        "TypertGatewayError": {
+          "extends": "RemoteError",
+          "extendsFrom": "@deepseek-ai/dsh-typert-protocol",
+          "methodNames": [
+            "constructor",
+            "super"
+          ],
+          "methodCount": 2
+        },
+        "TypertGatewayService": {
+          "extends": "Service",
+          "extendsFrom": "@deepseek-ai/cordis",
+          "methodNames": [
+            "constructor",
+            "super",
+            "if",
+            "rejectRemoteStreamUpgrade",
+            "unregister",
+            "registerRemoteEvents",
+            "claimsEndpoint",
+            "collectSrcClaims",
+            "for",
+            "invoke",
+            "stream",
+            "dispatchRpc",
+            "openWireStream",
+            "while",
+            "consumeRemoteEvents",
+            "broadcastRemoteEvent",
+            "assertRemoteEventFrame",
+            "startRemoteEvent",
+            "assertRemoteEventName",
+            "dispose",
+            "deliverRemoteEvent",
+            "receiveRemoteEventResult",
+            "removeRemoteEventDelivery",
+            "removeRemoteEventClient",
+            "settleRemoteEvent",
+            "cancelRemoteEvent",
+            "finishRemoteEvent",
+            "closeRemoteEvents",
+            "invokeRpc",
+            "prepareInvocation",
+            "assertExactArguments",
+            "validateBinding",
+            "resolveDescriptor",
+            "resolveSrcDescriptor",
+            "srcDescriptor",
+            "resolveReceiverContext",
+            "resolveParameter"
+          ],
+          "methodCount": 37
+        }
+      },
+      "classCount": 3,
+      "classAliases": {},
+      "functions": [],
+      "constants": []
+    },
+    "dsh-client-modules": {
+      "version": "0.1.5-rc.2",
+      "entryExportKey": ".",
+      "exports": [
+        "ClientModuleRegistry",
+        "bootInjections",
+        "default",
+        "orderByModuleGraph",
+        "stripClientSuffix"
+      ],
+      "exportCount": 5,
+      "starExports": [],
+      "clientExportKey": "./client",
+      "clientExports": [],
+      "classes": {
+        "ClientModuleRegistry": {
+          "extends": "Service",
+          "extendsFrom": "@deepseek-ai/cordis",
+          "methodNames": [
+            "constructor",
+            "super",
+            "if",
+            "queueMicrotask",
+            "for",
+            "graph",
+            "clientPath",
+            "fetchBundle",
+            "artifactBaseline",
+            "rebuilt",
+            "notify",
+            "onRebuilt",
+            "return",
+            "onGraphChanged",
+            "compose",
+            "notifyGraphChanged",
+            "listener",
+            "resolveMeta",
+            "locatePkgJson",
+            "nearestPackage",
+            "while",
+            "sourceKey",
+            "captureArtifactBaseline",
+            "allocateInitialRevision",
+            "initialBundleSnapshot",
+            "readSourceMapSnapshot",
+            "processOne",
+            "onError",
+            "resolveSource",
+            "reconcilePackage",
+            "flush",
+            "bundleResource"
+          ],
+          "methodCount": 32
+        },
+        "default": {
+          "extends": "Service",
+          "extendsFrom": "@deepseek-ai/cordis",
+          "methodNames": [
+            "constructor",
+            "super",
+            "if",
+            "queueMicrotask",
+            "for",
+            "graph",
+            "clientPath",
+            "fetchBundle",
+            "artifactBaseline",
+            "rebuilt",
+            "notify",
+            "onRebuilt",
+            "return",
+            "onGraphChanged",
+            "compose",
+            "notifyGraphChanged",
+            "listener",
+            "resolveMeta",
+            "locatePkgJson",
+            "nearestPackage",
+            "while",
+            "sourceKey",
+            "captureArtifactBaseline",
+            "allocateInitialRevision",
+            "initialBundleSnapshot",
+            "readSourceMapSnapshot",
+            "processOne",
+            "onError",
+            "resolveSource",
+            "reconcilePackage",
+            "flush",
+            "bundleResource"
+          ],
+          "methodCount": 32
+        }
+      },
+      "classCount": 2,
+      "classAliases": {},
+      "functions": [
+        "bootInjections",
+        "orderByModuleGraph",
+        "stripClientSuffix"
+      ],
+      "constants": []
+    },
+    "dsh-client-connection": {
+      "version": "0.1.5-rc.2",
+      "entryExportKey": ".",
+      "exports": [
+        "API_PATH",
+        "Config",
+        "HostConnectionService",
+        "RpcId",
+        "apply",
+        "clientRequestSchema",
+        "inject",
+        "name",
+        "rpcErrorSchema",
+        "rpcIdSchema",
+        "rpcMessageSchema",
+        "rpcResultSchema",
+        "serverResponseSchema",
+        "transportError"
+      ],
+      "exportCount": 14,
+      "starExports": [],
+      "clientExportKey": "./client",
+      "clientExports": [],
+      "classes": {
+        "HostConnectionService": {
+          "extends": "Service",
+          "extendsFrom": "@deepseek-ai/cordis",
+          "methodNames": [
+            "constructor",
+            "super",
+            "rpc",
+            "fetch",
+            "requestRejection",
+            "if",
+            "authorizeIndex",
+            "authenticatedUrl",
+            "createSharedFetchHandler",
+            "registerFetchRoute",
+            "assertFetchRoute",
+            "return",
+            "register",
+            "assertChannel",
+            "registerInterceptor"
+          ],
+          "methodCount": 15
+        }
+      },
+      "classCount": 1,
+      "classAliases": {},
+      "functions": [
+        "apply",
+        "RpcId",
+        "rpcResultSchema",
+        "transportError"
+      ],
+      "constants": [
+        "API_PATH",
+        "clientRequestSchema",
+        "Config",
+        "inject",
+        "name",
+        "rpcErrorSchema",
+        "rpcIdSchema",
+        "rpcMessageSchema",
+        "serverResponseSchema"
+      ]
+    },
+    "dsh-home-paths": {
+      "version": "0.1.5-rc.2",
+      "entryExportKey": ".",
+      "exports": [
+        "DEFAULT_DSH_HOME_DISPLAY",
+        "DSH_HOME_DIR_NAME",
+        "DSH_HOME_ENV",
+        "canonicalizeWatchPath",
+        "defaultDshHome",
+        "dshHomeDisplay",
+        "dshHomePath",
+        "expandHomePath",
+        "resolveDshHome"
+      ],
+      "exportCount": 9,
+      "starExports": [],
+      "clientExportKey": null,
+      "clientExports": null,
+      "classes": {},
+      "classCount": 0,
+      "classAliases": {},
+      "functions": [
+        "canonicalizeWatchPath",
+        "defaultDshHome",
+        "dshHomeDisplay",
+        "dshHomePath",
+        "expandHomePath",
+        "resolveDshHome"
+      ],
+      "constants": [
+        "DEFAULT_DSH_HOME_DISPLAY",
+        "DSH_HOME_DIR_NAME",
+        "DSH_HOME_ENV"
+      ]
+    },
+    "dsh-tools": {
+      "version": "0.1.5-rc.2",
+      "entryExportKey": ".",
+      "exports": [
+        "CodeRunFailedError",
+        "JsonSchemaError",
+        "RUN_CODE_NAME",
+        "TOOL_ABORTED",
+        "TOOL_ABORTED_BEFORE_DISPATCH",
+        "TOOL_RUNTIME_SCHEDULER",
+        "ToolArgsError",
+        "ToolNotFoundError",
+        "ToolOutputError",
+        "ToolRuntime",
+        "assertObjectJsonSchema",
+        "assertSupportedJsonSchema",
+        "default",
+        "defineContentToolFixture",
+        "defineTool",
+        "jsonSchemaToPy",
+        "jsonSchemaToTs",
+        "parameterSchemaSpecToJsonSchema",
+        "renderToolsSdk",
+        "renderToolsSdkPy",
+        "validateArgs",
+        "validateJsonSchemaValue",
+        "valueSchemaSpecToJsonSchema"
+      ],
+      "exportCount": 23,
+      "starExports": [],
+      "clientExportKey": null,
+      "clientExports": null,
+      "classes": {
+        "CodeRunFailedError": {
+          "extends": "HarnessError",
+          "extendsFrom": "@deepseek-ai/dsh-llm",
+          "methodNames": [
+            "constructor",
+            "super"
+          ],
+          "methodCount": 2
+        },
+        "default": {
+          "extends": "Service",
+          "extendsFrom": "@deepseek-ai/cordis",
+          "methodNames": [
+            "constructor",
+            "super",
+            "if",
+            "collapseSection",
+            "sdkSection",
+            "modeFor",
+            "for",
+            "requireCodeTransport",
+            "presentAs",
+            "return",
+            "wireSchemas",
+            "requireCodeRuntime",
+            "register",
+            "assertSupportedJsonSchema",
+            "restrict",
+            "guard",
+            "guardReason",
+            "view",
+            "get",
+            "resolveExecution",
+            "schemas",
+            "sdkSchemas",
+            "schemaOf",
+            "executionMode",
+            "shapeDispatchLog",
+            "collapses",
+            "execute",
+            "completeScheduledExecution",
+            "switch",
+            "createExecution",
+            "deferContext",
+            "concludeTurn",
+            "prepareScheduledExecution",
+            "prepareExecution",
+            "callerCancelled",
+            "cancellationResult",
+            "dispatchToolBody",
+            "dispatchScheduledExecution",
+            "finalizeScheduledExecution",
+            "finishScheduledExecution",
+            "applyFinalContent",
+            "notifyResult",
+            "scopeTarget",
+            "reportFailure",
+            "serviceAsk",
+            "postExecute",
+            "markCanonical",
+            "createSuccessResult",
+            "normalizeDispatchResult",
+            "materializeFinalResult"
+          ],
+          "methodCount": 50
+        },
+        "JsonSchemaError": {
+          "extends": "HarnessError",
+          "extendsFrom": "@deepseek-ai/dsh-llm",
+          "methodNames": [
+            "constructor",
+            "super"
+          ],
+          "methodCount": 2
+        },
+        "ToolArgsError": {
+          "extends": "HarnessError",
+          "extendsFrom": "@deepseek-ai/dsh-llm",
+          "methodNames": [
+            "constructor",
+            "super"
+          ],
+          "methodCount": 2
+        },
+        "ToolNotFoundError": {
+          "extends": "HarnessError",
+          "extendsFrom": "@deepseek-ai/dsh-llm",
+          "methodNames": [
+            "constructor",
+            "super"
+          ],
+          "methodCount": 2
+        },
+        "ToolOutputError": {
+          "extends": "HarnessError",
+          "extendsFrom": "@deepseek-ai/dsh-llm",
+          "methodNames": [
+            "constructor",
+            "super"
+          ],
+          "methodCount": 2
+        },
+        "ToolRuntime": {
+          "extends": "Service",
+          "extendsFrom": "@deepseek-ai/cordis",
+          "methodNames": [
+            "constructor",
+            "super",
+            "if",
+            "collapseSection",
+            "sdkSection",
+            "modeFor",
+            "for",
+            "requireCodeTransport",
+            "presentAs",
+            "return",
+            "wireSchemas",
+            "requireCodeRuntime",
+            "register",
+            "assertSupportedJsonSchema",
+            "restrict",
+            "guard",
+            "guardReason",
+            "view",
+            "get",
+            "resolveExecution",
+            "schemas",
+            "sdkSchemas",
+            "schemaOf",
+            "executionMode",
+            "shapeDispatchLog",
+            "collapses",
+            "execute",
+            "completeScheduledExecution",
+            "switch",
+            "createExecution",
+            "deferContext",
+            "concludeTurn",
+            "prepareScheduledExecution",
+            "prepareExecution",
+            "callerCancelled",
+            "cancellationResult",
+            "dispatchToolBody",
+            "dispatchScheduledExecution",
+            "finalizeScheduledExecution",
+            "finishScheduledExecution",
+            "applyFinalContent",
+            "notifyResult",
+            "scopeTarget",
+            "reportFailure",
+            "serviceAsk",
+            "postExecute",
+            "markCanonical",
+            "createSuccessResult",
+            "normalizeDispatchResult",
+            "materializeFinalResult"
+          ],
+          "methodCount": 50
+        }
+      },
+      "classCount": 7,
+      "classAliases": {},
+      "functions": [
+        "assertObjectJsonSchema",
+        "assertSupportedJsonSchema",
+        "defineContentToolFixture",
+        "defineTool",
+        "jsonSchemaToPy",
+        "jsonSchemaToTs",
+        "parameterSchemaSpecToJsonSchema",
+        "renderToolsSdk",
+        "renderToolsSdkPy",
+        "validateArgs",
+        "validateJsonSchemaValue",
+        "valueSchemaSpecToJsonSchema"
+      ],
+      "constants": [
+        "RUN_CODE_NAME",
+        "TOOL_ABORTED",
+        "TOOL_ABORTED_BEFORE_DISPATCH",
+        "TOOL_RUNTIME_SCHEDULER"
+      ]
+    }
+  },
+  "markers": {
+    "settingsNamespaceExported": {
+      "value": false,
+      "probe": "exportNames(@deepseek-ai/dsh-settings) 含 'settingsNamespace'（npm pack 真实 tarball 静态导出面）",
+      "origin": "tarball-static-extract"
+    },
+    "connectionApiDomainField": {
+      "value": false,
+      "probe": "regex /(?:^|[\\s;{])this\\.api\\s*=/ 命中 @deepseek-ai/dsh-client-connection 入口+client 源码（旧表面：连接载体上挂 api 域对象）",
+      "origin": "tarball-static-extract"
+    },
+    "remoteNamespaceServicePackages": {
+      "value": true,
+      "probe": "npm view @deepseek-ai/dsh-api-{settings,workspace,session}-controller versions —— 该族为 remote.<ns> 服务声明方，首版 0.1.2-alpha.2；此版本线下方为 false（注册表元数据事实，非 tarball 提取）",
+      "origin": "registry-metadata"
+    }
+  }
+}

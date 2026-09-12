@@ -23,9 +23,14 @@
  *       color-mix 令牌化兜底 + 选中态类化 + 空态 24px 图标）+
  *       UX-059 工作流控制条（标题栏启动钮迁移 / 停止·继续合并主按钮
  *       形态切换 / 压缩上下文 /compact / 绑定新会话——不自动打开）+
- *       COMPAT-002 宿主契约对账（lib/host-contract.mjs 六面 47 项结构 / F10 口径 /
- *       纯数据守卫 + 槽位名·服务名·CSS 令牌·DOM selector 四类 region 字面量
- *       与 lib/client.js 源码双向对账）。
+ *       COMPAT-003 宿主表面 fixtures 快照与离线契约对账（test/fixtures/host-surfaces/ 三版本真实包
+ *       只读提取快照〔0.1.1-rc.2 / 0.1.2-rc.1 / 0.1.5-rc.2〕/ 契约声明面 ⊆ fixture 实测面 /
+ *       三版本差异 golden〔settingsNamespace·connection.api 两个断点 = BUG-003·BUG-004〕/
+ *       ci.yml dsh-settings mock 导出面面钉〔F1：静态解析 + 动态 import 两法互证〕/
+ *       契约 file·line 活性与每面锚点抽核 / 递归 own-descriptor 纯数据强化）。
+ *       COMPAT-002 宿主契约对账（lib/host-contract.mjs 六面 48 项结构 / F10 口径 /
+ *       纯数据守卫 + 槽位名·CSS 令牌·DOM selector 三类 region 字面量双向对账 + 服务名
+ *       与事件名双向对账）。
  */
 import { mkdtempSync, writeFileSync, mkdirSync, readFileSync, rmSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -1705,11 +1710,11 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   const contractSrc = readFileSync(new URL('../lib/host-contract.mjs', import.meta.url), 'utf8')
   const codeOnly = clientSrc.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '') // 剥注释——对账提取一律代码级（同 ⑩ 口径）
 
-  // ① 契约结构：六面 47 项分布 11/13/7/6/5/5
+  // ① 契约结构：六面 48 项分布 11/13/8/6/5/5（面 3 含 COMPAT-003 F1 补录的 3.8）
   const faceCount = {}
   for (const it of hostContract.items) faceCount[it.face] = (faceCount[it.face] ?? 0) + 1
-  check('COMPAT-002 契约：六面 47 项全覆盖（面分布 11/13/7/6/5/5）',
-    hostContract.items.length === 47 && [1, 2, 3, 4, 5, 6].every((f) => faceCount[f] === [11, 13, 7, 6, 5, 5][f - 1]),
+  check('COMPAT-002 契约：六面 48 项全覆盖（面分布 11/13/8/6/5/5）',
+    hostContract.items.length === 48 && [1, 2, 3, 4, 5, 6].every((f) => faceCount[f] === [11, 13, 8, 6, 5, 5][f - 1]),
     'items=' + hostContract.items.length + ' faces=' + JSON.stringify(faceCount))
   // ② schema：七字段齐全 + item 编号 face 前缀正确且面内连续（§3 溯源结构机检）
   const FIELDS = ['face', 'item', 'kind', 'symbol', 'file', 'line', 'necessity']
@@ -1755,14 +1760,16 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   check('COMPAT-002 F8 服务名对账（svc 域名）：remote.*/workspaces 六域 ≡ 契约清单（双向 ⊆）',
     rl.serviceNames.svcDomains.every((s) => srcSvc.includes(s)) && srcSvc.every((s) => rl.serviceNames.svcDomains.includes(s)),
     'src=' + JSON.stringify(srcSvc))
-  // ⑨ F8 事件名——internal/service 监听字面量在源码代码级在册
-  check('COMPAT-002 F8 事件名对账：internal/service 字面量在 client.js 代码级在册',
-    rl.serviceNames.events.every((e) => codeOnly.includes("'" + e + "'")),
-    'events=' + JSON.stringify(rl.serviceNames.events))
-  // ⑩ F8 CSS 令牌——--dsw-alias-* 去重恰 12 且双向对账
-  const srcTokens = [...new Set([...codeOnly.matchAll(/--dsw-alias-[a-z0-9-]+/g)].map((m) => m[0]))]
-  check('COMPAT-002 F8 CSS 令牌对账：--dsw-alias-* 去重恰 12 个 ≡ 契约清单（双向 ⊆）',
-    srcTokens.length === 12 && rl.cssTokens.length === 12
+  // ⑨ F8 事件名双向对账（COMPAT-003 F3 修订：原为单向断言——删契约项或置空数组仍全绿，属真空方向）
+  const srcEvents = [...new Set([...codeOnly.matchAll(/ctx\.on\('([^']+)'/g)].map((m) => m[1]))]
+  check('COMPAT-002 F8 事件名对账：client.js ctx.on 提取面 ≡ 契约清单（双向 ⊆，COMPAT-003 F3 修订后）',
+    srcEvents.length === rl.serviceNames.events.length
+      && rl.serviceNames.events.every((e) => srcEvents.includes(e)) && srcEvents.every((e) => rl.serviceNames.events.includes(e)),
+    'src=' + JSON.stringify(srcEvents) + ' contract=' + JSON.stringify(rl.serviceNames.events))
+  // ⑩ F8 CSS 令牌——宿主令牌族收紧后双向对账（COMPAT-003 F2 修订：族由 --dsw-alias-* 放宽至 alias+shadow，12 → 13）
+  const srcTokens = [...new Set([...codeOnly.matchAll(/--dsw-(?:alias|shadow)-[a-z0-9-]*[a-z0-9]/g)].map((m) => m[0]))]
+  check('COMPAT-002 F8 CSS 令牌对账：--dsw-alias-*/--dsw-shadow-* 去重恰 13 个 ≡ 契约清单（双向 ⊆）',
+    srcTokens.length === 13 && rl.cssTokens.length === 13
       && rl.cssTokens.every((t) => srcTokens.includes(t)) && srcTokens.every((t) => rl.cssTokens.includes(t)),
     'src=' + srcTokens.length + ' contract=' + rl.cssTokens.length)
   // ⑪ F8 DOM selector——宿主耦合选择器提取面 ≡ 契约清单（.nv- 自有前缀除外）
@@ -1770,6 +1777,170 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   check('COMPAT-002 F8 DOM selector 对账：宿主耦合选择器提取面 ≡ 契约清单（.nv- 自有前缀除外，双向 ⊆）',
     rl.domSelectors.every((s) => srcSels.includes(s)) && srcSels.every((s) => rl.domSelectors.includes(s)),
     'src=' + JSON.stringify(srcSels))
+}
+
+// ── COMPAT-003：宿主表面 fixtures 离线对账 + ci.yml mock 面钉（F1）+ 契约 file/line 活性（F5）──
+// fixtures 来源口径：test/fixtures/host-surfaces/*.json 由同目录 extract.mjs 从真实包只读提取
+// （npm pack tarball 解包 / 已安装闭包），每份头部 source 如实标注（真实包提取 vs 证据构造）。
+{
+  const { hostContract: hc } = await import('../lib/host-contract.mjs')
+  const { extractHeredocs, staticExportKeys, dynamicMockExportKeys } = await import('./fixtures/host-surfaces/ci-mock-face.mjs')
+  const hs = hc.hostSurface
+  const fixtureUrl = (v) => new URL('./fixtures/host-surfaces/' + v + '.json', import.meta.url)
+  const versions = Object.keys(hs.packages)
+  const fixtures = Object.fromEntries(versions.map((v) => [v, JSON.parse(readFileSync(fixtureUrl(v), 'utf8'))]))
+  const localName = (pkg) => pkg.replace('@deepseek-ai/', '')
+  const sameSet = (a, b) => a.length === b.length && a.every((x) => b.includes(x))
+
+  // ① fixtures 三版本齐备 + 溯源字段完整（source 标注真实来源；禁止无 source 的手写表面）
+  check('COMPAT-003 fixtures：三版本宿主表面快照齐备（' + versions.join(' / ') + '）+ 溯源字段完整',
+    versions.length === 3
+      && versions.every((v) => fixtures[v].schemaVersion === 1 && fixtures[v].task === 'COMPAT-003'
+        && typeof fixtures[v].source === 'string' && fixtures[v].source.length > 30
+        && fixtures[v].hostVersion === v && sameSet(Object.keys(fixtures[v].packages), hs.packages[v])),
+    'versions=' + versions.length + ' packages=' + versions.map((v) => Object.keys(fixtures[v].packages).length).join('/'))
+
+  // ② 契约声明面 ⊆ 现行 fixture 实测面（逐包导出依赖；contract ⊆ fixture 的机检形态）
+  const missingExports = []
+  for (const [pkg, names] of Object.entries(hs.requiredExports)) {
+    const fx = fixtures[hs.current].packages[localName(pkg)]
+    for (const n of names) if (fx === undefined || !fx.exports.includes(n)) missingExports.push(pkg + '.' + n)
+  }
+  check('COMPAT-003 契约⊆fixture：requiredExports 逐包 ⊆ fixtures[' + hs.current + '] 实测导出面（' + Object.keys(hs.requiredExports).length + ' 包）',
+    missingExports.length === 0, 'missing=' + JSON.stringify(missingExports))
+
+  // ③ eliminated 口径：现行 fixture 无已消除导出（settingsNamespace），与 item 1.4 necessity=eliminated 一致
+  const stillExported = []
+  for (const [pkg, names] of Object.entries(hs.eliminatedExports)) {
+    const fx = fixtures[hs.current].packages[localName(pkg)]
+    for (const n of names) if (fx !== undefined && fx.exports.includes(n)) stillExported.push(pkg + '.' + n)
+  }
+  check('COMPAT-003 消除口径：现行 fixture 不含 settingsNamespace（与 item 1.4 necessity=eliminated 一致）',
+    stillExported.length === 0
+      && hc.items.some((it) => it.item === '1.4' && it.necessity === 'eliminated' && it.symbol.includes('settingsNamespace')),
+    'unexpected=' + JSON.stringify(stillExported) + ' fixture=' + JSON.stringify(fixtures[hs.current].packages['dsh-settings'].exports))
+
+  // ④⑤⑥ 版本差异 golden（三标记 × 三版本）——每项均由 fixture markers 实测值与契约 golden 逐版本比对
+  for (const fact of ['settingsNamespaceExported', 'connectionApiDomainField', 'remoteNamespaceServicePackages']) {
+    const got = hs.versionFacts.map((f) => fixtures[f.version].markers[fact].value)
+    const want = hs.versionFacts.map((f) => f[fact])
+    check('COMPAT-003 版本差异 ' + fact + '：三版本实测 ≡ 契约 golden [' + want.join(', ') + ']（0.1.x → 0.1.2-rc.1 断点）',
+      JSON.stringify(got) === JSON.stringify(want), 'got=' + JSON.stringify(got) + ' want=' + JSON.stringify(want))
+  }
+
+  // ⑦ F1 面钉：ci.yml mock 动态 import 导出键集 ≡ 契约声明面 ≡ fixture 现行真实面（三方一致）
+  const { keys: mockKeys } = await dynamicMockExportKeys(join(root, 'ci-mock'))
+  const mockWant = [...hs.requiredExports[hs.ciMock.package]].sort()
+  const mockFixture = [...fixtures[hs.current].packages[localName(hs.ciMock.package)].exports].sort()
+  check('COMPAT-003 F1 面钉：ci.yml mock 运行时导出键集恰 = ' + JSON.stringify(mockWant),
+    JSON.stringify(mockKeys) === JSON.stringify(mockWant) && JSON.stringify(mockKeys) === JSON.stringify(mockFixture),
+    'mock=' + JSON.stringify(mockKeys) + ' fixture=' + JSON.stringify(mockFixture))
+
+  // ⑧ F1 静态/动态互证：ci.yml mock 源码静态解析导出面 ≡ 动态 import 键集（CI sanity 步骤同口径）
+  const ciYmlSrc = readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8')
+  const mockSource = extractHeredocs(ciYmlSrc).get(hs.ciMock.heredocTarget)
+  const mockStatic = staticExportKeys(mockSource)
+  check('COMPAT-003 F1 互证：ci.yml mock 静态解析导出面 ≡ 动态 import 键集（两法独立证据）',
+    mockStatic.length === mockKeys.length && sameSet(mockStatic, mockKeys),
+    'static=' + JSON.stringify(mockStatic))
+
+  // ⑨ fixtures 内容安全边界（BC-05）：无绝对路径/宿主缓存路径/凭据形态（仅导出名·方法名·形状布尔）
+  const SENSITIVE = /[A-Za-z]:\\|\/Users\/|\/home\/|AppData|npm-cache|Bearer\s|password|api[_-]?key/i
+  const leaked = versions.filter((v) => SENSITIVE.test(readFileSync(fixtureUrl(v), 'utf8')))
+  check('COMPAT-003 fixtures 安全边界（BC-05）：无绝对路径/缓存路径/凭据形态字符串',
+    leaked.length === 0, 'leaked=' + JSON.stringify(leaked))
+
+  // ⑩ F5a 契约 file/line 活性：file 全为仓库真实文件 + line 命中形态白名单（三形态，F9 修订后）
+  const LINE_SEG = 'L\\d+(?:-L?\\d+)?'
+  const LINE_SHAPES = [
+    new RegExp('^(?:' + LINE_SEG + ')(?: / ' + LINE_SEG + ')*(?: 等)?$'),
+    /^L\d+（调用点 L\d+、L\d+）$/,
+    /^原 L\d+ → 现 L\d+ 字符串常量$/,
+  ]
+  const filesOf = (it) => (it.file === null ? [] : Array.isArray(it.file) ? it.file : [it.file])
+  const fileBad = hc.items.filter((it) => filesOf(it).some((f) => !existsSync(new URL('../' + f, import.meta.url))))
+  const shapeBad = hc.items.filter((it) => it.line !== null && !LINE_SHAPES.some((re) => re.test(it.line)))
+  check('COMPAT-003 F5a 契约 file/line 活性：非 null file 全为仓库真实文件 + line 命中形态白名单',
+    fileBad.length === 0 && shapeBad.length === 0,
+    'fileBad=' + JSON.stringify(fileBad.map((i) => i.item)) + ' shapeBad=' + JSON.stringify(shapeBad.map((i) => i.item + ':' + i.line)))
+
+  // ⑪ F5b 行号活性：每项首个行号 ≤ 目标文件总行数（产品代码增删后行号静默漂移即红）
+  const lineCount = new Map()
+  const linesOf = (rel) => {
+    if (!lineCount.has(rel)) lineCount.set(rel, readFileSync(new URL('../' + rel, import.meta.url), 'utf8').split('\n').length)
+    return lineCount.get(rel)
+  }
+  const lineBad = hc.items.filter((it) => {
+    const m = it.line === null ? null : /L(\d+)/.exec(it.line)
+    const files = filesOf(it)
+    return m !== null && files.length > 0 && Number(m[1]) > linesOf(files[0])
+  })
+  check('COMPAT-003 F5b 行号活性：每项首个行号 ≤ 目标文件总行数（' + hc.items.filter((i) => i.line !== null).length + ' 项）',
+    lineBad.length === 0, 'bad=' + JSON.stringify(lineBad.map((i) => i.item + ':' + i.line)))
+
+  // ⑫ F5c 锚点抽核：每面抽 1 项（该面首个有 file+line 的条目），symbol 的标识符候选须在目标文件命中
+  // 锚点规则（弱锚点，防 file 指错文件）：候选 = symbol 中的引号字面量 + 点号标识符 + 裸标识符（≥4 字符）
+  const anchors = []
+  for (const f of [1, 2, 3, 4, 5, 6]) {
+    const it = hc.items.find((x) => x.face === f && filesOf(x).length > 0 && x.line !== null)
+    if (it === undefined) { anchors.push({ face: f, item: '—', hit: false }); continue }
+    const src = readFileSync(new URL('../' + filesOf(it)[0], import.meta.url), 'utf8')
+    const cands = [...new Set([
+      ...(it.symbol.match(/"[^"]{4,}"/g) ?? []),
+      ...(it.symbol.match(/'[^']{3,}'/g) ?? []),
+      ...(it.symbol.match(/[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)+/g) ?? []),
+      ...(it.symbol.match(/[A-Za-z_$][\w$]{3,}/g) ?? []),
+    ])]
+    anchors.push({ face: f, item: it.item, hit: cands.length > 0 && cands.some((c) => src.includes(c)) })
+  }
+  check('COMPAT-003 F5c 锚点抽核：每面 1 项 symbol 标识符候选在目标文件命中（6/6）',
+    anchors.every((a) => a.hit), JSON.stringify(anchors.map((a) => a.item + (a.hit ? '✓' : '✗'))))
+
+  // ⑬ F6 necessity 九值 golden 分布（9 值全量 + 合计 48；防单值静默漂移）
+  const GOLDEN_NEC = { required: 39, consolidatable: 1, adapted: 1, optional: 1, improvable: 2, own: 1, eliminated: 1, 'adapted-drift': 1, awareness: 1 }
+  const nec3 = {}
+  for (const it of hc.items) nec3[it.necessity] = (nec3[it.necessity] ?? 0) + 1
+  check('COMPAT-003 F6 necessity 九值 golden 分布（合计 ' + hc.items.length + ' = ' + Object.values(GOLDEN_NEC).reduce((a, b) => a + b, 0) + '）',
+    hc.items.length === 48 && Object.keys(nec3).length === 9
+      && Object.entries(GOLDEN_NEC).every(([k, n]) => (nec3[k] ?? 0) === n),
+    JSON.stringify(nec3))
+
+  // ⑭ F7a kind 封闭枚举：48 项 kind 全部 ∈ kindEnum 且枚举无空置值
+  check('COMPAT-003 F7a kind 封闭枚举：items[].kind 全部 ∈ kindEnum（' + hc.kindEnum.length + ' 值）且无空置值',
+    hc.items.every((it) => hc.kindEnum.includes(it.kind))
+      && hc.kindEnum.every((k) => hc.items.some((it) => it.kind === k)),
+    'used=' + new Set(hc.items.map((i) => i.kind)).size + ' enum=' + hc.kindEnum.length)
+
+  // ⑮ F7b faces 结构：恰 6 项、id=1..6 连续、name/scope 非空（003/005 消费入口的结构保证）
+  check('COMPAT-003 F7b faces 结构：恰 6 项、id=1..6 连续、name/scope 非空字符串',
+    hc.faces.length === 6 && hc.faces.every((f, i) => f.id === i + 1
+      && typeof f.name === 'string' && f.name.trim() !== ''
+      && typeof f.scope === 'string' && f.scope.trim() !== ''),
+    'faces=' + hc.faces.length + ' ids=' + hc.faces.map((f) => f.id).join(','))
+
+  // ⑯ F4 纯数据强化：递归 own-descriptor——自有属性皆数据属性 + 值类型白名单 + 纯对象原型
+  // （补 ④ 的缝：JSON 往返对函数值天然免疫；本 check 直接看描述符，方法简写/取值器即刻暴露）
+  const ALLOWED_TYPES = new Set(['string', 'number', 'boolean'])
+  const scanPureData = (v, path, bad) => {
+    if (v === null) return
+    const t = typeof v
+    if (ALLOWED_TYPES.has(t)) return
+    if (Array.isArray(v)) { v.forEach((x, i) => scanPureData(x, path + '[' + i + ']', bad)); return }
+    if (t === 'object') {
+      for (const [k, d] of Object.entries(Object.getOwnPropertyDescriptors(v))) {
+        if (!('value' in d)) bad.push(path + '.' + k + ':非数据属性')
+        else scanPureData(d.value, path + '.' + k, bad)
+      }
+      const proto = Object.getPrototypeOf(v)
+      if (proto !== Object.prototype && proto !== null) bad.push(path + ':非纯对象原型')
+      return
+    }
+    bad.push(path + ':' + t)
+  }
+  const descBad = []
+  scanPureData(hc, 'hostContract', descBad)
+  check('COMPAT-003 F4 纯数据强化：递归 own-descriptor（数据属性 + 类型白名单 string/number/boolean/null/array/plain-object）',
+    descBad.length === 0, descBad.slice(0, 5).join(' | ') || 'clean')
 }
 
 console.log(`\nSMOKE DONE: ${passed} passed, ${failed} failed`)
