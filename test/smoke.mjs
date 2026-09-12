@@ -1987,13 +1987,31 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   //      后者对 file 指向正确但 line 指向别处无分辨力）；
   //   ③（RANGE_STRICT_FACES 声明的面）起止行**非空行/纯注释行**——范围边界必须是真实代码行。
   //      实证：2.12 旧值 `L4391-4397` 两端均落在 BUG-004/005 注释块上 ⇒ 红（本检查设立的直接动因）；
-  //      faces 3/5/6 存在**合法**的注释行起段（3.1 起于 `/**` JSDoc、3.5 起于 `//` 互操作说明）故未纳入——
-  //      扩面须先逐项核对边界语义，不可盲加；
+  //      faces 3/5/6 存在**合法**的注释行起段（恰 2 处：3.1 起于 `/**` JSDoc、3.5 起于 `//` 互操作说明——
+  //      该计数由 ⑫d golden 锁定）故未纳入——扩面须先逐项核对边界语义，不可盲加；
+  //      **口径边界（COMPAT-013 F-5①，如实披露）**：`lineIsComment` 仅识别 **JS 风格**注释（`//` `/*` `*`
+  //      与空行）——**YAML `#` 与 JSON（无注释语法）不在识别面内**。现存面 5/6 的边界行均非注释（无现存
+  //      误判），但**未来把面 5/6 纳入 RANGE_STRICT_FACES 前 MUST 先按目标语言实现注释口径**（或改以
+  //      「起点行是否属于所声明构造」替代注释启发式），不得只把面号加进数组；
   //   ④ 终点不截断同一构造：终点行的**行首点号调用前缀**（如 `ctx.slots.inject(`）不得在终点之后再次
   //      作为行首出现。实证：2.13 旧值 `L4422-4454` 止于第 5 处 `ctx.slots.inject(`，第 6 处在 L4458 ⇒ 红。
+  //      **强度边界（COMPAT-013 F-2 如实披露）**：④ 为 **opportunistic**——仅当「终点行恰以点号调用起行」
+  //      时生效；2.13 修复后终点 `L4461 = ))` ⇒ `callPrefix` 取 null ⇒ **对该条目已真空**，其终点的持续
+  //      机检力改由判据⑤a（出现次数完整性：截断 ≥1 处注册即 5 ≠ 6 ⇒ 红）承接。保留 ④ 而非删除：对
+  //      「终点行即下一次同构造起行」形态（旧值 `L4454` 即此类）④ 是唯一判据，删除会让该形态重新裸奔。
+  //      **残余缝（同次实测，未闭合）**：若 2.13 只删**终点闭合行**（`L4429-4460`——6 处注册仍全在范围内）
+  //      则 ①②③④⑤ **全绿**（实测 262/0：⑤a 计数仍 6 ≡ 6、④ callPrefix = null、⑤b 无 `键: {` 形态构造）
+  //      ⇒ 该形态目前无持续机检力。根治需「构造闭合行」口径，而 JS 范围本就可能是**合法语义片段**
+  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L4374-L4377` +1 / 3.8 `L2411-2421` +1 实测均非配平）——
+  //      无差别要求配平会误报上述 3 项，故如实留档待另案（非本任务可安全落地）。
   // R1 承继偏移（2.12 −6 / 2.13 −7）在修复前正是 ①③④ 三项的失败用例，修复后全绿（见 CHANGELOG COMPAT-012）。
+  //   ⑤ 范围**完整覆盖**所声明构造（COMPAT-013 F-1 新增，两子句，实现见下方 ⑫c）——见 ⑫c 处的口径论证。
   const RANGE_STRICT_FACES = [2]
   const GOLDEN_RANGE_ITEMS = 21
+  // COMPAT-013 F-5②：严格面条目数提为 golden——原守卫 `rangeStrict.length > 0` 允许严格面退化到 1 项仍绿
+  // （golden 只锁了总范围条目 21 项）。面 2 实测 11 项（13 项中 2.3/2.4 非单段范围形态），RANGE_STRICT_FACES
+  // 的覆盖面即 11 ⇒ 与 GOLDEN_RANGE_ITEMS 同款漂移探测约定（brittle-by-design，扩面/删项须显式改 golden）。
+  const GOLDEN_RANGE_STRICT_ITEMS = 11
   const RANGE_LINE = /^L(\d+)-L?(\d+)$/
   const lineIsComment = (l) => l.trim() === '' || /^(\/\/|\/\*|\*)/.test(l.trim())
   const callPrefix = (l) => {
@@ -2023,10 +2041,97 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
       if (off >= 0) rangeBad.push(it.item + ':终点截断(' + pre + ' 在 L' + (end + off + 1) + ' 再次起行)')
     }
   }
-  check('COMPAT-012 N2 F5d 范围型 line 抽核：' + rangeItems.length + '/' + hc.items.length + ' 项范围条目（严格面 ' + RANGE_STRICT_FACES.join(',') + ' 共 ' + rangeStrict.length + ' 项）范围有效 ∧ 锚点在范围内命中 ∧ 边界非注释 ∧ 终点不截断构造',
-    rangeItems.length === GOLDEN_RANGE_ITEMS && rangeStrict.length > 0 && rangeBad.length === 0,
-    'rangeItems=' + rangeItems.length + '(golden ' + GOLDEN_RANGE_ITEMS + ') bad=' + JSON.stringify(rangeBad))
+  check('COMPAT-012 N2 F5d 范围型 line 抽核：' + rangeItems.length + '/' + hc.items.length + ' 项范围条目（严格面 ' + RANGE_STRICT_FACES.join(',') + ' 共 ' + rangeStrict.length + ' 项 / golden ' + GOLDEN_RANGE_STRICT_ITEMS + '）范围有效 ∧ 锚点在范围内命中 ∧ 边界非注释 ∧ 终点不截断构造',
+    rangeItems.length === GOLDEN_RANGE_ITEMS && rangeStrict.length === GOLDEN_RANGE_STRICT_ITEMS && rangeBad.length === 0,
+    'rangeItems=' + rangeItems.length + '(golden ' + GOLDEN_RANGE_ITEMS + ') rangeStrict=' + rangeStrict.length + '(golden ' + GOLDEN_RANGE_STRICT_ITEMS + ') bad=' + JSON.stringify(rangeBad))
   console.log('  info COMPAT-012 N2 F5d 覆盖: 范围型 ' + rangeItems.length + '/' + hc.items.length + ' 项（面分布 ' + [...new Set(rangeItems.map((it) => it.face))].join(',') + '）；严格面 ' + RANGE_STRICT_FACES.join(',') + ' = ' + rangeStrict.map((it) => it.item).join(','))
+
+  // ⑫c F5d 判据⑤「范围完整覆盖所声明构造」（COMPAT-013 F-1，收口 COMPAT-012-R1 F-1）：② 只要求「范围**内**
+  // 至少一个候选命中」——范围**起点含无关前导行 / 终点漏构造闭合行**对它零信号（现存实例 = 契约 6.1 旧值
+  // `L38-44`：L38 = `"dependencies": {}` 属无关兄弟键、L45 = `}` 为构造闭合行；①③④ 三项对该实例全盲）。
+  // 判据⑤ 两子句：
+  //   ⑤a **声明基数构造的全部出现**：symbol 以 `×N` 声明构造基数时，凡「点号调用形态候选」（tier 2）在
+  //      **全文件**出现次数恰为 N 者，其在 `[起,止]` 内的出现次数 MUST ≡ N（= 全部出现都落在范围内）。
+  //      实证：2.13 `ctx.slots.inject` / `ctx.slots.register` 实测 6 ≡ 6；旧值 `L4422-4454` ⇒ 5 ≠ 6 即红。
+  //      **口径收窄的依据是实测（非拍脑袋）**：把该等式无差别施加于**全部**候选会使 7/21 项误报——
+  //      2.3 `ctx.get` 1≠14 / 2.10 `sessions.list` 1≠6 / 2.11 `launcher.sessions` 1≠10 / 2.12 `ctx.on` 1≠2 /
+  //      3.1 `document.querySelectorAll` 2≠3 / 3.8 `document.querySelector` 1≠5 / 4.6 `cordis.patch.yml` 1≠2
+  //      ——契约多数候选是「类型名 / 语义片段」，其全文件出现**本就不应**被单个范围条目包住；只有 symbol
+  //      自述基数的构造，其「全部出现」才是有定义的量。防空转 = ⑤a 覆盖对数 golden（实测 2 对）。
+  //   ⑤b **对象构造块闭合**：范围内出现的「候选键 + `: {`」声明行（如 `"peerDependencies": {`）其配平闭合
+  //      行 MUST ≤ 止。实证：6.1 旧值 `L38-44` ⇒ 闭合行 L45 > 止 ⇒ 红；真值 `L39-45` ⇒ 绿。
+  //      **为什么 6.1 必须靠 ⑤b、而不能靠计数式 ⑤a（实测，防后续被「简化」掉）**：6.1 的候选
+  //      `peerDependencies` / `schemastery` 在旧值 `L38-44` 与真值 `L39-45` 两个范围内的出现次数**同为 1 ≡ 1**
+  //      （L38 是 `"dependencies"`、L45 是 `}`，均不含任何候选）⇒ 纯计数口径对**该实例无分辨力**。
+  //      ⑤a/⑤b 分工：⑤a 覆盖 2.13 类（多次注册/调用被截断），⑤b 覆盖 6.1 类（范围未包住构造闭合行）。
+  //      其余 20 项范围条目在当前契约下 ⑤b 全绿（general 形态全量实测，未收窄到 JSON——JSON 与 JS 的
+  //      `键: {` 声明同构，收窄反而丢失 JS 面覆盖力；见 CHANGELOG COMPAT-013）。
+  const occ5 = (hay, needle) => hay.split(needle).length - 1
+  const openKey5 = (tok) => new RegExp('^\\s*["\']?' + tok.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '["\']?\\s*:\\s*\\{\\s*$')
+  const GOLDEN_CARDINALITY_PAIRS = 2
+  const rangeIncomplete = []
+  const cardPairs = []
+  for (const it of rangeItems) {
+    const files = filesOf(it)
+    if (files.length === 0) continue
+    const src = readFileSync(new URL('../' + files[0], import.meta.url), 'utf8')
+    const lines = src.split('\n')
+    const rm = RANGE_LINE.exec(it.line)
+    const start = Number(rm[1]); const end = Number(rm[2])
+    if (!(start >= 1 && end >= start && end <= lines.length)) continue // ① 已报，避免越界取行
+    const span = lines.slice(start - 1, end).join('\n')
+    const cands = symbolCandidates(it.symbol)
+    const declared = /×(\d+)/.exec(it.symbol)
+    if (declared !== null) {
+      const n = Number(declared[1])
+      for (const c of cands) {
+        if (c.tier !== 2 || occ5(src, c.tok) !== n) continue
+        cardPairs.push(it.item + '/' + c.tok + '×' + n)
+        if (occ5(span, c.tok) !== n) {
+          rangeIncomplete.push(it.item + ':⑤a 声明基数未全覆盖(' + c.tok + ' 范围内 ' + occ5(span, c.tok) + ' ≠ 声明 ' + n + ')')
+        }
+      }
+    }
+    for (const c of cands) {
+      const opener = openKey5(c.tok)
+      for (let i = start - 1; i < end; i++) {
+        if (!opener.test(lines[i])) continue
+        let depth = 0; let closeLine = -1
+        for (let j = i; j < lines.length; j++) {
+          depth += occ5(lines[j], '{') - occ5(lines[j], '}')
+          if (depth <= 0) { closeLine = j + 1; break }
+        }
+        if (closeLine < 0) rangeIncomplete.push(it.item + ':⑤b ' + c.tok + '(L' + (i + 1) + ') 构造未闭合')
+        else if (closeLine > end) rangeIncomplete.push(it.item + ':⑤b ' + c.tok + '(L' + (i + 1) + ') 构造闭合行 L' + closeLine + ' 超出止 L' + end)
+      }
+    }
+  }
+  check('COMPAT-013 F1 判据⑤ 范围完整覆盖所声明构造：⑤a 声明基数（×N）构造的全部出现落在范围内（覆盖 ' + cardPairs.length + ' 对 / golden ' + GOLDEN_CARDINALITY_PAIRS + '：' + cardPairs.join(',') + '）∧ ⑤b 对象构造块闭合行 ≤ 止',
+    cardPairs.length === GOLDEN_CARDINALITY_PAIRS && rangeIncomplete.length === 0,
+    'bad=' + JSON.stringify(rangeIncomplete))
+  console.log('  info COMPAT-013 F1 判据⑤ 覆盖: ⑤a ' + cardPairs.length + ' 对（' + cardPairs.join(',') + '）；⑤b 对象构造起行扫描 ' + rangeItems.length + ' 项，失配 ' + rangeIncomplete.length)
+
+  // ⑫d F-3 披露数字入机检（COMPAT-013）：非严格面（3/5/6）范围条目中「起于注释/空行」者 MUST 恰 2 项
+  //（3.1 起于 `/**` JSDoc L838、3.5 起于 `//` 互操作说明 L896）。动因 = 该计数原为**人工转写**且写错
+  //（CHANGELOG 曾披露「三处」）——与 COMPAT-004 FIND-1 的 tier 串转写漂移同类，故沿用同款处置：实测值
+  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.8 `L2411` 函数行 / 4.6 `L17`
+  // `"dsh": {` / 5.1 `L1` `name:` / 5.2 `L16` `- id:` / 5.4 `L77` `- id:` / 6.1 `L39`（修正后真值；修正前
+  // `L38` 亦非注释）/ 6.2 `L8` `"engines": {` / 6.4 `L77` `mkdir -p`。严格面（面 2 = 11 项）已由 ③ 逐项约束，
+  // 本项只覆盖未纳入严格面的面 3/5/6；注释口径同 ③（JS 风格），YAML `#` 不在识别面内（与 F-5① 同源前提）。
+  const GOLDEN_RANGE_COMMENT_START = 2
+  const commentStartRanges = []
+  for (const it of rangeItems) {
+    if (RANGE_STRICT_FACES.includes(it.face)) continue
+    const files = filesOf(it)
+    if (files.length === 0) continue
+    const lines = readFileSync(new URL('../' + files[0], import.meta.url), 'utf8').split('\n')
+    const rm = RANGE_LINE.exec(it.line)
+    const start = Number(rm[1])
+    if (start <= lines.length && lineIsComment(lines[start - 1])) commentStartRanges.push(it.item + '@L' + start)
+  }
+  check('COMPAT-013 F3 非严格面（3/5/6）注释/空行起段 golden：' + commentStartRanges.length + ' 项 ≡ ' + GOLDEN_RANGE_COMMENT_START + '（' + commentStartRanges.join(',') + '）——CHANGELOG 披露数由此锁定（原人工转写「三处」实读为 2 处）',
+    commentStartRanges.length === GOLDEN_RANGE_COMMENT_START,
+    'commentStart=' + JSON.stringify(commentStartRanges))
 
   // ⑬ F6 necessity 九值 golden 分布（9 值全量 + 合计 48；防单值静默漂移）
   const GOLDEN_NEC = { required: 39, consolidatable: 1, adapted: 1, optional: 1, improvable: 2, own: 1, eliminated: 1, 'adapted-drift': 1, awareness: 1 }
