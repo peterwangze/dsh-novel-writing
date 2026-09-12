@@ -28,9 +28,7 @@
     }
   },
   "files": [
-    "lib/index.js",
-    "lib/tools.js",
-    "lib/client.js",
+    "lib/",
     "cordis.patch.yml",
     "agent-presets/",
     "install.ps1",

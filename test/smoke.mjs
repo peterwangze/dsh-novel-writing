@@ -38,8 +38,8 @@
  *       仍挂载 + 降级默认 zh 不崩溃〕+ legacyApi 回退分支零改动 / FIND-1 tier golden + FIND-3 fixtures
  *       过筛项登记 + FIND-4 extract.mjs 边界披露）。
  */
-import { mkdtempSync, writeFileSync, mkdirSync, readFileSync, rmSync, existsSync } from 'node:fs'
-import { join } from 'node:path'
+import { mkdtempSync, writeFileSync, mkdirSync, readFileSync, readdirSync, rmSync, existsSync } from 'node:fs'
+import { join, dirname } from 'node:path'
 import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
 
@@ -2036,19 +2036,28 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   const { hostContract: hc4 } = await import('../lib/host-contract.mjs')
   const boundary = await import('../lib/host-boundary.js')
   const boundarySrc = readFileSync(new URL('../lib/host-boundary.js', import.meta.url), 'utf8')
+  const contractSrc4 = readFileSync(new URL('../lib/host-contract.mjs', import.meta.url), 'utf8')
   const hostSrc4 = readFileSync(new URL('../lib/index.js', import.meta.url), 'utf8')
   const hostCode = hostSrc4.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
   const clientCode = clientSrc.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
   const filesOf4 = (it) => (it.file === null ? [] : Array.isArray(it.file) ? it.file : [it.file])
 
-  // ① 收口（验收①）：index.js 宿主调用 100% 经 host-boundary —— 9 类直连模式 grep 零命中 + 唯一宿主入口
+  // ① 收口（验收① + REVIEW-COMPAT-004-R1 F5 强化）：index.js 宿主调用 100% 经 host-boundary ——
+  // **强口径**（F5）：代码面零 `ctx.<标识符>` 属性访问 + 零 `@deepseek-ai/` import。原「9 类模式表」属
+  // 开发者自列形态（自指）——新形态（ctx.on/ctx.inject/ctx.provide…）零信号；强口径覆盖**一切**形态。
+  const bareCtxHits = [...hostCode.matchAll(/(?<![.\w$])ctx\.[A-Za-z_$]/g)].map((m) => m[0])
+  const hostPkgImports = [...hostCode.matchAll(/from\s*'@deepseek-ai\/[^']*'/g)].map((m) => m[0])
+  check('COMPAT-004 收口①（强口径，R1-F5）：lib/index.js 代码面零 ctx.<标识符> 属性访问 + 零 @deepseek-ai/ import',
+    bareCtxHits.length === 0 && hostPkgImports.length === 0,
+    'ctxHits=' + JSON.stringify(bareCtxHits.slice(0, 5)) + ' hostImports=' + JSON.stringify(hostPkgImports))
+  // ①b 补充面（保留）：非 ctx.* 形态的宿主字面量/调用（webServer.register / resolveDshHome / .agent-presets 等）
   const DIRECT_HOST = [
     ['宿主包 import', /@deepseek-ai\//], ['ctx.settings', /ctx\.settings/], ['ctx.get', /ctx\.get\(/],
     ['ctx.effect', /ctx\.effect\(/], ['ctx.emit', /ctx\.emit\(/], ['ctx.logger', /ctx\.logger/],
     ['resolveDshHome', /resolveDshHome/], ['webServer.register', /webServer\.register/], ['$DSH_HOME 预设路径', /\.agent-presets/],
   ]
   const directHits = DIRECT_HOST.filter(([, re]) => re.test(hostCode)).map(([n]) => n)
-  check('COMPAT-004 收口①：lib/index.js 零直连宿主 API（' + DIRECT_HOST.length + ' 类模式 grep 实证，宿主调用 100% 经 host-boundary）',
+  check('COMPAT-004 收口①b（补充面）：index.js 零直连宿主字面量/调用（' + DIRECT_HOST.length + ' 类模式 grep，覆盖 webServer.register / .agent-presets 等非 ctx.* 形态）',
     directHits.length === 0, 'hits=' + JSON.stringify(directHits))
   check('COMPAT-004 收口②：index.js 唯一宿主入口 = ./host-boundary.js（import 面断言——宿主包零 import）',
     /^import\s*\{[\s\S]*?\}\s*from\s*'\.\/host-boundary\.js'$/m.test(hostSrc4) && !/from\s*'@deepseek-ai\//.test(hostCode),
@@ -2061,6 +2070,38 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   check('COMPAT-004 收口③：收口映射表齐备（键 ≡ 面 1 可收口项 ' + boundaryItems.length + ' 项 + file 全指边界）+ 映射符号全为边界真实导出且被 index.js 消费（' + mapSyms.length + ' 符号）',
     mapKeys.length === boundaryItems.length && mapBad.length === 0 && symBad.length === 0,
     'keys=' + mapKeys.length + ' mapBad=' + JSON.stringify(mapBad.map((i) => i.item)) + ' symBad=' + JSON.stringify(symBad))
+
+  // ①c 打包面（REVIEW-COMPAT-004-R1 F1，P0 防复发）：F1 的失效模式 = 源码工作区四门禁全绿而 tarball 缺文件
+  // （lib/index.js 静态 import ./host-boundary.js → 安装后 ERR_MODULE_NOT_FOUND，插件完全不加载）。
+  // 故把「files 覆盖面 ⊇ lib/ 全部实际文件 ∧ ⊇ 入口相对 import 传递闭包」锁进 smoke；
+  // 并约束 files 条目形态（精确路径或目录前缀）——出现 glob/否定式即刻红，强制显式评审（不静默失配）。
+  const filesEntries = Array.isArray(pkgJson.files) ? pkgJson.files : []
+  const LIB_FILES = readdirSync(new URL('../lib', import.meta.url)).sort()
+  const pkgCovered = (rel) => filesEntries.some((p) => (p.endsWith('/') ? rel.startsWith(p) : rel === p))
+  const pkgUncovered = LIB_FILES.filter((f) => !pkgCovered('lib/' + f))
+  const patternBad = filesEntries.filter((p) => !/^[^*?[\]{}]+$/.test(p))
+  const entryRels = [...new Set([pkgJson.main, ...Object.values(pkgJson.exports ?? {})])]
+    .filter((v) => typeof v === 'string')
+    .map((v) => v.replace(/^\.\//, ''))
+    .filter((v) => /\.(mjs|js)$/.test(v) && existsSync(new URL('../' + v, import.meta.url)))
+  const pkgClosure = new Set()
+  const walkImports = (rel) => {
+    if (pkgClosure.has(rel)) return
+    pkgClosure.add(rel)
+    const src = readFileSync(new URL('../' + rel, import.meta.url), 'utf8')
+    for (const m of src.matchAll(/from\s*'(\.{1,2}\/[^']+)'/g)) {
+      walkImports(join(dirname(rel), m[1]).replace(/\\/g, '/'))
+    }
+  }
+  for (const rel of entryRels) walkImports(rel)
+  const closureBad = [...pkgClosure].filter((rel) => !pkgCovered(rel))
+  const libOrphans = LIB_FILES.filter((f) => !pkgClosure.has('lib/' + f))
+  check('COMPAT-004 F1 打包面：package.json files ⊇ lib/ 全部 ' + LIB_FILES.length + ' 文件 ∧ ⊇ 入口相对 import 闭包 ' + pkgClosure.size + ' 文件（' + entryRels.length + ' 入口）∧ 条目形态白名单（精确路径/目录前缀）',
+    filesEntries.length > 0 && pkgUncovered.length === 0 && closureBad.length === 0 && patternBad.length === 0,
+    'files=' + JSON.stringify(filesEntries) + ' uncovered=' + JSON.stringify(pkgUncovered) + ' closureBad=' + JSON.stringify(closureBad) + ' patternBad=' + JSON.stringify(patternBad))
+  check('COMPAT-004 F1 打包面：lib/ 零闭包外孤儿文件（files 收编 lib/ 后不夹带未消费文件）+ 边界/契约两文件在包内',
+    libOrphans.length === 0 && LIB_FILES.includes('host-boundary.js') && LIB_FILES.includes('host-contract.mjs'),
+    'orphans=' + JSON.stringify(libOrphans) + ' lib=' + JSON.stringify(LIB_FILES))
 
   // ② detectHostCapabilities（验收②）：职责显式 ≤3 句 + 探测项 = 契约面 1 全项投影 + 全同步（F7）+ 未探测项如实披露
   const respLines = boundarySrc.match(/@responsibility[^\n]*/g) ?? []
@@ -2101,6 +2142,13 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   const warnEmpty = []
   check('COMPAT-004 D2 告警③：满面场景零输出（单次告警不刷屏——无缺面即静默，返回 false）',
     boundary.warnCompatReport(repOk, { warn: (...a) => warnEmpty.push(a) }) === false && warnEmpty.length === 0, 'silent')
+  // ③b F4（R1）：诊断载荷 task 由契约 revisions 末项**派生**（禁硬编码任务名——否则 COMPAT-005/006 沿用本层
+  // 时会把一切缺面误标为 COMPAT-004，污染归因）。断言：值 ≡ 契约末项 ∧ 源码以派生式赋值（无 task 字面量）。
+  check('COMPAT-004 F4：载荷 task 派生自契约 revisions 末项（实测 = ' + hc4.revisions.at(-1).task + '，非硬编码）+ 边界源码 task 无字面量赋值',
+    payload !== null && payload.task === hc4.revisions.at(-1).task
+      && !boundarySrc.includes("task: 'COMPAT-004'") && boundarySrc.includes('task: CONTRACT_TASK')
+      && boundarySrc.includes('hostContract.revisions.at(-1).task'),
+    'task=' + String(payload === null ? null : payload.task) + ' derived=' + String(boundarySrc.includes('hostContract.revisions.at(-1).task')))
 
   // ④ A3 双路径（验收④）：connection/locale 在 / 缺 均挂载成功；服务在时 locale 生效，缺时降级默认 zh 不崩溃
   const labelOf = (regs, id) => { const r = regs.find((x) => x.id === id); return r === undefined ? null : r.label() }
@@ -2138,6 +2186,60 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
       && hc4.regionLiterals.serviceNames.ctxGet.includes('locale'),
     'inject=' + JSON.stringify(hc4.regionLiterals.serviceNames.inject) + ' ctxGet=' + JSON.stringify(hc4.regionLiterals.serviceNames.ctxGet))
 
+  // ④b F2（R1 返工）：locale 服务**后到**自愈——方案 a（与 sessions 同构）：**同一个** internal/service
+  // 监听器加 locale 分支（重快照 + 通知已挂载组件重渲染）；宿主槽位标签改渲染期惰性取快照，不再固化
+  // apply 期字典。构造：先以 locale='zh' 的宿主归零模块快照（消除前序用例残留——localeValue 是模块级状态）
+  // → 再以「locale 缺席」的宿主挂载（捕获 internal/service 监听器）→ 服务后到触发事件 → 标签 zh ⇒ en。
+  const zhBase = runClientApply((n) => (n === 'locale' ? { getSnapshot: () => ({ active: 'zh' }) } : undefined))
+  // 标签现为**渲染期惰性**取值（读模块级 localeValue）——故基线标签必须**立即**读（延迟读会读到后续用例改过的快照）。
+  const zhBaseLabel = labelOf(zhBase.regs, 'novel-writing')
+  const lateBag = {}
+  const lateRegs = []
+  const lateHandlers = []
+  let lateOff = false
+  let lateErr = ''
+  let lateCleanup = null
+  const ctxLate = {
+    get: (n) => lateBag[n],
+    on: (ev, fn) => { lateHandlers.push([ev, fn]); return () => { lateOff = true } },
+    slots: { inject: (s, fn) => fn(), register: (def) => lateRegs.push(def) },
+  }
+  try { lateCleanup = clientExports.apply(ctxLate) } catch (e) { lateErr = e.message }
+  const lateLabel = () => { const r = lateRegs.find((x) => x.id === 'novel-writing'); return r === undefined ? null : r.label() }
+  const labelBefore = lateLabel()
+  lateBag.locale = { getSnapshot: () => ({ active: 'en' }) } // 宿主 locale 服务「后到」
+  const lateListener = lateHandlers.find(([ev]) => ev === 'internal/service')
+  if (lateListener !== undefined) lateListener[1]('locale')
+  const labelAfter = lateLabel()
+  if (typeof lateCleanup === 'function') lateCleanup()
+  check('COMPAT-004 F2：locale 服务「后到」自愈（单一 internal/service 监听器重快照 + 标签渲染期惰性取值）——缺席期 zh → 事件后 en',
+    zhBase.err === '' && zhBaseLabel === '小说写作'
+      && lateErr === '' && lateHandlers.length === 1 && typeof lateCleanup === 'function'
+      && labelBefore === '小说写作' && labelAfter === 'Novel Writing' && lateOff === true,
+    'base=' + String(zhBaseLabel) + ' before=' + String(labelBefore) + ' after=' + String(labelAfter)
+      + ' handlers=' + lateHandlers.length + ' off=' + lateOff + ' err=' + lateErr)
+  // ④c F2：locale 取值路径**零抛出**——本回调运行在宿主事件派发链内，抛错会打断宿主；ctx.get('locale')
+  // 抛错 / 服务形态不合格 / getSnapshot 抛错 ⇒ 保持现值（不写入 undefined、不崩）。此处现值 = 上一用例的 en。
+  const throwBag = {}
+  const throwRegs = []
+  const throwHandlers = []
+  const ctxThrowGet = {
+    get: (n) => { if (n === 'locale') throw new Error('locale service not provided'); return throwBag[n] },
+    on: (ev, fn) => { throwHandlers.push([ev, fn]); return () => {} },
+    slots: { inject: (s, fn) => fn(), register: (def) => throwRegs.push(def) },
+  }
+  let throwErr = ''
+  let fireErr = ''
+  try {
+    clientExports.apply(ctxThrowGet)
+    try { throwHandlers[0][1]('locale') } catch (e) { fireErr = e.message }
+  } catch (e) { throwErr = e.message }
+  const throwLabel = throwRegs.find((x) => x.id === 'novel-writing')
+  check('COMPAT-004 F2：locale 取值零抛出（ctx.get 抛错 → 保持现值 + 事件回调不抛，不打断宿主事件派发）',
+    throwErr === '' && fireErr === '' && throwHandlers.length === 1
+      && throwLabel !== undefined && throwLabel.label() === 'Novel Writing',
+    'err=' + throwErr + ' fired=' + fireErr + ' label=' + String(throwLabel === undefined ? null : throwLabel.label()))
+
   // ⑤ FIND-3/FIND-4（验收⑤）：fixtures 过筛项登记 + 契约判据优先级 + extract.mjs 边界披露
   const fieldMissing = []
   const exclAll = []
@@ -2164,6 +2266,66 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   const extractSrc = readFileSync(new URL('./fixtures/host-surfaces/extract.mjs', import.meta.url), 'utf8')
   check('COMPAT-004 FIND-4：extract.mjs 已知边界补正则字面量/嵌套模板串（花括号配平失真风险，当前未触发）',
     extractSrc.includes('不识别正则字面量') && extractSrc.includes('嵌套模板串') && extractSrc.includes('当前未触发'), 'caveat-recorded')
+
+  // ⑥ F3（R1）：宿主 `ctx.get` 语义**可对账化**——抛错构造断言（探测兜底不崩 + 产品路径透传不吞错，两向锁定）
+  // + 语义入契约 ctxGetSemantics（两形态行为 / 依赖面 / 兜底路径 / 复核状态 unverified + 残余风险如实披露）。
+  // 背景：本环境无宿主 cordis 源码可及，原仅靠 lib/client.js 注释引用（审查 F3：不可复核）。
+  const throwGetCtx = {
+    settings: { register() {}, get() {} },
+    get: () => { throw new Error('ctx.get: service not provided') },
+    effect() {}, emit() {}, logger: {},
+  }
+  let probeErr = ''
+  let repThrow = null
+  try { repThrow = boundary.detectHostCapabilities(throwGetCtx) } catch (e) { probeErr = e.message }
+  let warnThrowOk = false
+  try { warnThrowOk = boundary.warnCompatReport(repThrow, { warn: () => {} }) === true } catch { warnThrowOk = false }
+  let passthroughThrew = false
+  try { boundary.getWebServer(throwGetCtx) } catch { passthroughThrew = true }
+  const sem = hc4.ctxGetSemantics
+  check('COMPAT-004 F3：ctx.get 抛错构造断言——safeGet 兜底探测不崩（1.8 如实判缺面）+ 缺面告警可发 + 产品路径透传不吞错',
+    probeErr === '' && repThrow !== null && repThrow.missing.length === 1 && repThrow.missing[0].item === '1.8'
+      && repThrow.summary.missing === 1 && warnThrowOk === true && passthroughThrew === true,
+    'err=' + probeErr + ' missing=' + JSON.stringify(repThrow === null ? null : repThrow.missing.map((m) => m.item))
+      + ' passthroughThrew=' + passthroughThrew)
+  check('COMPAT-004 F3：契约 ctxGetSemantics 语义入册（两形态行为 + 依赖面 ≥2 + 兜底路径 + 复核状态 unverified + 残余风险非空）',
+    sem !== undefined && typeof sem.missingService === 'string' && sem.missingService.includes('undefined')
+      && typeof sem.propertyAccess === 'string' && sem.propertyAccess.includes('without inject')
+      && Array.isArray(sem.dependent) && sem.dependent.length >= 2
+      && typeof sem.fallback === 'string' && typeof sem.evidence === 'string' && sem.evidence !== ''
+      && sem.status === 'unverified' && typeof sem.risk === 'string' && sem.risk !== '',
+    'sem=' + JSON.stringify(sem === undefined ? null : { status: sem.status, dependent: sem.dependent.length }))
+
+  // ⑦ F6（R1）：`lib/index.js` 的 inject 与边界 hostInject **非共享引用**——宿主/消费方就地改写 inject
+  // 不再污染边界层（hostInject 同时是能力探测判据 1.5 的输入）。断言非同一引用 + 内容等价 + 改写零泄漏。
+  const injectBefore = JSON.stringify(boundary.hostInject)
+  mod.inject.push('__r1_probe__')
+  const injectLeaked = boundary.hostInject.includes('__r1_probe__')
+  mod.inject.pop()
+  check('COMPAT-004 F6：lib/index.js inject = 边界 hostInject 的副本（非共享引用；就地改写零泄漏，内容等价 ' + injectBefore + '）',
+    mod.inject !== boundary.hostInject && injectLeaked === false
+      && JSON.stringify(mod.inject) === injectBefore && JSON.stringify(boundary.hostInject) === injectBefore,
+    'sameRef=' + String(mod.inject === boundary.hostInject) + ' inject=' + JSON.stringify(mod.inject))
+
+  // ⑧ F7（R1）：收口口径**跨文档统一**——「lib/index.js 宿主调用 100% 收口」+ tools 行（契约 1.11）显式排除。
+  // 断言口径（不止「某处出现过字面」）：①三处文档均含限定短语（剥 markdown 装饰后比对）；②文档中**每一处**
+  // 「100% 收口」都限定在 lib/index.js（把一切「服务端全域收口」式表述挡在门外）；③tools 行显式排除。
+  const SCOPE_PHRASE = 'lib/index.js 宿主调用 100% 收口'
+  const scopeDocs = [
+    ['CHANGELOG.md', readFileSync(new URL('../CHANGELOG.md', import.meta.url), 'utf8')],
+    ['lib/host-contract.mjs', contractSrc4],
+    ['lib/host-boundary.js', boundarySrc],
+  ]
+  const scopeUnqualified = []
+  for (const [f, s] of scopeDocs) {
+    for (const line of s.split('\n')) {
+      if (/100%\s*收口/.test(line) && !line.includes('lib/index.js')) scopeUnqualified.push(f)
+    }
+  }
+  const scopeBad = scopeDocs.filter(([, s]) => !s.replace(/[`*]/g, '').includes(SCOPE_PHRASE) || !s.includes('lib/tools.js'))
+  check('COMPAT-004 F7：收口口径跨文档统一（CHANGELOG/契约/边界头 3 处含「' + SCOPE_PHRASE + '」+ 每处「100% 收口」均限定 lib/index.js + tools 行显式排除）',
+    scopeBad.length === 0 && scopeUnqualified.length === 0,
+    'bad=' + JSON.stringify(scopeBad.map(([f]) => f)) + ' unqualified=' + JSON.stringify(scopeUnqualified))
 }
 
 console.log(`\nSMOKE DONE: ${passed} passed, ${failed} failed`)
