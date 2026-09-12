@@ -5,8 +5,10 @@
   "source": "npm pack 真实 tarball（registry 可达；解包后静态提取，未 install、未执行宿主代码）——0.1.x 线（旧表面线）最新发布版本，代表 host-contract 6.3「0.1.x 旧表面（connection.api 回退）」；cordis/schemastery 属独立版本族未纳入本快照",
   "extraction": {
     "kind": "package-extract（npm pack 真实 tarball 解包闭包 或 已安装宿主闭包只读目录——由 --packed/--checkout 指定）",
+    "layout": "packed",
     "tool": "test/fixtures/host-surfaces/extract.mjs",
     "method": "static-parse（静态解析，零动态 import、零执行宿主代码）",
+    "classExtraction": "classBody 花括号配对 → 仅类体顶层（depth===1）匹配 + 关键字黑名单 + 排除点号前缀调用（COMPAT-011 C1）",
     "entryResolution": "package.json exports['.'].import|default ← module ← main ← index.js；子面 './client' 同法",
     "concerns": [
       "exportNames",
@@ -43,44 +45,13 @@
       "clientExportKey": null,
       "clientExports": null,
       "classes": {
-        "default": {
-          "extends": "Service",
-          "extendsFrom": "@deepseek-ai/cordis",
-          "methodNames": [
-            "isStopped",
-            "constructor",
-            "super",
-            "documentPath",
-            "prepareDocument",
-            "register",
-            "if",
-            "return",
-            "describe",
-            "get",
-            "update",
-            "replace",
-            "mutate",
-            "for",
-            "write",
-            "publish",
-            "section",
-            "resolve",
-            "bumpRevision",
-            "emitDocumentUpdated",
-            "commit",
-            "warnWatcherFailure",
-            "warnListenerFailure"
-          ],
-          "methodCount": 23
-        },
         "SettingsConflictError": {
           "extends": "Error",
           "extendsFrom": null,
           "methodNames": [
-            "constructor",
-            "super"
+            "constructor"
           ],
-          "methodCount": 2
+          "methodCount": 1
         },
         "SettingsProvider": {
           "extends": "Service",
@@ -88,18 +59,14 @@
           "methodNames": [
             "isStopped",
             "constructor",
-            "super",
             "documentPath",
             "prepareDocument",
             "register",
-            "if",
-            "return",
             "describe",
             "get",
             "update",
             "replace",
             "mutate",
-            "for",
             "write",
             "publish",
             "section",
@@ -110,11 +77,13 @@
             "warnWatcherFailure",
             "warnListenerFailure"
           ],
-          "methodCount": 23
+          "methodCount": 19
         }
       },
-      "classCount": 3,
-      "classAliases": {},
+      "classCount": 2,
+      "classAliases": {
+        "default": "SettingsProvider"
+      },
       "functions": [
         "deepEqualJson",
         "installSettingsSection",
@@ -136,51 +105,22 @@
       "clientExportKey": "./client",
       "clientExports": [],
       "classes": {
-        "default": {
-          "extends": "Service",
-          "extendsFrom": "@deepseek-ai/cordis",
-          "methodNames": [
-            "constructor",
-            "super",
-            "claimsEndpoint",
-            "if",
-            "collectSrcClaims",
-            "for",
-            "invoke",
-            "assertExactArguments",
-            "validateBinding",
-            "dispatchRpc",
-            "invokeRpc",
-            "resolveDescriptor",
-            "resolveSrcDescriptor",
-            "srcDescriptor",
-            "resolveReceiverContext",
-            "resolveParameter"
-          ],
-          "methodCount": 16
-        },
         "TypertGatewayError": {
           "extends": "Error",
           "extendsFrom": null,
           "methodNames": [
-            "constructor",
-            "super"
+            "constructor"
           ],
-          "methodCount": 2
+          "methodCount": 1
         },
         "TypertGatewayService": {
           "extends": "Service",
           "extendsFrom": "@deepseek-ai/cordis",
           "methodNames": [
             "constructor",
-            "super",
             "claimsEndpoint",
-            "if",
             "collectSrcClaims",
-            "for",
             "invoke",
-            "assertExactArguments",
-            "validateBinding",
             "dispatchRpc",
             "invokeRpc",
             "resolveDescriptor",
@@ -189,11 +129,13 @@
             "resolveReceiverContext",
             "resolveParameter"
           ],
-          "methodCount": 16
+          "methodCount": 11
         }
       },
-      "classCount": 3,
-      "classAliases": {},
+      "classCount": 2,
+      "classAliases": {
+        "default": "TypertGatewayService"
+      },
       "functions": [],
       "constants": []
     },
@@ -217,58 +159,25 @@
           "extendsFrom": "@deepseek-ai/cordis",
           "methodNames": [
             "constructor",
-            "super",
-            "if",
-            "queueMicrotask",
-            "for",
             "graph",
             "clientPath",
             "rebuilt",
-            "notify",
             "onRebuilt",
-            "return",
             "onGraphChanged",
             "compose",
             "notifyGraphChanged",
-            "listener",
             "resolveMeta",
             "initialBundleRevision",
             "processOne",
-            "flush",
-            "onError"
+            "flush"
           ],
-          "methodCount": 20
-        },
-        "default": {
-          "extends": "Service",
-          "extendsFrom": "@deepseek-ai/cordis",
-          "methodNames": [
-            "constructor",
-            "super",
-            "if",
-            "queueMicrotask",
-            "for",
-            "graph",
-            "clientPath",
-            "rebuilt",
-            "notify",
-            "onRebuilt",
-            "return",
-            "onGraphChanged",
-            "compose",
-            "notifyGraphChanged",
-            "listener",
-            "resolveMeta",
-            "initialBundleRevision",
-            "processOne",
-            "flush",
-            "onError"
-          ],
-          "methodCount": 20
+          "methodCount": 12
         }
       },
-      "classCount": 2,
-      "classAliases": {},
+      "classCount": 1,
+      "classAliases": {
+        "default": "ClientModuleRegistry"
+      },
       "functions": [
         "bootInjections",
         "orderByModuleGraph",
@@ -299,16 +208,12 @@
           "extendsFrom": "@deepseek-ai/cordis",
           "methodNames": [
             "constructor",
-            "super",
             "rpc",
             "createSharedFetchHandler",
-            "if",
             "register",
-            "assertChannel",
-            "registerInterceptor",
-            "return"
+            "registerInterceptor"
           ],
-          "methodCount": 9
+          "methodCount": 5
         }
       },
       "classCount": 1,
@@ -397,122 +302,55 @@
           "extends": "HarnessError",
           "extendsFrom": "@deepseek-ai/dsh-llm",
           "methodNames": [
-            "constructor",
-            "super"
+            "constructor"
           ],
-          "methodCount": 2
-        },
-        "default": {
-          "extends": "Service",
-          "extendsFrom": "@deepseek-ai/cordis",
-          "methodNames": [
-            "constructor",
-            "super",
-            "if",
-            "collapseSection",
-            "sdkSection",
-            "modeFor",
-            "for",
-            "requireCodeTransport",
-            "presentAs",
-            "return",
-            "wireSchemas",
-            "requireCodeRuntime",
-            "register",
-            "assertSupportedJsonSchema",
-            "restrict",
-            "guard",
-            "guardReason",
-            "view",
-            "get",
-            "resolveExecution",
-            "schemas",
-            "sdkSchemas",
-            "schemaOf",
-            "executionMode",
-            "shapeDispatchLog",
-            "collapses",
-            "execute",
-            "completeScheduledExecution",
-            "switch",
-            "createExecution",
-            "deferContext",
-            "concludeTurn",
-            "prepareScheduledExecution",
-            "prepareExecution",
-            "callerCancelled",
-            "cancellationResult",
-            "dispatchToolBody",
-            "dispatchScheduledExecution",
-            "finalizeScheduledExecution",
-            "finishScheduledExecution",
-            "applyFinalContent",
-            "notifyResult",
-            "scopeTarget",
-            "reportFailure",
-            "serviceAsk",
-            "postExecute",
-            "markCanonical",
-            "createSuccessResult",
-            "normalizeDispatchResult",
-            "materializeFinalResult"
-          ],
-          "methodCount": 50
+          "methodCount": 1
         },
         "JsonSchemaError": {
           "extends": "HarnessError",
           "extendsFrom": "@deepseek-ai/dsh-llm",
           "methodNames": [
-            "constructor",
-            "super"
+            "constructor"
           ],
-          "methodCount": 2
+          "methodCount": 1
         },
         "ToolArgsError": {
           "extends": "HarnessError",
           "extendsFrom": "@deepseek-ai/dsh-llm",
           "methodNames": [
-            "constructor",
-            "super"
+            "constructor"
           ],
-          "methodCount": 2
+          "methodCount": 1
         },
         "ToolNotFoundError": {
           "extends": "HarnessError",
           "extendsFrom": "@deepseek-ai/dsh-llm",
           "methodNames": [
-            "constructor",
-            "super"
+            "constructor"
           ],
-          "methodCount": 2
+          "methodCount": 1
         },
         "ToolOutputError": {
           "extends": "HarnessError",
           "extendsFrom": "@deepseek-ai/dsh-llm",
           "methodNames": [
-            "constructor",
-            "super"
+            "constructor"
           ],
-          "methodCount": 2
+          "methodCount": 1
         },
         "ToolRuntime": {
           "extends": "Service",
           "extendsFrom": "@deepseek-ai/cordis",
           "methodNames": [
             "constructor",
-            "super",
-            "if",
             "collapseSection",
             "sdkSection",
             "modeFor",
-            "for",
             "requireCodeTransport",
             "presentAs",
-            "return",
             "wireSchemas",
             "requireCodeRuntime",
             "register",
-            "assertSupportedJsonSchema",
             "restrict",
             "guard",
             "guardReason",
@@ -527,10 +365,7 @@
             "collapses",
             "execute",
             "completeScheduledExecution",
-            "switch",
             "createExecution",
-            "deferContext",
-            "concludeTurn",
             "prepareScheduledExecution",
             "prepareExecution",
             "callerCancelled",
@@ -541,8 +376,6 @@
             "finishScheduledExecution",
             "applyFinalContent",
             "notifyResult",
-            "scopeTarget",
-            "reportFailure",
             "serviceAsk",
             "postExecute",
             "markCanonical",
@@ -550,11 +383,13 @@
             "normalizeDispatchResult",
             "materializeFinalResult"
           ],
-          "methodCount": 50
+          "methodCount": 40
         }
       },
-      "classCount": 7,
-      "classAliases": {},
+      "classCount": 6,
+      "classAliases": {
+        "default": "ToolRuntime"
+      },
       "functions": [
         "assertObjectJsonSchema",
         "assertSupportedJsonSchema",

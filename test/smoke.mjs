@@ -1784,7 +1784,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
 // （npm pack tarball 解包 / 已安装闭包），每份头部 source 如实标注（真实包提取 vs 证据构造）。
 {
   const { hostContract: hc } = await import('../lib/host-contract.mjs')
-  const { extractHeredocs, staticExportKeys, dynamicMockExportKeys } = await import('./fixtures/host-surfaces/ci-mock-face.mjs')
+  const { extractHeredocs, staticExportKeys, dynamicMockExportKeys, mockFaces } = await import('./fixtures/host-surfaces/ci-mock-face.mjs')
   const hs = hc.hostSurface
   const fixtureUrl = (v) => new URL('./fixtures/host-surfaces/' + v + '.json', import.meta.url)
   const versions = Object.keys(hs.packages)
@@ -1799,6 +1799,24 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
         && typeof fixtures[v].source === 'string' && fixtures[v].source.length > 30
         && fixtures[v].hostVersion === v && sameSet(Object.keys(fixtures[v].packages), hs.packages[v])),
     'versions=' + versions.length + ' packages=' + versions.map((v) => Object.keys(fixtures[v].packages).length).join('/'))
+
+  // ①b C5 fixtures 内部版本一致性：非例外包 version MUST === hostVersion（本任务恰有「CLI 0.1.5-rc.1 vs
+  // 子包 0.1.5-rc.2」的版本分歧教训）；cordis/schemastery 属独立版本族 → 契约显式例外表，且例外表 MUST 有实据
+  // （双向：既防漏列例外，也防例外表腐化成「万能豁免」）。
+  const versionMismatch = []
+  for (const v of versions) {
+    for (const [p, pkgFace] of Object.entries(fixtures[v].packages)) {
+      if (hs.versionExceptions.includes(p)) continue
+      if (pkgFace.version !== fixtures[v].hostVersion) versionMismatch.push(v + ':' + p + '@' + pkgFace.version + '≠' + fixtures[v].hostVersion)
+    }
+  }
+  const staleExceptions = hs.versionExceptions.filter((p) => {
+    const pkgFace = fixtures[hs.current].packages[p]
+    return pkgFace === undefined || pkgFace.version === fixtures[hs.current].hostVersion
+  })
+  check('COMPAT-011 C5 fixtures 版本一致性：非例外包 packages[p].version ≡ hostVersion（' + versions.length + ' 版本 × ' + versions.map((v) => Object.keys(fixtures[v].packages).length).join('/') + ' 包）+ 例外表 ' + JSON.stringify(hs.versionExceptions) + ' 有实据',
+    versionMismatch.length === 0 && staleExceptions.length === 0,
+    'mismatch=' + JSON.stringify(versionMismatch) + ' stale=' + JSON.stringify(staleExceptions))
 
   // ② 契约声明面 ⊆ 现行 fixture 实测面（逐包导出依赖；contract ⊆ fixture 的机检形态）
   const missingExports = []
@@ -1820,29 +1838,54 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
       && hc.items.some((it) => it.item === '1.4' && it.necessity === 'eliminated' && it.symbol.includes('settingsNamespace')),
     'unexpected=' + JSON.stringify(stillExported) + ' fixture=' + JSON.stringify(fixtures[hs.current].packages['dsh-settings'].exports))
 
-  // ④⑤⑥ 版本差异 golden（三标记 × 三版本）——每项均由 fixture markers 实测值与契约 golden 逐版本比对
+  // ④⑤⑥ 版本差异 golden（三标记 × 三版本）——value + origin 双机检（COMPAT-011 C4）：
+  // 「三版本实测」措辞对 remoteNamespaceServicePackages 不成立（该值由命令行注入的注册表事实，origin
+  // ='registry-metadata'）⇒ 本断言把 origin 纳入机检：静态提取类的 origin 由 fixture.extraction.layout 决定
+  // （packed → 'tarball-static-extract'，checkout → 'checkout-static-extract'），防「注入值伪装成实测」。
+  const LAYOUT_ORIGIN = { packed: 'tarball-static-extract', checkout: 'checkout-static-extract' }
+  const expectedOrigin = (fact, fx) => (hs.versionFactOrigins[fact] === 'registry-metadata'
+    ? 'registry-metadata'
+    : (LAYOUT_ORIGIN[fx.extraction.layout] ?? null))
   for (const fact of ['settingsNamespaceExported', 'connectionApiDomainField', 'remoteNamespaceServicePackages']) {
     const got = hs.versionFacts.map((f) => fixtures[f.version].markers[fact].value)
     const want = hs.versionFacts.map((f) => f[fact])
-    check('COMPAT-003 版本差异 ' + fact + '：三版本实测 ≡ 契约 golden [' + want.join(', ') + ']（0.1.x → 0.1.2-rc.1 断点）',
-      JSON.stringify(got) === JSON.stringify(want), 'got=' + JSON.stringify(got) + ' want=' + JSON.stringify(want))
+    const originBad = hs.versionFacts.map((f) => f.version).filter((v) => fixtures[v].markers[fact].origin !== expectedOrigin(fact, fixtures[v]))
+    check('COMPAT-003 版本差异 ' + fact + '：fixture ≡ 契约 golden [' + want.join(', ') + ']（来源 ' + (hs.versionFactOrigins[fact] === 'registry-metadata' ? '注册表元数据注入' : '静态提取实测，origin 按 layout 分流') + '；0.1.x → 0.1.2-rc.1 断点）',
+      JSON.stringify(got) === JSON.stringify(want) && originBad.length === 0,
+      'got=' + JSON.stringify(got) + ' want=' + JSON.stringify(want) + ' originBad=' + JSON.stringify(originBad))
   }
 
-  // ⑦ F1 面钉：ci.yml mock 动态 import 导出键集 ≡ 契约声明面 ≡ fixture 现行真实面（三方一致）
-  const { keys: mockKeys } = await dynamicMockExportKeys(join(root, 'ci-mock'))
-  const mockWant = [...hs.requiredExports[hs.ciMock.package]].sort()
-  const mockFixture = [...fixtures[hs.current].packages[localName(hs.ciMock.package)].exports].sort()
-  check('COMPAT-003 F1 面钉：ci.yml mock 运行时导出键集恰 = ' + JSON.stringify(mockWant),
-    JSON.stringify(mockKeys) === JSON.stringify(mockWant) && JSON.stringify(mockKeys) === JSON.stringify(mockFixture),
-    'mock=' + JSON.stringify(mockKeys) + ' fixture=' + JSON.stringify(mockFixture))
+  // ⑦ F1 面钉（COMPAT-011 C6 由 dsh-settings 单面扩至 4/4）：ci.yml 每个 mock 的动态 import 导出键集
+  // ≡ 契约 requiredExports[本包] ⊆ fixture 现行宿主真实面。三方数据独立：mock 源码（ci.yml）/ 契约声明 /
+  // 宿主真实包 —— 即「mock 既不缺我方所需面，也不导出宿主真实面之外的东西」（后者 = BUG-003 假绿防线）。
+  const faces = mockFaces()
+  const mockResults = []
+  for (const f of faces) {
+    const { keys } = await dynamicMockExportKeys(join(root, 'ci-mock'), f)
+    const keys2 = [...keys].sort()
+    const want = [...(f.expected ?? [])].sort()
+    const hostFace = fixtures[hs.current].packages[f.localName]
+    const hostKeys = hostFace === undefined ? [] : [...hostFace.exports].sort()
+    mockResults.push({ pkg: f.localName, keys: keys2, want, ok: JSON.stringify(keys2) === JSON.stringify(want) && want.every((k) => hostKeys.includes(k)) })
+  }
+  check('COMPAT-003 F1 面钉（COMPAT-011 C6 扩 4/4）：' + faces.length + ' 个 ci.yml mock 运行时导出键集 ≡ 契约 requiredExports ⊆ fixture 宿主真实面',
+    faces.length === 4 && faces.every((f) => Array.isArray(f.expected) && f.expected.length > 0) && mockResults.every((r) => r.ok),
+    JSON.stringify(mockResults.map((r) => r.pkg + (r.ok ? '✓' : '✗') + JSON.stringify(r.keys))))
 
-  // ⑧ F1 静态/动态互证：ci.yml mock 源码静态解析导出面 ≡ 动态 import 键集（CI sanity 步骤同口径）
+  // ⑧ F1 静态/动态互证（C6 4/4）：每个 mock 源码静态解析导出面 ≡ 动态 import 键集（两法独立证据；CI sanity 同口径）
+  // C7②：heredoc 改名/缺失时判 undefined → 结构化 FAIL（原为 staticExportKeys(undefined) 抛 TypeError 中断 smoke）
   const ciYmlSrc = readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8')
-  const mockSource = extractHeredocs(ciYmlSrc).get(hs.ciMock.heredocTarget)
-  const mockStatic = staticExportKeys(mockSource)
-  check('COMPAT-003 F1 互证：ci.yml mock 静态解析导出面 ≡ 动态 import 键集（两法独立证据）',
-    mockStatic.length === mockKeys.length && sameSet(mockStatic, mockKeys),
-    'static=' + JSON.stringify(mockStatic))
+  const ciHeredocs = extractHeredocs(ciYmlSrc)
+  const staticBad = []
+  for (const f of faces) {
+    const mockSource = ciHeredocs.get(f.heredocTarget)
+    if (mockSource === undefined) { staticBad.push(f.localName + ':heredoc 缺失 ' + f.heredocTarget); continue }
+    const mockStatic = staticExportKeys(mockSource)
+    const dyn = (mockResults.find((r) => r.pkg === f.localName) ?? { keys: [] }).keys
+    if (mockStatic.length !== dyn.length || !sameSet(mockStatic, dyn)) staticBad.push(f.localName + ':static=' + JSON.stringify(mockStatic) + ' dynamic=' + JSON.stringify(dyn))
+  }
+  check('COMPAT-003 F1 互证（C6 4/4）：' + faces.length + ' 个 mock 静态解析导出面 ≡ 动态 import 键集（两法独立证据）',
+    staticBad.length === 0, staticBad.join(' | ') || 'clean')
 
   // ⑨ fixtures 内容安全边界（BC-05）：无绝对路径/宿主缓存路径/凭据形态（仅导出名·方法名·形状布尔）
   const SENSITIVE = /[A-Za-z]:\\|\/Users\/|\/home\/|AppData|npm-cache|Bearer\s|password|api[_-]?key/i
@@ -1878,23 +1921,39 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   check('COMPAT-003 F5b 行号活性：每项首个行号 ≤ 目标文件总行数（' + hc.items.filter((i) => i.line !== null).length + ' 项）',
     lineBad.length === 0, 'bad=' + JSON.stringify(lineBad.map((i) => i.item + ':' + i.line)))
 
-  // ⑫ F5c 锚点抽核：每面抽 1 项（该面首个有 file+line 的条目），symbol 的标识符候选须在目标文件命中
-  // 锚点规则（弱锚点，防 file 指错文件）：候选 = symbol 中的引号字面量 + 点号标识符 + 裸标识符（≥4 字符）
+  // ⑫ F5c 锚点抽核（COMPAT-011 C3 强化）：每面抽 1 项（该面首个有 file+line 的条目），symbol 的**非通用**
+  // 标识符候选须在目标文件命中。修订点：①候选**剥离引号后**入集（原实现保留引号，只有源文件同引号同内容才命中）；
+  // ②分级（1 = 引号字面量 > 2 = 点号标识符 > 3 = 裸词 ≥4 字符），报告命中的最佳层级；
+  // ③排除通用词表——否则 `package.json`/`name`/`cordis`/`package` 这类「任何 JS/JSON/YAML 都会命中」的词
+  // 使 4/6 面近乎恒真，宣称的「防 file 指错文件」不成立；④断言改为「至少一个非通用候选命中」。
+  const COMMON_WORDS = new Set([
+    'package.json', 'package', 'json', 'yml', 'yaml', 'index.js', 'index', 'main', 'module',
+    'default', 'import', 'export', 'class', 'const', 'let', 'var', 'function', 'require', 'return',
+    'async', 'await', 'static', 'new', 'this', 'null', 'undefined', 'true', 'false', 'type', 'typeof',
+    'string', 'number', 'boolean', 'object', 'array', 'value', 'version', 'name', 'description',
+    'deepseek', 'cordis', 'dsh', 'settings', 'home', 'paths', 'tools', 'document', 'window', 'data',
+  ])
   const anchors = []
   for (const f of [1, 2, 3, 4, 5, 6]) {
     const it = hc.items.find((x) => x.face === f && filesOf(x).length > 0 && x.line !== null)
-    if (it === undefined) { anchors.push({ face: f, item: '—', hit: false }); continue }
+    if (it === undefined) { anchors.push({ face: f, item: '—', hit: false, tier: null, sample: [] }); continue }
     const src = readFileSync(new URL('../' + filesOf(it)[0], import.meta.url), 'utf8')
-    const cands = [...new Set([
-      ...(it.symbol.match(/"[^"]{4,}"/g) ?? []),
-      ...(it.symbol.match(/'[^']{3,}'/g) ?? []),
-      ...(it.symbol.match(/[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)+/g) ?? []),
-      ...(it.symbol.match(/[A-Za-z_$][\w$]{3,}/g) ?? []),
-    ])]
-    anchors.push({ face: f, item: it.item, hit: cands.length > 0 && cands.some((c) => src.includes(c)) })
+    const tiered = [
+      ...(it.symbol.match(/"[^"]{4,}"/g) ?? []).map((c) => [1, c.slice(1, -1)]),
+      ...(it.symbol.match(/'[^']{3,}'/g) ?? []).map((c) => [1, c.slice(1, -1)]),
+      ...(it.symbol.match(/[\u4e00-\u9fff]{3,}/g) ?? []).map((c) => [1, c]), // 中文名字面量（面 5 preset name 即此类）
+      ...(it.symbol.match(/[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)+/g) ?? []).map((c) => [2, c]),
+      ...(it.symbol.match(/[A-Za-z_$][\w$]{3,}/g) ?? []).map((c) => [3, c]),
+    ]
+    const tierOf = new Map()
+    for (const [tier, tok] of tiered) tierOf.set(tok, Math.min(tierOf.get(tok) ?? 3, tier))
+    const cands = [...tierOf].map(([tok, tier]) => ({ tok, tier })).filter((c) => !COMMON_WORDS.has(c.tok.toLowerCase()))
+    const hits = cands.filter((c) => src.includes(c.tok))
+    anchors.push({ face: f, item: it.item, hit: hits.length > 0, tier: hits.length > 0 ? Math.min(...hits.map((c) => c.tier)) : null, sample: hits.slice(0, 2).map((c) => c.tok) })
   }
-  check('COMPAT-003 F5c 锚点抽核：每面 1 项 symbol 标识符候选在目标文件命中（6/6）',
-    anchors.every((a) => a.hit), JSON.stringify(anchors.map((a) => a.item + (a.hit ? '✓' : '✗'))))
+  check('COMPAT-003 F5c 锚点抽核（C3 强化）：每面 1 项 symbol 的非通用候选在目标文件命中（6/6；通用词表排除 ' + COMMON_WORDS.size + ' 词，候选分 3 级）',
+    anchors.every((a) => a.hit),
+    JSON.stringify(anchors.map((a) => a.item + (a.hit ? '✓T' + a.tier : '✗'))))
 
   // ⑬ F6 necessity 九值 golden 分布（9 值全量 + 合计 48；防单值静默漂移）
   const GOLDEN_NEC = { required: 39, consolidatable: 1, adapted: 1, optional: 1, improvable: 2, own: 1, eliminated: 1, 'adapted-drift': 1, awareness: 1 }
@@ -1925,7 +1984,17 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
     if (v === null) return
     const t = typeof v
     if (ALLOWED_TYPES.has(t)) return
-    if (Array.isArray(v)) { v.forEach((x, i) => scanPureData(x, path + '[' + i + ']', bad)); return }
+    if (Array.isArray(v)) {
+      v.forEach((x, i) => scanPureData(x, path + '[' + i + ']', bad))
+      // N2：数组分支与对象分支对齐——检自有附加属性（排除索引/length，它们本为数据属性）与原型替换
+      for (const [k, d] of Object.entries(Object.getOwnPropertyDescriptors(v))) {
+        if (k === 'length' || /^\d+$/.test(k)) continue
+        if (!('value' in d)) bad.push(path + '.' + k + ':非数据属性')
+        else scanPureData(d.value, path + '.' + k, bad)
+      }
+      if (Object.getPrototypeOf(v) !== Array.prototype) bad.push(path + ':非原生数组原型')
+      return
+    }
     if (t === 'object') {
       for (const [k, d] of Object.entries(Object.getOwnPropertyDescriptors(v))) {
         if (!('value' in d)) bad.push(path + '.' + k + ':非数据属性')
