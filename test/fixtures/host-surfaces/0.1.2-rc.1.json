@@ -8,7 +8,7 @@
     "layout": "packed",
     "tool": "test/fixtures/host-surfaces/extract.mjs",
     "method": "static-parse（静态解析，零动态 import、零执行宿主代码）",
-    "classExtraction": "classBody 花括号配对 → 仅类体顶层（depth===1）匹配 + 关键字黑名单 + 排除点号前缀调用（COMPAT-011 C1）",
+    "classExtraction": "classBody 花括号配对 → 仅类体顶层（depth===1）匹配 + 关键字黑名单 + 排除点号前缀调用（COMPAT-011 C1）；黑名单过筛项连同原始行号落 methodNamesExcludedByKeyword（COMPAT-004 FIND-3）",
     "entryResolution": "package.json exports['.'].import|default ← module ← main ← index.js；子面 './client' 同法",
     "concerns": [
       "exportNames",
@@ -48,7 +48,8 @@
           "methodNames": [
             "constructor"
           ],
-          "methodCount": 1
+          "methodCount": 1,
+          "methodNamesExcludedByKeyword": []
         },
         "SettingsProvider": {
           "extends": "Service",
@@ -75,7 +76,8 @@
             "warnWatcherFailure",
             "warnListenerFailure"
           ],
-          "methodCount": 20
+          "methodCount": 20,
+          "methodNamesExcludedByKeyword": []
         }
       },
       "classCount": 2,
@@ -106,7 +108,8 @@
           "methodNames": [
             "constructor"
           ],
-          "methodCount": 1
+          "methodCount": 1,
+          "methodNamesExcludedByKeyword": []
         },
         "TypertGatewayService": {
           "extends": "Service",
@@ -139,7 +142,8 @@
             "resolveReceiverContext",
             "resolveParameter"
           ],
-          "methodCount": 26
+          "methodCount": 26,
+          "methodNamesExcludedByKeyword": []
         }
       },
       "classCount": 2,
@@ -190,7 +194,8 @@
             "reconcilePackage",
             "flush"
           ],
-          "methodCount": 21
+          "methodCount": 21,
+          "methodNamesExcludedByKeyword": []
         }
       },
       "classCount": 1,
@@ -243,7 +248,8 @@
             "register",
             "registerInterceptor"
           ],
-          "methodCount": 10
+          "methodCount": 10,
+          "methodNamesExcludedByKeyword": []
         }
       },
       "classCount": 1,
@@ -340,7 +346,8 @@
           "methodNames": [
             "constructor"
           ],
-          "methodCount": 1
+          "methodCount": 1,
+          "methodNamesExcludedByKeyword": []
         },
         "JsonSchemaError": {
           "extends": "HarnessError",
@@ -348,7 +355,8 @@
           "methodNames": [
             "constructor"
           ],
-          "methodCount": 1
+          "methodCount": 1,
+          "methodNamesExcludedByKeyword": []
         },
         "ToolArgsError": {
           "extends": "HarnessError",
@@ -356,7 +364,8 @@
           "methodNames": [
             "constructor"
           ],
-          "methodCount": 1
+          "methodCount": 1,
+          "methodNamesExcludedByKeyword": []
         },
         "ToolNotFoundError": {
           "extends": "HarnessError",
@@ -364,7 +373,8 @@
           "methodNames": [
             "constructor"
           ],
-          "methodCount": 1
+          "methodCount": 1,
+          "methodNamesExcludedByKeyword": []
         },
         "ToolOutputError": {
           "extends": "HarnessError",
@@ -372,7 +382,8 @@
           "methodNames": [
             "constructor"
           ],
-          "methodCount": 1
+          "methodCount": 1,
+          "methodNamesExcludedByKeyword": []
         },
         "ToolRuntime": {
           "extends": "Service",
@@ -419,7 +430,8 @@
             "normalizeDispatchResult",
             "materializeFinalResult"
           ],
-          "methodCount": 40
+          "methodCount": 40,
+          "methodNamesExcludedByKeyword": []
         }
       },
       "classCount": 6,

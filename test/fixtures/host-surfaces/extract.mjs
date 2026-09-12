@@ -53,8 +53,13 @@
  *      `--source` 逐字复用 fixture 既有 source 字段（勿改写，否则 diff 噪声）；重建后跑 `node test/smoke.mjs`
  *      与 `node test/fixtures/host-surfaces/ci-mock-face.mjs` 复核（231/0 + exit 0）。
  *
- * 字段语义（COMPAT-011 明确）：
- *   packages[p].classes        — 类名 → {extends, methodNames, methodCount}；仅类体顶层声明（C1）
+ * 字段语义（COMPAT-011 明确；COMPAT-004 增 methodNamesExcludedByKeyword）：
+ *   packages[p].classes        — 类名 → {extends, methodNames, methodCount, methodNamesExcludedByKeyword}；仅类体顶层声明（C1）
+ *   packages[p].classes[c].methodNamesExcludedByKeyword — 被关键字黑名单过筛的**真实类体顶层成员名**
+ *                                （COMPAT-004 FIND-3）：每项 {name, line, reason:'keyword-blocklist'}；line = 原始
+ *                                文件行号（与 §3/审查报告口径一致）。恒存在（空数组 = 无过筛）——消费方可据此区分
+ *                                「确实不存在」与「被过筛」。**判据优先级：exports/AST > methodNames**（methodNames
+ *                                有假阴性风险：被过筛的真实方法会被误报缺失，见本文件「已知边界」）。
  *   packages[p].classAliases   — 别名导出名 → classes 主名（如 `default` → 'SettingsProvider'）；
  *                                `export { X as default }` 与 `export default X` 不重复计数（C2）。
  *                                主名取首个非 `default` 的导出名；若某类仅以 `default` 导出，则主名即 `default`。
@@ -92,7 +97,11 @@ function parseArgs(argv) {
 }
 
 // ── 源码工具 ────────────────────────────────────────────────────────────────
-const stripComments = (src) => src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^[ \t]*\/\/.*$/gm, '')
+/** 剥注释，**行结构逐字节保留**（块注释内容替换为等量空白而非删除）——COMPAT-004：报告行号 MUST 等于
+ *  原始文件行号（FIND-3 的过筛项行号需与审查报告/§3 底稿口径一致），故不允许改变换行计数。 */
+const stripComments = (src) => src
+  .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
+  .replace(/^[ \t]*\/\/.*$/gm, '')
 
 /** 从 `class X ... {` / `var X = class ... {` 的 `{` 起做花括号配对（跳过字符串/模板串/注释），返回类体。 */
 function classBody(src, braceIdx) {
@@ -161,28 +170,51 @@ function maskToClassBodyTopLevel(body) {
 }
 
 /**
- * 类体 → 方法名集合（含 constructor/static/get/set/async/#private）。
+ * 类体 → { names, excluded }：names = 方法名集合（含 constructor/static/get/set/async/#private）；
+ * excluded = 被黑名单过筛的**真实**顶层成员（COMPAT-004 FIND-3：{name, line, reason}，恒记录不静默）。
  * 三层约束（COMPAT-011 C1）：①仅类体顶层（depth===1）——方法体内语句行首的 `if (`/`for (`/`super (`
  * 一律不入选；②关键字黑名单兜底；③排除 `this.`/`obj.` 点号前缀调用。
- * 已知边界（如实披露）：若宿主真的以关键字命名方法（cordis `DisposableList.delete` L17、
- * `RegistryService.delete` L1564、`Fiber.await` L1398），黑名单会将其一并滤除——语义上这些**是**类方法名，
- * 属黑名单的过筛（宁缺勿污染：`methodNames` 的消费方用于探测「我方调用的方法是否仍存在」，
- * 伪名会造成误报缺失，故以零关键字为硬口径）。
+ * 已知边界（如实披露，COMPAT-004 补）：
+ *   · 关键字命名方法：若宿主真的以关键字命名方法（cordis `DisposableList.delete` L17、
+ *     `RegistryService.delete` L1564、`Fiber.await` L1398），黑名单会将其一并滤除——语义上这些**是**类方法名，
+ *     属黑名单的过筛（宁缺勿污染：`methodNames` 的消费方用于探测「我方调用的方法是否仍存在」，
+ *     伪名会造成误报缺失，故以零关键字为硬口径）。**代价已不再静默**：过筛项连同原始行号落
+ *     `methodNamesExcludedByKeyword`（COMPAT-004 FIND-3），消费方可区分「确实不存在」与「被过筛」；
+ *     存在性判据优先级 = **exports/AST > methodNames**（methodNames 有假阴性风险）。
+ *   · 正则字面量与嵌套模板串（COMPAT-004 FIND-4，未触发）：`classBody` 与 `maskToClassBodyTopLevel` 仅
+ *     识别注释与 `' " \`` 字符串，**不识别正则字面量、不处理嵌套模板串**——类体/方法体内出现含 `{`/`}`
+ *     的正则（如 `/^\s*\{/`）或嵌套反引号时，花括号配平可能失真，后续顶层成员被误掩（漏检）或语句
+ *     行首被误捕（回流污染）。三份 fixtures 当前未触发（关键字命中 0、`SettingsProvider` 20 名与宿主
+ *     逐名一致）；根治路径 = 以语法位置判别替代关键字表（或复用现成 AST 解析器，P-08）。
+ * @param {string} body 类体源码（不含最外层花括号）
+ * @param {number} baseIdx body 在 src 中的起始下标（行号换算基准）
+ * @param {(idx:number)=>number} lineAt 绝对下标 → 原始文件行号
  */
-function methodsOf(body) {
+function methodsOf(body, baseIdx, lineAt) {
   const masked = maskToClassBodyTopLevel(body)
   const names = []
+  const excluded = []
+  const seenExcluded = new Set()
   const re = /(?:^|\n)[\t ]*(?:(?:static|async|get|set|\*)\s+)*((?:#)?[A-Za-z_$][\w$]*)\s*\(/g
   let m
   while ((m = re.exec(masked)) !== null) {
     const name = m[1]
-    if (METHOD_KEYWORD_BLOCKLIST.has(name.replace(/^#/, ''))) continue
     const at = m.index + m[0].lastIndexOf(name)
+    if (METHOD_KEYWORD_BLOCKLIST.has(name.replace(/^#/, ''))) {
+      if (!seenExcluded.has(name)) {
+        seenExcluded.add(name)
+        excluded.push({ name, line: lineAt(baseIdx + at), reason: 'keyword-blocklist' })
+      }
+      continue
+    }
     if (at > 0 && masked[at - 1] === '.') continue
     names.push(name)
   }
-  return [...new Set(names)]
+  return { names: [...new Set(names)], excluded }
 }
+
+/** 绝对下标 → 行号（1 基）。src 以「行结构保留」方式剥注释，故行号 ≡ 原始文件行号（COMPAT-004 FIND-3）。 */
+const lineAtIdx = (src, idx) => src.slice(0, idx).split('\n').length
 
 /** 在单文件里定位符号声明：class（含 `var X = class`）/function/const 及其继承与基类来源包。 */
 function declOf(src, name) {
@@ -204,7 +236,7 @@ function declOf(src, name) {
     if (m === null) continue
     const brace = src.indexOf('{', m.index + m[0].length - 1)
     const body = classBody(src, brace)
-    const methods = methodsOf(body)
+    const { names: methods, excluded } = methodsOf(body, brace + 1, (abs) => lineAtIdx(src, abs))
     const base = m[1] !== undefined ? m[1].split('.').pop() : null
     return {
       kind: 'class',
@@ -213,6 +245,8 @@ function declOf(src, name) {
       methodNames: methods.slice(0, METHOD_CAP_PER_CLASS),
       ...(methods.length > METHOD_CAP_PER_CLASS ? { methodNamesTruncated: true } : {}),
       methodCount: methods.length,
+      // COMPAT-004 FIND-3：被黑名单过筛的真实顶层成员（名称 + 原始行号 + 原因），恒记录不静默
+      methodNamesExcludedByKeyword: excluded,
     }
   }
   if (new RegExp(`(?:^|\\n)[\\t ]*(?:export\\s+)?(?:async\\s+)?function\\s+${esc}\\s*\\(`).test(src)) return { kind: 'function' }
@@ -359,6 +393,8 @@ function buildFixture(opts) {
         methodNames: d.methodNames ?? [],
         ...(d.methodNamesTruncated === true ? { methodNamesTruncated: true } : {}),
         methodCount: d.methodCount ?? 0,
+        // COMPAT-004 FIND-3：恒存在（空数组 = 无过筛）——消费方据此区分「不存在」与「被过筛」
+        methodNamesExcludedByKeyword: d.methodNamesExcludedByKeyword ?? [],
       }
       for (const n of entry.names) if (n !== main) classAliases[n] = main
     }
@@ -411,7 +447,7 @@ function buildFixture(opts) {
       layout, // 'packed' = npm pack tarball 解包布局；'checkout' = 已安装闭包只读目录（决定 markers[*].origin 取值）
       tool: 'test/fixtures/host-surfaces/extract.mjs',
       method: 'static-parse（静态解析，零动态 import、零执行宿主代码）',
-      classExtraction: 'classBody 花括号配对 → 仅类体顶层（depth===1）匹配 + 关键字黑名单 + 排除点号前缀调用（COMPAT-011 C1）',
+      classExtraction: 'classBody 花括号配对 → 仅类体顶层（depth===1）匹配 + 关键字黑名单 + 排除点号前缀调用（COMPAT-011 C1）；黑名单过筛项连同原始行号落 methodNamesExcludedByKeyword（COMPAT-004 FIND-3）',
       entryResolution: "package.json exports['.'].import|default ← module ← main ← index.js；子面 './client' 同法",
       concerns: ['exportNames', 'classInheritance', 'classMethodNames', 'markers'],
       methodCapPerClass: METHOD_CAP_PER_CLASS,
@@ -435,6 +471,7 @@ if (args.dump === true) {
     for (const [sym, c] of Object.entries(p.classes)) {
       console.log(`    class ${sym} extends ${String(c.extends)}(${String(c.extendsFrom)}) methods=${c.methodCount}${c.methodNamesTruncated === true ? ' TRUNCATED' : ''}`)
       console.log(`        methodNames: ${JSON.stringify(c.methodNames)}`)
+      if ((c.methodNamesExcludedByKeyword ?? []).length > 0) console.log(`        excludedByKeyword: ${JSON.stringify(c.methodNamesExcludedByKeyword)}`)
     }
     if (Object.keys(p.classAliases).length > 0) console.log(`    classAliases: ${JSON.stringify(p.classAliases)}`)
     console.log(`    classCount=${p.classCount}`)

@@ -31,6 +31,12 @@
  *       COMPAT-002 宿主契约对账（lib/host-contract.mjs 六面 48 项结构 / F10 口径 /
  *       纯数据守卫 + 槽位名·CSS 令牌·DOM selector 三类 region 字面量双向对账 + 服务名
  *       与事件名双向对账）。
+ *       COMPAT-004 宿主边界层（lib/host-boundary.js 收口 lib/index.js 宿主调用——9 类直连模式 grep
+ *       零命中 + 收口映射表键集 ≡ 契约面 1 可收口项 + 映射符号真实导出且被消费 / detectHostCapabilities
+ *       探测项 = 契约 face 1 全 11 项投影且全同步〔F7〕+ 未探测项如实披露 / 缺面单次 [nv-compat] 结构化
+ *       告警〔含安全边界 BC-05 机检〕/ A3 inject 收敛双路径〔service 在 → locale 生效；service 缺 →
+ *       仍挂载 + 降级默认 zh 不崩溃〕+ legacyApi 回退分支零改动 / FIND-1 tier golden + FIND-3 fixtures
+ *       过筛项登记 + FIND-4 extract.mjs 边界披露）。
  */
 import { mkdtempSync, writeFileSync, mkdirSync, readFileSync, rmSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -484,8 +490,13 @@ try {
 } catch (e) { clientFactoryErr = e.message }
 check('客户端 factory 无 DOM 环境可求值', clientFactoryErr === '' && clientExports !== null, clientFactoryErr)
 check('客户端 exports.apply 为函数', clientExports !== null && typeof clientExports.apply === 'function')
-check('客户端 inject 声明 slots/connection/locale', clientExports !== null && Array.isArray(clientExports.inject)
-  && ['slots', 'connection', 'locale'].every((x) => clientExports.inject.includes(x)), 'inject=' + JSON.stringify(clientExports !== null ? clientExports.inject : null))
+// COMPAT-004 A3（DEC-026）：inject 由三服务硬声明收敛为 slots 单硬依赖 —— connection/locale 降为可选探测
+// （ctx.get 惰性判定；双路径实证见文末 COMPAT-004 段：服务在 → locale 生效；服务缺 → 降级默认 zh 不崩溃）
+check('COMPAT-004 A3：客户端 inject 收敛为 slots 单硬依赖（connection/locale 不再进 inject）',
+  clientExports !== null && Array.isArray(clientExports.inject)
+    && clientExports.inject.length === 1 && clientExports.inject.includes('slots')
+    && !clientExports.inject.includes('connection') && !clientExports.inject.includes('locale'),
+  'inject=' + JSON.stringify(clientExports !== null ? clientExports.inject : null))
 
 const slotRegs = []
 let pendingSlotName = ''
@@ -1954,6 +1965,12 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   check('COMPAT-003 F5c 锚点抽核（C3 强化）：每面 1 项 symbol 的非通用候选在目标文件命中（6/6；通用词表排除 ' + COMMON_WORDS.size + ' 词，候选分 3 级）',
     anchors.every((a) => a.hit),
     JSON.stringify(anchors.map((a) => a.item + (a.hit ? '✓T' + a.tier : '✗'))))
+  // COMPAT-004 FIND-1：把实测层级写进机检 golden（原 CHANGELOG 人工转写为 T3/T1/T1/T3/T1/T3，与实测不符——
+  // 面 4 由中文 name 字面量「新布局」命中 T1 而非 T3）。此处的 info 行为 CHANGELOG 引用的事实源串。
+  const tierString = anchors.map((a) => 'T' + a.tier).join('/')
+  console.log('  info COMPAT-004 FIND-1 锚点层级实测: ' + anchors.map((a) => a.item + (a.hit ? '✓T' + a.tier : '✗')).join(' / ') + '  ⇒ ' + tierString)
+  check('COMPAT-004 FIND-1 锚点层级 golden：实测 ' + tierString + '（面 4 由中文字面量「新布局」命中 T1，非 T3）',
+    tierString === 'T3/T1/T1/T1/T1/T3', 'tier=' + tierString)
 
   // ⑬ F6 necessity 九值 golden 分布（9 值全量 + 合计 48；防单值静默漂移）
   const GOLDEN_NEC = { required: 39, consolidatable: 1, adapted: 1, optional: 1, improvable: 2, own: 1, eliminated: 1, 'adapted-drift': 1, awareness: 1 }
@@ -2010,6 +2027,143 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   scanPureData(hc, 'hostContract', descBad)
   check('COMPAT-003 F4 纯数据强化：递归 own-descriptor（数据属性 + 类型白名单 string/number/boolean/null/array/plain-object）',
     descBad.length === 0, descBad.slice(0, 5).join(' | ') || 'clean')
+}
+
+// ── COMPAT-004：宿主边界层（服务端收口 + detectHostCapabilities + [nv-compat] D2 告警 + A3 inject 收敛）──
+// 收口/探测/告警三面机检：index.js 零直连宿主 API（grep 实证）+ 收口映射表齐备 + 探测项 = 契约面 1 投影且全同步 +
+// 缺面结构化告警（含安全边界）+ A3 双路径（service 在/缺）不崩溃 + FIND-1~4 落点。
+{
+  const { hostContract: hc4 } = await import('../lib/host-contract.mjs')
+  const boundary = await import('../lib/host-boundary.js')
+  const boundarySrc = readFileSync(new URL('../lib/host-boundary.js', import.meta.url), 'utf8')
+  const hostSrc4 = readFileSync(new URL('../lib/index.js', import.meta.url), 'utf8')
+  const hostCode = hostSrc4.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
+  const clientCode = clientSrc.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
+  const filesOf4 = (it) => (it.file === null ? [] : Array.isArray(it.file) ? it.file : [it.file])
+
+  // ① 收口（验收①）：index.js 宿主调用 100% 经 host-boundary —— 9 类直连模式 grep 零命中 + 唯一宿主入口
+  const DIRECT_HOST = [
+    ['宿主包 import', /@deepseek-ai\//], ['ctx.settings', /ctx\.settings/], ['ctx.get', /ctx\.get\(/],
+    ['ctx.effect', /ctx\.effect\(/], ['ctx.emit', /ctx\.emit\(/], ['ctx.logger', /ctx\.logger/],
+    ['resolveDshHome', /resolveDshHome/], ['webServer.register', /webServer\.register/], ['$DSH_HOME 预设路径', /\.agent-presets/],
+  ]
+  const directHits = DIRECT_HOST.filter(([, re]) => re.test(hostCode)).map(([n]) => n)
+  check('COMPAT-004 收口①：lib/index.js 零直连宿主 API（' + DIRECT_HOST.length + ' 类模式 grep 实证，宿主调用 100% 经 host-boundary）',
+    directHits.length === 0, 'hits=' + JSON.stringify(directHits))
+  check('COMPAT-004 收口②：index.js 唯一宿主入口 = ./host-boundary.js（import 面断言——宿主包零 import）',
+    /^import\s*\{[\s\S]*?\}\s*from\s*'\.\/host-boundary\.js'$/m.test(hostSrc4) && !/from\s*'@deepseek-ai\//.test(hostCode),
+    'boundary import')
+  const boundaryItems = hc4.items.filter((it) => it.face === 1 && it.necessity !== 'eliminated' && it.item !== '1.11')
+  const mapKeys = Object.keys(boundary.BOUNDARY_MAP)
+  const mapBad = boundaryItems.filter((it) => !filesOf4(it).includes('lib/host-boundary.js') || !mapKeys.includes(it.item))
+  const mapSyms = [...new Set(Object.values(boundary.BOUNDARY_MAP).flat())]
+  const symBad = mapSyms.filter((s) => !(s in boundary) || !new RegExp('\\b' + s + '\\b').test(hostCode))
+  check('COMPAT-004 收口③：收口映射表齐备（键 ≡ 面 1 可收口项 ' + boundaryItems.length + ' 项 + file 全指边界）+ 映射符号全为边界真实导出且被 index.js 消费（' + mapSyms.length + ' 符号）',
+    mapKeys.length === boundaryItems.length && mapBad.length === 0 && symBad.length === 0,
+    'keys=' + mapKeys.length + ' mapBad=' + JSON.stringify(mapBad.map((i) => i.item)) + ' symBad=' + JSON.stringify(symBad))
+
+  // ② detectHostCapabilities（验收②）：职责显式 ≤3 句 + 探测项 = 契约面 1 全项投影 + 全同步（F7）+ 未探测项如实披露
+  const respLines = boundarySrc.match(/@responsibility[^\n]*/g) ?? []
+  check('COMPAT-004 探测①：边界模块职责显式声明 ≤3 句（文件头 @responsibility 标记数 = ' + respLines.length + '，REVIEW-COMPAT-001-R1 F3）',
+    respLines.length >= 1 && respLines.length <= 3, 'n=' + respLines.length)
+  const okCtx = {
+    settings: { register() {}, get() {} },
+    get: (n) => (n === 'webServer' ? { register() {} } : undefined),
+    effect() {}, emit() {}, logger: {},
+  }
+  const repOk = boundary.detectHostCapabilities(okCtx)
+  const face1Items = hc4.items.filter((it) => it.face === 1)
+  check('COMPAT-004 探测②：探测项清单 = 契约 face 1 全 ' + face1Items.length + ' 项投影（逐项同序）+ 每项 sync=true（F7：apply 期零网络/零布局等待）',
+    repOk.probes.length === face1Items.length && repOk.probes.every((p, i) => p.item === face1Items[i].item && p.sync === true),
+    'probes=' + repOk.probes.length + ' sync=' + repOk.probes.every((p) => p.sync === true))
+  check('COMPAT-004 探测③：满面场景零缺面（ok=9）+ 未探测项如实计入 unprobed（ok=null + 原因；1.4 已退役 / 1.11 越界）+ 面 2~6 披露 notCovered=5',
+    repOk.missing.length === 0 && repOk.summary.ok === 9 && repOk.unprobed.length === 2
+      && repOk.unprobed.every((u) => typeof u.reason === 'string' && u.reason !== '')
+      && repOk.notCovered.length === 5 && repOk.host.version === null,
+    'ok=' + repOk.summary.ok + ' unprobed=' + JSON.stringify(repOk.unprobed.map((u) => u.item)) + ' notCovered=' + repOk.notCovered.length)
+
+  // ③ D2 启动告警（验收③）：缺面场景样例输出 + 安全边界（仅布尔/名称/版本）+ 满面零输出
+  const warnCalls = []
+  const repMiss = boundary.detectHostCapabilities({ get: () => undefined })
+  const emitted = boundary.warnCompatReport(repMiss, { warn: (...args) => warnCalls.push(args) })
+  const payload = warnCalls.length === 1 ? JSON.parse(warnCalls[0][1]) : null
+  check('COMPAT-004 D2 告警①：缺面场景单次 [nv-compat] 结构化输出（含缺面域名/方法名/服务名 + 计数）',
+    emitted === true && warnCalls.length === 1 && warnCalls[0][0] === '[nv-compat]'
+      && payload !== null && payload.domains.includes('ctx') && payload.domains.includes('service')
+      && payload.services.includes('settings') && payload.services.includes('webServer')
+      && payload.methods.includes('effect') && payload.items.join(',') === '1.6,1.8,1.9,1.10',
+    'calls=' + warnCalls.length + ' payload=' + JSON.stringify(payload))
+  const SENSITIVE4 = /[A-Za-z]:\\|\/Users\/|\/home\/|AppData|npm-cache|Bearer\s|password|api[_-]?key/i
+  check('COMPAT-004 D2 告警② 安全边界（BC-05）：摘要仅布尔/名称/版本——无路径/token/用户数据',
+    payload !== null && !SENSITIVE4.test(JSON.stringify(payload)) && !/[A-Za-z]:[\\/]/.test(JSON.stringify(payload))
+      && Object.values(payload.counts).every((v) => typeof v === 'number'),
+    'sensitive-clean')
+  const warnEmpty = []
+  check('COMPAT-004 D2 告警③：满面场景零输出（单次告警不刷屏——无缺面即静默，返回 false）',
+    boundary.warnCompatReport(repOk, { warn: (...a) => warnEmpty.push(a) }) === false && warnEmpty.length === 0, 'silent')
+
+  // ④ A3 双路径（验收④）：connection/locale 在 / 缺 均挂载成功；服务在时 locale 生效，缺时降级默认 zh 不崩溃
+  const labelOf = (regs, id) => { const r = regs.find((x) => x.id === id); return r === undefined ? null : r.label() }
+  const runClientApply = (getImpl) => {
+    const regs = []
+    let pending = ''
+    const ctxC = { get: getImpl, slots: { inject: (s, fn) => { pending = s; fn() }, register: (def) => regs.push(def) } }
+    let err = ''
+    let cleanup = null
+    try { cleanup = clientExports.apply(ctxC) } catch (e) { err = e.message }
+    return { regs, err, cleanup, pending }
+  }
+  const legacyApiStub = { settings: {}, sessions: {}, workspace: {}, host: {}, agentPresets: {} }
+  // 路径 B 先行：localeValue 为模块级状态（apply 期快照），须在「未见 locale」的初始态断言降级默认 zh；
+  // 路径 A 随后跑——同时证明「降级挂载后再见服务」仍能生效（服务在 → 标签切英文）。
+  const pathOff = runClientApply(() => undefined)
+  check('COMPAT-004 A3 路径B（service 缺）：connection/locale 缺席仍挂载（不崩溃）+ 6 席注册 + 降级默认 zh（UI 走既有 apiHas/degraded 提示路径）',
+    pathOff.err === '' && pathOff.regs.length === 6 && typeof pathOff.cleanup === 'function'
+      && labelOf(pathOff.regs, 'novel-writing') === '小说写作',
+    'err=' + pathOff.err + ' n=' + pathOff.regs.length + ' label=' + String(labelOf(pathOff.regs, 'novel-writing')))
+  const pathOn = runClientApply((n) => (n === 'locale' ? { getSnapshot: () => ({ active: 'en' }) } : n === 'connection' ? { api: legacyApiStub } : undefined))
+  check('COMPAT-004 A3 路径A（service 在）：apply 成功 + 6 席注册 + locale 服务生效（英文标签 = 服务真被消费）',
+    pathOn.err === '' && pathOn.regs.length === 6 && typeof pathOn.cleanup === 'function'
+      && labelOf(pathOn.regs, 'novel-writing') === 'Novel Writing',
+    'err=' + pathOn.err + ' n=' + pathOn.regs.length + ' label=' + String(labelOf(pathOn.regs, 'novel-writing')))
+  const LEGACY_FALLBACKS = ['legacyApi.settings', 'legacyApi.sessions', 'legacyApi.workspace', 'legacyApi.host', 'legacyApi.agentPresets']
+  check('COMPAT-004 A3：makeHostApi legacyApi 回退分支零改动（connection.api 唯一引用 + 5 域回退返回在位 + 单点收口函数在位）',
+    (clientCode.match(/connection\.api/g) ?? []).length === 1
+      && LEGACY_FALLBACKS.every((s) => clientCode.includes(s))
+      && clientCode.includes('function makeHostApi(')
+      && clientCode.includes('makeHostApi((name) => ctx.get(name), connection)'), 'legacy-intact')
+  check('COMPAT-004 A3 契约同步：regionLiterals.serviceNames.inject ≡ ["slots"]（硬依赖面）+ ctxGet 仍含 connection/locale（探测面）',
+    JSON.stringify(hc4.regionLiterals.serviceNames.inject) === JSON.stringify(['slots'])
+      && hc4.regionLiterals.serviceNames.ctxGet.includes('connection')
+      && hc4.regionLiterals.serviceNames.ctxGet.includes('locale'),
+    'inject=' + JSON.stringify(hc4.regionLiterals.serviceNames.inject) + ' ctxGet=' + JSON.stringify(hc4.regionLiterals.serviceNames.ctxGet))
+
+  // ⑤ FIND-3/FIND-4（验收⑤）：fixtures 过筛项登记 + 契约判据优先级 + extract.mjs 边界披露
+  const fieldMissing = []
+  const exclAll = []
+  for (const v of Object.keys(hc4.hostSurface.packages)) {
+    const fx = JSON.parse(readFileSync(new URL('./fixtures/host-surfaces/' + v + '.json', import.meta.url), 'utf8'))
+    for (const [pn, pkg] of Object.entries(fx.packages)) {
+      for (const [cn, c] of Object.entries(pkg.classes)) {
+        if (!Array.isArray(c.methodNamesExcludedByKeyword)) fieldMissing.push(v + ':' + pn + '.' + cn)
+        for (const e of c.methodNamesExcludedByKeyword ?? []) exclAll.push(v + ':' + pn + '.' + cn + '.' + e.name + '@L' + e.line)
+      }
+    }
+  }
+  const FIND3_KNOWN = ['cordis.DisposableList.delete@L17', 'cordis.Fiber.await@L1398', 'cordis.RegistryService.delete@L1564']
+  const curPrefix = hc4.hostSurface.current + ':'
+  const excl15 = exclAll.filter((x) => x.startsWith(curPrefix)).map((x) => x.slice(curPrefix.length))
+  check('COMPAT-004 FIND-3：三份 fixtures 落 methodNamesExcludedByKeyword（恒存在）+ 现行 fixture 三处过筛点名称·行号精确 ≡ ' + JSON.stringify(FIND3_KNOWN),
+    fieldMissing.length === 0 && JSON.stringify(excl15) === JSON.stringify(FIND3_KNOWN)
+      && exclAll.filter((x) => !x.startsWith(curPrefix)).length === 0,
+    'fieldMissing=' + JSON.stringify(fieldMissing) + ' excl=' + JSON.stringify(excl15))
+  const exclSchema = hc4.hostSurface._schema['packages[p].classes[c].methodNamesExcludedByKeyword']
+  check('COMPAT-004 FIND-3：契约 _schema 声明该字段 + 判据优先级 exports/AST > methodNames（防假阴性误报缺失）',
+    typeof exclSchema === 'string' && exclSchema.includes('exports/AST > methodNames') && exclSchema.includes('恒存在'),
+    'schema=' + String(exclSchema).slice(0, 40))
+  const extractSrc = readFileSync(new URL('./fixtures/host-surfaces/extract.mjs', import.meta.url), 'utf8')
+  check('COMPAT-004 FIND-4：extract.mjs 已知边界补正则字面量/嵌套模板串（花括号配平失真风险，当前未触发）',
+    extractSrc.includes('不识别正则字面量') && extractSrc.includes('嵌套模板串') && extractSrc.includes('当前未触发'), 'caveat-recorded')
 }
 
 console.log(`\nSMOKE DONE: ${passed} passed, ${failed} failed`)
