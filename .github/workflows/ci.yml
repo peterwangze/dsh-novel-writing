@@ -12,7 +12,13 @@ on:
 
 jobs:
   sanity:
+    # COMPAT-014 A-F1（收口 REVIEW-COMPAT-007-R1 F1）：`on.schedule` 是 workflow 级 ⇒ 若无事件门禁，既有 job
+    # 亦进入每日无人值守执行面。本 job 反向 if：schedule 事件下 skipped（每日面收敛为 host-latest-probe），
+    # pull_request / push / workflow_dispatch 照常执行（手动 dispatch = 全量随查语义，保持不变）。
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -26,6 +32,7 @@ jobs:
           node --check lib/host-contract.mjs
           node --check test/fixtures/host-surfaces/extract.mjs
           node --check test/fixtures/host-surfaces/ci-mock-face.mjs
+          node --check test/fixtures/host-surfaces/probe-face.mjs
       - name: 依赖架构守卫（防双闭包陷阱）
         run: |
           node -e "
@@ -46,6 +53,13 @@ jobs:
       # （如 settingsNamespace，BUG-003 根因）会让 CI 假绿而实机崩溃；本步骤把 mock 面钉在 fixtures 实测面上。
       - name: CI mock 导出面 × 宿主表面 fixtures 对齐（COMPAT-003 F1 面钉）
         run: node test/fixtures/host-surfaces/ci-mock-face.mjs
+      # COMPAT-014 A-F2（收口 REVIEW-COMPAT-007-R1 F2）：探测轨判据的**离线**机检——原判据脚本（host-latest-probe
+      # job 内联 heredoc）在 PR/push 面零机检（该 job 被 if 排除、既有 extractHeredocs 不匹配 `<<'PROBE_EOF'` 约定），
+      # 语法/逻辑缺陷只能等首次 schedule 暴露。本步骤把提取 + 语法机检 + 构造 JSON 驱动判据真跑搬进 PR 门禁——
+      # 全程离线：无网络、无 install、不因宿主发版误红（检查的是**脚本**而非宿主版本，故不违背「只读网络探测不进
+      # PR 门禁」原意）。同步骤附事件门禁结构断言（A-F1）与命令白名单 / stem↔命令一一对应校验（A-F5）。
+      - name: 探测轨判据离线机检（提取 heredoc → node --check → 构造 JSON 驱动判据；白名单/门禁结构断言）
+        run: node test/fixtures/host-surfaces/probe-face.mjs
       - name: 包结构检查
         run: |
           node -e "
@@ -68,7 +82,12 @@ jobs:
           "
 
   host-logic:
+    # COMPAT-014 A-F1：反向 if——schedule 下本 job skipped（其中含一次**未钉版本**的真实包安装 + 全量 smoke，
+    # 不应进每日无人值守面）；push / pull_request / workflow_dispatch 照常执行，真实 schemastery 漂移检测不变。
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -162,11 +181,17 @@ jobs:
           // host-latest-probe.mjs — COMPAT-007 C1「latest 探测轨」判据（DEC-025 ADR 决策②②）。
           // 只读：本脚本不联网、不发命令、不写仓库——只消费（i）上一「只读探测」步骤落盘的 npm view JSON、
           // （ii）test/fixtures/host-surfaces/*.json（覆盖版本唯一机读事实源）、（iii）lib/host-contract.mjs 声明面（纯数据）。
-          // 退出码：0 = 无新版本（绿）；1 = 检测到新版本 / 覆盖失配（红）；2 = 用法或输入缺失（红）。
+          // 退出码：0 = 无新版本（绿）；1 = 检测到新版本 / 覆盖失配 / 口径外形态（红）；2 = 用法或输入缺失 /
+          //   探测输入不可解析（红；COMPAT-014 A-F7——`npm view` 非零退出只留空文件，原实现会 JSON.parse 抛错
+          //   + 栈回溯并以 1 退出，与本节声明不符，且单包损坏会吞掉其余包的结论）。
           //
           // 判据（逐包可归因）：
           //   ① 探测面 ≡ 契约 hostSurface.packages 并集（双向：漏探=红、越界探=红）——契约是探测目标集单一事实源；
-          //   ② fixtures 覆盖版本 MUST 仍在上游已发布列表内（否则覆盖声明陈旧或被撤回）；
+          //   ①b 版本维双向对账（COMPAT-014 A-F4）：契约 packages 键集 ≡ fixtures hostVersion 集 ∧ current ∈ 覆盖集
+          //      ——① 只对包名维对账，版本维可「只增 fixture / 只改契约」静默解耦（「重建 fixtures 关红」的缝隙）；
+          //   ② fixtures 覆盖版本 MUST 仍在上游已发布列表内（否则覆盖声明陈旧或被撤回）——**CLI 不适用**
+          //      （COMPAT-014 A-F3）：CLI 的 covered 是 hostVersion **代理**，与 CLI 发版号不保证一致，套用本子句
+          //      会因非宿主原因误红并误导归因；CLI 检测力由 ④ 版本车判据承担（报文含代理限定语）；
           //   ③ fixtures 自洽：host 族包版本 MUST === hostVersion；versionExceptions 包 MUST ≠ hostVersion（防例外表腐化）；
           //   ④ 版本车判据：已覆盖车（major.minor.patch 三元组）内的上游最大版本 MUST ≡ 已覆盖版本，且上游 MUST NOT
           //      出现高于最新已覆盖车的车 ⇒ 违反即输出「detected new host version X, fixtures covered Y ⇒ 需审阅+更新 fixtures」。
@@ -185,6 +210,16 @@ jobs:
 
           const [probeDir, fixturesDir, contractPath] = process.argv.slice(2)
           const die = (msg) => { console.error('[COMPAT-007 探测轨] 输入错误：' + msg); process.exit(2) }
+          // 失败分类处置（COMPAT-014 A-F6，收口 REVIEW-COMPAT-007-R1 F6）：三类红的关闭路径不同——口径类红
+          // **无法**靠「更新 fixtures」关闭（MUST 扩受限口径/人工审阅该形态）；面类红需同步探测行或契约声明面；
+          // 覆盖/自洽类与版本推进类才走 fixtures 重建。原文案对所有类别统一说「重建 fixtures」⇒ 运维者会走错路径。
+          const DISPOSAL = {
+            'input': '检查 npm view 是否成功落盘（registry 抖动 / 网络 / 包下架）后重跑；空文件 = npm view 非零退出的残留，**不是**宿主发版',
+            'surface': '同步探测行（白名单内 `npm view @deepseek-ai/<pkg> versions --json`）与契约 hostSurface 声明面（packages / current / versionExceptions）——两者 MUST 双向一致',
+            'coverage': '审阅覆盖声明 → 以 test/fixtures/host-surfaces/extract.mjs **只读重建** fixtures（契约与 fixtures 须同步改，只改一侧即本类红）',
+            'version-form': '版本形态超出受限口径（X.Y.Z 或 X.Y.Z-{alpha|rc}.N）：**扩口径/人工审阅该形态**（parseVersion 与 TRACK 表）——重建 fixtures 关不掉本类红',
+            'version-drift': '宿主发版类：审阅新版本变更面 → 以 extract.mjs 只读重建 fixtures → 复核契约声明面 → 适配后关红',
+          }
           if (!probeDir || !fixturesDir || !contractPath) die('用法：node host-latest-probe.mjs <probeDir> <fixturesDir> <contractPath>')
           if (!existsSync(probeDir)) die('probe 目录不存在：' + probeDir)
           if (!existsSync(fixturesDir)) die('fixtures 目录不存在：' + fixturesDir)
@@ -224,45 +259,62 @@ jobs:
             }
           }
 
-          const failures = new Set()
+          const failures = new Map()   // msg → 类别（A-F6 分类处置）
+          const fail = (cls, msg) => failures.set(msg, cls)
+          const inputProblems = []     // A-F7：探测输入缺失/损坏（逐包归因；退出码 2）
           const okLines = []
           const targets = [...declared, 'dsh']   // 'dsh' = @deepseek-ai/dsh（CLI 单列探测面）
           const probedStems = readdirSync(probeDir).filter((f) => f.endsWith('.versions.json')).map((f) => f.replace('.versions.json', ''))
 
           // ① 探测面 ≡ 契约声明面（双向 ⊆）
-          for (const p of declared) if (!probedStems.includes(p)) failures.add(`探测面缺契约声明包 ${p}：契约 hostSurface.packages 已声明 ⇒ MUST 同步补 npm view 探测行（白名单内）`)
-          for (const s of probedStems) if (!targets.includes(s)) failures.add(`探测面含契约未声明的包 ${s}：探测目标集单一事实源是契约 hostSurface.packages（越界探测）`)
+          for (const p of declared) if (!probedStems.includes(p)) fail('surface', `探测面缺契约声明包 ${p}：契约 hostSurface.packages 已声明 ⇒ MUST 同步补 npm view 探测行（白名单内）`)
+          for (const s of probedStems) if (!targets.includes(s)) fail('surface', `探测面含契约未声明的包 ${s}：探测目标集单一事实源是契约 hostSurface.packages（越界探测）`)
+
+          // ①b 版本维双向对账（COMPAT-014 A-F4）：契约 packages 键集 ≡ fixtures hostVersion 集 ∧ current ∈ 覆盖集
+          const contractVersions = Object.keys(surface.packages).sort()
+          for (const v of contractVersions) if (!coveredHost.has(v)) fail('surface', `契约 hostSurface.packages 声明版本 ${v} 在 fixtures 中无快照 ⇒ 契约声明版本面与 fixtures 失配（版本维双向对账，A-F4）`)
+          for (const v of [...coveredHost].sort()) if (!contractVersions.includes(v)) fail('surface', `fixtures 快照版本 ${v} 不在契约 hostSurface.packages 键集 ⇒ 契约声明面陈旧（版本维双向对账，A-F4）`)
+          if (!coveredHost.has(surface.current)) fail('surface', `契约 hostSurface.current=${surface.current} 不在 fixtures 覆盖集内（版本维对账，A-F4）`)
 
           for (const p of targets) {
             const probeFile = join(probeDir, p + '.versions.json')
-            if (!existsSync(probeFile)) { failures.add(`探测输入缺失：${p}.versions.json（npm view @deepseek-ai/${p} versions --json 未落盘）`); continue }
+            if (!existsSync(probeFile)) { inputProblems.push(`${p}：探测输入缺失 ${p}.versions.json（npm view @deepseek-ai/${p} versions --json 未落盘）`); continue }
             const before = failures.size
             const isCli = p === 'dsh'
-            const raw = readJson(probeFile)
+            let raw = null
+            try {
+              const text = readFileSync(probeFile, 'utf8')
+              if (text.trim() === '') throw new Error('空文件（npm view 非零退出只留空文件）')
+              raw = JSON.parse(text)
+            } catch (e) {
+              inputProblems.push(`${p}：探测输入不可解析（${p}.versions.json）——${e instanceof Error ? e.message : String(e)}`)
+              continue
+            }
             const list = Array.isArray(raw) ? raw : [raw]
+            if (list.some((v) => typeof v !== 'string')) { inputProblems.push(`${p}：探测输入形态异常（非版本字符串数组）`); continue }
             const covered = [...(isCli ? coveredHost : (coveredByPkg.get(p) ?? []))]
             const cov = covered.map(parseVersion)
             const badCov = covered.filter((_, i) => !cov[i])
-            if (badCov.length > 0) { failures.add(`覆盖版本形态超出受限口径：${p} ${badCov.join(', ')} ⇒ 无法判定（fail-closed，需人工审阅）`); continue }
-            if (cov.length === 0) { failures.add(`契约声明面 ${p} 在 fixtures 中无覆盖版本 ⇒ 声明面与 fixtures 失配（需审阅 + 更新 fixtures）`); continue }
+            if (badCov.length > 0) { fail('version-form', `覆盖版本形态超出受限口径：${p} ${badCov.join(', ')} ⇒ 无法判定（fail-closed，需人工审阅）`); continue }
+            if (cov.length === 0) { fail('coverage', `契约声明面 ${p} 在 fixtures 中无覆盖版本 ⇒ 声明面与 fixtures 失配（需审阅 + 更新 fixtures）`); continue }
             cov.sort(cmpVersion)
             const newestCov = cov[cov.length - 1]
             const pub = list.map(parseVersion)
             const badPub = list.filter((_, i) => !pub[i])
-            if (badPub.length > 0) failures.add(`上游已发布版本形态超出受限口径：${p} ${badPub.join(', ')} ⇒ 无法判定新旧（fail-closed，需人工审阅）`)
+            if (badPub.length > 0) fail('version-form', `上游已发布版本形态超出受限口径：${p} ${badPub.join(', ')} ⇒ 无法判定新旧（fail-closed，需人工审阅）`)
             const pubOk = pub.filter(Boolean)
             const upstreamNewest = pubOk.slice().sort(cmpVersion).pop()
 
-            // ② 覆盖版本仍在上游已发布列表内（覆盖声明可解析）
-            for (const c of cov) if (!list.includes(c.v)) failures.add(`fixtures 覆盖版本 ${c.v} 不在上游已发布列表（${p}）⇒ 覆盖声明陈旧或被撤回，需审阅`)
+            // ② 覆盖版本仍在上游已发布列表内（CLI 不适用——覆盖串为 hostVersion 代理，见文件头 ② 说明，A-F3）
+            if (!isCli) for (const c of cov) if (!list.includes(c.v)) fail('coverage', `fixtures 覆盖版本 ${c.v} 不在上游已发布列表（${p}）⇒ 覆盖声明陈旧或被撤回，需审阅`)
 
             // ③ fixtures 自洽（host 族 ≡ hostVersion；例外表 MUST ≠ hostVersion）
             if (!isCli) {
               for (const fx of fixtures) {
                 const meta = fx.packages?.[p]
                 if (!meta) continue
-                if (!exceptions.has(p) && meta.version !== fx.hostVersion) failures.add(`fixtures 自洽：${fx.file} 中 ${p}=${meta.version} ≠ hostVersion=${fx.hostVersion}（host 族包应与宿主同版本）`)
-                if (exceptions.has(p) && meta.version === fx.hostVersion) failures.add(`版本例外表腐化：${fx.file} 中 ${p}=${meta.version} ≡ hostVersion（例外包属独立版本族，MUST ≠ 宿主版本）`)
+                if (!exceptions.has(p) && meta.version !== fx.hostVersion) fail('coverage', `fixtures 自洽：${fx.file} 中 ${p}=${meta.version} ≠ hostVersion=${fx.hostVersion}（host 族包应与宿主同版本）`)
+                if (exceptions.has(p) && meta.version === fx.hostVersion) fail('coverage', `版本例外表腐化：${fx.file} 中 ${p}=${meta.version} ≡ hostVersion（例外包属独立版本族，MUST ≠ 宿主版本）`)
               }
             }
 
@@ -274,9 +326,9 @@ jobs:
               if (maxPub && cmpVersion(maxPub, maxCov) > 0) found.set(maxPub.v + '|' + maxCov.v, [maxPub.v, maxCov.v])
             }
             for (const x of pubOk) if (cmpTrain(x.train, newestCov.train) > 0) found.set(x.v + '|' + newestCov.v, [x.v, newestCov.v])
-            for (const [newV, covV] of found.values()) failures.add(`detected new host version ${newV}, fixtures covered ${covV} ⇒ 需审阅 + 更新 fixtures（${p}）`)
+            for (const [newV, covV] of found.values()) fail('version-drift', `detected new host version ${newV}, fixtures covered ${covV} ⇒ 需审阅 + 更新 fixtures（${p}）`)
 
-            if (failures.size === before) okLines.push(`${p}：上游最新 ${upstreamNewest ? upstreamNewest.v : 'n/a'} ≡ fixtures 覆盖 ${newestCov.v}（覆盖车 ${[...new Set(cov.map(trainKey))].join(' / ')}${exceptions.has(p) ? '；独立版本族' : ''}${isCli ? '；CLI 覆盖代理 = hostVersion 集合' : ''}）`)
+            if (failures.size === before) okLines.push(`${p}：上游最新 ${upstreamNewest ? upstreamNewest.v : 'n/a'} ≡ fixtures 覆盖 ${newestCov.v}（覆盖车 ${[...new Set(cov.map(trainKey))].join(' / ')}${exceptions.has(p) ? '；独立版本族' : ''}${isCli ? '；CLI 覆盖面 = hostVersion 代理（子句②不适用）' : ''}）`)
           }
 
           // ── 报告 ──
@@ -285,14 +337,32 @@ jobs:
           console.log(`  fixtures 覆盖面（${fixtures.length}）：${fixtures.map((f) => String(f.hostVersion)).join(' / ')}`)
           for (const l of okLines) console.log('  ✅ ' + l)
           const distTagsFile = join(probeDir, 'dsh.dist-tags.json')
-          if (existsSync(distTagsFile)) console.log('  ℹ️ @deepseek-ai/dsh dist-tags（上下文，非判据）：' + JSON.stringify(readJson(distTagsFile)))
+          if (existsSync(distTagsFile)) {
+            try { console.log('  ℹ️ @deepseek-ai/dsh dist-tags（上下文，非判据）：' + JSON.stringify(readJson(distTagsFile))) }
+            catch { console.log('  ℹ️ @deepseek-ai/dsh dist-tags 文件不可解析（上下文，非判据，不影响结论）') }
+          }
+          // 输入异常优先（A-F7）：退出码 2 = 用法/输入缺失，与「检测到新版本」区分，逐包归因
+          if (inputProblems.length > 0) {
+            console.error(`❌ [COMPAT-007 探测轨] 探测输入异常 ${inputProblems.length} 项（退出码 2 = 用法/输入缺失，**非**宿主发版）：`)
+            for (const f of inputProblems) console.error('  - ' + f)
+            console.error('⇒ 处置（input）：' + DISPOSAL.input)
+            process.exit(2)
+          }
           if (failures.size === 0) {
             console.log('✅ 无新宿主版本：上游已发布版本均未超出 fixtures 覆盖（探测频率每日一次；窗口期残余见 README「探测窗口期」）')
             process.exit(0)
           }
-          console.error(`❌ [COMPAT-007 探测轨] 检出 ${failures.size} 项（宿主发版 ⇒ 需审阅）：`)
-          for (const f of failures) console.error('  - ' + f)
-          console.error('⇒ 处置：审阅新版本变更面 → 以 test/fixtures/host-surfaces/extract.mjs 只读重建 fixtures → 复核 lib/host-contract.mjs 声明面 → 适配后再关红。')
+          const byClass = new Map()
+          for (const [msg, cls] of failures) {
+            if (!byClass.has(cls)) byClass.set(cls, [])
+            byClass.get(cls).push(msg)
+          }
+          console.error(`❌ [COMPAT-007 探测轨] 检出 ${failures.size} 项（按类别处置，退出码 1）：`)
+          for (const [cls, msgs] of byClass) {
+            console.error(`  ── 类别 ${cls}（${msgs.length} 项）`)
+            for (const m of msgs) console.error('     - ' + m)
+            console.error('     ⇒ 处置：' + DISPOSAL[cls])
+          }
           process.exit(1)
           PROBE_EOF
           node "$RUNNER_TEMP/nv-host-latest-probe.mjs" "$PROBE_DIR" test/fixtures/host-surfaces lib/host-contract.mjs

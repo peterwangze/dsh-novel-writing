@@ -1804,12 +1804,17 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   const sameSet = (a, b) => a.length === b.length && a.every((x) => b.includes(x))
 
   // ① fixtures 三版本齐备 + 溯源字段完整（source 标注真实来源；禁止无 source 的手写表面）
-  check('COMPAT-003 fixtures：三版本宿主表面快照齐备（' + versions.join(' / ') + '）+ 溯源字段完整',
+  // **版本维双向（COMPAT-014 A-F4，收口 REVIEW-COMPAT-007-R1 F4）**：原断言只以**契约 packages 键集**为循环源
+  // ⇒ 新增第 4 份 fixture 文件对本断言与探测轨 ① 均不可见（「重建 fixtures 关红」的缝隙）；现同时枚举 fixtures
+  // 目录并与契约键集双向对账（目录 ≡ 契约键集 ⇒ 只加文件或只改契约侧任一行为即红）。
+  const fixtureFiles = readdirSync(new URL('./fixtures/host-surfaces/', import.meta.url)).filter((f) => f.endsWith('.json')).map((f) => f.replace(/\.json$/, '')).sort()
+  check('COMPAT-003 fixtures：三版本宿主表面快照齐备（' + versions.join(' / ') + '）+ 溯源字段完整 + **fixtures 目录 ≡ 契约 packages 版本键集**（版本维双向，A-F4）',
     versions.length === 3
       && versions.every((v) => fixtures[v].schemaVersion === 1 && fixtures[v].task === 'COMPAT-003'
         && typeof fixtures[v].source === 'string' && fixtures[v].source.length > 30
-        && fixtures[v].hostVersion === v && sameSet(Object.keys(fixtures[v].packages), hs.packages[v])),
-    'versions=' + versions.length + ' packages=' + versions.map((v) => Object.keys(fixtures[v].packages).length).join('/'))
+        && fixtures[v].hostVersion === v && sameSet(Object.keys(fixtures[v].packages), hs.packages[v]))
+      && JSON.stringify(fixtureFiles) === JSON.stringify([...versions].sort()),
+    'versions=' + versions.length + ' packages=' + versions.map((v) => Object.keys(fixtures[v].packages).length).join('/') + ' files=' + JSON.stringify(fixtureFiles))
 
   // ①b C5 fixtures 内部版本一致性：非例外包 version MUST === hostVersion（本任务恰有「CLI 0.1.5-rc.1 vs
   // 子包 0.1.5-rc.2」的版本分歧教训）；cordis/schemastery 属独立版本族 → 契约显式例外表，且例外表 MUST 有实据
@@ -1897,6 +1902,17 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   }
   check('COMPAT-003 F1 互证（C6 4/4）：' + faces.length + ' 个 mock 静态解析导出面 ≡ 动态 import 键集（两法独立证据）',
     staticBad.length === 0, staticBad.join(' | ') || 'clean')
+
+  // ⑧b COMPAT-014 A-F2**接线守卫**：探测轨判据的离线机检必须留在 sanity（PR 门禁）内——该步骤若被删，
+  // 判据脚本又回到「只能等首次 schedule 暴露」的零机检态（正是 REVIEW-COMPAT-007-R1 F2 的失效模式本身），
+  // 且提取口径（ci-mock-face 的 extractHeredocs 泛化）是 PR 面唯一消费点。故在 smoke 侧再钉一次接线。
+  const probeFaceUrl = new URL('./fixtures/host-surfaces/probe-face.mjs', import.meta.url)
+  const probeFaceWired = ciYmlSrc.includes('node test/fixtures/host-surfaces/probe-face.mjs')
+    && ciYmlSrc.includes('node --check test/fixtures/host-surfaces/probe-face.mjs')
+    && existsSync(probeFaceUrl)
+  check('COMPAT-014 A-F2 接线守卫：ci.yml sanity 含探测轨离线机检步骤（`node test/fixtures/host-surfaces/probe-face.mjs`）+ 语法检查清单含该文件 + 工具文件在仓（删除接线 = 判据回到零机检态）',
+    probeFaceWired,
+    'wired=' + probeFaceWired + ' run=' + ciYmlSrc.includes('node test/fixtures/host-surfaces/probe-face.mjs') + ' check=' + ciYmlSrc.includes('node --check test/fixtures/host-surfaces/probe-face.mjs') + ' file=' + existsSync(probeFaceUrl))
 
   // ⑨ fixtures 内容安全边界（BC-05）：无绝对路径/宿主缓存路径/凭据形态（仅导出名·方法名·形状布尔）
   const SENSITIVE = /[A-Za-z]:\\|\/Users\/|\/home\/|AppData|npm-cache|Bearer\s|password|api[_-]?key/i
@@ -2009,8 +2025,9 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   const RANGE_STRICT_FACES = [2]
   const GOLDEN_RANGE_ITEMS = 21
   // COMPAT-013 F-5②：严格面条目数提为 golden——原守卫 `rangeStrict.length > 0` 允许严格面退化到 1 项仍绿
-  // （golden 只锁了总范围条目 21 项）。面 2 实测 11 项（13 项中 2.3/2.4 非单段范围形态），RANGE_STRICT_FACES
-  // 的覆盖面即 11 ⇒ 与 GOLDEN_RANGE_ITEMS 同款漂移探测约定（brittle-by-design，扩面/删项须显式改 golden）。
+  // （golden 只锁了总范围条目 21 项）。面 2 实测 11 项（13 项中 **2.2**〔`L97` 单行号形态〕与 **2.4**〔多段〕非单段
+  // 范围形态——COMPAT-014 C-F-2 订正：原注释写「2.3/2.4」，而 2.3 `L4374-L4377` 命中 RANGE_LINE 属**单段范围**条目），
+  // RANGE_STRICT_FACES 的覆盖面即 11 ⇒ 与 GOLDEN_RANGE_ITEMS 同款漂移探测约定（brittle-by-design，扩面/删项须显式改 golden）。
   const GOLDEN_RANGE_STRICT_ITEMS = 11
   const RANGE_LINE = /^L(\d+)-L?(\d+)$/
   const lineIsComment = (l) => l.trim() === '' || /^(\/\/|\/\*|\*)/.test(l.trim())
@@ -2058,6 +2075,14 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   //      3.1 `document.querySelectorAll` 2≠3 / 3.8 `document.querySelector` 1≠5 / 4.6 `cordis.patch.yml` 1≠2
   //      ——契约多数候选是「类型名 / 语义片段」，其全文件出现**本就不应**被单个范围条目包住；只有 symbol
   //      自述基数的构造，其「全部出现」才是有定义的量。防空转 = ⑤a 覆盖对数 golden（实测 2 对）。
+  //      **同源披露（COMPAT-014 C-F-3，收口 REVIEW-COMPAT-013-R1 F-3）**：实测两对 `ctx.slots.inject` / `ctx.slots.register`
+  //      在 `lib/client.js` **同行共现**（6 行均为 `ctx.slots.inject('…', () => ctx.slots.register(`）⇒ 两 token 的出现/缺失
+  //      **恒等联动**，「覆盖 2 对」的判别力**等价单构造计数**（整行截断时两者同时 5 ≠ 6 ⇒ 仍红，不产生假绿；golden `=== 2`
+  //      的独立作用仅在「仅一 token 计数漂移而另一 token 恰为 6」时显现）。出现非同源 tier-2 构造时再补第 3 对。
+  //      **工具口径边界（COMPAT-014 C-F-5，收口同轮 F-5）**：`occ5` 为纯文本**子串计数**（无词边界、不剔除注释与
+  //      字符串内容）；⑤b / ⑥ 的花括号配平为**裸字符**计数（不解析字符串/注释中的 `{`/`}`）⇒ 同名子串（如
+  //      `ctx.slots.injectExtra(`）可使计数漂移，方向为 fail-closed（`cardPairs < golden ⇒ 红`，报文只报覆盖对数、
+  //      不精确定位到该 token）；当前全量实测零误报 / 零漏报。
   //   ⑤b **对象构造块闭合**：范围内出现的「候选键 + `: {`」声明行（如 `"peerDependencies": {`）其配平闭合
   //      行 MUST ≤ 止。实证：6.1 旧值 `L38-44` ⇒ 闭合行 L45 > 止 ⇒ 红；真值 `L39-45` ⇒ 绿。
   //      **为什么 6.1 必须靠 ⑤b、而不能靠计数式 ⑤a（实测，防后续被「简化」掉）**：6.1 的候选
@@ -2106,22 +2131,67 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
       }
     }
   }
-  check('COMPAT-013 F1 判据⑤ 范围完整覆盖所声明构造：⑤a 声明基数（×N）构造的全部出现落在范围内（覆盖 ' + cardPairs.length + ' 对 / golden ' + GOLDEN_CARDINALITY_PAIRS + '：' + cardPairs.join(',') + '）∧ ⑤b 对象构造块闭合行 ≤ 止',
+  check('COMPAT-013 F1 判据⑤ 范围完整覆盖所声明构造：⑤a 声明基数（×N）构造的全部出现落在范围内（覆盖 ' + cardPairs.length + ' 对 / golden ' + GOLDEN_CARDINALITY_PAIRS + '：' + cardPairs.join(',') + '；**两对同源**=同行共现 ⇒ 判别力等价单构造计数，C-F-3）∧ ⑤b 对象构造块闭合行 ≤ 止',
     cardPairs.length === GOLDEN_CARDINALITY_PAIRS && rangeIncomplete.length === 0,
     'bad=' + JSON.stringify(rangeIncomplete))
   console.log('  info COMPAT-013 F1 判据⑤ 覆盖: ⑤a ' + cardPairs.length + ' 对（' + cardPairs.join(',') + '）；⑤b 对象构造起行扫描 ' + rangeItems.length + ' 项，失配 ' + rangeIncomplete.length)
 
-  // ⑫d F-3 披露数字入机检（COMPAT-013）：非严格面（3/5/6）范围条目中「起于注释/空行」者 MUST 恰 2 项
+  // ⑫e 判据⑥「范围内首行构造的配对闭合行 ≤ 止」（COMPAT-014 C-F-4，收口 REVIEW-COMPAT-013-R1 F-4）：
+  // ⑤b 的 opener 取自 symbol 候选（含 tier-3 裸词**子串**）⇒ 它对 4.6/6.2 的覆盖是**偶然且不完整**的——
+  // **实测订正 R1 F-4 的静态推演（P-01，见 CHANGELOG COMPAT-014 三例实测表）**：F-4 称「4.6 键名 `dsh`
+  // 在 COMMON_WORDS 内被剔除、6.2 候选形态为 `engines.node` 与键名不等 ⇒ ⑤b 无匹配 opener」，实测为——
+  // 4.6 经裸词候选 `client` 命中 L21 `"client": {`、6.2 经裸词候选 `engines` 命中 L8（故 4.6 止改 L21 /
+  // 6.2 止改 L9 时 ⑤b **亦红**）；**但 4.6 止改 L28**（外层 `"dsh": {` 缺自身闭合行 L29，内层 client 仍闭合）
+  // 时 ⑤b **green** 而本判据红 ⇒ ⑥ 的覆盖增量 = 「首行键 ≠ 任何 symbol 候选」与「外层构造闭合行 > 止而
+  // 内层 ≤ 止」两类。判据⑥ 故**不复用 symbol 候选**，改按**目标语言**从范围内**首行**取构造键（JSON 与 JS
+  // 同为 `键: {` 声明；YAML 缩进块与 `[` 数组不入面）：首行起构造时，其花括号配平闭合行 MUST ≤ 止。实测
+  // 首行起构造者恰 3 项 = 4.6 `"dsh": {` / 6.1 `"peerDependencies": {` / 6.2 `"engines": {`（面 6 三项
+  // JSON 根级子对象；其余 18 项首行为 JS 调用/声明/注释 ⇒ 不适用），项数入 golden（防空转）。
+  // **只取首行、不取范围内全部 opener 的理由**：JS 范围可为**合法语义片段**（2.1 `L92-94` 净差 +2 / 2.3
+  // `L4374-L4377` +1 / 3.8 `L2411-2421` +1 实测均非配平，⑤ 注释已留档）——无差别要求范围内每个 opener 配平
+  // 会误报这些条目；而「范围未包住自身构造闭合行」的形态恰以构造键行起段（首行 opener 即充分判据）。
+  // 口径边界同 ⑤b（裸字符配平，不剥注释/字符串中的 `{`/`}`）。
+  const KEY_OPEN6 = /^\s*(?:"([^"]{1,60})"|'([^']{1,60})'|([A-Za-z_$][\w$.-]{0,60}))\s*:\s*\{\s*$/
+  const GOLDEN_KEY_OPEN_ITEMS = 3
+  const keyOpenItems = []
+  const keyCloseBad = []
+  for (const it of rangeItems) {
+    const files = filesOf(it)
+    if (files.length === 0) continue
+    const lines = readFileSync(new URL('../' + files[0], import.meta.url), 'utf8').split('\n')
+    const rm = RANGE_LINE.exec(it.line)
+    const start = Number(rm[1]); const end = Number(rm[2])
+    if (!(start >= 1 && end >= start && end <= lines.length)) continue   // ① 已报，避免越界取行
+    if (!KEY_OPEN6.test(lines[start - 1])) continue
+    keyOpenItems.push(it.item)
+    let depth = 0
+    let closeLine = -1
+    for (let j = start - 1; j < lines.length; j++) {
+      depth += occ5(lines[j], '{') - occ5(lines[j], '}')
+      if (depth <= 0) { closeLine = j + 1; break }
+    }
+    if (closeLine < 0) keyCloseBad.push(it.item + ':⑥ 首行构造未闭合')
+    else if (closeLine > end) keyCloseBad.push(it.item + ':⑥ 首行构造（L' + start + '）闭合行 L' + closeLine + ' 超出止 L' + end)
+  }
+  check('COMPAT-014 C-F-4 判据⑥ 范围首行构造闭合（按目标语言取键名，不依赖 symbol 候选）：' + keyOpenItems.length + ' 项以构造键行起段（golden ' + GOLDEN_KEY_OPEN_ITEMS + '：' + keyOpenItems.join(',') + '）其配平闭合行 MUST ≤ 止',
+    keyOpenItems.length === GOLDEN_KEY_OPEN_ITEMS && keyCloseBad.length === 0,
+    'keyOpen=' + JSON.stringify(keyOpenItems) + '(golden ' + GOLDEN_KEY_OPEN_ITEMS + ') bad=' + JSON.stringify(keyCloseBad))
+
+  // ⑫d F-3 披露数字入机检（COMPAT-013）：非严格面（**由 rangeItems 动态生成**；实测 **3/4/5/6 共 10 项**——
+  // COMPAT-014 C-F-1 订正：原标签「3/5/6」漏面 4，且与下方列举清单自含 `4.6 L17`（面 4）自相矛盾；条目数同时
+  // 入 golden）范围条目中「起于注释/空行」者 MUST 恰 2 项
   //（3.1 起于 `/**` JSDoc L838、3.5 起于 `//` 互操作说明 L896）。动因 = 该计数原为**人工转写**且写错
   //（CHANGELOG 曾披露「三处」）——与 COMPAT-004 FIND-1 的 tier 串转写漂移同类，故沿用同款处置：实测值
   // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.8 `L2411` 函数行 / 4.6 `L17`
   // `"dsh": {` / 5.1 `L1` `name:` / 5.2 `L16` `- id:` / 5.4 `L77` `- id:` / 6.1 `L39`（修正后真值；修正前
   // `L38` 亦非注释）/ 6.2 `L8` `"engines": {` / 6.4 `L77` `mkdir -p`。严格面（面 2 = 11 项）已由 ③ 逐项约束，
-  // 本项只覆盖未纳入严格面的面 3/5/6；注释口径同 ③（JS 风格），YAML `#` 不在识别面内（与 F-5① 同源前提）。
+  // 本项只覆盖未纳入严格面的面（动态生成：实测 3/4/5/6）；注释口径同 ③（JS 风格），YAML `#` 不在识别面内（与 F-5① 同源前提）。
   const GOLDEN_RANGE_COMMENT_START = 2
+  const rangeNonStrict = rangeItems.filter((it) => !RANGE_STRICT_FACES.includes(it.face))
+  const rangeNonStrictFaces = [...new Set(rangeNonStrict.map((it) => it.face))].sort()
+  const GOLDEN_RANGE_NONSTRICT_ITEMS = 10
   const commentStartRanges = []
-  for (const it of rangeItems) {
-    if (RANGE_STRICT_FACES.includes(it.face)) continue
+  for (const it of rangeNonStrict) {
     const files = filesOf(it)
     if (files.length === 0) continue
     const lines = readFileSync(new URL('../' + files[0], import.meta.url), 'utf8').split('\n')
@@ -2129,9 +2199,9 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
     const start = Number(rm[1])
     if (start <= lines.length && lineIsComment(lines[start - 1])) commentStartRanges.push(it.item + '@L' + start)
   }
-  check('COMPAT-013 F3 非严格面（3/5/6）注释/空行起段 golden：' + commentStartRanges.length + ' 项 ≡ ' + GOLDEN_RANGE_COMMENT_START + '（' + commentStartRanges.join(',') + '）——CHANGELOG 披露数由此锁定（原人工转写「三处」实读为 2 处）',
-    commentStartRanges.length === GOLDEN_RANGE_COMMENT_START,
-    'commentStart=' + JSON.stringify(commentStartRanges))
+  check('COMPAT-013 F3 非严格面（' + rangeNonStrictFaces.join('/') + '，共 ' + rangeNonStrict.length + ' 项 / golden ' + GOLDEN_RANGE_NONSTRICT_ITEMS + '）注释/空行起段 golden：' + commentStartRanges.length + ' 项 ≡ ' + GOLDEN_RANGE_COMMENT_START + '（' + commentStartRanges.join(',') + '）——CHANGELOG 披露数由此锁定（原人工转写「三处」实读为 2 处）；覆盖面与条目数由本断言动态生成（C-F-1 订正「3/5/6」漏面 4）',
+    rangeNonStrict.length === GOLDEN_RANGE_NONSTRICT_ITEMS && commentStartRanges.length === GOLDEN_RANGE_COMMENT_START,
+    'nonStrict=' + rangeNonStrict.length + '(golden ' + GOLDEN_RANGE_NONSTRICT_ITEMS + ') faces=' + JSON.stringify(rangeNonStrictFaces) + ' commentStart=' + JSON.stringify(commentStartRanges))
 
   // ⑬ F6 necessity 九值 golden 分布（9 值全量 + 合计 48；防单值静默漂移）
   const GOLDEN_NEC = { required: 39, consolidatable: 1, adapted: 1, optional: 1, improvable: 2, own: 1, eliminated: 1, 'adapted-drift': 1, awareness: 1 }
@@ -2544,7 +2614,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
     ok: true,
     report: {
       contract: { task: 'COMPAT-002', schemaVersion: 1, items: 48, faces: 6 },
-      host: { version: null, versionNote: 'unprobed' },
+      host: { version: null, versionCode: 'tp4-unprobed' },   // B-N3：自由文本 versionNote → 枚举码（R2 收口）
       scope: { face: 1, probesDeclared: 11, probesCovered: 9, probesUnprobed: 2 },
       probes: [
         { item: '1.1', face: 1, kind: 'import', sync: true, ok: true, mode: 'module-surface', domain: '@deepseek-ai/cordis', service: null, method: 'Service', detail: 'function' },
@@ -2640,14 +2710,25 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   runClientApply(() => undefined)
   const remoteProbesC = REMOTE_PROBE_IDS5.map((k) => clientExports.CLIENT_PROBES[k]())
   const rbC = clientExports.buildDiagReport({ api: undefined, server: serverMock5 }).minSupport
-  check('COMPAT-005 D1③ RB-03 代理信号构造断言（R1 返工 F1：判据 = **原始 remote.* 命名空间**在场性）：真实旧表面（域对象**带方法**）⇒ triggered=true + 明确文案；新表面 ⇒ 五项探针 ok=true 且 triggered=false；双缺 ⇒ 不误报',
+  // (g) **R2 N1 构造（COMPAT-014 B-N1）**：**原始肢在场 ∧ facade 肢不可用** ∧ 旧表面标记在场 ⇒ MUST NOT 触发。
+  //     触发判据取自原始服务命名空间（check.raw）；若沿用 raw∧facade 的合并读数 ok，则本形态 remotePresent=false
+  //     ∧ legacyPresent=true ⇒ 误报「宿主版本低于最低支持」（R2 指出的理论误报路径，本构造把它固化为反例）。
+  const connG = { api: { settings: legacySettingsD } }
+  const remoteNsG = { 'remote.settings': remoteNsE.settings, 'remote.session': remoteNsE.session, 'remote.workspace': remoteNsE.workspace, 'remote.directoryPicker': remoteNsE.directoryPicker, 'remote.agentPresets': remoteNsE.agentPresets }
+  runClientApply((n) => (n === 'connection' ? connG : remoteNsG[n]))
+  const repG = clientExports.buildDiagReport({ api: {}, server: serverMock5 })   // facade 空对象 ⇒ facade 肢不可用
+  const rbG = repG.minSupport
+  const remoteChecksG = repG.checks.filter((c) => REMOTE_PROBE_IDS5.includes(c.id))
+  check('COMPAT-005 D1③ RB-03 代理信号构造断言（R1 返工 F1：判据 = **原始 remote.* 命名空间**在场性；**R2 N1：触发取原始肢 `raw`，facade 肢仅作展示**）：真实旧表面（域对象**带方法**）⇒ triggered=true + 明确文案；新表面 ⇒ 五项探针 ok=true 且 triggered=false；双缺 ⇒ 不误报；原始肢在场 ∧ facade 肢不可用（合并读数 ok=false）⇒ MUST NOT 触发',
     rbD.triggered === true && rbD.text.includes('宿主版本低于最低支持')
       && rbD.text.includes('remote.') && rbD.text.includes('0.1.2-rc.1')
       && remoteChecksD.length === 5 && remoteChecksD.every((c) => c.ok === false) && oldHostNoGreen5
       && remoteProbesE.every((p) => p.ok === true) && rbE.triggered === false && rbE.text === '' && newHostAllGreen5
-      && remoteProbesC.every((p) => p.ok === false) && rbC.triggered === false && rbC.text === '',
+      && remoteProbesC.every((p) => p.ok === false) && rbC.triggered === false && rbC.text === ''
+      && remoteChecksG.length === 5 && remoteChecksG.every((c) => c.ok === false && c.raw === true) && rbG.triggered === false,
     'D=' + JSON.stringify(rbD.triggered) + ' E=' + JSON.stringify(rbE.triggered) + ' C=' + JSON.stringify(rbC.triggered)
       + ' Drows=' + JSON.stringify(remoteChecksD.map((c) => c.ok)) + ' Eprobes=' + JSON.stringify(remoteProbesE.map((p) => p.ok))
+      + ' Graw=' + JSON.stringify(remoteChecksG.map((c) => c.raw)) + ' Gok=' + JSON.stringify(remoteChecksG.map((c) => c.ok)) + ' Gtrig=' + String(rbG.triggered)
       + ' Dtext=' + rbD.text.slice(0, 24))
   check('COMPAT-005 D1③b（R1 返工 F4）apply 装配路径**直读**：runClientApply(真实旧表面) 后**不新建 facade** 直读 CLIENT_PROBES —— 代际标记与原始解析器确由 makeHostApi 于 apply 期写入（删除任一处赋值即红）',
     probeLegacyApplyD.ok === true && probeLegacyApplyD.detail.includes('true')
@@ -2832,13 +2913,28 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
 
   // ⑩ R1 返工 F5~F9 落点机检：
   //    F5 契约 note 与行号**解耦**（不内嵌「现 L…」——字段值才是唯一事实源；原 2.3/3.1/3.6/1.8 note 残留旧值）；
-  //    F6 死样式/死 i18n 键清除 + diagReason 映射覆盖生产者枚举码（双向：生产码 ⊆ 客户端文案表）；
+  //    **B-N2（COMPAT-014，收口 REVIEW-COMPAT-005-R2 N2）**：原守卫只匹配 `/现\s*L\d/` 且只扫 note ⇒ 两条**现役**
+  //    行号副本逃逸（1.3 note「index.js 现调用点 L170/L1367」——「现…L…」中间隔词；1.10 note「emit L155 / logger L122」
+  //    ——无「现」字）。现：① 词法覆盖「现…L…」与「emit|logger|logWarn + L…」两形态；② 扫描面扩至 items[].symbol、
+  //    faces[].scope、revisions[].scope、regionLiterals、ctxGetSemantics、hostSurface（深度遍历字符串值）——
+  //    行号唯一事实源 = 各条 `line` 字段，free-text 不得承载**现役**副本（带「原/收口前」限定的历史锚点不受限）。
+  //    F6 死样式/死 i18n 键清除 + diagReason 映射覆盖生产者枚举码（双向：生产码 ⊆ 客户端文案表）；**B-N3**：载荷
+  //    `report.host` 仅 null + 枚举码（无自由文本字段）；
   //    F7 产品代码零直连契约（改经边界 `contractProjection`）+ 同一派生式收敛单点 + `bindow` 拼写订正；
   //    F9 `diagDesc`（zh/en）去仓内路径硬编码；F1 附带 `diagRbNone` 文案订正（不再宣称「至少其一在场」）。
+  const deepStrings5 = (o) => (typeof o === 'string' ? [o] : (o === null || typeof o !== 'object' ? [] : Object.values(o).flatMap(deepStrings5)))
   const contractNoteTexts5 = [
-    ...hc5.items.map((it) => it.note), ...hc5.clientProbes.map((p) => p.note), hc5.clientProbesNote,
+    ...hc5.items.map((it) => it.note), ...hc5.items.map((it) => it.symbol), ...hc5.clientProbes.map((p) => p.note), hc5.clientProbesNote,
+    ...hc5.faces.map((f) => f.scope), ...hc5.revisions.map((r) => r.scope),
+    ...deepStrings5(hc5.regionLiterals), ...deepStrings5(hc5.ctxGetSemantics), ...deepStrings5(hc5.hostSurface),
   ].filter((n) => typeof n === 'string')
-  const staleNoteRefs5 = contractNoteTexts5.filter((n) => /现\s*L\d/.test(n))
+  const staleNoteRefs5 = contractNoteTexts5.filter((n) => /现[^。；]{0,10}L\d/.test(n) || /(?:emit|logger|logWarn|emitChanged)\s*(?:\/|,|、)?\s*L\d/.test(n))
+  // B-N3（R2 N3）：`report.host` 的**自由文本**载体已枚举化——只允许 `version: null` + `versionCode: <枚举码>`
+  // （人类可读文案在客户端 i18n，不进网关；原 `versionNote` 自由文本为零散漂移面）。
+  const hostPayload5 = rp5 === null || rp5.report === undefined ? null : rp5.report.host
+  const fHostEnum5 = hostPayload5 !== null && hostPayload5.version === null
+    && typeof hostPayload5.versionCode === 'string' && /^[a-z][a-z0-9-]*$/.test(hostPayload5.versionCode)
+    && hostPayload5.versionNote === undefined
   const f6Dead5 = !clientSrc.includes('.nv-diag-sub') && !clientSrc.includes('.nv-diag-tbl code')
     && ['diagStOk', 'diagStMissing', 'diagStUnprobed', 'diagNotDetected'].every((k) => !clientSrc.includes(k))
   const reasonBlock5 = clientSrc.slice(clientSrc.indexOf('diagReason: (code) => ({'), clientSrc.indexOf('}[code] ?? String(code))'))
@@ -2857,11 +2953,20 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   const f1TextOk5 = clientSrc.includes('触发条件 = remote.* 命名空间服务族全缺')
     && clientSrc.includes('requires all remote.* namespace services absent')
     && !clientSrc.includes('remote.* 与旧连接载体 .api 至少其一在场')
-  check('COMPAT-005 D1⑩（R1 返工 F5~F9）落点：F5 note 行号解耦（0 处内嵌「现 L…」）+ F6 死样式/死键清除且 diagReason 覆盖全部生产者枚举码（' + emittedCodes5.length + ' 码）+ F7 产品零直连契约/派生式收敛单点/拼写订正 + F9 diagDesc 去硬编码 + F1 diagRbNone 文案订正',
-    staleNoteRefs5.length === 0 && f6Dead5 && f6ReasonCovered5 && f7Boundary5 && f9Desc5 && f1TextOk5,
-    'staleNote=' + JSON.stringify(staleNoteRefs5.map((n) => n.slice(0, 20))) + ' f6Dead=' + f6Dead5 + ' f6Codes=' + f6ReasonCovered5
+  check('COMPAT-005 D1⑩（R1 返工 F5~F9 + R2 B-N2/B-N3）落点：F5/B-N2 note+symbol+faces+revisions+regionLiterals+ctxGetSemantics+hostSurface 行号解耦（0 处现役副本；词法含「现…L…」与「emit/logger+L…」）+ B-N3 载荷 host 无自由文本（仅 null + 枚举码 '+ String(hostPayload5 === null ? 'n/a' : hostPayload5.versionCode) +'）+ F6 死样式/死键清除且 diagReason 覆盖全部生产者枚举码（' + emittedCodes5.length + ' 码）+ F7 产品零直连契约/派生式收敛单点/拼写订正 + F9 diagDesc 去硬编码 + F1 diagRbNone 文案订正',
+    staleNoteRefs5.length === 0 && fHostEnum5 && f6Dead5 && f6ReasonCovered5 && f7Boundary5 && f9Desc5 && f1TextOk5,
+    'staleNote=' + JSON.stringify(staleNoteRefs5.map((n) => n.slice(0, 20))) + ' hostEnum=' + fHostEnum5 + ' f6Dead=' + f6Dead5 + ' f6Codes=' + f6ReasonCovered5
       + ' f7=' + f7Boundary5 + ' f9=' + f9Desc5 + ' f1Text=' + f1TextOk5)
 }
+
+// ⑪ COMPAT-014 A-F9：README 验证管线段的 smoke 断言计数 ≡ 实测（含本断言自身）——原为**人工转写**且已陈旧
+//   至少 4 个任务周期（179 vs 276，正落在 COMPAT-007 修改的代码块内）；本断言把「随 smoke 计数变更同步」由
+//   文档纪律升级为机检（改 README 计数与改 smoke 断言数必须同 commit）。**必须保持为本文件最后一条 check**
+//   （断言式用 `passed + 1` 计入自身；后续新增 check 会使其红——这正是期望的提示信号）。
+const readmeSmokeDeclared = Number((/node test\/smoke\.mjs\s+#[^\n]*?(\d+)\s*项断言/.exec(readFileSync(new URL('../README.md', import.meta.url), 'utf8')) ?? [])[1] ?? NaN)
+check('COMPAT-014 A-F9 README smoke 断言计数同步：声明 ' + (Number.isNaN(readmeSmokeDeclared) ? '缺失' : readmeSmokeDeclared) + ' ≡ 实测 ' + (passed + 1) + '（含本断言自身；陈旧即红）',
+  readmeSmokeDeclared === passed + 1,
+  'declared=' + readmeSmokeDeclared + ' actual=' + (passed + 1))
 
 }
 

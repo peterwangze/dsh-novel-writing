@@ -13,6 +13,8 @@
  * 退出码：0 = 一致；1 = 不一致（列出差异）；2 = 输入缺失（ci.yml/fixture/包面/契约声明缺项）。
  *
  * 只读纪律：只读 ci.yml / fixtures / 契约；写操作仅发生在调用方显式给出的临时目录（smoke 用 mkdtemp）。
+ * 消费方：CI sanity（本文件 CLI + smoke 动态 import）与 COMPAT-014 新增的 `probe-face.mjs`（探测轨判据离线机检
+ * ——共用本文件 `extractHeredocs` 作为**唯一** heredoc 提取口径，避免两处各写一份后漂移）。
  */
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join, dirname, resolve, sep } from 'node:path'
@@ -23,15 +25,22 @@ const HERE = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(HERE, '..', '..', '..')
 const CI_YML = join(REPO_ROOT, '.github', 'workflows', 'ci.yml')
 
-/** 提取 YAML run 块内的 `cat > <target> <<'EOF' … EOF` heredoc：返回 target → 去公共缩进后的内容。 */
+/**
+ * 提取 YAML run 块内的 `cat > <target> <<'DELIM' … DELIM` heredoc：返回 target → 去公共缩进后的内容。
+ * **定界约定泛化（COMPAT-014 A-F2，收口 REVIEW-COMPAT-007-R1 F2）**：原实现硬编码 `<<'EOF'` + 未引号 target
+ * ⇒ 不匹配探测轨判据的新约定 `cat > "$RUNNER_TEMP/nv-host-latest-probe.mjs" <<'PROBE_EOF'`（该判据因此在
+ * PR/push 面零机检）。现支持：引号/未引号 target + 任意 `'[A-Z_]+'` 定界符（闭定界符按同符号回配）。
+ * target 键统一为**去引号后的原样串**（如 `$RUNNER_TEMP/nv-host-latest-probe.mjs`），便于消费方按名查找。
+ */
 export function extractHeredocs(yamlText) {
   const out = new Map()
-  const re = /^([ \t]*)cat > (\S+) <<'EOF'\n([\s\S]*?)\n[ \t]*EOF[ \t]*$/gm
+  const re = /^([ \t]*)cat > (?:"([^"]+)"|'([^']+)'|(\S+)) <<'([A-Z_][A-Z_0-9]*)'\n([\s\S]*?)\n[ \t]*\5[ \t]*$/gm
   let m
   while ((m = re.exec(yamlText)) !== null) {
     const indent = m[1]
-    const body = m[3].split('\n').map((l) => (l.startsWith(indent) ? l.slice(indent.length) : l)).join('\n')
-    out.set(m[2], body + '\n')
+    const target = m[2] ?? m[3] ?? m[4]
+    const body = m[6].split('\n').map((l) => (l.startsWith(indent) ? l.slice(indent.length) : l)).join('\n')
+    out.set(target, body + '\n')
   }
   return out
 }
