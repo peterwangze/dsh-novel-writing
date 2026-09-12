@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 82 | 69 | 0 | 2 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 82 | 70 | 0 | 2 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -139,9 +139,9 @@
 | **P1** | COMPAT-001 | 插件兼容性设计系统性分析（用户 2026-09-11 请求，BUG-006 修复后）：基于 BUG-003/004/005/006 四次 dsh 升级兼容事故 + RISK-003 宿主 DOM 依赖，对宿主依赖面全量清点并按用户四轴出设计——①尽可能减少对 DSH 宿主的依赖 ②必需接口/字段依赖逻辑解耦单独维护 ③依赖代码严格依赖性校验与看护 ④依赖边界可调测性设计（第一时间发现+低代价适配）；产出 docs/research/COMPAT-001-host-compat-analysis.md + proposed ADR；实现任务经用户确认另行入账 | — | v0.5.2 | open | 🔄 分析完成 + R1 审查通过（APPROVED_WITH_NOTES 0 阻断，REVIEW-COMPAT-001-R1 机录；61 处抽核 0 失实；P2×2 已按 F1/F2 修正；COMPAT-006 版本矩阵决策呈请中；实现任务入账待发） |
 
 | **P0** | COMPAT-006 | 版本支持矩阵决策（决策型——分析 §8 唯一用户决策点）：最低支持版本/A1 收敛时点/peer 口与 connection inject 处置 | COMPAT-001 | v0.6.0 | closed | ✅ 完成 (2026-09-12，DEC-026 用户经 ask_user_question 定案：A3 立即〔inject 收敛非 breaking〕+ A1 绑 v1.0 major 边界〔最低 0.1.2-rc.1+移除旧表面回退+peer 下限+README 矩阵〕；断供保障=apiHas 降级+RB-03 代理信号文案) |
-| **P1** | COMPAT-010 | CI dsh-settings mock 漂移 hotfix（REVIEW R1-F5 拆出——分析 6.4 活性缺陷「第一优先」不应依赖 COMPAT-002）：.github/workflows/ci.yml L76-78 mock 导出面对齐真实 0.1.5-rc.2（删 settingsNamespace 导出，对齐 SettingsConflictError/SettingsProvider/redactSecrets）+ CHANGELOG [Unreleased]；宿主 checkout dsh-settings/lib/index.js L610 为权威面 | — | v0.6.0 | open | ⏳ 待执行（Developer 派发中） |
+| **P1** | COMPAT-010 | CI dsh-settings mock 漂移 hotfix（REVIEW R1-F5 拆出——分析 6.4 活性缺陷「第一优先」不应依赖 COMPAT-002）：.github/workflows/ci.yml L76-78 mock 导出面对齐真实 0.1.5-rc.2（删 settingsNamespace 导出，对齐 SettingsConflictError/SettingsProvider/redactSecrets）+ CHANGELOG [Unreleased]；宿主 checkout dsh-settings/lib/index.js L610 为权威面 | — | v0.6.0 | closed | ✅ 完成 (2026-09-12，commit 1617aba + EVD-083 + REVIEW-COMPAT-010-R1 APPROVED_WITH_NOTES 0 阻断〔机录〕；宿主 L610 一手比对全一致；F1 面钉断言→COMPAT-003 承接；F2/F3/F4 知悉；CI 实跑终证待 push) |
 | **P1** | COMPAT-002 | 宿主契约清单提取：lib/host-contract.mjs（六面 47 项机读化——分析 §3 为底稿）；验收含 F4（schema 条目样例：face/item/kind/symbol/file/line/necessity）+ F8（region 常量 ⊆ contract 一致性断言入 smoke）+ F10（自有口径统一=1 项）| COMPAT-010（CHANGELOG 串行） | v0.6.0 | open | ⏳ 待执行 |
-| **P1** | COMPAT-003 | 宿主表面 fixtures 快照（0.1.x/0.1.2-rc.1/0.1.5-rc.1 三版本入仓 test/fixtures/host-surfaces/）+ smoke 离线契约对账 + mock 对齐断言（生成或对照） | COMPAT-002 | v0.6.0 | open | ⏳ 待执行 |
+| **P1** | COMPAT-003 | 宿主表面 fixtures 快照（0.1.x/0.1.2-rc.1/0.1.5-rc.1 三版本入仓 test/fixtures/host-surfaces/）+ smoke 离线契约对账 + mock 对齐断言（生成或对照）；**承接 REVIEW-COMPAT-010-R1 F1**（smoke 增「面钉」机器断言：动态 import mock 断言导出键集恰 4-key——注释钉升级为可执行钉） | COMPAT-002 | v0.6.0 | open | ⏳ 待执行 |
 | **P1** | COMPAT-004 | detectHostCapabilities 探测函数（一函数三消费）+ 启动 [nv-compat] 结构化警告（D2）+ 服务端 host-boundary.js 收口（B1 服务端部）+ **A3 执行**（DEC-026：connection/locale inject 降可选探测）；验收含 F3（探测函数显式 ≤3 句职责）+ F7（apply 期探测全同步快速无网络/布局等待） | COMPAT-002 | v0.6.0 | open | ⏳ 待执行 |
 | **P2** | COMPAT-005 | 设置页诊断面板（D1——能力报告=契约运行时投影；输出仅布尔/名称/版本〔BC-05 安全边界〕）；验收含 RB-03 代理信号（remote.* 全缺+connection.api 在→「宿主版本低于最低支持」文案）+ F6（TP-4 交叉标注） | COMPAT-004 | v0.6.0 | open | ⏳ 待执行 |
 | **P2** | COMPAT-007 | CI scheduled latest 探测轨（C1——只读元数据不 install 不执行，供应链白名单）；验收含 RB-01（探测频率 SLO 如每日 + README 记录探测窗口期残余风险） | COMPAT-002 | v0.6.0 | open | ⏳ 待执行 |

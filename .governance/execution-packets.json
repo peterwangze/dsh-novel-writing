@@ -111,7 +111,7 @@
   "COMPAT-010": {
    "task_id": "COMPAT-010",
    "priority": "P1",
-   "status": "🔄 进行中 (2026-09-12 Developer 派发——CI mock 漂移 hotfix)",
+   "status": "✅ 完成 (2026-09-12，commit 1617aba + EVD-083 + REVIEW-COMPAT-010-R1 APPROVED_WITH_NOTES 0 阻断〔机录〕；F1→COMPAT-003 承接)",
    "goal": "CI dsh-settings mock 导出面对齐真实 dsh-settings@0.1.5-rc.2：删除 ci.yml L76-78 的 settingsNamespace mock 导出（真实导出面=SettingsConflictError/SettingsProvider/redactSecrets，宿主 checkout dsh-settings/lib/index.js L610 权威复核）——消灭「mock 让已删除宿主表面复活=smoke 假绿」的 BUG-003 类温床（REVIEW-COMPAT-001-R1 F5 拆出立即可做项）",
    "product_success_contract": {
     "user": "插件维护者/贡献者——CI 绿灯重新代表真实兼容性而非 mock 幻觉",
