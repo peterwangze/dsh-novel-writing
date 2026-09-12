@@ -303,8 +303,8 @@
   "COMPAT-004": {
    "task_id": "COMPAT-004",
    "priority": "P1",
-   "status": "⏳ 待执行 (2026-09-12 入账——COMPAT-003 完成后派发；005/007/008/009 依赖其探测函数)",
-   "goal": "边界层三件套的服务端+探测半壁（DEC-025 ADR 决策①③ + DEC-026 A3）：①新建 lib/host-boundary.js——服务端宿主调用（settings 注册读取/webServer 路由挂载/resolveDshHome/Service 构造参数）单点收口，index.js 产品代码只经 boundary（行为等价重构，smoke 203+ 零回归）；②detectHostCapabilities() 探测函数——读取 host-contract 声明→探测宿主实际表面→输出结构化能力报告（纯读取无副作用；单一实现三消费方：D2 启动警告/005 诊断面板/CI）；显式 ≤3 句职责定义（REVIEW-COMPAT-001-R1 F3）；③启动 [nv-compat] 结构化警告（D2）：apply 期探测缺面 → console.warn('[nv-compat]', JSON 摘要)，**探测项全部同步快速、无网络/布局等待**（REVIEW-COMPAT-001-R1 F7）；④A3 执行（DEC-026）：client.js inject 表 connection/locale 降为可选探测（ctx.get 惰性判定 + 缺席降级不崩溃，非 breaking——旧宿主/新宿主双路径 smoke 断言）",
+   "status": "🔄 进行中 (2026-09-12 Developer 派发——边界层收口+探测函数+[nv-compat] 警告+A3 inject 收敛)",
+   "goal": "边界层三件套的服务端+探测半壁（DEC-025 ADR 决策①③ + DEC-026 A3）：①新建 lib/host-boundary.js——服务端宿主调用（settings 注册读取/webServer 路由挂载/resolveDshHome/Service 构造参数）单点收口，index.js 产品代码只经 boundary（行为等价重构，smoke 零回归）；②detectHostCapabilities() 探测函数——读取 host-contract 声明→探测宿主实际表面→输出结构化能力报告（纯读取无副作用；单一实现三消费方：D2 启动警告/005 诊断面板/CI）；显式 ≤3 句职责定义（REVIEW-COMPAT-001-R1 F3）；③启动 [nv-compat] 结构化警告（D2）：apply 期探测缺面 → console.warn('[nv-compat]', JSON 摘要)，**探测项全部同步快速、无网络/布局等待**（REVIEW-COMPAT-001-R1 F7）；④A3 执行（DEC-026）：client.js inject 表 connection/locale 降为可选探测（ctx.get 惰性判定 + 缺席降级不崩溃，非 breaking——旧宿主/新宿主双路径 smoke 断言）；⑤**并入 REVIEW-COMPAT-011-R1 FIND-1~4 收口**：FIND-1 CHANGELOG tier 枚举订正/T3·T1·T1·T1·T1·T3；FIND-2 契约头 L46 typo+新字段入括号列表；FIND-3 fixtures 落 methodNamesExcludedByKeyword（名+行+原因，区分「不存在」vs「被过筛」）+ 明确判据优先级 exports·AST > methodNames；FIND-4 extract 头部「已知边界」补正则/嵌套模板串未识别披露",
    "product_success_contract": {
     "user": "插件用户（宿主升级后）——断裂第一时间在控制台可见（结构化警告指明断在哪层），而非白屏/静默降级",
     "job_to_be_done": "宿主升级后插件即使局部失效也能加载并给出可诊断信号；适配改动收敛到 host-boundary/region 单点",
@@ -358,7 +358,7 @@
     "node --check ×3 + validate-preset + smoke {N}/0 真实输出 + A3 双路径断言记录 + [nv-compat] 警告样例",
     "Code Reviewer 审查结论（review-record 机录）"
    ],
-   "allowed_change_scope": ["lib/host-boundary.js", "lib/index.js", "lib/client.js", "test/smoke.mjs", "CHANGELOG.md"],
+   "allowed_change_scope": ["lib/host-boundary.js", "lib/index.js", "lib/client.js", "test/smoke.mjs", "CHANGELOG.md", "lib/host-contract.mjs", "test/fixtures/host-surfaces/extract.mjs", "test/fixtures/host-surfaces/0.1.1-rc.2.json", "test/fixtures/host-surfaces/0.1.2-rc.1.json", "test/fixtures/host-surfaces/0.1.5-rc.2.json"],
    "next_commands": ["COMPAT-003 完成 → 派发 Developer：boundary 收口（行为等价）→ 探测函数 → 警告接线 → A3 → smoke 断言 → 演练 → commit"],
    "done_definition": ["boundary + 探测落盘接线；宿主调用全经 boundary（grep 实证）", "[nv-compat] 警告样例在案", "A3 双路径断言绿 + smoke 不劣化", "Code Reviewer 通过（机录）"],
    "source": "plan-tracker.md##当前活跃事项",
