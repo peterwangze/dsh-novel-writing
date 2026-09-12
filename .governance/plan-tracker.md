@@ -174,7 +174,7 @@
 | v0.4.0 | 已发布 | 2026-08-29 | 工作台重构（DEC-013）+ 视觉统一设计语言（UX-053/055，DEC-019~023）+ 绑定弹窗三修（UX-057）：分栏工作区/绑定会话/侧栏抽屉/令牌迁移/视觉 V1+V2/主题无关自适应 | UX-006~057 系列 | git tag v0.4.0（fbff776）+ CHANGELOG [0.4.0] 2026-08-29 |
 | v0.5.0 | 已发布 | 2026-08-30 | 工作流控制面板（UX-059）：标题栏启动钮迁入创作台中窗下半区左侧（与章节列表列等宽联动）+ 停止/继续合并形态切换 + 压缩上下文 + 绑定新会话（用户截图批注触发；布局两次实机纠正定案） | UX-059 | git tag v0.5.0（2c0caf1）+ CHANGELOG [0.5.0] 2026-08-30 |
 | v0.5.1 | 已发布 | 2026-09-07 | dsh 0.1.2-rc.1 兼容三修：BUG-003 服务端启动崩溃（settingsNamespace 移除）+ BUG-004 客户端 API 表面迁移（connection.api→remote.*/workspaces 快照，makeHostApi 适配层 + last-non-null 联动守卫 + 设置页防崩）+ BUG-005 useSessions hook 面服务后到自愈（makeSessionsHookReactive）；smoke 147→203 | BUG-003,BUG-004,BUG-005,REL-005 | git tag v0.5.1（cd1911e）+ CHANGELOG [0.5.1] 2026-09-07 |
-| v0.5.2 | 未发布 | — | dsh 0.1.5-rc.1 安装通道适配（BUG-006）：install.ps1/install.sh 版本自适应双通道（per-profile node_modules + package.json dependencies/bundles 注册 + patch 行兜底；旧布局零回归）+ README/CHANGELOG 同步；插件代码本身对 0.1.5 零改动兼容（隔离实例全链路实证） | BUG-006 | CHANGELOG [Unreleased]（发布号以 Release Gate 用户确认为准） |
+| v0.5.2 | 已发布 | 2026-09-12 | dsh 0.1.5-rc.1 安装通道适配（BUG-006）：install.ps1/install.sh 版本自适应双通道（per-profile node_modules + package.json dependencies/bundles 注册 + patch 行兜底；旧布局零回归）+ README/CHANGELOG 同步；插件代码本身对 0.1.5 零改动兼容（隔离实例全链路实证）。**代码范围声明**：v0.5.2 代码基准 = BUG-006 安装通道适配（471ed00）+ 治理收尾（3442f39，远端同源）；COMPAT-002~016 兼容性架构演进属未发布的 v0.6.0 线（保留 [Unreleased]，不属本版范围） | BUG-006 | git tag v0.5.2（本地 annotated tag，未 push——RISK-004；SHA 见 EVD-097 补录）+ CHANGELOG [0.5.2] 2026-09-12 |
 | v0.6.0 | 未发布 | — | 兼容性架构演进（DEC-025 ADR 采纳 + DEC-026 版本矩阵）：宿主边界层三件套（host-contract 契约/host-boundary+region 适配/detectHostCapabilities 探测）+ fixtures/l latest 探测轨/加载期警告三层看护 + 诊断面板 + A3 inject 收敛 + CI mock hotfix（COMPAT-010）；基于 COMPAT-001 分析（R1 审查通过）四轴落地 | COMPAT-002~005, 007~010（006 决策已闭环 DEC-026） | CHANGELOG [Unreleased]（发布时机 Release Gate 用户确认） |
 
 ### 版本里程碑
@@ -187,6 +187,7 @@
 | v0.4.0 范围确认 | v0.4.0 | 2026-08-28 | 达成（DEC-013，UX-006 入账） |
 | v0.4.0 发布 | v0.4.0 | 2026-08-29 | 达成（REL-003，tag fbff776；CLEAN-004 实机验证不阻塞——用户确认） |
 | v0.5.0 发布 | v0.5.0 | 2026-08-30 | 达成（REL-004，tag v0.5.0） |
+| v0.5.2 发布 | v0.5.2 | 2026-09-12 | 达成（REL-006，本地 annotated tag v0.5.2——未 push，RISK-004 待授权） |
 
 ### 版本 Gate 检查项
 

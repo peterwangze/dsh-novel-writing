@@ -115,6 +115,10 @@
   - **验证**：smoke **230 → 231 项，0 失败**；`ci-mock-face.mjs` **exit 0（4/4 面）**；`node --check` ×4（extract.mjs / ci-mock-face.mjs / host-contract.mjs / smoke.mjs）0 错；`validate-preset` 不劣化。**断言活性演练（红 → 绿）**：临时改 fixture `hostVersion` → C5 版本一致性断言变红（失配明细列出 `0.1.5-rc.2:dsh-settings@…≠…`）→ 复原 → 231/0 全绿。
 
 - **CI dsh-settings mock 导出面漂移修正（COMPAT-010；纯 CI mock 修正，产品代码零改动）**：COMPAT-001 宿主兼容分析（`docs/research/COMPAT-001-host-compat-analysis.md` §6.4）+ Design Review R1（F5）确证的活性缺陷——`.github/workflows/ci.yml` 的 dsh-settings mock 仍导出宿主 dsh 0.1.2-rc.1 起已删除的 `settingsNamespace` 具名导出，而真实 `dsh-settings@0.1.5-rc.2` 导出面仅 `SettingsConflictError / SettingsProvider（含 default 别名）/ redactSecrets`（宿主只读闭包 `@deepseek-ai/dsh-settings/lib/index.js` L610 权威核对）。mock 让已删除表面「复活」= 若插件代码重新引入该导入，CI 假绿而宿主实机启动崩溃——BUG-003 类事故温床。修正：mock 导出面逐项对齐真实面并保持形态忠实（`SettingsConflictError`=Error 子类〔name/code/expected/actual〕、`SettingsProvider`=cordis `Service` 子类、`default`=`SettingsProvider` 别名、`redactSecrets(schema, value)`→`{value, secrets}`；删除 `settingsNamespace` 导出），mock 处注释钉住宿主权威面位置（包路径 + 行号）。`lib/*` 产品代码零改动。
+
+## [0.5.2] - 2026-09-12
+
+### 修复
 - **兼容 dsh 0.1.5 布局重构——安装脚本版本自适应（BUG-006，安装通道适配）**：dsh 0.1.2-rc.1 → 0.1.5-rc.1 重构了 profile 布局与插件注册机制（每 profile 独立目录：`package.json` + `pnpm-workspace.yaml` + 私有 `node_modules`；官方注册通道 = profile `package.json` 的 `dependencies`（`"dsh-novel-writing": "file:<插件路径>"`）+ `dsh.profile.bundles` 数组追加）。**本插件代码本身对 dsh 0.1.5-rc.1 零改动兼容**（隔离实例全链路实测启动成功），本条为安装脚本适配：install.ps1 / install.sh 自动检测布局版本（`profiles/<Profile>/package.json` 存在 = 0.1.5+ per-profile / 缺省 = 旧版全局）——**新布局** junction 接入 `profiles/<Profile>/node_modules/` + 幂等注册 profile `package.json`（dependencies + `dsh.profile.bundles`，保留既有键与键序、2 空格缩进；install.sh 注册用 `node -e`，无 node 回退 python3，两者皆无降级仅写 patch 行并提示）+ `cordis.patch.yml` insert 行兜底双保险（两条注册路径均独立有效）；**旧布局行为完全不变**（junction 到 `profiles/node_modules` + patch 行）。幂等可重复执行，不产生重复行/重复键/损坏 JSON；README 安装与兼容性说明同步。
 
 ## [0.5.1] - 2026-09-07
