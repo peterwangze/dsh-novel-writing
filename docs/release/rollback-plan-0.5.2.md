@@ -44,11 +44,20 @@ git -C "D:\AI\agent\deepseek\harness\writing-workflow" checkout 3442f39
 
 ```powershell
 git -C "D:\AI\agent\deepseek\harness\writing-workflow" tag -d v0.5.2
-git -C "D:\AI\agent\deepseek\harness\writing-workflow" revert --no-edit 914725f8 6f0027b 792030c e1f25df8   # 重定后「本版发布动作链」= 4 提交，须逆序逐个 revert
-git -C "D:\AI\agent\deepseek\harness\writing-workflow" reset --hard e1f25df8^   # 或更简：单次 reset 到 v0.5.2 之前（= 发布提交 `e1f25df8` 之前）
+
+# 变体 ① reset —— 彻底回到发布前（会丢弃本地此后全部提交；仅本地未 push 且不需保留这些提交时可考虑）
+git -C "D:\AI\agent\deepseek\harness\writing-workflow" reset --hard e1f25df8^   # = 发布提交 `e1f25df8` 之前（`dd6b5ef`）
+
+# 变体 ② revert 序列 —— 保留历史（逐个覆盖撤销范围内的全部提交，倒序：新 → 旧）
+git -C "D:\AI\agent\deepseek\harness\writing-workflow" revert --no-edit ea56693 8a0448a 66f0213 ef23ed3 914725f8 6f0027b 792030c e1f25df8
 ```
 
-- **撤销范围补注（tag 重定后，N4）**：单 `revert e1f25df` **已不足以**撤销全部发布工件/证据——「本版发布动作链」= `e1f25df8`（版本 bump）→ `792030c`（R1 补强）→ `6f0027b`（M7.7 事件机写证据）→ `914725f8`（演练工件固化 = 当前 tag peel）**共 4 提交**；须逐个 revert（逆序）或直接 `reset` 到 `v0.5.2` 之前。
+- **撤销范围（N4 + N6 订正，与当前提交结构对齐）**：撤销本版发布动作须覆盖**两类提交**——
+  1. **发布动作链 4 提交**（在 tag 树内）：`e1f25df8`（版本 bump）→ `792030c`（R1 补强）→ `6f0027b`（M7.7 事件机写证据）→ `914725f8`（演练工件固化 = 当前 tag peel）；
+  2. **tag peel 之后的治理/审查提交**（**不在 tag 树内**）：`ef23ed3`（R2 复审机录）→ `66f0213`（返工 R2）→ `8a0448a`（tracker 口径清理）→ `ea56693`（R3 终审机录）。
+- **两变体的适用面与覆盖差异**：**① `reset` 覆盖完备**——`reset --hard e1f25df8^` 丢弃 `e1f25df8` 的**全部后代**（上列 8 提交 + 发布后治理提交 `e093e72` 发布工件补建 / `6618dde` COMPAT-016 关单 / `5643e7c` R1 机录与 DEC-027 裁定，共 11 提交），无遗漏；代价是这些**未 push 提交一并丢弃**（脱离分支，仅 reflog 可短期寻回）⇒ 仅在「确定不要这些本地提交」时使用。**② `revert` 序列保留历史**（每条各产生一个反向提交，可复查），但**须显式列出**上述 8 提交——单 `revert e1f25df` 或仅 revert tag 树内 4 提交**均已不足以**覆盖 tag peel 之后的治理提交；若需零残留，可用等价值 `git revert --no-edit e1f25df8^..HEAD`（一次覆盖区间**全部**提交，git 按时间倒序处理）。**同一文件被多个提交连续修改时 `revert` 可能需手工解冲突**（治理记录面尤为常见）。
+- **读数口径**：上列 SHA 为**落盘时实测**（`git log --oneline --reverse e1f25df8..HEAD` / `914725f8..HEAD`）；该区间随治理提交增长 ⇒ **执行前 MUST 重跑实测**，不得照抄本文数量。
+- **演练状态（如实标注，措辞纪律）**：路径 C 两变体**均未演练（仅命令级推演）**——§6/§7 的隔离实测覆盖**路径 A**；本路径的订正为**描述与提交结构对齐**，未对仓库执行任何 `reset`/`revert`/tag 命令。
 - 前置事实：发布提交与 tag **均未 push**（远端 `refs/heads/main` = `3442f39…`；`git ls-remote origin refs/tags/v0.5.2` 为空）⇒ **撤销无远端影响、无他人可见面**。
 - ⚠️ 一旦 push 完成，本路径失效（届时须走 `revert` + 新版本号，不得改写已发布历史）。
 

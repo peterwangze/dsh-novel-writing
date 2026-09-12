@@ -210,6 +210,8 @@
 
 ## 10. 执行日志（命令级，供复核）
 
+> **本表为历史执行日志**（含 tag 重定前读数，按命令级日志纪律保留不抹除）；**当前 tag 身份以 §7 R7 行为准**（§10 内以「返工 R2 轮」表首行为准，该表末行为该轮未执行 tag/push 的命令声明）。
+
 | 时间 | 命令 | 结果 |
 | --- | --- | --- |
 | 2026-09-12 | `git status --porcelain` / `git log --oneline` / `git tag -l` / `git for-each-ref refs/tags` | 工作树 clean；本地 main 领先 origin/main 44 commits；已有 tag v0.2.0~v0.5.1；分析 `git ls-remote origin refs/heads/main` ⇒ `3442f39…` |
