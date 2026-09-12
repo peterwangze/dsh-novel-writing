@@ -2,7 +2,7 @@
 
 - **关联任务**：REL-006（发布 v0.5.2 —— BUG-006 安装通道适配承载）
 - **发布记录**：`docs/review/REL-006-release-notes.md`；**检查清单**：`docs/release/release-checklist-0.5.2.md`
-- **本版发布事实**：发布提交 `e1f25df84ead0a4d07c655f9afcd379a8a96a2a8`；tag `v0.5.2` = `7ca99d6d…` → peel `e1f25df8…`；**未 push**（RISK-004）
+- **本版发布事实**：发布提交 `e1f25df84ead0a4d07c655f9afcd379a8a96a2a8`（版本 bump）+ 返工链 `792030c`（R1 补强）→ `6f0027b`（M7.7 事件机写证据）→ `914725f8`（演练工件固化）；tag `v0.5.2` 对象 **`793dde78…` → peel `914725f8…`**（DEC-027 重定后；旧对象 `7ca99d6d…` → peel `e1f25df8…` **已随重定删除**，supersede 留痕）；**未 push**——**push 已授权**（DEC-027，用户已授予 `workflow` scope），按执行序待 R2/R3 审查通过后由 Coordinator 执行
 - **上一已发布版本**：v0.5.1（tag target `cd1911e`）
 - **回滚对象性质**：本地 tag / 安装产物版本（**非运行态系统**——本插件经 junction 安装，代码生效即时，无服务端状态需回置）
 
@@ -44,9 +44,11 @@ git -C "D:\AI\agent\deepseek\harness\writing-workflow" checkout 3442f39
 
 ```powershell
 git -C "D:\AI\agent\deepseek\harness\writing-workflow" tag -d v0.5.2
-git -C "D:\AI\agent\deepseek\harness\writing-workflow" revert --no-edit e1f25df   # 或 reset --hard <v0.5.2 之前的提交>
+git -C "D:\AI\agent\deepseek\harness\writing-workflow" revert --no-edit 914725f8 6f0027b 792030c e1f25df8   # 重定后「本版发布动作链」= 4 提交，须逆序逐个 revert
+git -C "D:\AI\agent\deepseek\harness\writing-workflow" reset --hard e1f25df8^   # 或更简：单次 reset 到 v0.5.2 之前（= 发布提交 `e1f25df8` 之前）
 ```
 
+- **撤销范围补注（tag 重定后，N4）**：单 `revert e1f25df` **已不足以**撤销全部发布工件/证据——「本版发布动作链」= `e1f25df8`（版本 bump）→ `792030c`（R1 补强）→ `6f0027b`（M7.7 事件机写证据）→ `914725f8`（演练工件固化 = 当前 tag peel）**共 4 提交**；须逐个 revert（逆序）或直接 `reset` 到 `v0.5.2` 之前。
 - 前置事实：发布提交与 tag **均未 push**（远端 `refs/heads/main` = `3442f39…`；`git ls-remote origin refs/tags/v0.5.2` 为空）⇒ **撤销无远端影响、无他人可见面**。
 - ⚠️ 一旦 push 完成，本路径失效（届时须走 `revert` + 新版本号，不得改写已发布历史）。
 
@@ -92,7 +94,7 @@ git -C "D:\AI\agent\deepseek\harness\writing-workflow" revert --no-edit e1f25df 
 | --- | --- |
 | 隔离根 | `C:\Users\peter\AppData\Local\Temp\rel006-drill-20260912`（下称 `<ISO>`） |
 | 取树方式（**不用 `git checkout`**） | `git -C <repo> archive --format=tar -o <ISO>\tree-v0.5.1.tar v0.5.1` → `tar -xf <ISO>\tree-v0.5.1.tar -C <ISO>\tree-v0.5.1`；v0.5.2 同法。**当前工作树未被切换、未被修改** |
-| 引用确认（演练前 `git rev-parse`） | `v0.5.1` tag = `7d4d89923e4e572d9af0003182a344d0acb0f2e9` → peel `cd1911e9f1e3bbb90b6197fa3cf7a5e95a1ea373`；`v0.5.2` tag = `7ca99d6d612d90aadeba83d4c7ad40ed61feafa4` → peel `e1f25df84ead0a4d07c655f9afcd379a8a96a2a8` |
+| 引用确认（演练前 `git rev-parse`） | `v0.5.1` tag = `7d4d89923e4e572d9af0003182a344d0acb0f2e9` → peel `cd1911e9f1e3bbb90b6197fa3cf7a5e95a1ea373`；`v0.5.2` tag **演练时读数为** `7ca99d6d612d90aadeba83d4c7ad40ed61feafa4` → peel `e1f25df84ead0a4d07c655f9afcd379a8a96a2a8`〔**重定前**取值，历史留痕〕——**当前身份（DEC-027 重定后）= 对象 `793dde78…` → peel `914725f8…`**；`7ca99d6d…` 已随删 tag 不再由 `for-each-ref` 返回。**演练代表性不受影响**：`git diff --name-only e1f25df8 914725f8` 实测 `install.ps1`/`install.sh` **0 改动** |
 | 环境重定向（全部指向 `<ISO>`） | `DSH_HOME` · `USERPROFILE` · `HOME` · `APPDATA` · `LOCALAPPDATA` · `XDG_CONFIG_HOME` / `XDG_DATA_HOME` / `XDG_CACHE_HOME` / `XDG_STATE_HOME` · `PNPM_HOME` · `npm_config_cache` / `npm_config_userconfig` / `npm_config_globalconfig` / `npm_config_prefix` · `npm_config_ignore_scripts=true` |
 | 夹具 | `home-new`（模拟 dsh ≥0.1.5 新布局：`profiles\web\package.json` 存在、未注册本插件）；`home-legacy`（模拟 dsh ≤0.1.2 旧布局：无 profile package.json）。夹具结构按真实 `~/.dsh/profiles/web/package.json` 形态建模（只读取样，未写入） |
 | 安装调用 | `powershell.exe -ExecutionPolicy Bypass -NoProfile -File <ISO>\repo-sim\install.ps1 -LocalPath <ISO>\repo-sim -Profile web`（离线 `-LocalPath` 模式；无 git / 无网络 / 无 npm 调用） |
@@ -155,7 +157,7 @@ git -C "D:\AI\agent\deepseek\harness\writing-workflow" revert --no-edit e1f25df 
 - **实际副作用（3 项，均为新建，CreationTime 全部 = 演练时刻）**：`C:\Users\peter\profiles\`（含链接与 `web\cordis.patch.yml`）、`C:\Users\peter\.agent-presets\novel-writing\`（47 文件）、`C:\Users\peter\settings.yaml`（85 B）。
 - **清理（已完成）**：删除前逐个断言 `CreationTime ∈ [19:05:00, 19:06:30]`（= 演练窗口），**任一不在窗口即 `throw` 中止**（防误删用户既有数据）→ 守卫 PASSED 后先 `.Delete()` 断 junction 链（不触目标）、再删 3 项；删后核验 `exists=False` × 3。真实 `~/.dsh` 全程未被触碰。
 - **纠正措施（重跑前生效）**：`$home` → `$dshHomeIso` 重命名；`Assert-IsoPath` fail-closed 守卫（任何目标路径 MUST 以隔离根为前缀，否则 `throw`）；`Set-IsoEnv` 环境变量生效值二次断言；新增真实路径泄漏检测器；调用侧 `$ErrorActionPreference='Stop'`（同类静默赋值失败将直接终止）。§7.2/§7.3 全部结果来自**加守卫之后**的运行。
-- **本次演练的工件**（供 R2 复核）：`<ISO>\isolate-env.ps1`（守卫实现）、`<ISO>\run-drill.ps1`（驱动）、`<ISO>\drill-log.txt`（逐 leg 原始输出）、`<ISO>\snap-*.txt`（7 份文件面快照）、`<ISO>\drill-summary.json`、`<ISO>\version-flip-table.json`、`<ISO>\pre-dsh-fingerprint.txt` / `post-dsh-fingerprint.txt`。**注**：工件位于系统临时目录，非仓库内资产——它们不随提交入仓；本 §7 与 `release-checklist` §C.2/§D.1 为仓库内可读的记录面。
+- **本次演练的工件**（供 R2 复核）：`<ISO>\isolate-env.ps1`（守卫实现）、`<ISO>\run-drill.ps1`（驱动）、`<ISO>\drill-log.txt`（逐 leg 原始输出）、`<ISO>\snap-*.txt`（7 份文件面快照）、`<ISO>\drill-summary.json`、`<ISO>\version-flip-table.json`、`<ISO>\pre-dsh-fingerprint.txt` / `post-dsh-fingerprint.txt`。**存放口径（N3 订正）**：工件**已固化入仓**——`docs/release/evidence/rel006-drill-20260912/`（15 件工件 94.9 KiB + `README.md` 索引；目录实测 16 文件 / 98.4 KiB；随证据固化提交 `914725f8` 入仓，提交面 16 files / +1281）；**原 temp 副本可能被系统清理**，仓内副本为可复查面（存放口径见该目录 `README.md` L3）。本 §7 与 `release-checklist` §C.2/§D.1 为仓库内可读的记录面，与仓内证据目录互为对照。
 
 ### 7.6 演练结论
 
