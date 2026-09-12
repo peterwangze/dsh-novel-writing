@@ -2297,11 +2297,20 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   check('COMPAT-004 探测②：探测项清单 = 契约 face 1 全 ' + face1Items.length + ' 项投影（逐项同序）+ 每项 sync=true（F7：apply 期零网络/零布局等待）',
     repOk.probes.length === face1Items.length && repOk.probes.every((p, i) => p.item === face1Items[i].item && p.sync === true),
     'probes=' + repOk.probes.length + ' sync=' + repOk.probes.every((p) => p.sync === true))
-  check('COMPAT-004 探测③：满面场景零缺面（ok=9）+ 未探测项如实计入 unprobed（ok=null + 原因；1.4 已退役 / 1.11 越界）+ 面 2~6 披露 notCovered=5',
+  check('COMPAT-004 探测③：满面场景零缺面（ok=9）+ 未探测项如实计入 unprobed（ok=null + 原因码；1.4 已退役 / 1.11 越界）+ 面 2~6 披露 notCovered=5',
     repOk.missing.length === 0 && repOk.summary.ok === 9 && repOk.unprobed.length === 2
-      && repOk.unprobed.every((u) => typeof u.reason === 'string' && u.reason !== '')
+      && repOk.unprobed.every((u) => typeof u.code === 'string' && u.code !== '')
       && repOk.notCovered.length === 5 && repOk.host.version === null,
     'ok=' + repOk.summary.ok + ' unprobed=' + JSON.stringify(repOk.unprobed.map((u) => u.item)) + ' notCovered=' + repOk.notCovered.length)
+  // ③b R1 返工 F2（BC-05 出网纪律）：未探测/未覆盖**原因**一律为**枚举码**（自由文本含仓内相对路径
+  //    如「lib/tools.js」⇒ 会经路由原样出网关并在面板渲染）；枚举码取值集由本断言钉住，
+  //    未知码即红（生产者新增码而客户端 i18n 未登记时同样暴露——见 D1⑨ diagReason 覆盖断言）。
+  const EMITTED_REASON_CODES4 = new Set(['retired', 'out-of-boundary-scope', 'no-runtime-predicate'])
+  check('COMPAT-005 F2（R1 返工）探测载荷原因字段 = 枚举码（无自由文本/无仓内路径）：unprobed[].code ∈ 枚举集 ∧ reason 字段不存于载荷 ∧ notCovered[].code 齐备',
+    repOk.unprobed.every((u) => EMITTED_REASON_CODES4.has(u.code) && u.reason === undefined)
+      && repOk.probes.filter((p) => p.ok === null).every((p) => EMITTED_REASON_CODES4.has(p.code) && p.reason === undefined)
+      && repOk.notCovered.every((n) => typeof n.code === 'string' && n.reason === undefined),
+    'unprobed=' + JSON.stringify(repOk.unprobed) + ' notCovered=' + JSON.stringify(repOk.notCovered.map((n) => n.code)))
 
   // ③ D2 启动告警（验收③）：缺面场景样例输出 + 安全边界（仅布尔/名称/版本）+ 满面零输出
   const warnCalls = []
@@ -2508,12 +2517,14 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
     'bad=' + JSON.stringify(scopeBad.map(([f]) => f)) + ' unqualified=' + JSON.stringify(scopeUnqualified))
 // ── COMPAT-005 D1：设置页诊断面板（能力报告 = 契约运行时投影；只读；BC-05 载荷边界 + RB-03 代理信号）──
 // 机检面：①报告生成函数可达（exports 纯函数面）+ 载荷仅布尔/名称/版本（BC-05 沿用 COMPAT-004 D2 告警②口径）；
-// ②RB-03 代理信号构造断言（remote.* 全缺 + connection.api 在 → 明确文案；反向与双缺均不触发）；
-// ③数据源单一（报告项全由入参投影 + 客户端探测项 ↔ 契约 clientProbes **双向 ⊆** + 面 4/5/6 零伪造）；
-// ④服务端路由契约投影出口（只读、无 file/line 泄漏）；⑤N3/N4 契约登记 + ctxGetSemantics 诚实保持 unverified。
+// ②RB-03 代理信号构造断言（**R1 返工 F1**：真实旧表面「域对象带方法」⇒ 触发；新表面 ⇒ 五项探针可用且不触发；双缺不误报）；
+// ③数据源单一（报告项全由入参投影 + 客户端探测项 ↔ 契约 clientProbes **双向 ⊆** + item/kind **等价** + 面 4/5/6 零伪造）；
+// ④服务端路由**行为**断言（真实 handler 产出整包扫描 + 注入 file 正向对照 + 失败路径 ok:false）；
+// ⑤N3/N4 契约登记 + ctxGetSemantics 诚实保持 unverified + **R1 返工 F5~F9 落点**。
 {
   const { hostContract: hc5 } = await import('../lib/host-contract.mjs')
   const hostSrc5 = readFileSync(new URL('../lib/index.js', import.meta.url), 'utf8')
+  const boundarySrc5 = readFileSync(new URL('../lib/host-boundary.js', import.meta.url), 'utf8')
   // ① 报告生成函数可达性（验收⑤「诊断报告生成函数可达」）
   const genReachable = clientExports !== null
     && typeof clientExports.buildDiagReport === 'function'
@@ -2527,6 +2538,8 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
 
   // ② 载荷安全边界（BC-05，验收②）：沿用 COMPAT-004 D2 告警②口径——仅布尔/名称/版本，
   //    无路径/token/用户数据；且报告**不含**契约 file/line 字段（本任务新增的显式边界，服务端路由同口径）。
+  //    **R1 返工 F2**：扫描面由「客户端投影字段子集」改为**整个报告对象**（原 `payload5` 字段集不含
+  //    `unprobed`——正是承载真实仓内路径的字段 ⇒ 盲区）；fixture 的 reason 亦由净化文本改为枚举 `code`。
   const serverMock5 = {
     ok: true,
     report: {
@@ -2535,11 +2548,11 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
       scope: { face: 1, probesDeclared: 11, probesCovered: 9, probesUnprobed: 2 },
       probes: [
         { item: '1.1', face: 1, kind: 'import', sync: true, ok: true, mode: 'module-surface', domain: '@deepseek-ai/cordis', service: null, method: 'Service', detail: 'function' },
-        { item: '1.4', face: 1, kind: 'import', sync: true, ok: null, mode: 'unprobed', reason: 'retired' },
+        { item: '1.4', face: 1, kind: 'import', sync: true, ok: null, mode: 'unprobed', code: 'retired' },
       ],
       missing: [],
-      unprobed: [{ item: '1.4', reason: 'retired' }],
-      notCovered: [{ face: 2, reason: 'r2' }, { face: 3, reason: 'r3' }, { face: 4, reason: 'r4' }, { face: 5, reason: 'r5' }, { face: 6, reason: 'r6' }],
+      unprobed: [{ item: '1.4', code: 'retired' }],
+      notCovered: [{ face: 2, code: 'client-api-surface' }, { face: 3, code: 'host-dom-surface' }, { face: 4, code: 'install-registration' }, { face: 5, code: 'preset-manifest' }, { face: 6, code: 'version-environment' }],
       summary: { total: 11, ok: 9, missing: 0, unprobed: 2 },
     },
     contract: {
@@ -2558,42 +2571,88 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   let diag5 = null
   let diag5Err = ''
   try { diag5 = clientExports.buildDiagReport({ api: apiFull5, server: serverMock5 }) } catch (e) { diag5Err = e.message }
+  // BC-05 扫描器（D1②/⑥ 共用）：整包文本——绝对路径/敏感串 + 契约 file/line/模块后缀形态
   const SENSITIVE5 = /[A-Za-z]:\\|\/Users\/|\/home\/|AppData|npm-cache|Bearer\s|password|api[_-]?key/i
-  const payload5 = diag5 === null ? '' : JSON.stringify({ rows: diag5.rows, faces: diag5.faces, checks: diag5.checks, style: diag5.style, notCovered: diag5.notCovered, minSupport: diag5.minSupport.text })
+  const scanBc05 = (s) => /[A-Za-z]:[\\/]/.test(s) || SENSITIVE5.test(s) || ['file:', 'line:', 'L0', '.js', '.mjs', '.yml', '.json'].some((k) => s.includes(k))
+  const payload5 = diag5 === null ? '' : JSON.stringify(diag5) // **整包**（含 unprobed/notCovered——R1 F2 盲区）
   const hasPathish5 = /[A-Za-z]:[\\/]/.test(payload5) || SENSITIVE5.test(payload5)
   const hasFileLine5 = ['file:', 'line:', 'L0', '.js', '.mjs', '.yml', '.json'].some((s) => payload5.includes(s))
-  check('COMPAT-005 D1② 载荷安全边界（BC-05）：报告仅布尔/名称/版本——无路径/token/用户数据 + 无契约 file/line 泄漏',
+  check('COMPAT-005 D1② 载荷安全边界（BC-05）：报告**整包**仅布尔/名称/版本——无路径/token/用户数据 + 无契约 file/line 泄漏（含 unprobed/notCovered 字段）',
     diag5Err === '' && diag5 !== null && diag5.rows.length === 10 && diag5.checks.length === 8
       && diag5.summary.ok === 9 && diag5.hostVersion === null && hasPathish5 === false && hasFileLine5 === false
       && diag5.rows.every((r) => ['ok', 'missing', 'unprobed'].includes(r.state) && typeof r.item === 'string')
-      && diag5.faces.every((f) => [f.items, f.probed, f.ok, f.missing, f.unprobed, f.notCovered].every((v) => typeof v === 'number')),
-    'err=' + diag5Err + ' rows=' + String(diag5 === null ? null : diag5.rows.length) + ' pathish=' + hasPathish5 + ' fileline=' + hasFileLine5)
+      && diag5.faces.every((f) => [f.items, f.probed, f.ok, f.missing, f.unprobed, f.notCovered].every((v) => typeof v === 'number'))
+      && Array.isArray(diag5.unprobed) && diag5.unprobed.every((u) => u.reason === undefined && typeof u.code === 'string')
+      && scanBc05(payload5) === false,
+    'err=' + diag5Err + ' rows=' + String(diag5 === null ? null : diag5.rows.length) + ' pathish=' + hasPathish5 + ' fileline=' + hasFileLine5 + ' scan=' + scanBc05(payload5))
 
-  // ③ RB-03 代理信号**构造断言**（验收③）：构造三形态——(a) remote.* 全缺 + connection.api 在 → 触发明确文案；
-  //    (b) 服务在 → 不触发；(c) 双缺（无宿主表面）→ 不触发（无连接载体即无从判定旧表面，不误报）。
-  // 构造方式：以 apply 驱动代际标记（hostLegacyApiSurface 是模块级单点状态——由 makeHostApi 于
-  // 每轮 apply 按其 connection 实况重置，故三个形态各跑一次挂载，读数才可归因、不受前序用例残留影响）。
-  // 口径要点：apply 期 `ctx.get('connection')` 取到的是**连接服务**（旧表面下其 `.api` 域对象在场），
-  // 故 (a) 必须传 `{ api: <域对象> }` 而非域对象本身——后者会让 legacyApi 判定为 undefined（假阴性）。
-  const rbLegacyApi = { settings: {}, sessions: {}, workspace: {}, host: {}, agentPresets: {} }
-  const rbLegacyConn = { api: rbLegacyApi }
-  const rbModernConn = undefined
-  // (a) 旧表面：connection 服务在场且其 .api 域对象可用（remote.* 服务全部缺席）
-  runClientApply((n) => (n === 'connection' ? rbLegacyConn : undefined))
-  const rbA = clientExports.buildDiagReport({ api: clientExports.makeHostApi(() => undefined, rbLegacyConn), server: serverMock5 }).minSupport
-  // (b) 新表面：无 connection 载体，remote.* 服务就位 → 不触发
-  runClientApply((n) => (n === 'remote.settings' ? { describe() {}, update() {}, mutate() {} } : undefined))
-  const rbB = clientExports.buildDiagReport({ api: clientExports.makeHostApi((n) => (n === 'remote.settings' ? { describe() {} } : undefined), rbModernConn), server: serverMock5 }).minSupport
-  // (c) 双缺（无宿主表面）→ 不触发（无连接载体即无从判定旧表面，不误报）
+  // ③ RB-03 代理信号**构造断言**（验收③；**R1 返工 F1 重写**）：三形态——
+  //    (d) 真实旧表面（**域对象带方法**，复用 ⑥ BUG-004 旧宿主回退用例同形态 fixture）⇒ MUST triggered=true；
+  //    (e) 新表面（remote.* 服务就位）⇒ 五项探针 ok=true 且 triggered=false；
+  //    (f) 双缺（无宿主表面）⇒ 不触发（无连接载体即无从判定旧表面，不误报）。
+  // **F1 根因与口径**：探针判据 = **原始服务命名空间在场性**（apply 期记录的 `ctx.get` 解析器求值），
+  //    **不是** facade 域对象形状——facade 在 remote.* 缺席时**原样返回旧表面域对象**（下述 legacy* 域对象
+  //    即带方法形态），形状反推会使五谓词全真 ⇒ `remotePresent` 恒真 ⇒ 信号在真实旧宿主上恒不触发 +
+  //    面板把 2.5~2.9 报成「可用」（假绿）。故本构造用**带方法**的旧表面 fixture（R1 复现用例，非空壳）。
+  // **F4 纪律（R1 返工）**：读数在 `runClientApply` 之后**先直接读 CLIENT_PROBES**（不新建 facade）——
+  //    测试自建 facade 会补写模块标记（apply 装配路径的回归会被掩盖）；随后才构报告用 facade。
+  const legacySettingsD = { describe: () => {}, update: () => {}, mutate: () => {} }
+  const legacySessionsD = { create: () => {}, prompt: () => {}, cancel: () => {} }
+  const legacyWorkspaceD = { list: () => {}, create: () => {} }
+  const legacyHostD = { pickDirectory: () => {}, createDirectory: () => {}, listDirectory: () => {} }
+  const legacyPresetsD = { select: () => {} }
+  const rbLegacyConnD = { api: { settings: legacySettingsD, sessions: legacySessionsD, workspace: legacyWorkspaceD, host: legacyHostD, agentPresets: legacyPresetsD } }
+  const getLegacyD = (n) => (n === 'connection' ? rbLegacyConnD : undefined)
+  const REMOTE_PROBE_IDS5 = ['remote-settings', 'remote-session', 'remote-workspace', 'remote-directory-picker', 'remote-agent-presets']
+  runClientApply(getLegacyD)
+  // (d-1) F4(a)：apply 装配路径**直读**——代际标记/原始解析器若未由 apply 期的 makeHostApi 写入，此处必红
+  const probeLegacyApplyD = clientExports.CLIENT_PROBES['legacy-connection-api']()
+  const probeRemoteApplyD = clientExports.CLIENT_PROBES['remote-settings']()
+  // (d-2) 报告读数据 = 与 apply 同 getImpl/同 connection 的 facade（标记同值，如实反映 apply 装配实况）
+  const apiD = clientExports.makeHostApi(getLegacyD, rbLegacyConnD)
+  const repD = clientExports.buildDiagReport({ api: apiD, server: serverMock5 })
+  const rbD = repD.minSupport
+  const remoteChecksD = repD.checks.filter((c) => REMOTE_PROBE_IDS5.includes(c.id))
+  const clientRowD = (it) => repD.rows.find((r) => r.item === it && r.scope === 'client')
+  const oldHostNoGreen5 = ['2.5', '2.6', '2.7', '2.8', '2.9'].every((it) => {
+    const r = clientRowD(it)
+    return r !== undefined && r.state !== 'ok'
+  })
+  // (e) 新表面：remote.* 五个原始服务就位（方法面与 facade getter 同口径）
+  const remoteNsE = {
+    settings: { describe() {}, update() {}, mutate() {} },
+    session: { create() {}, prompt() {}, cancel() {} },
+    workspace: { create() {} },
+    directoryPicker: { pick() {}, createDirectory() {}, list() {} },
+    agentPresets: { select() {} },
+  }
+  const getNewE = (n) => ({ 'remote.settings': remoteNsE.settings, 'remote.session': remoteNsE.session, 'remote.workspace': remoteNsE.workspace, 'remote.directoryPicker': remoteNsE.directoryPicker, 'remote.agentPresets': remoteNsE.agentPresets }[n])
+  runClientApply(getNewE)
+  const apiE = clientExports.makeHostApi(getNewE, undefined)
+  const remoteProbesE = REMOTE_PROBE_IDS5.map((k) => clientExports.CLIENT_PROBES[k](apiE))
+  const repE = clientExports.buildDiagReport({ api: apiE, server: serverMock5 })
+  const rbE = repE.minSupport
+  const newHostAllGreen5 = ['2.5', '2.6', '2.7', '2.8', '2.9'].every((it) => {
+    const r = repE.rows.find((x) => x.item === it && x.scope === 'client')
+    return r !== undefined && r.state === 'ok'
+  })
+  // (f) 双缺（无宿主表面）→ 不触发（无连接载体即无从判定旧表面，不误报）
   runClientApply(() => undefined)
-  const rbC = clientExports.buildDiagReport({ api: clientExports.makeHostApi(() => undefined, undefined), server: serverMock5 }).minSupport
-  check('COMPAT-005 D1③ RB-03 代理信号构造断言：remote.* 全缺 + 旧 .api 连接载体在 → 触发「宿主版本低于最低支持」明确文案（不依赖 TP-4 宿主版本号）',
-    rbA.triggered === true && rbA.text.includes('宿主版本低于最低支持')
-      && rbA.text.includes('remote.') && rbA.text.includes('0.1.2-rc.1')
-      && rbB.triggered === false && rbB.text === ''
-      && rbC.triggered === false && rbC.text === '',
-    'A=' + JSON.stringify(rbA.triggered) + ' B=' + JSON.stringify(rbB.triggered) + ' C=' + JSON.stringify(rbC.triggered)
-      + ' Atext=' + rbA.text.slice(0, 30))
+  const remoteProbesC = REMOTE_PROBE_IDS5.map((k) => clientExports.CLIENT_PROBES[k]())
+  const rbC = clientExports.buildDiagReport({ api: undefined, server: serverMock5 }).minSupport
+  check('COMPAT-005 D1③ RB-03 代理信号构造断言（R1 返工 F1：判据 = **原始 remote.* 命名空间**在场性）：真实旧表面（域对象**带方法**）⇒ triggered=true + 明确文案；新表面 ⇒ 五项探针 ok=true 且 triggered=false；双缺 ⇒ 不误报',
+    rbD.triggered === true && rbD.text.includes('宿主版本低于最低支持')
+      && rbD.text.includes('remote.') && rbD.text.includes('0.1.2-rc.1')
+      && remoteChecksD.length === 5 && remoteChecksD.every((c) => c.ok === false) && oldHostNoGreen5
+      && remoteProbesE.every((p) => p.ok === true) && rbE.triggered === false && rbE.text === '' && newHostAllGreen5
+      && remoteProbesC.every((p) => p.ok === false) && rbC.triggered === false && rbC.text === '',
+    'D=' + JSON.stringify(rbD.triggered) + ' E=' + JSON.stringify(rbE.triggered) + ' C=' + JSON.stringify(rbC.triggered)
+      + ' Drows=' + JSON.stringify(remoteChecksD.map((c) => c.ok)) + ' Eprobes=' + JSON.stringify(remoteProbesE.map((p) => p.ok))
+      + ' Dtext=' + rbD.text.slice(0, 24))
+  check('COMPAT-005 D1③b（R1 返工 F4）apply 装配路径**直读**：runClientApply(真实旧表面) 后**不新建 facade** 直读 CLIENT_PROBES —— 代际标记与原始解析器确由 makeHostApi 于 apply 期写入（删除任一处赋值即红）',
+    probeLegacyApplyD.ok === true && probeLegacyApplyD.detail.includes('true')
+      && probeRemoteApplyD.ok === false,
+    'legacyProbe=' + JSON.stringify(probeLegacyApplyD) + ' remoteProbe=' + JSON.stringify(probeRemoteApplyD))
 
   // ④ 数据源单一（验收①，硬门槛①）：客户端探测项常数 ↔ 契约 clientProbes **双向 ⊆**（防面板自列清单自指）
   //    + 每项 item 真实存在于契约 items[] + 面 4/5/6 零伪造（有 0 个探测项）。
@@ -2617,6 +2676,16 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
       && hc5.clientProbes.filter((p) => p.item.startsWith('4.') || p.item.startsWith('5.') || p.item.startsWith('6.')).length === 0,
     'src=' + srcClientIds5.length + ' contract=' + JSON.stringify(contractProbeIds5) + ' keys=' + JSON.stringify(keysOf5) + ' kindOk=' + clientFaceOk5)
 
+  // ④b R1 返工 F3（等价断言）：`D_PROBE_ITEM[probe]` MUST **等于**契约 `clientProbes[].item`（原断言只查
+  //     「是字符串且在册」⇒ 交换同面两项（2.5↔2.7）时面计数/算术/rows/checks 长度**全部不变**、面板把
+  //     探针结果归因到错误的契约项而机检全绿）。同时钉：映射单射（无两项映到同一 item）+ 目标项 kind 对账。
+  const dProbeEquiv5 = hc5.clientProbes.every((p) => clientExports.D_PROBE_ITEM[p.probe] === p.item
+    && itemById5[p.item] !== undefined && itemById5[p.item].kind === p.kind)
+  const dProbeInjective5 = new Set(hc5.clientProbes.map((p) => clientExports.D_PROBE_ITEM[p.probe])).size === hc5.clientProbes.length
+  check('COMPAT-005 D1④b（R1 返工 F3）映射等价：D_PROBE_ITEM[probe] ≡ 契约 clientProbes[].item（逐项相等，非仅「在册」）∧ 单射 ∧ 目标项 kind 对账（交换同面两项 2.5↔2.7 必红）',
+    dProbeEquiv5 && dProbeInjective5,
+    'equiv=' + dProbeEquiv5 + ' injective=' + dProbeInjective5 + ' map=' + JSON.stringify(clientExports.D_PROBE_ITEM))
+
   // ⑤ 面覆盖台账算术（验收①「披露 notCovered 面 2~6 = 数量摘要」）：探测项总数 ≤ 契约项总数，
   //    未覆盖数 = 契约项 − 服务端探测 − 客户端探测；面 4/5/6 探测数 0（未实现面不伪造状态）。
   const serverProbeCount5 = serverMock5.report.probes.length
@@ -2630,19 +2699,81 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
       && coveredByProbe5 + notCoveredSum5 === contractItemTotal5 && face456Probed5 === 0,
     'probed=' + coveredByProbe5 + ' notCovered=' + notCoveredSum5 + ' f456=' + face456Probed5)
 
-  // ⑥ 服务端路由（数据源出口）：`api('compat')` 在既有 webServer 路由模式内；只读、契约投影仅
-  //    item/face/kind/necessity（file/line 不出网关）；探测抛错如实 { ok:false } 不伪造绿。
-  const compatRouteOk5 = hostSrc5.includes("api('compat'")
+  // ⑥ 服务端路由（数据源出口）——**行为断言**（R1 返工 F2/F4）：直接驱动真实路由 handler，
+  //    对**真实产出整包**做 BC-05 扫描（含此前盲区字段 `unprobed`）+ **正向对照**（注入 `file`/自由文本
+  //    `reason` ⇒ 扫描器必红，判别力已证实）+ 契约投影字段面（file/line/symbol 不出网关）+
+  //    失败路径以行为方式驱动（ctx 缺席 ⇒ `{ ok:false, error:'probe-unavailable' }`，不冒泡 500）。
+  //    源码级检查保留（标注口径：`report` 出口 + 同源同函数 + 投影经边界层 contractProjection 单点，R1 F7）。
+  const compatRouteSrc5 = hostSrc5.includes("api('compat'")
     && hostSrc5.includes('detectHostCapabilities(ctxNow)')
     && hostSrc5.includes("return { ok: false, error: 'probe-unavailable' }")
-    && hostSrc5.includes('report,')
-    && /items: hostContract\.items\.map\(\(it\) => \(\{ item: it\.item, face: it\.face, kind: it\.kind, necessity: it\.necessity \}\)\)/.test(hostSrc5)
-    && !/api\('compat'[\s\S]{0,1200}?\bit\.(file|line)\b/.test(hostSrc5)
-  check('COMPAT-005 D1⑥ 服务端路由：既有 webServer 路由模式新增只读 `api(\'compat\')`——同源 detectHostCapabilities + 契约投影仅 item/face/kind/necessity（file/line 不出网关）+ 探测失败如实 ok:false',
-    compatRouteOk5, 'compat-route=' + compatRouteOk5)
+    && hostSrc5.includes('return {') && hostSrc5.includes('ok: true,') && hostSrc5.includes('report,')
+    && hostSrc5.includes('contract: contractProjection()')
+    && !/api\('compat'[\s\S]{0,1400}?\bit\.(file|line)\b/.test(hostSrc5)
+    && !/from '\.\/host-contract/.test(hostSrc5) // R1 返工 F7：产品代码不直接 import 契约模块
+  const routes5 = []
+  svc.registerHttp({ register: (r) => { routes5.push(r) } })
+  const compatRoute5 = routes5.find((r) => r.path === '/novel-writing/api/compat')
+  /** 驱动真实路由 handler：fake req/res（回环来源 + JSON content-type 语义）→ 捕获响应体。 */
+  const callRoute5 = async (route, ctxOverride) => {
+    const prevCtx = svc.ctx
+    svc.ctx = ctxOverride
+    const cap = { status: null, body: null }
+    const res = {
+      writableEnded: false,
+      writeHead(status) { cap.status = status; return this },
+      end(body) { cap.body = body; res.writableEnded = true },
+    }
+    const req = {
+      method: 'GET', url: route.path, headers: { host: '127.0.0.1:3080', 'content-type': 'application/json' },
+      socket: { remoteAddress: '127.0.0.1' },
+      on(ev, fn) { if (ev === 'end') fn(); return req },
+    }
+    await route.handler(req, res)
+    await new Promise((r) => setTimeout(r, 0))
+    svc.ctx = prevCtx
+    return { status: cap.status, payload: cap.body === null ? null : JSON.parse(cap.body) }
+  }
+  // 满面 ctx（面 1 十一项中九项有判据 ⇒ ok=9、未探测 2）——真实探测路径产出，非手搓载荷
+  const routeCtx5 = {
+    settings: { register() {}, get() {} },
+    get: (n) => (n === 'webServer' ? { register() {} } : undefined),
+    effect() {}, emit() {}, logger: { warn() {} },
+  }
+  const routeOk5 = compatRoute5 !== undefined ? await callRoute5(compatRoute5, routeCtx5) : { status: null, payload: null }
+  const routeFail5 = compatRoute5 !== undefined ? await callRoute5(compatRoute5, undefined) : { status: null, payload: null }
+  const realPayload5 = routeOk5.payload === null ? '' : JSON.stringify(routeOk5.payload)
+  const realClean5 = scanBc05(realPayload5)
+  // 正向对照（F2 要求）：给**真实产出**注入契约 file 字段 + 自由文本 reason ⇒ 扫描器 MUST 变红
+  const injected5 = routeOk5.payload === null ? null : JSON.parse(realPayload5)
+  if (injected5 !== null) {
+    injected5.report.probes[0].file = 'lib/client.js'
+    injected5.report.unprobed[0].reason = 'out-of-boundary-scope（属 lib/tools.js 行）'
+  }
+  const injectedRed5 = injected5 !== null && scanBc05(JSON.stringify(injected5)) === true
+  const rp5 = routeOk5.payload
+  check('COMPAT-005 D1⑥ 服务端路由**行为**断言（R1 返工 F2/F4）：真实 handler 产出整包 BC-05 扫描干净（含 unprobed/notCovered）∧ 正向对照（注入 file/reason ⇒ 必红）∧ 契约投影仅 item/face/kind/necessity ∧ 失败路径 { ok:false, error:\'probe-unavailable\' }',
+    compatRouteSrc5 && compatRoute5 !== undefined
+      && routeOk5.status === 200 && rp5 !== null && rp5.ok === true
+      && rp5.report.probes.length === 11 && rp5.report.summary.ok === 9
+      && rp5.report.unprobed.length === 2 && rp5.report.unprobed.every((u) => typeof u.code === 'string' && u.reason === undefined)
+      && rp5.report.notCovered.length === 5 && rp5.report.notCovered.every((n) => typeof n.code === 'string' && n.reason === undefined)
+      && rp5.contract.items.length === 48 && rp5.contract.faces.length === 6
+      && rp5.contract.revision === hc5.revisions.at(-1).task
+      && rp5.contract.items.every((it) => it.item !== undefined && it.face !== undefined && it.kind !== undefined && it.necessity !== undefined
+        && it.symbol === undefined && it.file === undefined && it.line === undefined)
+      && realClean5 === false && injectedRed5 === true
+      && routeFail5.status === 200 && routeFail5.payload !== null && routeFail5.payload.ok === false && routeFail5.payload.error === 'probe-unavailable',
+    'src=' + compatRouteSrc5 + ' status=' + String(routeOk5.status) + ' realClean=' + realClean5 + ' injectedRed=' + injectedRed5
+      + ' fail=' + JSON.stringify(routeFail5.payload) + ' unprobed=' + JSON.stringify(rp5 === null ? null : rp5.report.unprobed.map((u) => u.code)))
 
   // ⑦ 客户端面板接入点：设置页 section 内渲染诊断面板 + 单一数据源调用（apiJson 取服务端报告）+ 刷新钮；
   //    负向断言：诊断面板自身**不直连宿主 API**（只经 props.api，经 makeHostApi 收口）。
+  //    **R1 返工 F4**：源码文本断言**外补行为断言**（见下 `diagStyleProbe()` 真跑 + ⑨ 探针降级 + ⑥ 路由行为）。
+  //    **如实披露（不可达面的口径）**：面板**渲染树**断言在本 mock 下不可达——mock react 的 `useState`
+  //    返回固定帧值且 setter 为 no-op，SettingsPage 的 `view`（初始 null）永不为非空 ⇒ 诊断区只在其
+  //    「已加载」分支内（源码级断言 `el(DiagnosticsPanel, { api, t })` 覆盖挂载点）。故本项以
+  //    **面板自身运行期探针真跑**（`diagStyleProbe`：解析真实 NV_STYLE）作为行为读数，不以假绿代替。
   const diagWiredOk5 = clientCode.includes("el(DiagnosticsPanel, { api, t })")
     && clientCode.includes("apiJson('/novel-writing/api/compat')")
     && clientCode.includes("t('diagRefresh')")
@@ -2650,8 +2781,13 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
       const block = clientSrc.slice(clientSrc.indexOf('function DiagnosticsPanel('), clientSrc.indexOf('function diagTable('))
       return block.includes('buildDiagReport(') && !/ctx\.[A-Za-z_$]/.test(block)
     })()
-  check('COMPAT-005 D1⑦ 设置页接入：DiagnosticsPanel 渲染于 settings.section 内 + 单一数据源（buildDiagReport 投影）+ 服务端报告经 apiJson 读取 + 面板零直连宿主 API',
-    diagWiredOk5, 'wired=' + diagWiredOk5)
+  let styleProbe5 = null
+  let styleProbeErr5 = ''
+  try { styleProbe5 = clientExports.diagStyleProbe() } catch (e) { styleProbeErr5 = e.message }
+  check('COMPAT-005 D1⑦ 设置页接入（源码 + **行为**）：DiagnosticsPanel 渲染于 settings.section 内 + 单一数据源（buildDiagReport 投影）+ 服务端报告经 apiJson 读取 + 面板零直连宿主 API + 面板运行期探针真跑（diagStyleProbe 解析真实 NV_STYLE：ok=true 且 vars/rules > 0）',
+    diagWiredOk5 && styleProbeErr5 === '' && styleProbe5 !== null
+      && styleProbe5.ok === true && styleProbe5.vars > 0 && styleProbe5.rules > 0,
+    'wired=' + diagWiredOk5 + ' styleProbe=' + JSON.stringify(styleProbe5) + ' err=' + styleProbeErr5)
 
   // ⑧ N3/N4 契约登记（验收④）+ ctxGetSemantics 诚实保持（验收「若有新证据才转 verified」——本轮无新证据）。
   const item213 = hc5.items.find((it) => it.item === '2.13')
@@ -2668,6 +2804,63 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
       && typeof sem5.recheck === 'string' && sem5.recheck.includes('COMPAT-005')
       && sem5.recheck.includes('保持 unverified') && sem5.recheck.includes('转 verified 的判据'),
     'status=' + String(sem5 === undefined ? null : sem5.status))
+
+  // ⑨ R1 返工 F8（健壮性）：**单点**探针抛错只降级该项（ok:null + detail 含 probe-error + 进 unprobed），
+  //    其余已完成读数保留。原实现整体 try ⇒ 一个探针抛错使 8 项读数**全量丢弃**、面 2/3 全退化为「未覆盖」。
+  //    构造：临时替换 dom-phase 探针为抛错实现（断言后 finally 复原——不污染后续用例与 D1④ 键集断言）。
+  const savedProbe5 = clientExports.CLIENT_PROBES['dom-phase']
+  let degraded5 = null
+  let probeRestored5 = false
+  try {
+    clientExports.CLIENT_PROBES['dom-phase'] = () => { throw new Error('boom') }
+    const repThrow5 = clientExports.buildDiagReport({ api: apiFull5, server: serverMock5 })
+    degraded5 = {
+      total: repThrow5.checks.length,
+      kept: repThrow5.checks.filter((c) => c.ok !== null).length,
+      thrown: repThrow5.checks.find((c) => c.id === 'dom-phase'),
+      checkErr: repThrow5.checkErr,
+    }
+  } finally {
+    clientExports.CLIENT_PROBES['dom-phase'] = savedProbe5
+    probeRestored5 = clientExports.CLIENT_PROBES['dom-phase'] === savedProbe5
+  }
+  check('COMPAT-005 D1⑨（R1 返工 F8）探针单点抛错**降级**：仅该项 ok:null + detail 含 probe-error，其余 7 项读数保留（整体 catch 会把 8 项全量丢弃）',
+    degraded5 !== null && degraded5.total === 8 && degraded5.kept === 7 && degraded5.checkErr === ''
+      && degraded5.thrown !== undefined && degraded5.thrown.ok === null && degraded5.thrown.detail.includes('probe-error')
+      && probeRestored5,
+    JSON.stringify(degraded5) + ' restored=' + probeRestored5)
+
+  // ⑩ R1 返工 F5~F9 落点机检：
+  //    F5 契约 note 与行号**解耦**（不内嵌「现 L…」——字段值才是唯一事实源；原 2.3/3.1/3.6/1.8 note 残留旧值）；
+  //    F6 死样式/死 i18n 键清除 + diagReason 映射覆盖生产者枚举码（双向：生产码 ⊆ 客户端文案表）；
+  //    F7 产品代码零直连契约（改经边界 `contractProjection`）+ 同一派生式收敛单点 + `bindow` 拼写订正；
+  //    F9 `diagDesc`（zh/en）去仓内路径硬编码；F1 附带 `diagRbNone` 文案订正（不再宣称「至少其一在场」）。
+  const contractNoteTexts5 = [
+    ...hc5.items.map((it) => it.note), ...hc5.clientProbes.map((p) => p.note), hc5.clientProbesNote,
+  ].filter((n) => typeof n === 'string')
+  const staleNoteRefs5 = contractNoteTexts5.filter((n) => /现\s*L\d/.test(n))
+  const f6Dead5 = !clientSrc.includes('.nv-diag-sub') && !clientSrc.includes('.nv-diag-tbl code')
+    && ['diagStOk', 'diagStMissing', 'diagStUnprobed', 'diagNotDetected'].every((k) => !clientSrc.includes(k))
+  const reasonBlock5 = clientSrc.slice(clientSrc.indexOf('diagReason: (code) => ({'), clientSrc.indexOf('}[code] ?? String(code))'))
+  const emittedCodes5 = [...new Set([
+    ...(rp5 === null ? [] : rp5.report.unprobed.map((u) => u.code)),
+    ...(rp5 === null ? [] : rp5.report.notCovered.map((n) => n.code)),
+  ])]
+  const f6ReasonCovered5 = emittedCodes5.length === 7 && emittedCodes5.every((c) => reasonBlock5.includes(c))
+    && reasonBlock5.includes('no-runtime-predicate')
+  const f7Boundary5 = !/from '\.\/host-contract/.test(hostSrc5) && !/hostContract\./.test(hostSrc5)
+    && boundarySrc5.includes('export function contractProjection()') && boundarySrc5.includes('revision: CONTRACT_TASK')
+    && boundarySrc5.includes('hostContract.revisions.at(-1).task')
+    && !hc5.clientProbes.some((p) => /bindow/.test(p.note ?? ''))
+  const diagDescLines5 = clientSrc.split('\n').filter((l) => /diagDesc:/.test(l))
+  const f9Desc5 = diagDescLines5.length === 2 && diagDescLines5.every((l) => !/lib\//.test(l) && !/\.mjs/.test(l))
+  const f1TextOk5 = clientSrc.includes('触发条件 = remote.* 命名空间服务族全缺')
+    && clientSrc.includes('requires all remote.* namespace services absent')
+    && !clientSrc.includes('remote.* 与旧连接载体 .api 至少其一在场')
+  check('COMPAT-005 D1⑩（R1 返工 F5~F9）落点：F5 note 行号解耦（0 处内嵌「现 L…」）+ F6 死样式/死键清除且 diagReason 覆盖全部生产者枚举码（' + emittedCodes5.length + ' 码）+ F7 产品零直连契约/派生式收敛单点/拼写订正 + F9 diagDesc 去硬编码 + F1 diagRbNone 文案订正',
+    staleNoteRefs5.length === 0 && f6Dead5 && f6ReasonCovered5 && f7Boundary5 && f9Desc5 && f1TextOk5,
+    'staleNote=' + JSON.stringify(staleNoteRefs5.map((n) => n.slice(0, 20))) + ' f6Dead=' + f6Dead5 + ' f6Codes=' + f6ReasonCovered5
+      + ' f7=' + f7Boundary5 + ' f9=' + f9Desc5 + ' f1Text=' + f1TextOk5)
 }
 
 }
