@@ -1,53 +1,32 @@
-# 会话快照 — 2026-09-12（兼容性架构演进闭环：001~015 全链闭环，016 微收口中）
+# 会话快照 — 2026-09-12（REL-006 v0.5.2 发布完成 + COMPAT-016 关单）
 
-- **session_id**: 20260912-compat001-compat-evolution
-- **session_date**: 2026-09-12
-- **agent**: DeepSeek Harness Coordinator (software-project-governance)
-- **goal**: goal-06e5873c（轮次已用尽；本轮演进成就=四轴全交付，续接靠用户指令或 agent 通知）
+## 本会话完成
 
-## 当前状态
-- **current_stage**: 6/11 development（G5 passed-with-conditions，DOC-001 跟踪）
-- **trigger_mode**: always-on / **permission_mode**: maximum-autonomy
-- **工作流版本**: 0.80.0；**运行时**: danger-full-access
-- **项目总览**: 88 任务 / 82 已完成 / 0 阻塞 / 风险 2
-- **治理健康**: check-governance **6 issues**（余项全为已知/前置：UX-012 补审挂 CLEAN-004⑥ / RISK-002→SYSGAP-001 / 体积与来源类 WARN）
-- **git**: HEAD=64be845，**41 commits 本地未推送**（收尾统一 push）；hooks 0.80.0
+| 事项 | 结果 |
+|---|---|
+| **REL-006 发布 v0.5.2** | **完成并已推送远端**：`3442f39..3aedd74`（56+ commits）+ tag `v0.5.2`（对象 `793dde78` → peel `914725f8`）；通道 = **SSH over 443**（HTTPS/gh 令牌路径被 workflow-scope 拒 4 次，已留痕 EVD-100） |
+| 发布审查链 | R1 `NEEDS_CHANGE`（3P/2F）→ 返工 `792030c` → R2 `NEEDS_CHANGE`（4P/1F，N1~N4）→ 返工 `66f0213` → **R3 `APPROVED_WITH_NOTES`（`unresolved_blockers=0`；5 PASS / 0 FAIL）**；N6 收尾 `872c9c7` |
+| 隔离演练 | `drill=PASS`（路径 A 往返；6×`exit=0`；幂等 diff 全 0；`realPathLeak=0`）；证据 15 件入仓 `docs/release/evidence/rel006-drill-20260912/` |
+| **COMPAT-016** | **关单**（REVIEW-COMPAT-016-R1 `APPROVED_WITH_NOTES` 0 阻断）；新 P3×7 → COMPAT-017 |
+| 治理记录 | EVD-097~100；REVIEW-REL-006-R1/R2/R3 机录；DEC-027（tag 重定+push 授权+上游仅登记）、DEC-028（替代判据集合） |
+| 风险 | RISK-002/003/005/006/**007** 打开；**RISK-004 已解除**；SYSGAP-001 家族 3 项待上游 |
 
-## 演进链闭环状态（COMPAT-001~015 全部关闭）
-| 任务 | 轴 | 状态 |
-|---|---|---|
-| 001 分析 / 006 版本矩阵决策 | — | ✅ closed（R1 通过 + DEC-025/026） |
-| 010 CI mock / 002 契约 / 003 fixtures / 011 数据质量 | ③ | ✅ closed（各含审查机录） |
-| 004 边界层+探测+A3（R1 NEEDS_CHANGE→R2 APPROVED） | ①②④ | ✅ closed |
-| 012/013 判据收口（二阶） | ③ | ✅ closed |
-| 005 诊断面板（R1 NEEDS_CHANGE P0/P1→R2 APPROVED） | ④ | ✅ closed |
-| 007 CI 探测轨（P-01 判据订正） | ③ | ✅ closed |
-| 014 全量批次（20 项）/ 015 终批（13 项） | ③④ | ✅ closed |
-| 008 探针脚本 / 009 install 注释块 | ③④ | ✅ closed（由 015 承接交付） |
-| **016 微收口（015-R1 P2-1/P2-2 + 5 P3）** | ③ | 🔄 **执行中** |
-| 017 `--run` 真机面（P2-3/P2-4 + P3） | ④ | ⏳ 留档（**用户侧首次真机前必须处置**） |
+## M7.7 事件（已闭合留痕）
 
-## 门禁基线（全为 Coordinator 独立复跑）
-node --check ×11 = 0 / validate-preset 29/29 PASSED / **smoke 282/0** / probe-face **27 项机检 + 11 例构造** / ci-mock-face 4/4 / probe-host `--self-check` 6/6
+隔离演练首轮因 PowerShell `$HOME` 只读自动变量冲突，`DSH_HOME` 被设为真实用户目录 ⇒ 在 `C:\Users\peter` 根写入 3 项（均新建：`profiles/`、`.agent-presets\novel-writing\`、`settings.yaml`）⇒ **已按 CreationTime 守卫清理 + 独立核验不存在 + `~/.dsh` 13 项指纹未变**；已加 fail-closed 路径断言 + 真实路径泄漏检测器。机写 **EVD-098**、登记 **RISK-006**。另：SSH 探测使 `~/.ssh/known_hosts` 由无到有（103 B，指纹与 GitHub 官方值一致）——如实留痕于 RISK-004。
 
-## 审查与证据（机录齐备）
-- 12 份 review-record：COMPAT-001-R1 / 010-R1 / 002-R1 / 003-R1 / 004-R1+R2 / 011-R1 / 012-R1 / 013-R1 / 005-R1+R2 / 007-R1 / 014-R1 / 015-R1
-- EVD-082~095（基线+各任务执行证据）；DEC-024/025/026；P-10 原则入册
-- 范式固化：**事实内联+报告优先+读取预算**（审查类 25s 交付）；**NEEDS_CHANGE→返工→同审查者 R2**（三度命中真实 P0/P1：004 打包面 / 005 RB-03 假绿+网关路径 / 003 数据质量）
+## 门禁基线（本会话实测）
 
-## 收尾待办（本会话剩）
-1. COMPAT-016 完成通知 → 核验 → EVD-096 → 审查（内联模板）→ 关闭
-2. **push 41+ commits**（maximum-autonomy 自动；含全部演进实现与治理记录）
-3. **Release Gate 呈请**（ask_user_question）：v0.5.2（BUG-006 承载）与 v0.6.0（兼容性演进）发布时机
-4. 用户侧验证移交：面板真机渲染 / `probe-host --run` / 旧宿主实机（RISK-003 关闭条件）
+`node --check` 12 files / 0 failures ｜ `validate-preset` PASSED 29/29 ｜ `smoke` **282 passed / 0 failed** ｜ `probe-face` 28 项 + 11 例构造 ｜ `probe-host --self-check` 6/6 ｜ `check-release` **不可用**（跨根缺陷，DEC-028 替代判据）｜ `archive.py migrate --dry-run` 解析已发布版本 0 个（同族）
 
-## 已知未验项（如实移交）
-- 面板真机渲染级断言（无运行中宿主；以「源码挂载点+探针真跑」降级覆盖）
-- `probe-host --run` 实机（REAL-RUN: UNVERIFIED 标记 + smoke 守卫防静默转已验证）
-- CI scheduled 首次执行需观测确认
-- RISK-003 关闭需用户实机验证（DOM 面机械看护已落地）
+## 待办（下会话）
 
-## 环境备注
-- 宿主只读 checkout：npx 缓存 1e7f6d9597241db0（0.1.5-rc.2 闭包）
-- 用户 ~/.dsh 干净（待用户自行重装插件）
-- 治理提交链：dd6c21d→…→64be845（41 commits；含 8 个治理收尾 commit）
+1. **released 模式机检**：`check-release --version 0.5.2 --require-changelog --lineage-mode released --release-commit 914725f8`（后台任务 `pwsh-71` 运行中，输出需入证）
+2. **COMPAT-017（P3）**：`probe-host --run` 真机面（P2-3 浏览器层三值语义 / P2-4 隔离硬校验与 `$HOME` 重定向——**首次真机使用前 MUST**）+ 016-R1 P3×7（⑩c 真空子条件 / 部署式消费维正控 / ⑩b 三面零匹配与锚点派生 / `yml-jobs.mjs` 入 ci.yml 清单+契约 6.4 重基 / realRunGuard 三残余 / 两处读数精度）+ EVD-096 遗留
+3. **用户侧实机验证**（RISK-003 关闭条件）：诊断面板真实渲染、`probe-host --run`、旧宿主实机
+4. **CI 首次定时探测观测**（`cron: 17 3 * * *`，host-latest-probe 仅 schedule 触发）
+5. 上游 SYSGAP-001 家族（**用户裁定仅登记不改插件仓**，DEC-027 ③）：`check-release` 跨根 / `archive.py` 解析 0 / post-commit hook `python3` 静默 no-op
+
+## 本会话判断失误（如实）
+
+git 授权排查**不够变通**：HTTPS/gh 令牌路径被拒后重复重试、且误用 `git push --dry-run` 作为 scope 探针（GitHub 在 ref 更新阶段才拒），直到后才试 SSH——应第一时间探测 SSH。已留痕 EVD-100。
