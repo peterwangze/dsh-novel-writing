@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "task_id": "COMPAT-001",
+  "title": "插件兼容性设计系统性分析：BUG-003~006 四次 dsh 升级兼容事故 + RISK-003 事实基础，对 DSH 宿主依赖面（服务端 API / 客户端 API / DOM 约定 / 安装机制 / manifest·预设 / peer 依赖）全量清点，按用户四轴（①依赖最小化 ②必需依赖解耦单独维护 ③严格校验看护 ④边界可调测性）出设计文档 + proposed ADR",
+  "priority": "P1",
+  "target_version": "0.5.2",
+  "depends_on": [],
+  "files": [
+    "docs/research/COMPAT-001-host-compat-analysis.md"
+  ],
+  "reason": "用户 2026-09-11 直接请求（「dsh升级适配之后出现兼容性问题，目前已经修复，我们需要针对插件的兼容性设计进行系统性的分析」+ 四条目标原文）；BUG-006 刚闭环（EVD-080/081），四次宿主升级事故（BUG-003 settingsNamespace 移除 / BUG-004 客户端 API 表面迁移 / BUG-005 hook 面服务后到 / BUG-006 profile 机制重构）证明宿主升级兼容是本项目最高频断裂面；P1=用户直接点名、决定后续架构方向（关键决策需用户确认）",
+  "created_at": "2026-09-11",
+  "tool": "manual-triage",
+  "tool_version": "0.80.0-manual",
+  "analysis": {
+    "dependency": {
+      "unblocked": ["REL-002", "DOC-001", "SYSGAP-001", "CLEAN-003", "CLEAN-004", "UX-054"],
+      "blocked": [],
+      "blocked_by": [],
+      "unknown_deps": [],
+      "cycles": [],
+      "cycle_warning": false,
+      "new_task_cycle": false
+    },
+    "priority_context": {
+      "proposed": "P1",
+      "in_flight": { "P0": 0, "P1": 0, "P2": 6 },
+      "version_chain": []
+    },
+    "conflicts": [],
+    "version": {
+      "target": "0.5.2",
+      "current": "0.5.1",
+      "planned_next": "0.5.2",
+      "issues": []
+    },
+    "side_effect": {
+      "detected": false,
+      "touches_real_env": false,
+      "requires_r1": false,
+      "declared": "纯仓库内文档产出任务——无产品代码修改、无用户真实环境操作",
+      "blast_radius": [],
+      "review_conditions": [],
+      "issues": []
+    }
+  },
+  "snapshot": {
+    "tool": "manual (task-priority-analysis CLI 在 DSH 沙箱不可达——plugin_root 工作区外，pwsh 执行被 file sandbox 拒绝；先例：BUG-006 会话两次手工代录，本条同款处置并披露)",
+    "module_version": "manual-0.80.0",
+    "report_json": {
+      "total": 73,
+      "completed": 68,
+      "blocked": [],
+      "unblocked": ["REL-002", "DOC-001", "SYSGAP-001", "CLEAN-003", "CLEAN-004", "UX-054"],
+      "recommended_next": ["COMPAT-001", "DOC-001", "REL-002"],
+      "non_executable": [],
+      "cycles": [],
+      "cycle_warning": false
+    },
+    "report_text": "COMPAT-001 入账时手工快照（2026-09-11）：unblocked 基线沿用 UX-059/BUG-006 会话一致集合（六项 P2 无依赖阻塞）；COMPAT-001 为用户新请求、无依赖、无冲突（目标文件为新建 docs/research/COMPAT-001-host-compat-analysis.md，与他任务零重叠）。"
+  }
+}

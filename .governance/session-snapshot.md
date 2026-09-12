@@ -1,42 +1,47 @@
-# 会话快照 — 2026-09-11（BUG-006 dsh 0.1.5-rc.1 接入兼容修复 + 用户环境全卸载处置）
+# 会话快照 — 2026-09-12（COMPAT-001 兼容性设计分析 → Design Reviewer 审查中）
 
-- **session_id**: 20260911-bug006-dsh015-install-adapt
-- **session_date**: 2026-09-11
+- **session_id**: 20260912-compat001-compat-evolution
+- **session_date**: 2026-09-12
 - **agent**: DeepSeek Harness Coordinator (software-project-governance)
+- **goal**: goal-06e5873c（兼容性架构演进闭环，round 2/12 进行中）
 
 ## 当前状态
 - **current_stage**: 6/11 development（G5 passed-with-conditions，DOC-001 跟踪）
 - **trigger_mode**: always-on / **permission_mode**: maximum-autonomy
-- **项目总览**: 72 任务 / 68 已完成 / 0 阻塞 / 风险 2（RISK-002、RISK-003）
-- **版本**: v0.5.1 已发布（2026-09-07）；BUG-006 修复入 CHANGELOG [Unreleased]（归属 v0.5.2，发布时机待 Release Gate 用户确认）
+- **工作流版本**: 0.80.0（2026-09-12 bootstrap 自升级 0.75.0→0.80.0 完成）
+- **项目总览**: 73 任务 / 68 已完成 / 0 阻塞 / 风险 2（RISK-002、RISK-003）
+- **版本**: v0.5.1 已发布；v0.5.2（BUG-006 承载）未发布；兼容性演进实现承载版本待 COMPAT-006 决策后定（建议新开 minor 线）
+- **运行时**: danger-full-access（审批禁用——verify_workflow CLI 全量可达；workspace-write 期 smoke spawn 曾 EPERM，全权限下 203/0 全绿）
 
-## 本轮完成（增量）
-- **BUG-006 P0**（EVD-080/081，REVIEW-BUG-006-R1/R2）：dsh 0.1.5-rc.1 升级后插件无法接入——根因 = profile 机制重构（per-profile 目录 + package.json dependencies/bundles 注册替代 junction+patch 行；升级模板重建重置旧注册）。**本插件 v0.5.1 代码零改动全兼容**（3181 隔离实例全链路实证：overview HTTP 200/客户端 bundle/侧栏/控制台/分栏 38 章）。产品侧修复：install.ps1/install.sh 版本自适应双通道（新布局 profile 私有 node_modules + 幂等注册 dependencies+bundles + patch 行兜底；旧布局整树 diff 零差异）+ README/CHANGELOG；审查链 R1 NEEDS_CHANGE（无 dsh 键分支两层结构缺陷）→ 返工 → R2 APPROVED_WITH_NOTES 0 阻断；回归门禁 node --check/validate-preset/smoke 203-0 全绿。
-- **用户环境处置**（用户决策 AskUserQuestion）：全部插件卸载（6 个 junction：novel-writing/reasoning-level/router/@peterwangze gov/@zcode gov——rmdir 仅删链接，目标仓库无损）；回滚 Coordinator 诊断期写入的 web profile 注册；settings.yaml default 预设 governance→standard（备份 settings.yaml.bak-20260911-pre-cleanup）；探针环境全清（3181 实例/Edge 9223/novel-test profile/临时脚本）。
-- **顺带发现**：dsh plugin add 在 Windows shell:true 转发下报「'dsh' 不是内部或外部命令」（上游 bug；等价替代 = profile 目录手动 pnpm add + bundles 追加）——SYSGAP-001 家族候选；用户另两插件掉线属 dsh 升级同因（junction 无注册），已按用户决策一并清理。
+## 本会话完成（增量）
+- **COMPAT-001 入账 + Architect 分析完成**：六面 47 项依赖清单（全五要素+事故勾稽无遗漏）+ 四轴设计（各 3 候选）+ 蓝军 5 条 + proposed ADR（ADR-DEC-候选-C1：宿主边界层三件套 host-contract/host-boundary·region/detectHostCapabilities）+ 实现任务清单 COMPAT-002~009 + 待验证 TP-1~5。产出：docs/research/COMPAT-001-host-compat-analysis.md。关键发现：CI dsh-settings mock 仍导出已消失的 settingsNamespace（BUG-003 温床，COMPAT-003 顺带修正）；客户端单 factory 硬约束（宿主 dsh-client-modules L155/L248 实证——客户端只能 region 收口不能拆文件）。
+- **DEC-024 授权入册**：用户 2026-09-11 授权分析后按推荐推进至闭环；边界=发版 tag/越界范围/宿主源码改动（DEC-021）/breaking change 仍留用户确认（COMPAT-006 版本矩阵属此列）。
+- **回归基线 EVD-082**：node --check ×3 / validate-preset 29/29 / smoke 203/0——实现期不得劣化的绿色起点。
+- **治理健康修复 20→8 issues**（CLI 恢复后）：COMPAT-001 执行包 18c/18d/18f/18i 四级语义全清；表行管线转义（EVD-044 ×2 + plan-tracker UX-028 ×1「树｜章节列」全角化）；DEC-018 断档补录（P-09 原则，标注重构）；EVD-028 补目标对齐/用户影响结构化字段；RISK-002 复核改判（历史 27 issues 确有真实缺陷已修，余=上游误报族）；Bootstrap 自升级 0.75.0→0.80.0（AGENTS.md 两处实质差异：版本头+归档查询措辞）；归档检测=跳过；cleanup.py 跨根缓置（plugin_root 独立 git 仓库，属 launch.py --sync 通道）。
+- **余 8 issues 归账**：21=UX-012 PENDING-CODEREVIEW 补审挂 CLEAN-004⑥；32=1 项 change-triage 未明细（历史任务）；36×2=SYSGAP-001 待执行 + RISK-003→COMPAT-001 闭环自解；其余 WARN=历史/体积/30c 手工代录披露。
 
-## 遗留任务
-| 任务 ID | 描述 | 优先级 |
-|---------|-------------|--------|
-| 用户侧安装 | 用户自行重装 dsh-novel-writing：推荐 `cd C:\Users\peter\.dsh\profiles\web && pnpm add "file:D:/AI/agent/deepseek/harness/writing-workflow"`（复制形态）或跑修好的 install.ps1（junction 开发形态）后 `npx @deepseek-ai/dsh web` 验证 | 用户侧 |
-| BUG-006 实机验收 | 用户安装后验证：侧栏「📖 小说管理工作台」入口 + 控制台书目 + 分栏打开（隔离环境已全链路实证，实机口径一致） | 用户侧 |
-| v0.5.2 发布 | BUG-006 承载版本（CHANGELOG [Unreleased] 已入账；发布时机 Release Gate 用户确认） | P1 待定 |
-| BUG-006 审查 P2 遗留 | P2-2 格式归一副作用 / P2-3 升级残留不清理 / P2-4 三套注册实现收敛（PS 通道优先 node -e）——留档发布卫生批次 | P2 |
-| Git Bash ln -s 深拷贝 | Developer 备注：Git Bash 无原生 symlink 权限时 ln -s 目录为静默深拷贝，提示语与实际形态不符（平台固有）——可另立 UX 任务 | P2 |
-| BUG-005 评审遗留小修批次 | F1 BindDialog:2350 + F2 SplitWorkspace:3639 + F3 注释——并入 UX-054 | P2 |
-| CLEAN-004 / UX-054 / CLEAN-003 / DOC-001 / REL-002 / SYSGAP-001 | 既有 P2 | P2 |
-| 治理插件升级残留 | plan-tracker 工作流版本 0.75.0 → 0.78.1 bootstrap 自升级（可补做；本机 verify_workflow.py/review-record CLI 不可达已两次手工代录） | P2 |
+## 进行中
+- **Design Reviewer R1**（agent e83a43db，后台）：审查 COMPAT-001 分析文档 → docs/review/COMPAT-001-R1.md；锁已取（COMPAT-001：分析文档+报告文件，role=Design-Reviewer）。完成后：review-record 机录（CLI 可达）→ 触发器判定（NEEDS_CHANGE→同 Reviewer 复审 round+1；≥3 轮→BLOCKED escalation）。
+
+## 遗留任务（下一步序列）
+| 任务 | 说明 | 优先级 |
+|------|------|--------|
+| COMPAT-006 决策呈请 | 版本矩阵（A3 止血+A1 于 v1.0 收敛 / 仅 A3 / A2 全保留）——DEC-024 边界② breaking change MUST ask_user_question | P0 决策 |
+| COMPAT-002~009 入账执行 | 002 契约提取（地基）→ 003 fixtures+mock 修正 / 004 探测+boundary（并行）→ 005/007 → 008/009；Developer+Code Reviewer 分离，门禁不劣化 EVD-082 | P1~P3 |
+| v0.5.2 发布 | BUG-006 承载（CHANGELOG [Unreleased] 在账）；发布时机用户 Release Gate | P1 待定 |
+| 既有 P2 | CLEAN-004（含⑥UX-012 补审）/UX-054/CLEAN-003/DOC-001/REL-002/SYSGAP-001/BUG-006 审查 P2 遗留 ×3 | P2 |
+| EVD-024/033 编号空洞 | 历史缺号（不伪造补录）；Check 13 EVD gaps WARN 留档 | 记录性 |
 
 ## 待确认决策
-- v0.5.2 发布时机（BUG-006 承载；用户实机安装验收后定）。
+- COMPAT-006 版本矩阵（审查通过后呈请）；ADR-DEC-候选-C1 采纳落 decision-log（DEC-025 预留号）。
 
 ## 用户偏好设置（延续）
-- DEC-021 主题无关 / 视觉工作方法论 / 兼容红线（零宿主改动）/ 文案零改动（DEC-022 白名单除外）
-- P-09 逐条勾稽；实机验收前必须有隔离环境行为证据（本条 BUG-006 已履行——隔离实例全链路后用户实机装）
-- 环境=用户自主管理：插件安装/卸载由用户决策执行（本轮 AskUserQuestion 确认）
+- DEC-021 主题无关 / 兼容红线（零宿主改动）/ P-09 逐条勾稽 / 实机验收前隔离环境行为证据
+- 环境=用户自主管理（插件安装/卸载用户决策）
+- DEC-024：兼容性演进按推荐推进授权（2026-09-11）
 
 ## 环境备注
-- dsh 0.1.5-rc.1（npx 缓存）；用户 ~/.dsh 现为干净状态（无插件注册/junction；settings.yaml default=standard）。
-- 修好的安装入口：仓库 install.ps1/install.sh（版本自适应）或 profile 目录手动 pnpm add。
-- npm 缓存 dsh 0.1.5-rc.1 的依赖树含全部本插件 peer（cordis 4.0.2/dsh-home-paths/dsh-tools 0.1.5-rc.2 等）。
-- git hooks 本会话可跑；commit message 写 message 文件用 UTF8Encoding($false)。
+- dsh 0.1.5-rc.1（npx 缓存）；用户 ~/.dsh 干净（无插件注册——待用户自行重装）。
+- 宿主只读 checkout：C:\Users\peter\AppData\Local\npm-cache\_npx\1e7f6d9597241db0\（分析已用，保持只读）。
+- verify_workflow CLI 全量可达（danger-full-access）；review-record/agent-locks-acquire 均机路径可用。
+- git hooks 在位；工作区未提交变更=本会话治理记录+分析文档（COMPAT-001 审查通过后原子 commit）。

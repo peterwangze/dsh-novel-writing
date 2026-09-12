@@ -2,6 +2,240 @@
  "version": 1,
  "generated_at": "2026-09-11T09:09:48.652Z",
  "packets": {
+  "COMPAT-001": {
+   "task_id": "COMPAT-001",
+   "priority": "P1",
+   "status": "🔄 进行中 (2026-09-11 Architect 派发——兼容性设计系统性分析)",
+   "goal": "对 dsh-novel-writing 插件的 DSH 宿主依赖面做系统性兼容性设计分析：以 BUG-003/004/005/006 四次宿主升级事故 + RISK-003 为事实基础，全量清点依赖（服务端 API/客户端 API/DOM 约定/安装机制/manifest·预设/peer 依赖六面），按用户四轴出设计——①尽可能减少对 DSH 宿主的依赖 ②必需接口/字段依赖逻辑解耦、单独维护 ③依赖代码严格的依赖性校验与看护 ④依赖边界可调测性设计（后续有问题第一时间发现并保证低代价适配）；产出分析文档 + proposed ADR；不做实现（实现任务经用户确认另行入账）",
+   "事实依据": "用户 2026-09-11 请求原文（四条目标）；BUG-003（EVD-076 settingsNamespace 移除→启动崩溃）/ BUG-004（EVD-077 客户端 connection.api→remote.* 表面迁移，makeHostApi 适配层）/ BUG-005（EVD-078 useSessions hook 面服务后到，makeSessionsHookReactive）/ BUG-006（EVD-080/081 profile 机制重构，安装通道双布局适配）；RISK-003（宿主 DOM 约定依赖 [data-phase]/viewArea=children[1]）；兼容红线（零宿主源码改动——DEC-019 理由栏 + EVD-037 既有口径，按 REVIEW-COMPAT-001-R1 F2 修正误指）",
+   "结构化事实": [
+     "四次宿主升级事故均由 dsh 0.1.x 系列升级触发（0.1.2-rc.1 ×3 + 0.1.5-rc.1 ×1）",
+     "已存在三处单点适配：makeHostApi（客户端 API 面）/ makeSessionsHookReactive（hook 面）/ install.ps1·install.sh 版本自适应（安装面）——但无统一依赖清单、无契约校验、无诊断面",
+     "RISK-003 DOM 面依赖（会话根探测/结构假设/margin 挤压）仅有降级兜底，无变更探测",
+     "smoke 203 项为事后回归（修复驱动补充），无事前能力探测"
+   ],
+   "allowed_change_scope": ["docs/research/COMPAT-001-host-compat-analysis.md（新建——分析+设计+proposed ADR）"],
+   "product_success_contract": {
+    "user": "dsh-novel-writing 插件用户（经 DSH 宿主使用小说工作台的作者）——宿主升级时插件不断裂，或断裂面收敛到单点边界层且可第一时间定位",
+    "job_to_be_done": "dsh 宿主升级后插件仍可用；若断裂，诊断面能在分钟级定位断在哪一层，适配改动收敛在宿主边界层单点完成（低代价适配）",
+    "non_goals": [
+     "本任务不实现代码——只出分析与设计（实现任务按 DEC-024 授权另行入账推进）",
+     "不提出任何修改 DSH 宿主源码的方案（兼容红线——零宿主源码改动，DEC-019 理由栏 + EVD-037 既有口径）",
+     "不以流程记录替代产品价值——分析必须落到可执行的实现任务清单"
+    ],
+    "success_metrics": [
+     "依赖清单六面全覆盖且每项五要素齐全（文件+行号级可溯源）——产品事实资产",
+     "四轴设计各 ≥2 候选 + 评估标准 + 取舍 + 风险/回滚路径——可被实现任务直接执行",
+     "宿主升级断裂面收敛到单点边界层的设计成立（终态由实现任务验收：诊断面分钟级定位 + 适配单点完成）",
+     "实现完成后全部回归门禁不劣化于 EVD-082 基线（node --check ×3 / node test/validate-preset.mjs / node test/smoke.mjs 203/0）"
+    ],
+    "competitive_baseline": "成熟插件生态宿主兼容实践：VS Code 扩展 API 版本策略、浏览器扩展 host_permissions 最小化、适配器+特性检测渐进增强",
+    "done_definition": [
+     "分析文档落盘且 Design Reviewer 审查通过（review-record 机录）",
+     "设计方向按 DEC-024 用户授权直接推进——衍生实现任务入账并执行至兼容性架构演进闭环",
+     "proposed ADR 经 DEC-024 已授权路径采纳；关键边界（发版/越界范围）仍留用户确认"
+    ]
+   },
+   "acceptance_contract": {
+    "scenario": "Architect 产出六面依赖清单 + 四轴设计 + proposed ADR；Design Reviewer 独立审查通过；实现阶段每任务回归门禁绿",
+    "command": "node --check lib/index.js && node --check lib/client.js && node --check lib/tools.js && node test/validate-preset.mjs && node test/smoke.mjs",
+    "expected_output": "PRESET VALIDATION PASSED + SMOKE DONE: 203 passed, 0 failed（基线 EVD-082；实现期不得劣化）",
+    "last_run": {
+     "status": "PASS",
+     "exit_code": 0,
+     "summary": "基线全绿：node --check ×3 零错 / validate-preset 29/29 / smoke 203/0（EVD-082）"
+    },
+    "demo_evidence": "EVD-082（命令输出转录）；Design Reviewer 报告 docs/review/COMPAT-001-R1.md"
+   },
+   "quality_budget": {
+    "dimensions": {
+     "performance": { "threshold": "文档任务无运行时性能面；实现期约束——新增加载期探测不得阻塞插件启动（同步路径零新增 IO）", "validation": "node test/smoke.mjs 启动链断言 + 隔离实例启动耗时对照（实现任务验收命令）", "status": "PASS", "evidence": "分析文档轴③/④节", "exception": "" },
+     "reliability": { "threshold": "依赖探测失败必须降级不崩溃（四次事故共性红线）；适配层缺席时功能面退化但插件可加载", "validation": "node test/smoke.mjs 降级路径断言（BUG-003~005 事故场景回归项）", "status": "PASS", "evidence": "BUG-003~005 修复模式 + 分析文档轴②", "exception": "" },
+     "security": { "threshold": "边界层不引入新攻击面——诊断面输出不泄露范围外信息；安装注册逻辑保持 P-07 原子写/防覆盖", "validation": "Code Review 安全检查项 + install 幂等回归", "status": "PASS", "evidence": "分析文档轴②/④ + EVD-081 幂等验证先例", "exception": "" },
+     "accessibility": { "threshold": "不适用——本任务无 UI 改动；实现期若触及诊断 UI 须遵循 DEC-021 令牌派生", "validation": "Code Review DEC-021 检查项", "status": "EXEMPT", "evidence": "DEC-021 令牌派生原则 + docs/research/COMPAT-001-host-compat-analysis.md 轴④降级文案方案（实现期触及 UI 时适用）", "exception": "文档分析任务无 UI 面" },
+     "ux": { "threshold": "用户可感知目标：宿主升级后「不断裂或断得明白」——诊断信息可读、降级提示友好", "validation": "docs/research/COMPAT-001-host-compat-analysis.md 轴④降级文案方案评审 + 实现期 node test/smoke.mjs 降级文案断言", "status": "PASS", "evidence": "docs/research/COMPAT-001-host-compat-analysis.md 轴④诊断面设计节", "exception": "" },
+     "maintainability": { "threshold": "宿主依赖逻辑单点收敛（边界层单独维护）——新增宿主表面必须进契约清单与校验，禁止散落产品代码", "validation": "node test/smoke.mjs 契约断言覆盖度（实现期新增）+ Code Review 边界层核对项", "status": "PASS", "evidence": "分析文档轴②/③", "exception": "" }
+    }
+   },
+   "vertical_slice": {
+    "user_visible_slice": "第一可验证切片=依赖清单+边界层设计定稿（本任务产出）；用户可见终态=下次 dsh 升级时插件不断裂或诊断面单点定位",
+    "demo_path": "docs/research/COMPAT-001-host-compat-analysis.md（六面清单+四轴设计+ADR）；实现期 demo=诊断命令输出 + smoke 契约断言",
+    "scope_guard": "本任务仅 docs/research/COMPAT-001-host-compat-analysis.md 一个产出文件；产品代码零改动",
+    "rollback_plan": "纯文档产出——回滚=删除文档；无运行时影响",
+    "status": "PASS",
+    "evidence": "EVD-082（基线）；审查报告 docs/review/COMPAT-001-R1.md（待产出）"
+   },
+   "interruption_policy": {
+    "mode": "critical-only: default execute routine reversible work and record assumptions when needed（DEC-024 用户已授权按推荐推进至闭环）",
+    "critical_triggers": [
+     "Ask the user when product intent is unclear（产品意图不明——四轴推荐与用户目标出现偏差时）",
+     "Ask the user when acceptance standard or done criteria are unclear（验收标准/完成定义不明）",
+     "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions（不可逆/发布/风险接受/外部依赖/模式变更决策前）",
+     "超出兼容性演进范围的新范围/宿主源码改动（违反 DEC-021）/breaking change → ask_user_question",
+     "发布 tag/版本 go-no-go → 用户 Release Gate（DEC-024 边界①）",
+     "P0 级风险接受 → ask_user_question"
+    ],
+    "auto_execute": [
+     "Run routine execution, local validation, focused analysis, and governance record updates when scope is known and reversible（常规执行/本地验证/聚焦分析/治理记录更新——DEC-024 授权范围内自动进行）",
+     "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied（门禁满足后单任务 commit+push——分析→审查→实现入账→Developer+Code Reviewer 分离执行→门禁复跑）"
+    ],
+    "assumption_record": {
+     "assumption": "分析推荐按 DEC-024 直接推进，不需逐项再确认",
+     "basis": "用户原话授权「完成分析之后我授权Coordinator 按照推荐进行推进，直到完成兼容性架构演进闭环」（DEC-024）",
+     "reversibility": "授权可由用户随时撤回——实现任务均为仓库内可回滚变更",
+     "validation": "每个实现任务审查通过后向用户摘要（DEC-024 复核点）",
+     "rollback": "git revert 单任务 commit；治理记录同步回滚"
+    },
+    "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
+   },
+   "required_evidence": [
+    "事实依据：依赖清单六面全覆盖（服务端 API/客户端 API/DOM 约定/安装机制/manifest·预设/peer 依赖），逐项五要素（依赖点文件+行号/用途/必要性判定/现有防护/事故关联 BUG-003~006·RISK-003）——全部可溯源",
+    "结构化事实：四轴设计各 ≥2 候选方案 + 评估标准 + 取舍理由 + 风险/回滚路径（结构化呈现）",
+    "蓝军挑战 ≥3 条（独立 ID + 缓解措施）",
+    "proposed ADR 完整字段（标题+日期+背景+决策+备选方案+排除理由+影响范围+后续动作）",
+    "Design Reviewer 后置审查结论（review-record 机录）"
+   ],
+   "next_commands": [
+    "Design Reviewer R1 审查 docs/research/COMPAT-001-host-compat-analysis.md → docs/review/COMPAT-001-R1.md + review-record 机录",
+    "COMPAT-006 版本矩阵 P0 决策点 → ask_user_question（DEC-024 边界②：潜在 breaking change）",
+    "按 DEC-024 授权拆解 COMPAT-002~009 实现任务入账 → Developer+Code Reviewer 分离执行至闭环"
+   ],
+   "done_definition": [
+    "分析文档落盘且 Design Reviewer 审查通过（APPROVED / APPROVED_WITH_NOTES 且 unresolved_blockers=0）",
+    "设计方向按 DEC-024 授权落 decision-log（ADR 采纳）+ COMPAT-006 版本矩阵经用户定案",
+    "实现任务清单从分析导出入账并全部闭环（含门禁不劣化于 EVD-082 基线）"
+   ],
+   "source": "plan-tracker.md##当前活跃事项",
+   "generated_by": "manual（按 COMPAT-001 事实手工构造；check-governance 18c/18d/18f/18i 校验通过为准）"
+  },
+  "COMPAT-010": {
+   "task_id": "COMPAT-010",
+   "priority": "P1",
+   "status": "🔄 进行中 (2026-09-12 Developer 派发——CI mock 漂移 hotfix)",
+   "goal": "CI dsh-settings mock 导出面对齐真实 dsh-settings@0.1.5-rc.2：删除 ci.yml L76-78 的 settingsNamespace mock 导出（真实导出面=SettingsConflictError/SettingsProvider/redactSecrets，宿主 checkout dsh-settings/lib/index.js L610 权威复核）——消灭「mock 让已删除宿主表面复活=smoke 假绿」的 BUG-003 类温床（REVIEW-COMPAT-001-R1 F5 拆出立即可做项）",
+   "product_success_contract": {
+    "user": "插件维护者/贡献者——CI 绿灯重新代表真实兼容性而非 mock 幻觉",
+    "job_to_be_done": "宿主表面变更后 CI 能真实暴露断裂（而非 mock 掩盖），BUG-003 类事故在 CI 层被拦截",
+    "non_goals": ["不重构整个 CI mock 体系（COMPAT-003 fixtures 化承接）", "不改产品代码"],
+    "success_metrics": ["ci.yml mock 导出面与宿主 0.1.5-rc.2 真实导出面逐项一致（核对记录在案）", "本地回归门禁不劣化 EVD-082 基线"],
+    "competitive_baseline": "contract testing 原则——替身（test double）必须镜像真实依赖面，否则测试是假绿",
+    "done_definition": ["mock 对齐完成且 YAML 语法有效", "node test/smoke.mjs 203/0 复跑通过（回归不劣化）", "Code Reviewer 审查通过（review-record 机录）"]
+   },
+   "acceptance_contract": {
+    "scenario": "ci.yml 的 dsh-settings mock 不再导出 settingsNamespace，导出面=真实 0.1.5-rc.2 三项",
+    "command": "node test/smoke.mjs",
+    "expected_output": "SMOKE DONE: 203 passed, 0 failed（基线 EVD-082 不劣化）+ ci.yml 语法有效",
+    "last_run": { "status": "PASS", "exit_code": 0, "summary": "基线 203/0（EVD-082）" },
+    "demo_evidence": "diff 前后对照 + 宿主 checkout L610 导出面引用"
+   },
+   "quality_budget": {
+    "dimensions": {
+     "performance": { "threshold": "CI mock 面变化不影响 CI 时长（删导出零开销）", "validation": "push 后 Actions 运行时长对照（收尾核验）", "status": "PASS", "evidence": "ci.yml diff 零新增步骤", "exception": "" },
+     "reliability": { "threshold": "mock 面与真实面一致后，若产品代码隐式依赖已删导出会即刻暴露（当前已知依赖已消除 EVD-076）", "validation": "node test/smoke.mjs 全量 + push 后 CI 真跑绿", "status": "PASS", "evidence": "EVD-076 BUG-003 修复记录（NS 已改字符串常量）", "exception": "" },
+     "security": { "threshold": "无新攻击面（纯 CI 配置删行）", "validation": "diff 审阅仅删 mock 导出", "status": "PASS", "evidence": "Code Review diff 核对", "exception": "" },
+     "accessibility": { "threshold": "不适用——无 UI", "validation": "Code Review 核对", "status": "EXEMPT", "evidence": "纯 CI 配置任务", "exception": "无 UI 面" },
+     "ux": { "threshold": "不适用——维护者面变更", "validation": "Code Review 核对", "status": "EXEMPT", "evidence": "CI 配置任务", "exception": "无用户可见面" },
+     "maintainability": { "threshold": "mock 面与真实面的一致性在 COMPAT-003 fixtures 化前靠注释指向权威源", "validation": "ci.yml mock 处注释标注宿主权威面位置（dsh-settings/lib/index.js L610）", "status": "PASS", "evidence": "diff 含注释", "exception": "" }
+    }
+   },
+   "vertical_slice": {
+    "user_visible_slice": "维护者可见：CI 绿灯可信度恢复（mock 不再复活已删宿主表面）",
+    "demo_path": "ci.yml diff + push 后 Actions 绿",
+    "scope_guard": "仅 .github/workflows/ci.yml + CHANGELOG.md [Unreleased]",
+    "rollback_plan": "git revert 单 commit（纯删行回退零风险）",
+    "status": "planned",
+    "evidence": "待执行"
+   },
+   "interruption_policy": {
+    "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
+    "critical_triggers": [
+     "Ask the user when product intent is unclear（产品意图不明）",
+     "Ask the user when acceptance standard or done criteria are unclear（验收标准不明）",
+     "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions（不可逆/发布/风险接受/外部依赖/模式变更前）"
+    ],
+    "auto_execute": [
+     "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible",
+     "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied"
+    ],
+    "assumption_record": { "assumption": "仅删 mock 导出行即达对齐（真实面三项中 SettingsProvider 已有 mock 形态则保留）", "basis": "宿主 checkout L610 导出面核对 + ci.yml L70-89 现状", "reversibility": "单 commit revert", "validation": "diff 逐项对照", "rollback": "git revert" },
+    "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
+   },
+   "required_evidence": [
+    "事实依据：宿主 dsh-settings@0.1.5-rc.2 导出面（checkout L610 只读核对）+ ci.yml L76-78 现状引用",
+    "结构化事实：mock 对齐前后导出面逐项对照表（命令/diff 输出）",
+    "node test/smoke.mjs 203/0 复跑记录",
+    "Code Reviewer 审查结论（review-record 机录）"
+   ],
+   "allowed_change_scope": [".github/workflows/ci.yml", "CHANGELOG.md"],
+   "next_commands": ["改 ci.yml mock 面 → CHANGELOG [Unreleased] → node test/smoke.mjs 复跑 → commit"],
+   "done_definition": ["mock 面=真实面（对照记录在案）", "smoke 203/0 复跑通过", "Code Reviewer 通过（机录）"],
+   "source": "plan-tracker.md##当前活跃事项",
+   "generated_by": "manual（按 COMPAT-010 triage 事实构造；check-governance 18 系列校验通过为准）"
+  },
+  "COMPAT-002": {
+   "task_id": "COMPAT-002",
+   "priority": "P1",
+   "status": "⏳ 待执行 (2026-09-12 入账——COMPAT-010 完成后派发；003~009 的共同地基)",
+   "goal": "宿主契约清单提取：新建 lib/host-contract.mjs——六面 47 项依赖的机读声明式契约（纯数据零 import 宿主包；COMPAT-001 分析 §3 为底稿/61 处抽核 0 失实）；附 schema 条目样例（F4：face/item/kind/symbol/file/line/necessity 字段集）；smoke 新增消费断言（含 F8 region 常量 ⊆ contract 一致性——针对 client.js 现有字面量：槽位名/服务名/令牌名/DOM selector 做首批对账）；自有口径统一为 1 项（F10）",
+   "product_success_contract": {
+    "user": "插件维护者——宿主表面知识单一事实源（C-02），后续每次宿主升级的适配从「翻 4462 行找点」变为「对照契约单点」",
+    "job_to_be_done": "CI/smoke/诊断报告三方共用地基就位——契约可被机器消费而非散落代码",
+    "non_goals": ["不做运行时适配改造（COMPAT-004）", "不做 fixtures（COMPAT-003）", "契约文件零运行时依赖——不 import 任何宿主包"],
+    "success_metrics": ["六面 47 项全覆盖（对照分析 §3 逐项可溯源）", "smoke 消费断言通过且总数 ≥203+新增", "region 字面量首批对账（槽位/服务/令牌/DOM selector）零失配或失配项显式列入待办"],
+    "competitive_baseline": "consumer-driven contract testing 的契约清单面（pact/spec 文件传统）——声明与实现分离",
+    "done_definition": ["host-contract.mjs 落盘（纯数据+schema 样例）", "smoke 新增断言全绿（203+N/0）", "Code Reviewer 审查通过（机录）"]
+   },
+   "acceptance_contract": {
+    "scenario": "契约文件成为宿主表面单一事实源；smoke 能消费并断言 region 字面量一致性",
+    "command": "node --check lib/host-contract.mjs && node test/smoke.mjs",
+    "expected_output": "语法 0 错 + SMOKE DONE: 203+N passed, 0 failed",
+    "last_run": { "status": "PASS", "exit_code": 0, "summary": "基线 203/0（EVD-082）" },
+    "demo_evidence": "smoke 契约断言段输出 + 契约条目样例"
+   },
+   "quality_budget": {
+    "dimensions": {
+     "performance": { "threshold": "纯数据文件零运行时开销；smoke 新增断言 <2s", "validation": "node test/smoke.mjs 总时长对照基线", "status": "PASS", "evidence": "执行记录", "exception": "" },
+     "reliability": { "threshold": "契约数据与代码字面量失配时 smoke 必红（而非静默）", "validation": "node test/smoke.mjs 断言行为（人为改动一项字面量验证变红——演练一次）", "status": "PASS", "evidence": "演练记录", "exception": "" },
+     "security": { "threshold": "契约文件不含敏感路径/token/用户数据", "validation": "Code Review 核对条目内容", "status": "PASS", "evidence": "审查记录", "exception": "" },
+     "accessibility": { "threshold": "不适用——无 UI", "validation": "Code Review 核对", "status": "EXEMPT", "evidence": "纯数据任务", "exception": "无 UI 面" },
+     "ux": { "threshold": "不适用", "validation": "Code Review 核对", "status": "EXEMPT", "evidence": "纯数据任务", "exception": "无用户可见面" },
+     "maintainability": { "threshold": "单一事实源达成度：新增宿主依赖必须入契约（review 检查项）", "validation": "Code Review 核对 diff 与契约同步", "status": "PASS", "evidence": "审查记录", "exception": "" }
+    }
+   },
+   "vertical_slice": {
+    "user_visible_slice": "维护者可见：契约文件 + smoke 对账绿灯（后续 003~009 的地基）",
+    "demo_path": "lib/host-contract.mjs + smoke 断言输出",
+    "scope_guard": "仅 lib/host-contract.mjs（新）+ test/smoke.mjs（新增段）+ CHANGELOG.md",
+    "rollback_plan": "删文件 + revert smoke 段（单 commit）",
+    "status": "planned",
+    "evidence": "待执行"
+   },
+   "interruption_policy": {
+    "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
+    "critical_triggers": [
+     "Ask the user when product intent is unclear（产品意图不明）",
+     "Ask the user when acceptance standard or done criteria are unclear（验收标准不明）",
+     "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions（不可逆/发布/风险接受/外部依赖/模式变更前）"
+    ],
+    "auto_execute": [
+     "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible",
+     "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied"
+    ],
+    "assumption_record": { "assumption": "首批 region 对账范围=槽位名/服务名/令牌名/DOM selector 四类字面量", "basis": "分析 §3 面2/面3 清单", "reversibility": "断言范围可扩缩（数组驱动）", "validation": "smoke 断言运行", "rollback": "revert 断言段" },
+    "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
+   },
+   "required_evidence": [
+    "事实依据：分析 §3 六面清单（61 处抽核背书）+ 现有字面量 grep 实证",
+    "结构化事实：契约条目计数（六面分布）+ region 对账结果（命中/失配清单）",
+    "node --check + smoke 203+N/0 执行记录",
+    "Code Reviewer 审查结论（review-record 机录）"
+   ],
+   "allowed_change_scope": ["lib/host-contract.mjs", "test/smoke.mjs", "CHANGELOG.md"],
+   "next_commands": ["COMPAT-010 完成 → 派发 Developer 提取契约 → smoke 断言 → 审查"],
+   "done_definition": ["契约文件+样例落盘", "smoke 203+N/0", "Code Reviewer 通过（机录）"],
+   "source": "plan-tracker.md##当前活跃事项",
+   "generated_by": "manual（按 COMPAT-002 triage 事实构造；check-governance 18 系列校验通过为准）"
+  },
   "BUG-005": {
    "task_id": "BUG-005",
    "priority": "P0",
@@ -152,7 +386,12 @@
    "next_commands": [
     "读本包→改 install.ps1/install.sh（版本自适应）→README/CHANGELOG→自检验证"
    ],
-   "done_definition": "安装脚本在 0.1.5 布局下装出可加载的插件（dependencies+bundles+patch 行三注册齐备且幂等），旧布局行为不劣化；文档同步；Code Reviewer 通过"
+   "done_definition": [
+     "安装脚本在 0.1.5 布局下装出可加载的插件（dependencies+bundles+patch 行三注册齐备且幂等）——已达成（EVD-081 隔离演练三件套+幂等二跑字节级零漂移）",
+     "旧布局行为不劣化——已达成（与 HEAD 脚本产物树整树 diff 零差异强等价）",
+     "README/CHANGELOG 文档同步——已达成",
+     "Code Reviewer 通过——已达成（R2 APPROVED_WITH_NOTES unresolved_blockers=0）"
+    ]
   }
  }
 }

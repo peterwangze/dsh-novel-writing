@@ -1,6 +1,6 @@
 ## Governance Bootstrap（强制 — 每次会话第一动作）
 
-> @bootstrap-version: 0.75.0（模板最低引导版本——低于 SKILL frontmatter active_version 即陈旧，先升级本段再继续）
+> @bootstrap-version: 0.80.0（模板最低引导版本——低于 SKILL frontmatter active_version 即陈旧，先升级本段再继续）
 
 **⚡ SELF-CHECK（在任何输出之前先问自己）**：
 1. 我是否已经读了 `.governance/plan-tracker.md`？否 → **立即停止，先去读**
@@ -263,7 +263,7 @@
 **查询已归档 entry 的标准路径**：
    需要查询特定 task/evidence 的详细内容时:
    Step 1: Read `.governance/archive/index.md` → grep 目标 ID
-   Step 2: From index.md 获取归档文件路径 → Read 该归档文件 → 定位具体条目
+   Step 2: 从 index.md 获取归档文件路径 → Read 该归档文件 → 定位具体条目
    总开销: 2 次 Read call
 
 ## 项目级原则（本仓库自有内容，非 governance 模板；Bootstrap 自升级只替换 Governance Bootstrap 段，此节保留）

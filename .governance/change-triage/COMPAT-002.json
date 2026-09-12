@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "task_id": "COMPAT-002",
+  "title": "宿主契约清单提取：lib/host-contract.mjs（六面 47 项机读化——COMPAT-001 分析 §3 为底稿）；验收含 F4 schema 条目样例 / F8 region 常量一致性断言 / F10 自有口径统一",
+  "priority": "P1",
+  "target_version": "0.6.0",
+  "depends_on": ["COMPAT-010"],
+  "files": ["lib/host-contract.mjs", "test/smoke.mjs", "CHANGELOG.md"],
+  "reason": "DEC-025 ADR 决策①落地地基：契约可机读是轴③（CI 对账/fixtures）与轴④（诊断报告投影）的共同前置；分析 §3 六面 47 项（61 处抽核 0 失实）为提取底稿；Reviewer F4（schema 样例）/F8（region 常量 ⊆ contract 断言）/F10（自有口径=1 项）并入验收",
+  "created_at": "2026-09-12",
+  "tool": "change-triage",
+  "tool_version": "0.80.0-manual",
+  "analysis": {
+    "dependency": {
+      "unblocked": ["COMPAT-003", "COMPAT-004", "COMPAT-005", "COMPAT-007", "COMPAT-008", "COMPAT-009"],
+      "blocked": [], "blocked_by": ["COMPAT-010（CHANGELOG 串行）"], "unknown_deps": [], "cycles": [], "cycle_warning": false, "new_task_cycle": false
+    },
+    "priority_context": { "proposed": "P1", "in_flight": { "P0": 0, "P1": 2, "P2": 8 }, "version_chain": [] },
+    "conflicts": [],
+    "version": { "target": "0.6.0", "current": "0.5.1", "planned_next": "0.5.2", "issues": [] },
+    "side_effect": { "detected": false, "touches_real_env": false, "requires_r1": true, "declared": "新增纯数据文件 + smoke 断言；零运行时行为变化", "blast_radius": ["test/smoke.mjs（新增断言段）"], "review_conditions": ["Code Reviewer 后置审查必达"], "issues": [] }
+  },
+  "snapshot": {
+    "tool": "manual（task-priority-analysis 调用快照）",
+    "module_version": "manual-0.80.0",
+    "report_json": { "total": 82, "completed": 69, "blocked": [], "unblocked": ["COMPAT-010", "COMPAT-002"], "recommended_next": ["COMPAT-010", "COMPAT-002"], "non_executable": [], "cycles": [], "cycle_warning": false },
+    "report_text": "COMPAT-002 入账快照（2026-09-12）：003~009 全依赖本任务；host-contract 纯数据零 import（无循环风险）。"
+  }
+}
