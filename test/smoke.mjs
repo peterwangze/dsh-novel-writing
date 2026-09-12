@@ -1944,21 +1944,27 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
     'string', 'number', 'boolean', 'object', 'array', 'value', 'version', 'name', 'description',
     'deepseek', 'cordis', 'dsh', 'settings', 'home', 'paths', 'tools', 'document', 'window', 'data',
   ])
+  // symbol → 非通用候选集（分 3 级：1 = 引号/中文名字面量 > 2 = 点号标识符 > 3 = 裸词 ≥4 字符）。
+  // COMPAT-012 抽出为共用函数：F5c（每面锚点抽核）与 F5d（范围型 line 抽核）用**同一候选口径**，
+  // 避免两处各写一份后口径漂移（口径定义 = ③注释所述，含通用词表排除）。
+  const symbolCandidates = (symbol) => {
+    const tiered = [
+      ...(symbol.match(/"[^"]{4,}"/g) ?? []).map((c) => [1, c.slice(1, -1)]),
+      ...(symbol.match(/'[^']{3,}'/g) ?? []).map((c) => [1, c.slice(1, -1)]),
+      ...(symbol.match(/[\u4e00-\u9fff]{3,}/g) ?? []).map((c) => [1, c]), // 中文名字面量（面 5 preset name 即此类）
+      ...(symbol.match(/[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)+/g) ?? []).map((c) => [2, c]),
+      ...(symbol.match(/[A-Za-z_$][\w$]{3,}/g) ?? []).map((c) => [3, c]),
+    ]
+    const tierOf = new Map()
+    for (const [tier, tok] of tiered) tierOf.set(tok, Math.min(tierOf.get(tok) ?? 3, tier))
+    return [...tierOf].map(([tok, tier]) => ({ tok, tier })).filter((c) => !COMMON_WORDS.has(c.tok.toLowerCase()))
+  }
   const anchors = []
   for (const f of [1, 2, 3, 4, 5, 6]) {
     const it = hc.items.find((x) => x.face === f && filesOf(x).length > 0 && x.line !== null)
     if (it === undefined) { anchors.push({ face: f, item: '—', hit: false, tier: null, sample: [] }); continue }
     const src = readFileSync(new URL('../' + filesOf(it)[0], import.meta.url), 'utf8')
-    const tiered = [
-      ...(it.symbol.match(/"[^"]{4,}"/g) ?? []).map((c) => [1, c.slice(1, -1)]),
-      ...(it.symbol.match(/'[^']{3,}'/g) ?? []).map((c) => [1, c.slice(1, -1)]),
-      ...(it.symbol.match(/[\u4e00-\u9fff]{3,}/g) ?? []).map((c) => [1, c]), // 中文名字面量（面 5 preset name 即此类）
-      ...(it.symbol.match(/[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)+/g) ?? []).map((c) => [2, c]),
-      ...(it.symbol.match(/[A-Za-z_$][\w$]{3,}/g) ?? []).map((c) => [3, c]),
-    ]
-    const tierOf = new Map()
-    for (const [tier, tok] of tiered) tierOf.set(tok, Math.min(tierOf.get(tok) ?? 3, tier))
-    const cands = [...tierOf].map(([tok, tier]) => ({ tok, tier })).filter((c) => !COMMON_WORDS.has(c.tok.toLowerCase()))
+    const cands = symbolCandidates(it.symbol)
     const hits = cands.filter((c) => src.includes(c.tok))
     anchors.push({ face: f, item: it.item, hit: hits.length > 0, tier: hits.length > 0 ? Math.min(...hits.map((c) => c.tier)) : null, sample: hits.slice(0, 2).map((c) => c.tok) })
   }
@@ -1971,6 +1977,56 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   console.log('  info COMPAT-004 FIND-1 锚点层级实测: ' + anchors.map((a) => a.item + (a.hit ? '✓T' + a.tier : '✗')).join(' / ') + '  ⇒ ' + tierString)
   check('COMPAT-004 FIND-1 锚点层级 golden：实测 ' + tierString + '（面 4 由中文字面量「新布局」命中 T1，非 T3）',
     tierString === 'T3/T1/T1/T1/T1/T3', 'tier=' + tierString)
+
+  // ⑫b F5d 范围型 line 抽核（COMPAT-012，收口 REVIEW-COMPAT-004-R2 N2）：F5a/b/c 对**范围形态**的 line
+  // （`L<起>-L<止>`）只有三重覆盖——形态白名单（F5a）+「首个行号 ≤ 文件总行数」（F5b）+ 每面 1 项锚点
+  // 抽核，而面 2 抽到的锚点是 2.1（其范围精确）。于是**终点**是否落在有效行、范围是否真的包住所声明构造、
+  // 边界是否落在真实代码行，三项均无信号——2.12/2.13 两处范围偏移即由此逃逸。本检查对**全部**范围型条目:
+  //   ① 有效范围：起 ≥ 1 ∧ 止 ≥ 起 ∧ 止 ≤ 目标文件总行数（F5b 只查首个行号，终点越界无信号）；
+  //   ② 范围内锚点命中：symbol 的非通用候选至少一个出现在 [起,止] 行内（不是「文件里任意位置命中」——
+  //      后者对 file 指向正确但 line 指向别处无分辨力）；
+  //   ③（RANGE_STRICT_FACES 声明的面）起止行**非空行/纯注释行**——范围边界必须是真实代码行。
+  //      实证：2.12 旧值 `L4391-4397` 两端均落在 BUG-004/005 注释块上 ⇒ 红（本检查设立的直接动因）；
+  //      faces 3/5/6 存在**合法**的注释行起段（3.1 起于 `/**` JSDoc、3.5 起于 `//` 互操作说明）故未纳入——
+  //      扩面须先逐项核对边界语义，不可盲加；
+  //   ④ 终点不截断同一构造：终点行的**行首点号调用前缀**（如 `ctx.slots.inject(`）不得在终点之后再次
+  //      作为行首出现。实证：2.13 旧值 `L4422-4454` 止于第 5 处 `ctx.slots.inject(`，第 6 处在 L4458 ⇒ 红。
+  // R1 承继偏移（2.12 −6 / 2.13 −7）在修复前正是 ①③④ 三项的失败用例，修复后全绿（见 CHANGELOG COMPAT-012）。
+  const RANGE_STRICT_FACES = [2]
+  const GOLDEN_RANGE_ITEMS = 21
+  const RANGE_LINE = /^L(\d+)-L?(\d+)$/
+  const lineIsComment = (l) => l.trim() === '' || /^(\/\/|\/\*|\*)/.test(l.trim())
+  const callPrefix = (l) => {
+    const m = /^\s*([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\(/.exec(l)
+    return m === null ? null : m[1]
+  }
+  const rangeItems = hc.items.filter((it) => it.line !== null && RANGE_LINE.test(it.line))
+  const rangeStrict = rangeItems.filter((it) => RANGE_STRICT_FACES.includes(it.face))
+  const rangeBad = []
+  for (const it of rangeItems) {
+    const files = filesOf(it)
+    if (files.length === 0) { rangeBad.push(it.item + ':无 file（范围锚点不可核）'); continue }
+    const lines = readFileSync(new URL('../' + files[0], import.meta.url), 'utf8').split('\n')
+    const rm = RANGE_LINE.exec(it.line)
+    const start = Number(rm[1]); const end = Number(rm[2])
+    if (!(start >= 1 && end >= start && end <= lines.length)) {
+      rangeBad.push(it.item + ':范围越界(' + it.line + ' / 文件 ' + lines.length + ' 行)'); continue
+    }
+    const span = lines.slice(start - 1, end)
+    if (!symbolCandidates(it.symbol).some((c) => span.some((l) => l.includes(c.tok)))) rangeBad.push(it.item + ':锚点不在范围内')
+    if (RANGE_STRICT_FACES.includes(it.face) && (lineIsComment(lines[start - 1]) || lineIsComment(lines[end - 1]))) {
+      rangeBad.push(it.item + ':边界落在注释/空行')
+    }
+    const pre = callPrefix(lines[end - 1])
+    if (pre !== null) {
+      const off = lines.slice(end).findIndex((l) => callPrefix(l) === pre)
+      if (off >= 0) rangeBad.push(it.item + ':终点截断(' + pre + ' 在 L' + (end + off + 1) + ' 再次起行)')
+    }
+  }
+  check('COMPAT-012 N2 F5d 范围型 line 抽核：' + rangeItems.length + '/' + hc.items.length + ' 项范围条目（严格面 ' + RANGE_STRICT_FACES.join(',') + ' 共 ' + rangeStrict.length + ' 项）范围有效 ∧ 锚点在范围内命中 ∧ 边界非注释 ∧ 终点不截断构造',
+    rangeItems.length === GOLDEN_RANGE_ITEMS && rangeStrict.length > 0 && rangeBad.length === 0,
+    'rangeItems=' + rangeItems.length + '(golden ' + GOLDEN_RANGE_ITEMS + ') bad=' + JSON.stringify(rangeBad))
+  console.log('  info COMPAT-012 N2 F5d 覆盖: 范围型 ' + rangeItems.length + '/' + hc.items.length + ' 项（面分布 ' + [...new Set(rangeItems.map((it) => it.face))].join(',') + '）；严格面 ' + RANGE_STRICT_FACES.join(',') + ' = ' + rangeStrict.map((it) => it.item).join(','))
 
   // ⑬ F6 necessity 九值 golden 分布（9 值全量 + 合计 48；防单值静默漂移）
   const GOLDEN_NEC = { required: 39, consolidatable: 1, adapted: 1, optional: 1, improvable: 2, own: 1, eliminated: 1, 'adapted-drift': 1, awareness: 1 }
@@ -2045,11 +2101,30 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // ① 收口（验收① + REVIEW-COMPAT-004-R1 F5 强化）：index.js 宿主调用 100% 经 host-boundary ——
   // **强口径**（F5）：代码面零 `ctx.<标识符>` 属性访问 + 零 `@deepseek-ai/` import。原「9 类模式表」属
   // 开发者自列形态（自指）——新形态（ctx.on/ctx.inject/ctx.provide…）零信号；强口径覆盖**一切**形态。
-  const bareCtxHits = [...hostCode.matchAll(/(?<![.\w$])ctx\.[A-Za-z_$]/g)].map((m) => m[0])
+  // **口径修正（REVIEW-COMPAT-004-R2 N1）**：R1 的 lookbehind `(?<![.\w$])` 把**前导 `.` 也排除** ⇒
+  // 漏 `this.ctx.<id>`（类方法内现实的书写形态——本仓 `lib/index.js` 类方法即用 `this.ctx`，如
+  // `loggerOf(this.ctx)` / `emitChanged(this.ctx, …)`）⇒ 改为 `(?<![\w$])`；词内/同类标识符形态
+  // （`myctx.` / `_ctx.` / `$ctx.`）仍排除，不误报。覆盖力由下条 ①a **双向实证**锁定。
+  const CTX_STRONG = /(?<![\w$])ctx\.[A-Za-z_$]/g
+  const bareCtxHits = [...hostCode.matchAll(CTX_STRONG)].map((m) => m[0])
   const hostPkgImports = [...hostCode.matchAll(/from\s*'@deepseek-ai\/[^']*'/g)].map((m) => m[0])
   check('COMPAT-004 收口①（强口径，R1-F5）：lib/index.js 代码面零 ctx.<标识符> 属性访问 + 零 @deepseek-ai/ import',
     bareCtxHits.length === 0 && hostPkgImports.length === 0,
     'ctxHits=' + JSON.stringify(bareCtxHits.slice(0, 5)) + ' hostImports=' + JSON.stringify(hostPkgImports))
+  // ①a 强口径**覆盖力**双向实证（COMPAT-012 N1）：把审查实测的覆盖缝固化为反向构造——
+  //   (i) R1 口径对负向构造 `this.ctx.get(1)` **0 命中**（漏检 = 修复动因，防「改回 R1 口径」）；
+  //   (ii) 现行口径对同一构造**恰 1 命中**（修复生效）；
+  //   (iii) 词内/同类标识符形态仍 **0 命中**（`[\w$]` 含字母/数字/下划线/`$`，不把别的变量名当宿主访问）。
+  // 注：`CTX_STRONG_R1` 是**反例口径**，只在本断言内使用（不参与 ① 判定）。
+  const CTX_STRONG_R1 = /(?<![.\w$])ctx\.[A-Za-z_$]/g
+  const N1_NEG = 'this.ctx.get(1)'
+  const n1R1Hits = [...N1_NEG.matchAll(CTX_STRONG_R1)].length
+  const n1NowHits = [...N1_NEG.matchAll(CTX_STRONG)].length
+  const N1_WORD_INTERNAL = ['myctx.get(1)', '_ctx.get(1)', '$ctx.get(1)']
+  const n1WordInternal = N1_WORD_INTERNAL.filter((s) => [...s.matchAll(CTX_STRONG)].length > 0)
+  check('COMPAT-012 N1 强口径覆盖力双向实证：`this.ctx.get(1)` R1 口径漏检(' + n1R1Hits + ') ∧ 现行口径命中(' + n1NowHits + ') ∧ 词内形态仍排除(' + n1WordInternal.length + ' 误报)',
+    n1R1Hits === 0 && n1NowHits === 1 && n1WordInternal.length === 0,
+    'r1=' + n1R1Hits + ' now=' + n1NowHits + ' wordInternal=' + JSON.stringify(n1WordInternal))
   // ①b 补充面（保留）：非 ctx.* 形态的宿主字面量/调用（webServer.register / resolveDshHome / .agent-presets 等）
   const DIRECT_HOST = [
     ['宿主包 import', /@deepseek-ai\//], ['ctx.settings', /ctx\.settings/], ['ctx.get', /ctx\.get\(/],
