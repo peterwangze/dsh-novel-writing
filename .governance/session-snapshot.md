@@ -1,17 +1,50 @@
-# 会话快照 — 2026-09-12（兼容性演进：001/006/010 闭环，COMPAT-002 执行中）
+# 会话快照 — 2026-09-12（兼容性演进：001/006/010/002/003/011 闭环，COMPAT-004 执行中）
 
 - **session_id**: 20260912-compat001-compat-evolution
 - **session_date**: 2026-09-12
 - **agent**: DeepSeek Harness Coordinator (software-project-governance)
-- **goal**: goal-06e5873c（12/12 rounds 用尽——延续依赖用户「继续」指令重开；COMPAT-002 完成通知仍会到达会话）
+- **goal**: goal-06e5873c（round 25/26——将尽；延续依赖用户「继续」指令重开；**COMPAT-004 完成通知不受影响仍会到达会话**）
 
 ## 当前状态
 - **current_stage**: 6/11 development（G5 passed-with-conditions，DOC-001 跟踪）
 - **trigger_mode**: always-on / **permission_mode**: maximum-autonomy
-- **工作流版本**: 0.80.0
-- **项目总览**: 82 任务 / 70 已完成 / 0 阻塞 / 风险 2（RISK-002 开、RISK-003 待 COMPAT 闭环后复核关闭）
+- **工作流版本**: 0.80.0；**运行时**: danger-full-access（CLI 全量可达）
+- **项目总览**: 83 任务 / 73 已完成 / 0 阻塞 / 风险 2
 - **版本**: v0.5.1 已发布；v0.5.2（BUG-006）与 v0.6.0（兼容性演进）未发布——tag 时机均留用户 Release Gate
-- **运行时**: danger-full-access（审批禁用——CLI 全量可达）
+- **git**: HEAD=2fd2072（未推送 ahead 12）；hooks 0.80.0
+
+## 演进链状态（v0.6.0）
+| 任务 | 状态 |
+|------|------|
+| COMPAT-001 分析 | ✅ 闭环（REVIEW-COMPAT-001-R1 APPROVED_WITH_NOTES 0 阻断） |
+| COMPAT-006 决策 | ✅ 闭环（DEC-026：A3 现在 + A1 绑 v1.0） |
+| COMPAT-010 mock hotfix | ✅ 闭环（1617aba + REVIEW-COMPAT-010-R1） |
+| COMPAT-002 契约 | ✅ 闭环（80f4a0b + REVIEW-COMPAT-002-R1） |
+| COMPAT-003 fixtures/对账 | ✅ 闭环（4cf1c6a + REVIEW-COMPAT-003-R1） |
+| COMPAT-011 fixtures 质量 | ✅ 闭环（adfd0d1 + REVIEW-COMPAT-011-R1 APPROVED） |
+| **COMPAT-004 边界层+探测+A3** | 🔄 **执行中**（developer 3bc12c60；host-boundary.js 已建 12KB + index.js 收口 + fixtures FIND-3 就位；余 client.js/smoke/契约 FIND-2/CHANGELOG FIND-1/门禁/commit） |
+| COMPAT-005/007/008/009 | ⏳ 依赖 004 探测函数 |
+
+## 进行中任务的下游链（004 完成后）
+1. 独立核验（node --check/smoke ≥231/0/收口映射 grep/[nv-compat] 样例）→ EVD-087 → Code Reviewer（内联模板：事实内联+报告优先+预算纪律）
+2. 004 闭环后：**005（诊断面板）/007（CI 探测轨）可并行**（文件面：005=client.js+smoke；007=ci.yml+CHANGELOG——smoke/CHANGELOG 重叠→串行或分片）→ 008（探针脚本 P3）→ 009（install 注释块 P3）
+3. 全部闭环后：全门禁 + 治理收尾（快照/证据/路线图/CHANGELOG）+ **push（ahead 12+）** + Release Gate 呈请
+
+## 已固化经验（调度模板）
+- 审查类任务：**事实内联 + 报告优先 + 读取预算** → 25 秒交付（vs 原版 3 轮无产物）；反之 5 轮后需 interrupt + 硬收敛三步
+- Developer 类任务：正常 prompt + 软引导（三行式中期状态）+ 网络降级授权即可
+- 每任务闭环标准链：commit → Coordinator 独立复跑 → EVD → 审查（review-record 机录）→ 发现承接 → 下一任务
+
+## 待确认决策
+- 无新增（COMPAT-006 已定案）。发布时机保持用户 Gate。
+
+## 用户偏好（延续）
+- DEC-021 主题无关 / 兼容红线（DEC-025 正名口径）/ P-09 逐条勾稽 / P-10 宿主耦合入契约（本会话新入册）/ 实机验收前隔离环境证据 / DEC-024 演进推进授权持续有效
+
+## 环境备注
+- 宿主只读 checkout：C:\Users\peter\AppData\Local\npm-cache\_npx\1e7f6d9597241db0\（0.1.5-rc.2 闭包）
+- 全部门禁基线：node --check / validate-preset 29/29 / **smoke 231/0**（004 后需 ≥231）
+- COMPAT-004 锁：lib/host-boundary.js（新）/index.js/client.js/smoke.mjs/CHANGELOG/contract/fixtures/报告
 
 ## 兼容性演进链状态
 | 任务 | 状态 |
