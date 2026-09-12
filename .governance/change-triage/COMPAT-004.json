@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "task_id": "COMPAT-004",
+  "title": "detectHostCapabilities 探测函数（一函数三消费）+ 启动 [nv-compat] 结构化警告（D2）+ 服务端 host-boundary.js 收口 + DEC-026 A3 执行（connection/locale inject 降可选探测）；验收含 REVIEW-COMPAT-001-R1 F3（探测函数显式 ≤3 句职责）与 F7（apply 期探测全同步快速、无网络/布局等待）",
+  "priority": "P1",
+  "target_version": "0.6.0",
+  "depends_on": ["COMPAT-003（smoke/CHANGELOG 文件串行）"],
+  "files": ["lib/host-boundary.js", "lib/index.js", "lib/client.js", "test/smoke.mjs", "CHANGELOG.md"],
+  "reason": "DEC-025 ADR 决策①（边界层三件套之服务端收口+探测函数）+ 决策③（D2 自检日志立即做）+ DEC-026 A3（inject 收敛立即执行，非 breaking）；REVIEW-COMPAT-001-R1 F3/F7 验收项；分析 §8 COMPAT-004 行",
+  "created_at": "2026-09-12",
+  "tool": "change-triage",
+  "tool_version": "0.80.0-manual",
+  "analysis": {
+    "dependency": {
+      "unblocked": ["COMPAT-005", "COMPAT-007", "COMPAT-008", "COMPAT-009"],
+      "blocked": [], "blocked_by": ["COMPAT-003（smoke.mjs/CHANGELOG.md 串行）"], "unknown_deps": [], "cycles": [], "cycle_warning": false, "new_task_cycle": false
+    },
+    "priority_context": { "proposed": "P1", "in_flight": { "P0": 0, "P1": 1, "P2": 7 }, "version_chain": [] },
+    "conflicts": [],
+    "version": { "target": "0.6.0", "current": "0.5.1", "planned_next": "0.5.2", "issues": [] },
+    "side_effect": {
+      "detected": true, "touches_real_env": false, "requires_r1": true,
+      "declared": "行为等价重构（index.js 宿主调用经 boundary 包装）+ 客户端 region 收口 + inject 收敛（A3）——smoke 全量回归必达",
+      "blast_radius": ["lib/index.js（宿主调用路径）", "lib/client.js（inject 表/region/启动警告）", "smoke.mjs（新增探测断言）"],
+      "review_conditions": ["Code Reviewer 后置审查必达", "A3 行为回归（降级路径断言）"], "issues": []
+    }
+  },
+  "snapshot": {
+    "tool": "manual（task-priority-analysis 调用快照）",
+    "module_version": "manual-0.80.0",
+    "report_json": { "total": 82, "completed": 71, "blocked": [], "unblocked": ["COMPAT-003"], "recommended_next": ["COMPAT-003", "COMPAT-004"], "non_executable": [], "cycles": [], "cycle_warning": false },
+    "report_text": "COMPAT-004 入账快照（2026-09-12）：003 完成后（文件串行）派发；005/007/008/009 排队其后。"
+  }
+}

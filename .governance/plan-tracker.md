@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 82 | 71 | 0 | 2 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 83 | 72 | 0 | 2 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -141,12 +141,13 @@
 | **P0** | COMPAT-006 | 版本支持矩阵决策（决策型——分析 §8 唯一用户决策点）：最低支持版本/A1 收敛时点/peer 口与 connection inject 处置 | COMPAT-001 | v0.6.0 | closed | ✅ 完成 (2026-09-12，DEC-026 用户经 ask_user_question 定案：A3 立即〔inject 收敛非 breaking〕+ A1 绑 v1.0 major 边界〔最低 0.1.2-rc.1+移除旧表面回退+peer 下限+README 矩阵〕；断供保障=apiHas 降级+RB-03 代理信号文案) |
 | **P1** | COMPAT-010 | CI dsh-settings mock 漂移 hotfix（REVIEW R1-F5 拆出——分析 6.4 活性缺陷「第一优先」不应依赖 COMPAT-002）：.github/workflows/ci.yml L76-78 mock 导出面对齐真实 0.1.5-rc.2（删 settingsNamespace 导出，对齐 SettingsConflictError/SettingsProvider/redactSecrets）+ CHANGELOG [Unreleased]；宿主 checkout dsh-settings/lib/index.js L610 为权威面 | — | v0.6.0 | closed | ✅ 完成 (2026-09-12，commit 1617aba + EVD-083 + REVIEW-COMPAT-010-R1 APPROVED_WITH_NOTES 0 阻断〔机录〕；宿主 L610 一手比对全一致；F1 面钉断言→COMPAT-003 承接；F2/F3/F4 知悉；CI 实跑终证待 push) |
 | **P1** | COMPAT-002 | 宿主契约清单提取：lib/host-contract.mjs（六面 47 项机读化——分析 §3 为底稿）；验收含 F4（schema 条目样例：face/item/kind/symbol/file/line/necessity）+ F8（region 常量 ⊆ contract 一致性断言入 smoke）+ F10（自有口径统一=1 项）| COMPAT-010✅ | v0.6.0 | closed | ✅ 完成 (2026-09-12，commit 80f4a0b + EVD-084 + REVIEW-COMPAT-002-R1 APPROVED_WITH_NOTES 0 阻断〔机录〕——47/47 全表对照 §3 无失实+14 项源码抽核全命中+硬门槛 5/5；P2×4/P3×5 非阻断项→COMPAT-003 承接) |
-| **P1** | COMPAT-003 | 宿主表面 fixtures 快照（0.1.x/0.1.2-rc.1/0.1.5-rc.1 三版本入仓 test/fixtures/host-surfaces/）+ smoke 离线契约对账 + mock 对齐断言（生成或对照）；**承接 REVIEW-COMPAT-010-R1 F1**（smoke 增「面钉」机器断言：动态 import mock 断言导出键集恰 4-key——注释钉升级为可执行钉）；**承接 REVIEW-COMPAT-002-R1 非阻断项全量**：F1（findSidebarEl 宿主类名正则补入契约 item 3.8/48 项+计数同步）、F2（--dsw-shadow-lv2 令牌族外盲区）、F3（事件名双向对账+文档措辞订正）、F4（纯数据守卫强化：递归 own-descriptor 检查）、F5（file/line 活性校验：文件白名单+line 形态+抽点 anchor）、F6（necessity 九值 golden 分布断言）、F7（kind 枚举 membership+faces 结构断言）、F8（提取口径写入契约自述+review 检查项登记）、F9（line 精度损失三处修正）| COMPAT-002✅ | v0.6.0 | open | ⏳ 待执行（Developer 派发中） |
-| **P1** | COMPAT-004 | detectHostCapabilities 探测函数（一函数三消费）+ 启动 [nv-compat] 结构化警告（D2）+ 服务端 host-boundary.js 收口（B1 服务端部）+ **A3 执行**（DEC-026：connection/locale inject 降可选探测）；验收含 F3（探测函数显式 ≤3 句职责）+ F7（apply 期探测全同步快速无网络/布局等待） | COMPAT-002 | v0.6.0 | open | ⏳ 待执行 |
+| **P1** | COMPAT-003 | 宿主表面 fixtures 快照（0.1.x/0.1.2-rc.1/0.1.5-rc.1 三版本入仓 test/fixtures/host-surfaces/）+ smoke 离线契约对账 + mock 对齐断言（生成或对照）；**承接 REVIEW-COMPAT-010-R1 F1**（smoke 增「面钉」机器断言：动态 import mock 断言导出键集恰 4-key——注释钉升级为可执行钉）；**承接 REVIEW-COMPAT-002-R1 非阻断项全量**：F1（findSidebarEl 宿主类名正则补入契约 item 3.8/48 项+计数同步）、F2（--dsw-shadow-lv2 令牌族外盲区）、F3（事件名双向对账+文档措辞订正）、F4（纯数据守卫强化：递归 own-descriptor 检查）、F5（file/line 活性校验：文件白名单+line 形态+抽点 anchor）、F6（necessity 九值 golden 分布断言）、F7（kind 枚举 membership+faces 结构断言）、F8（提取口径写入契约自述+review 检查项登记）、F9（line 精度损失三处修正）| COMPAT-002✅ | v0.6.0 | closed | ✅ 完成 (2026-09-12，最终 commit 4cf1c6a + EVD-085 + REVIEW-COMPAT-003-R1 APPROVED_WITH_NOTES 0 阻断〔机录〕——F1~F9+010-F1=10/10 落地核验 9/9+1、硬门槛 5/5、契约 48 项四处同步、一手抽核全命中；C1(P1)/C2(P2)/C3~C7(P3) 非阻断项→COMPAT-011 承接) |
+| **P1** | COMPAT-004 | detectHostCapabilities 探测函数（一函数三消费）+ 启动 [nv-compat] 结构化警告（D2）+ 服务端 host-boundary.js 收口（B1 服务端部）+ **A3 执行**（DEC-026：connection/locale inject 降可选探测）；验收含 F3（探测函数显式 ≤3 句职责）+ F7（apply 期探测全同步快速无网络/布局等待） | COMPAT-002✅ + COMPAT-011（fixtures 修复=消费前置） | v0.6.0 | open | ⏳ 待执行（011 完成后派发） |
 | **P2** | COMPAT-005 | 设置页诊断面板（D1——能力报告=契约运行时投影；输出仅布尔/名称/版本〔BC-05 安全边界〕）；验收含 RB-03 代理信号（remote.* 全缺+connection.api 在→「宿主版本低于最低支持」文案）+ F6（TP-4 交叉标注） | COMPAT-004 | v0.6.0 | open | ⏳ 待执行 |
 | **P2** | COMPAT-007 | CI scheduled latest 探测轨（C1——只读元数据不 install 不执行，供应链白名单）；验收含 RB-01（探测频率 SLO 如每日 + README 记录探测窗口期残余风险） | COMPAT-002 | v0.6.0 | open | ⏳ 待执行 |
 | **P3** | COMPAT-008 | 探针脚本固化 scripts/probe-host.mjs（D3——BUG-004/005 方法论：隔离实例〔DSH_HOME 重定向临时目录〕+无头浏览器+能力 diff 报告） | COMPAT-002 | v0.6.0 | open | ⏳ 待执行 |
 | **P3** | COMPAT-009 | install 注册知识规范化：两脚本头部「宿主布局契约」注释块（零行为变化+强等价 diff）+ CI 正则对账 host-contract；验收含 RB-02（固定标记行 # host-contract:v1 + 标记存在断言） | COMPAT-002 | v0.6.0 | open | ⏳ 待执行 |
+| **P1** | COMPAT-011 | fixtures 数据质量与断言强化（REVIEW-COMPAT-003-R1 非阻断项全量承接，C1 为 COMPAT-004 消费前置）：C1（P1 methodsOf 关键字黑名单+类体顶层 depth 约束+排除 this. 前缀→重建三份 fixtures+差异记 CHANGELOG）/ C2（P2 export{X as default} 去重→classAliases 语义修复）/ C3（P3 F5c 锚点剥离引号+通用词排除+非通用候选断言）/ C4（P3「实测」措辞订正或 origin 纳入机检）/ C5（P3 fixtures 版本一致性断言 packages[].version≡hostVersion+例外表）/ C6（P3 mock 面钉扩至 4/4 或显式登记范围）/ C7（P3 输入判空+路径包含性检查）/ N1（origin 按 packed·checkout 分流）/ N2（⑯ 数组原型守卫）/ N3（classAliases 语义消费方文档化） | COMPAT-003✅ | v0.6.0 | open | ⏳ 待执行（Developer 派发中） |
 
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 

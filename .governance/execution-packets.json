@@ -300,6 +300,134 @@
    "source": "plan-tracker.md##当前活跃事项",
    "generated_by": "manual（按 COMPAT-003 triage 事实构造；check-governance 18 系列校验通过为准）"
   },
+  "COMPAT-004": {
+   "task_id": "COMPAT-004",
+   "priority": "P1",
+   "status": "⏳ 待执行 (2026-09-12 入账——COMPAT-003 完成后派发；005/007/008/009 依赖其探测函数)",
+   "goal": "边界层三件套的服务端+探测半壁（DEC-025 ADR 决策①③ + DEC-026 A3）：①新建 lib/host-boundary.js——服务端宿主调用（settings 注册读取/webServer 路由挂载/resolveDshHome/Service 构造参数）单点收口，index.js 产品代码只经 boundary（行为等价重构，smoke 203+ 零回归）；②detectHostCapabilities() 探测函数——读取 host-contract 声明→探测宿主实际表面→输出结构化能力报告（纯读取无副作用；单一实现三消费方：D2 启动警告/005 诊断面板/CI）；显式 ≤3 句职责定义（REVIEW-COMPAT-001-R1 F3）；③启动 [nv-compat] 结构化警告（D2）：apply 期探测缺面 → console.warn('[nv-compat]', JSON 摘要)，**探测项全部同步快速、无网络/布局等待**（REVIEW-COMPAT-001-R1 F7）；④A3 执行（DEC-026）：client.js inject 表 connection/locale 降为可选探测（ctx.get 惰性判定 + 缺席降级不崩溃，非 breaking——旧宿主/新宿主双路径 smoke 断言）",
+   "product_success_contract": {
+    "user": "插件用户（宿主升级后）——断裂第一时间在控制台可见（结构化警告指明断在哪层），而非白屏/静默降级",
+    "job_to_be_done": "宿主升级后插件即使局部失效也能加载并给出可诊断信号；适配改动收敛到 host-boundary/region 单点",
+    "non_goals": ["不做诊断面板 UI（COMPAT-005）", "不做 fixtures（COMPAT-003 已完成）", "不改 client.js 业务行为（仅 inject 收敛+探测接入）"],
+    "success_metrics": ["index.js 宿主调用 100% 经 host-boundary（grep 断言 product 代码零直连宿主 API）", "detectHostCapabilities 三消费方就位（警告已接、其余待 005/CI）", "A3 双路径 smoke 断言（service 在/缺）", "smoke 全量不劣化"],
+    "competitive_baseline": "特性检测渐进增强（Modernizr 模式）+ 结构化运行时诊断（webpack/VS Code 扩展 host 警告惯例）",
+    "done_definition": ["host-boundary.js + detectHostCapabilities 落盘且接线", "启动警告实测输出样例在案", "A3 双路径断言绿", "Code Reviewer 审查通过（机录）"]
+   },
+   "acceptance_contract": {
+    "scenario": "宿主服务缺失时插件加载成功 + [nv-compat] 警告指明缺面；inject 收敛后新旧宿主双路径可用",
+    "command": "node --check lib/host-boundary.js && node --check lib/index.js && node --check lib/client.js && node test/validate-preset.mjs && node test/smoke.mjs",
+    "expected_output": "PRESET VALIDATION PASSED + SMOKE DONE: {N} passed, 0 failed（≥214+N 基线）",
+    "last_run": { "status": "PASS", "exit_code": 0, "summary": "基线 214/0（COMPAT-002 后 EVD-084；003 后将抬升）" },
+    "demo_evidence": "探测报告样例输出 + smoke 新增断言段 + index.js boundary 收口 grep 结果"
+   },
+   "quality_budget": {
+    "dimensions": {
+     "performance": { "threshold": "apply 期探测全同步快速（无网络/布局等待/无新增 IO）；启动耗时对照基线不劣化", "validation": "node test/smoke.mjs 启动链断言 + apply 期探测项清单审查（F7）", "status": "PASS", "evidence": "REVIEW-COMPAT-001-R1 F7 验收项", "exception": "" },
+     "reliability": { "threshold": "探测失败/服务缺席一律降级不崩溃（四次事故共性红线）；boundary 包装行为等价", "validation": "node test/smoke.mjs 双路径断言（服务在/缺）+ 全量回归 0 failed", "status": "PASS", "evidence": "BUG-003~005 修复模式", "exception": "" },
+     "security": { "threshold": "诊断输出仅布尔/名称/版本，不含路径/token/用户数据（BC-05 边界）", "validation": "Code Review 核对警告载荷", "status": "PASS", "evidence": "BC-05（DEC-025）", "exception": "" },
+     "accessibility": { "threshold": "不适用——无 UI 变更（仅控制台警告）", "validation": "Code Review 核对", "status": "EXEMPT", "evidence": "无 UI 面", "exception": "无 UI 改动的诊断面" },
+     "ux": { "threshold": "警告文案可读、可检索（[nv-compat] 前缀）、不刷屏（单次输出）", "validation": "Code Review 核对文案 + smoke 断言单次性", "status": "PASS", "evidence": "D2 设计（分析 §4 轴④）", "exception": "" },
+     "maintainability": { "threshold": "宿主调用单点收敛——新增服务调用必须经 boundary（review 检查项）", "validation": "Code Review 核对 index.js diff + grep 断言", "status": "PASS", "evidence": "轴② B1/B2（DEC-025 决策①）", "exception": "" }
+    }
+   },
+   "vertical_slice": {
+    "user_visible_slice": "用户可见：宿主升级后控制台 [nv-compat] 结构化警告（断点层可见化）；维护者可见：host-boundary 单点 + 探测函数",
+    "demo_path": "[nv-compat] 警告输出样例 + smoke 探测断言段",
+    "scope_guard": "lib/host-boundary.js（新）+ lib/index.js + lib/client.js + test/smoke.mjs + CHANGELOG.md",
+    "rollback_plan": "boundary 包装与直接调用等价（纯搬运），revert 单 commit；A3 inject 收敛可单点回退",
+    "status": "planned",
+    "evidence": "待执行"
+   },
+   "interruption_policy": {
+    "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
+    "critical_triggers": [
+     "Ask the user when product intent is unclear（产品意图不明）",
+     "Ask the user when acceptance standard or done criteria are unclear（验收标准不明）",
+     "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions（不可逆/发布/风险接受/外部依赖/模式变更前）"
+    ],
+    "auto_execute": [
+     "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible",
+     "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied"
+    ],
+    "assumption_record": { "assumption": "A3 的 inject 收敛通过 ctx.get 惰性探测实现（cordis 允许可选依赖）", "basis": "分析 §4 轴① A3 + cordis inject 机制（BUG-005 经验：ctx.get 捕获 undefined 已容错）", "reversibility": "inject 表单行回退", "validation": "smoke 双路径断言", "rollback": "git revert 单 commit" },
+    "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
+   },
+   "required_evidence": [
+    "事实依据：contract 声明面（COMPAT-002 契约）+ 宿主表面实测（fixtures）+ 现有 makeHostApi/makeSessionsHookReactive 适配点行号",
+    "结构化事实：index.js 宿主调用点 → boundary 映射表（收口前后对照）；探测函数职责定义（≤3 句）；apply 期探测项清单（同步性声明）",
+    "node --check ×3 + validate-preset + smoke {N}/0 真实输出 + A3 双路径断言记录 + [nv-compat] 警告样例",
+    "Code Reviewer 审查结论（review-record 机录）"
+   ],
+   "allowed_change_scope": ["lib/host-boundary.js", "lib/index.js", "lib/client.js", "test/smoke.mjs", "CHANGELOG.md"],
+   "next_commands": ["COMPAT-003 完成 → 派发 Developer：boundary 收口（行为等价）→ 探测函数 → 警告接线 → A3 → smoke 断言 → 演练 → commit"],
+   "done_definition": ["boundary + 探测落盘接线；宿主调用全经 boundary（grep 实证）", "[nv-compat] 警告样例在案", "A3 双路径断言绿 + smoke 不劣化", "Code Reviewer 通过（机录）"],
+   "source": "plan-tracker.md##当前活跃事项",
+   "generated_by": "manual（按 COMPAT-004 triage 事实构造；check-governance 18 系列校验通过为准）"
+  },
+  "COMPAT-011": {
+   "task_id": "COMPAT-011",
+   "priority": "P1",
+   "status": "🔄 进行中 (2026-09-12 Developer 派发——fixtures 数据质量修复，COMPAT-004 消费前置)",
+   "goal": "REVIEW-COMPAT-003-R1 全量承接：**C1（P1，消费前置）**——extract.mjs L97-104 methodsOf 加关键字黑名单（if/for/while/do/switch/catch/return/throw/super/typeof/await/yield/new/delete/void/else/try）+ 仅类体顶层（brace depth==1）匹配 + 排除 this. 前缀 → 重建三份 fixtures（重跑命令已留档 extract.mjs L17-36）+ 差异记 CHANGELOG；**C2（P2）**——export {X as default} 形态去重（classAliases/classCount 语义修复）；C3（P3）F5c 锚点剥离引号+通用词排除+非通用候选断言；C4（P3）「三版本实测」措辞订正或 origin 纳入机检；C5（P3）fixtures 版本一致性断言（packages[].version ≡ hostVersion + 例外表入契约）；C6（P3）mock 面钉扩 4/4（cordis/dsh-home-paths/dsh-tools）或显式登记范围；C7（P3）输入判空 + resolve 包含性检查；N1（origin 按 packed/checkout 分流）N2（⑯ 数组原型守卫）N3（classAliases 语义消费方文档化）",
+   "product_success_contract": {
+    "user": "插件维护者——fixtures 作为宿主表面校准基线语义正确（方法面判据不被语句关键字污染），COMPAT-004/005 诊断可信",
+    "job_to_be_done": "fixtures 数据面 + 断言网达到「语义正确 + 断言不虚设」双重标准，可安全作为探测/诊断的 golden",
+    "non_goals": ["不改 fixtures 的提取口径与版本选择（003 已定）", "不做探测函数（COMPAT-004）"],
+    "success_metrics": ["methodNames 无语句关键字（黑名单机检 + 与宿主类体事实一致）", "classCount/classAliases 与宿主类数一致（0.1.5-rc.2：2 类 + default 别名）", "smoke 断言数不降且新增强度项（C5 版本一致性 + C3 非通用候选）", "三份 fixtures 重建后 smoke 全绿"],
+    "competitive_baseline": "AST/正则解析质量纪律——启发式提取必须声明能力边界（与 F4 守卫披露同一原则）",
+    "done_definition": ["C1/C2 修复 + 三份 fixtures 重建（重跑命令留档可复现）", "C3~C7/N1~N3 逐项落地或显式登记", "smoke 全绿（≥230/0）", "Code Reviewer 审查通过（机录）"]
+   },
+   "acceptance_contract": {
+    "scenario": "fixtures methodNames 语义正确、classAliases 可还原类名；断言能捕获对应失配",
+    "command": "node test/smoke.mjs",
+    "expected_output": "SMOKE DONE: {N} passed, 0 failed（≥230）",
+    "last_run": { "status": "PASS", "exit_code": 0, "summary": "基线 230/0（COMPAT-003 后 EVD-085）" },
+    "demo_evidence": "重建前后 fixtures 差异摘要（methodNames 净化计数）+ smoke 尾行 + 演练红绿"
+   },
+   "quality_budget": {
+    "dimensions": {
+     "performance": { "threshold": "修 extract.mjs 不引入运行时开销（离线脚本）；smoke 新增断言 <0.5s", "validation": "node test/smoke.mjs 时长对照", "status": "PASS", "evidence": "003 性能基线（~10ms 级）", "exception": "" },
+     "reliability": { "threshold": "重建后 fixtures 与宿主真实类体一致（抽核 dsh-settings 类体 method 名）", "validation": "与宿主 checkout 类体对照（只读）+ smoke 断言", "status": "PASS", "evidence": "REVIEW-COMPAT-003-R1 §6-C 一手证实清单", "exception": "" },
+     "security": { "threshold": "npm pack 只读；宿主 checkout 零写入；fixtures 无敏感数据（沿用 003 机检）", "validation": "现有 smoke 安全断言 + Code Review", "status": "PASS", "evidence": "BC-05", "exception": "" },
+     "accessibility": { "threshold": "不适用", "validation": "Code Review 核对", "status": "EXEMPT", "evidence": "数据/断言任务", "exception": "无 UI 面" },
+     "ux": { "threshold": "不适用", "validation": "Code Review 核对", "status": "EXEMPT", "evidence": "维护者面", "exception": "无用户可见面" },
+     "maintainability": { "threshold": "extract.mjs 提取口径与能力边界在文件内自述（关键字黑名单/顶层约束）", "validation": "Code Review 核对注释", "status": "PASS", "evidence": "REVIEW-COMPAT-003-R1 C1 建议①", "exception": "" }
+    }
+   },
+   "vertical_slice": {
+    "user_visible_slice": "维护者可见：语义正确的 fixtures 校准基线（004/005 依赖）",
+    "demo_path": "fixtures diff 摘要 + smoke 尾行",
+    "scope_guard": "extract.mjs + 三份 fixtures + ci-mock-face.mjs + smoke.mjs + host-contract.mjs + CHANGELOG.md（lib/client.js 与 lib/index.js 零改动）",
+    "rollback_plan": "重建为数据替换；revert 单 commit",
+    "status": "planned",
+    "evidence": "待执行"
+   },
+   "interruption_policy": {
+    "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
+    "critical_triggers": [
+     "Ask the user when product intent is unclear（产品意图不明）",
+     "Ask the user when acceptance standard or done criteria are unclear（验收标准不明）",
+     "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions（不可逆/发布/风险接受/外部依赖/模式变更前）"
+    ],
+    "auto_execute": [
+     "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible",
+     "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied"
+    ],
+    "assumption_record": { "assumption": "C6 若扩 4/4 成本高则显式登记范围（F1 原始诉求仅指 dsh-settings）", "basis": "REVIEW-COMPAT-003-R1 C6 建议", "reversibility": "登记可随时升级为扩面", "validation": "返回中显式声明采取哪条路径", "rollback": "不适用" },
+    "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
+   },
+   "required_evidence": [
+    "事实依据：REVIEW-COMPAT-003-R1 C1~C7/N1~N3 原文 + 宿主类体一手对照（dsh-settings 类体 method 名 vs 修复后 fixtures）",
+    "结构化事实：重建前后 fixtures 差异（methodNames 净化 count/classCount/classAliases）+ C1~C7 逐项落点",
+    "smoke ≥230/0 真实输出 + 演练红绿（改动一项验证新断言活性）",
+    "Code Reviewer 审查结论（review-record 机录）"
+   ],
+   "allowed_change_scope": ["test/fixtures/host-surfaces/", "test/smoke.mjs", "lib/host-contract.mjs", "CHANGELOG.md"],
+   "next_commands": ["Developer：修 extract.mjs（C1/C2）→ 重建三份 fixtures → smoke 断言强化（C3/C5）+ 校验收敛（C7）→ C4/C6/N1~N3 → 演练 → CHANGELOG → commit"],
+   "done_definition": ["C1/C2 修复 + fixtures 重建可复现", "C3~C7/N1~N3 落地或显式登记", "smoke 全绿（≥230/0）", "Code Reviewer 通过（机录）"],
+   "source": "plan-tracker.md##当前活跃事项",
+   "generated_by": "manual（按 COMPAT-011 triage 事实构造；check-governance 18 系列校验通过为准）"
+  },
   "BUG-005": {
    "task_id": "BUG-005",
    "priority": "P0",
