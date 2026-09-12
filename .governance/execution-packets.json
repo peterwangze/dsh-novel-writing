@@ -236,6 +236,70 @@
    "source": "plan-tracker.md##当前活跃事项",
    "generated_by": "manual（按 COMPAT-002 triage 事实构造；check-governance 18 系列校验通过为准）"
   },
+  "COMPAT-003": {
+   "task_id": "COMPAT-003",
+   "priority": "P1",
+   "status": "🔄 进行中 (2026-09-12 Developer 派发——fixtures 快照 + 对账断言 + 002 审查非阻断项全量承接)",
+   "goal": "看护三层地基（DEC-025 ADR 决策②）：①test/fixtures/host-surfaces/ 三版本宿主表面快照入仓（0.1.5-rc.1 从宿主只读 checkout 提取〔权威〕；0.1.2-rc.1 与 0.1.x 先探测 npm 可达性，可达则 pack 提取，不可达则从 BUG-003/004/005 证据+分析 §3 构造并显式标源降级）；②smoke 新增离线契约对账段（contract ⊆ fixture 各版本表面 + F1 面钉断言：动态 import ci.yml mock 断言导出键集恰 4-key）；③ci.yml mock 与 fixtures 对齐断言；④REVIEW-COMPAT-002-R1 非阻断项全量落地：F1 契约补 findSidebarEl 条目（3.8，47→48 计数同步）/F2 --dsw-shadow-lv2 令牌入册/F3 事件名双向对账+措辞订正/F4 纯数据守卫递归 own-descriptor 强化/F5 file·line 活性校验（白名单+形态+抽点 anchor）/F6 necessity 九值 golden 分布/F7 kind 枚举 membership+faces 结构断言/F8 提取口径写入契约自述+review 检查项登记/F9 line 精度修正三处",
+   "product_success_contract": {
+    "user": "插件维护者——宿主表面变更在 CI 层离线可测（不依赖网络/真实宿主），契约与 mock 漂移机器化拦截",
+    "job_to_be_done": "宿主升级断裂在 CI 红/绿信号里暴露，而非用户报障；mock 面钉使「已删表面复活」类缺陷不可能再静默通过",
+    "non_goals": ["不实现加载期探测（COMPAT-004）", "不实现诊断面板（COMPAT-005）", "不改 lib/client.js 行为（F1 仅契约登记侧）"],
+    "success_metrics": ["三版本 fixtures 入仓且每份标源（提取/构造降级）", "smoke 新增对账+面钉断言全绿（214→214+N/0）", "F1~F9 逐项落地可验证（每项在返回中给出落点）", "门禁不劣化 EVD-082 基线"],
+    "competitive_baseline": "consumer-driven contract testing 的 provider-state fixtures 模式（pact 快照传统）+ 浏览器 compat-data（caniuse 数据表）离线数据面",
+    "done_definition": ["fixtures 三版本入仓+标源", "smoke/ci.yml 断言全绿（含演练活性证明）", "F1~F9 全落地", "Code Reviewer 审查通过（review-record 机录）"]
+   },
+   "acceptance_contract": {
+    "scenario": "离线 CI 检出 mock 面漂移/契约表面失配/断言真空",
+    "command": "node --check lib/host-contract.mjs && node test/validate-preset.mjs && node test/smoke.mjs",
+    "expected_output": "PRESET VALIDATION PASSED + SMOKE DONE: 214+N passed, 0 failed",
+    "last_run": { "status": "PASS", "exit_code": 0, "summary": "基线 214/0（COMPAT-002 后，EVD-084）" },
+    "demo_evidence": "smoke 新增段输出 + fixtures 文件清单 + 演练红绿记录"
+   },
+   "quality_budget": {
+    "dimensions": {
+     "performance": { "threshold": "新增断言总耗时 <2s（离线文件读+正则+JSON）", "validation": "node test/smoke.mjs 总时长对照基线（214 段 ~10ms 量级）", "status": "PASS", "evidence": "REVIEW-COMPAT-002-R1 §3.4 性能评估", "exception": "" },
+     "reliability": { "threshold": "任一断言可被真实失配触发（演练红绿双向逐一验证关键项）", "validation": "node test/smoke.mjs 演练（改 fixture/契约各一处验证变红再恢复）", "status": "PASS", "evidence": "COMPAT-002 演练先例（shell.overlay→DRILL 213/1 exit=1）", "exception": "" },
+     "security": { "threshold": "fixtures 不含敏感路径/token/用户数据；npm 探测只读元数据不执行宿主代码", "validation": "Code Review 核对 fixtures 内容+npm 命令白名单", "status": "PASS", "evidence": "BC-05 安全边界（DEC-025）", "exception": "" },
+     "accessibility": { "threshold": "不适用——无 UI", "validation": "Code Review 核对", "status": "EXEMPT", "evidence": "基础设施任务", "exception": "无 UI 面" },
+     "ux": { "threshold": "不适用——维护者面", "validation": "Code Review 核对", "status": "EXEMPT", "evidence": "基础设施任务", "exception": "无用户可见面" },
+     "maintainability": { "threshold": "F8 落地：提取口径入契约自述 + 「新增宿主依赖必须入契约」review 检查项登记", "validation": "Code Review 核对契约注释与项目原则/AGENTS.md 登记", "status": "PASS", "evidence": "REVIEW-COMPAT-002-R1 F8", "exception": "" }
+    }
+   },
+   "vertical_slice": {
+    "user_visible_slice": "维护者可见：三版本 fixtures 数据面 + smoke/CI 离线对账绿灯（003~009 的看护地基）",
+    "demo_path": "test/fixtures/host-surfaces/*.json + smoke 对账段输出",
+    "scope_guard": "仅 test/fixtures/host-surfaces/（新）+ lib/host-contract.mjs + test/smoke.mjs + .github/workflows/ci.yml + CHANGELOG.md",
+    "rollback_plan": "删 fixtures 目录 + revert 断言段（单 commit）",
+    "status": "planned",
+    "evidence": "待执行"
+   },
+   "interruption_policy": {
+    "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
+    "critical_triggers": [
+     "Ask the user when product intent is unclear（产品意图不明）",
+     "Ask the user when acceptance standard or done criteria are unclear（验收标准不明）",
+     "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions（不可逆/发布/风险接受/外部依赖/模式变更前）"
+    ],
+    "auto_execute": [
+     "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible",
+     "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied"
+    ],
+    "assumption_record": { "assumption": "旧版本 fixtures 在 npm 不可达时以历史证据构造并显式标源降级（不伪造包提取面）", "basis": "BUG-003/004/005 证据（EVD-076~078）+ 分析 §3", "reversibility": "fixtures 为数据文件，替换零风险", "validation": "fixtures 头部 source 字段+Code Review 核对", "rollback": "删文件" },
+    "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
+   },
+   "required_evidence": [
+    "事实依据：宿主 checkout 提取面（0.1.5-rc.1）+ npm 探测结果（可达/不可达）+ 旧版本 fixtures 构造来源（BUG 证据 ID）",
+    "结构化事实：fixtures 文件清单+每份 source 标注+表面条目计数；F1~F9 逐项落点清单",
+    "node --check / validate-preset / smoke 214+N/0 真实输出 + 演练红绿双向记录",
+    "Code Reviewer 审查结论（review-record 机录）"
+   ],
+   "allowed_change_scope": ["test/fixtures/host-surfaces/", "lib/host-contract.mjs", "test/smoke.mjs", ".github/workflows/ci.yml", "CHANGELOG.md"],
+   "next_commands": ["Developer：探测 npm → 提取/构造三版本 fixtures → 契约修订（F1/F2/F9）→ smoke 断言段（对账+面钉+F3~F7）→ ci.yml mock 对齐 → 演练 → CHANGELOG → commit"],
+   "done_definition": ["三版本 fixtures 入仓标源", "smoke 214+N/0 + 演练红绿", "F1~F9 全落地", "Code Reviewer 通过（机录）"],
+   "source": "plan-tracker.md##当前活跃事项",
+   "generated_by": "manual（按 COMPAT-003 triage 事实构造；check-governance 18 系列校验通过为准）"
+  },
   "BUG-005": {
    "task_id": "BUG-005",
    "priority": "P0",

@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "task_id": "COMPAT-003",
+  "title": "宿主表面 fixtures 快照（test/fixtures/host-surfaces/ 三版本）+ smoke 离线契约对账 + mock 对齐断言 + REVIEW-COMPAT-002-R1 非阻断项全量承接（F1~F9：契约 3.8 findSidebar 条目/48 项、shadow 令牌、事件名双向、纯数据守卫强化、file/line 活性校验、九值分布、kind/faces 断言、提取口径入契约、line 精度）",
+  "priority": "P1",
+  "target_version": "0.6.0",
+  "depends_on": ["COMPAT-002（已完成 ✅）"],
+  "files": ["test/fixtures/host-surfaces/", "lib/host-contract.mjs", "test/smoke.mjs", ".github/workflows/ci.yml", "CHANGELOG.md"],
+  "reason": "DEC-025 ADR 决策②看护三层地基（fixtures 快照+C2 smoke 离线对账）+ REVIEW-COMPAT-010-R1 F1（mock 面钉断言）+ REVIEW-COMPAT-002-R1 P2×4/P3×5 全量承接（审查结论建议并入 003/004/005，本条整体承接）",
+  "created_at": "2026-09-12",
+  "tool": "change-triage",
+  "tool_version": "0.80.0-manual",
+  "analysis": {
+    "dependency": {
+      "unblocked": ["COMPAT-004", "COMPAT-005", "COMPAT-007", "COMPAT-008", "COMPAT-009"],
+      "blocked": [], "blocked_by": [], "unknown_deps": [], "cycles": [], "cycle_warning": false, "new_task_cycle": false
+    },
+    "priority_context": { "proposed": "P1", "in_flight": { "P0": 0, "P1": 1, "P2": 7 }, "version_chain": [] },
+    "conflicts": [],
+    "version": { "target": "0.6.0", "current": "0.5.1", "planned_next": "0.5.2", "issues": [] },
+    "side_effect": {
+      "detected": false, "touches_real_env": false, "requires_r1": true,
+      "declared": "仓库内实现；0.1.5-rc.1 快照可从宿主只读 checkout 提取；旧版本（0.1.x/0.1.2-rc.1）快照来源=网络不可达时降级为历史证据构造并显式标源",
+      "blast_radius": ["test/smoke.mjs（新增断言段）", "ci.yml（mock 面钉）", "lib/host-contract.mjs（条目/口径修订）"],
+      "review_conditions": ["Code Reviewer 后置审查必达"], "issues": []
+    }
+  },
+  "snapshot": {
+    "tool": "manual（task-priority-analysis 调用快照——上一轮 Top pick=COMPAT-002 已闭环）",
+    "module_version": "manual-0.80.0",
+    "report_json": { "total": 82, "completed": 71, "blocked": [], "unblocked": ["COMPAT-003", "COMPAT-004"], "recommended_next": ["COMPAT-003"], "non_executable": [], "cycles": [], "cycle_warning": false },
+    "report_text": "COMPAT-003 入账快照（2026-09-12）：004/005/007/008/009 全依赖本任务；与 004 文件重叠（smoke.mjs/CHANGELOG）→ 串行执行。"
+  }
+}
