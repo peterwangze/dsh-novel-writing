@@ -2506,6 +2506,170 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   check('COMPAT-004 F7：收口口径跨文档统一（CHANGELOG/契约/边界头 3 处含「' + SCOPE_PHRASE + '」+ 每处「100% 收口」均限定 lib/index.js + tools 行显式排除）',
     scopeBad.length === 0 && scopeUnqualified.length === 0,
     'bad=' + JSON.stringify(scopeBad.map(([f]) => f)) + ' unqualified=' + JSON.stringify(scopeUnqualified))
+// ── COMPAT-005 D1：设置页诊断面板（能力报告 = 契约运行时投影；只读；BC-05 载荷边界 + RB-03 代理信号）──
+// 机检面：①报告生成函数可达（exports 纯函数面）+ 载荷仅布尔/名称/版本（BC-05 沿用 COMPAT-004 D2 告警②口径）；
+// ②RB-03 代理信号构造断言（remote.* 全缺 + connection.api 在 → 明确文案；反向与双缺均不触发）；
+// ③数据源单一（报告项全由入参投影 + 客户端探测项 ↔ 契约 clientProbes **双向 ⊆** + 面 4/5/6 零伪造）；
+// ④服务端路由契约投影出口（只读、无 file/line 泄漏）；⑤N3/N4 契约登记 + ctxGetSemantics 诚实保持 unverified。
+{
+  const { hostContract: hc5 } = await import('../lib/host-contract.mjs')
+  const hostSrc5 = readFileSync(new URL('../lib/index.js', import.meta.url), 'utf8')
+  // ① 报告生成函数可达性（验收⑤「诊断报告生成函数可达」）
+  const genReachable = clientExports !== null
+    && typeof clientExports.buildDiagReport === 'function'
+    && typeof clientExports.diagMinSupportSignal === 'function'
+    && typeof clientExports.diagStyleProbe === 'function'
+    && typeof clientExports.CLIENT_PROBES === 'object' && clientExports.CLIENT_PROBES !== null
+    && typeof clientExports.D_PROBE_ITEM === 'object' && clientExports.D_PROBE_ITEM !== null
+  check('COMPAT-005 D1①：诊断报告生成函数可达（exports 纯函数面：buildDiagReport / diagMinSupportSignal / diagStyleProbe / CLIENT_PROBES / D_PROBE_ITEM）',
+    genReachable,
+    'exports=' + (clientExports === null ? 'null' : typeof clientExports.buildDiagReport))
+
+  // ② 载荷安全边界（BC-05，验收②）：沿用 COMPAT-004 D2 告警②口径——仅布尔/名称/版本，
+  //    无路径/token/用户数据；且报告**不含**契约 file/line 字段（本任务新增的显式边界，服务端路由同口径）。
+  const serverMock5 = {
+    ok: true,
+    report: {
+      contract: { task: 'COMPAT-002', schemaVersion: 1, items: 48, faces: 6 },
+      host: { version: null, versionNote: 'unprobed' },
+      scope: { face: 1, probesDeclared: 11, probesCovered: 9, probesUnprobed: 2 },
+      probes: [
+        { item: '1.1', face: 1, kind: 'import', sync: true, ok: true, mode: 'module-surface', domain: '@deepseek-ai/cordis', service: null, method: 'Service', detail: 'function' },
+        { item: '1.4', face: 1, kind: 'import', sync: true, ok: null, mode: 'unprobed', reason: 'retired' },
+      ],
+      missing: [],
+      unprobed: [{ item: '1.4', reason: 'retired' }],
+      notCovered: [{ face: 2, reason: 'r2' }, { face: 3, reason: 'r3' }, { face: 4, reason: 'r4' }, { face: 5, reason: 'r5' }, { face: 6, reason: 'r6' }],
+      summary: { total: 11, ok: 9, missing: 0, unprobed: 2 },
+    },
+    contract: {
+      task: 'COMPAT-002', schemaVersion: 1, revision: hc5.revisions.at(-1).task,
+      faces: [{ id: 1, name: 'F1' }, { id: 2, name: 'F2' }, { id: 3, name: 'F3' }, { id: 4, name: 'F4' }, { id: 5, name: 'F5' }, { id: 6, name: 'F6' }],
+      items: hc5.items.map((it) => ({ item: it.item, face: it.face, kind: it.kind, necessity: it.necessity })),
+    },
+  }
+  const apiFull5 = {
+    settings: { describe() {}, update() {}, mutate() {} },
+    sessions: { create() {}, prompt() {}, cancel() {} },
+    workspace: { list() {}, create() {} },
+    host: { pickDirectory() {}, createDirectory() {}, listDirectory() {} },
+    agentPresets: { select() {} },
+  }
+  let diag5 = null
+  let diag5Err = ''
+  try { diag5 = clientExports.buildDiagReport({ api: apiFull5, server: serverMock5 }) } catch (e) { diag5Err = e.message }
+  const SENSITIVE5 = /[A-Za-z]:\\|\/Users\/|\/home\/|AppData|npm-cache|Bearer\s|password|api[_-]?key/i
+  const payload5 = diag5 === null ? '' : JSON.stringify({ rows: diag5.rows, faces: diag5.faces, checks: diag5.checks, style: diag5.style, notCovered: diag5.notCovered, minSupport: diag5.minSupport.text })
+  const hasPathish5 = /[A-Za-z]:[\\/]/.test(payload5) || SENSITIVE5.test(payload5)
+  const hasFileLine5 = ['file:', 'line:', 'L0', '.js', '.mjs', '.yml', '.json'].some((s) => payload5.includes(s))
+  check('COMPAT-005 D1② 载荷安全边界（BC-05）：报告仅布尔/名称/版本——无路径/token/用户数据 + 无契约 file/line 泄漏',
+    diag5Err === '' && diag5 !== null && diag5.rows.length === 10 && diag5.checks.length === 8
+      && diag5.summary.ok === 9 && diag5.hostVersion === null && hasPathish5 === false && hasFileLine5 === false
+      && diag5.rows.every((r) => ['ok', 'missing', 'unprobed'].includes(r.state) && typeof r.item === 'string')
+      && diag5.faces.every((f) => [f.items, f.probed, f.ok, f.missing, f.unprobed, f.notCovered].every((v) => typeof v === 'number')),
+    'err=' + diag5Err + ' rows=' + String(diag5 === null ? null : diag5.rows.length) + ' pathish=' + hasPathish5 + ' fileline=' + hasFileLine5)
+
+  // ③ RB-03 代理信号**构造断言**（验收③）：构造三形态——(a) remote.* 全缺 + connection.api 在 → 触发明确文案；
+  //    (b) 服务在 → 不触发；(c) 双缺（无宿主表面）→ 不触发（无连接载体即无从判定旧表面，不误报）。
+  // 构造方式：以 apply 驱动代际标记（hostLegacyApiSurface 是模块级单点状态——由 makeHostApi 于
+  // 每轮 apply 按其 connection 实况重置，故三个形态各跑一次挂载，读数才可归因、不受前序用例残留影响）。
+  // 口径要点：apply 期 `ctx.get('connection')` 取到的是**连接服务**（旧表面下其 `.api` 域对象在场），
+  // 故 (a) 必须传 `{ api: <域对象> }` 而非域对象本身——后者会让 legacyApi 判定为 undefined（假阴性）。
+  const rbLegacyApi = { settings: {}, sessions: {}, workspace: {}, host: {}, agentPresets: {} }
+  const rbLegacyConn = { api: rbLegacyApi }
+  const rbModernConn = undefined
+  // (a) 旧表面：connection 服务在场且其 .api 域对象可用（remote.* 服务全部缺席）
+  runClientApply((n) => (n === 'connection' ? rbLegacyConn : undefined))
+  const rbA = clientExports.buildDiagReport({ api: clientExports.makeHostApi(() => undefined, rbLegacyConn), server: serverMock5 }).minSupport
+  // (b) 新表面：无 connection 载体，remote.* 服务就位 → 不触发
+  runClientApply((n) => (n === 'remote.settings' ? { describe() {}, update() {}, mutate() {} } : undefined))
+  const rbB = clientExports.buildDiagReport({ api: clientExports.makeHostApi((n) => (n === 'remote.settings' ? { describe() {} } : undefined), rbModernConn), server: serverMock5 }).minSupport
+  // (c) 双缺（无宿主表面）→ 不触发（无连接载体即无从判定旧表面，不误报）
+  runClientApply(() => undefined)
+  const rbC = clientExports.buildDiagReport({ api: clientExports.makeHostApi(() => undefined, undefined), server: serverMock5 }).minSupport
+  check('COMPAT-005 D1③ RB-03 代理信号构造断言：remote.* 全缺 + 旧 .api 连接载体在 → 触发「宿主版本低于最低支持」明确文案（不依赖 TP-4 宿主版本号）',
+    rbA.triggered === true && rbA.text.includes('宿主版本低于最低支持')
+      && rbA.text.includes('remote.') && rbA.text.includes('0.1.2-rc.1')
+      && rbB.triggered === false && rbB.text === ''
+      && rbC.triggered === false && rbC.text === '',
+    'A=' + JSON.stringify(rbA.triggered) + ' B=' + JSON.stringify(rbB.triggered) + ' C=' + JSON.stringify(rbC.triggered)
+      + ' Atext=' + rbA.text.slice(0, 30))
+
+  // ④ 数据源单一（验收①，硬门槛①）：客户端探测项常数 ↔ 契约 clientProbes **双向 ⊆**（防面板自列清单自指）
+  //    + 每项 item 真实存在于契约 items[] + 面 4/5/6 零伪造（有 0 个探测项）。
+  const CLIENT_PROBES_SRC5 = ['legacy-connection-api', 'remote-settings', 'remote-session', 'remote-workspace', 'remote-directory-picker', 'remote-agent-presets', 'dom-phase', 'dom-observers']
+  const srcClientIds5 = (clientSrc.match(/^\s*'([a-z-]+)': \(/gm) ?? []).map((s) => s.trim().replace(/^\s*'/, '').replace(/': \($/, ''))
+  const contractProbeIds5 = hc5.clientProbes.map((p) => p.probe)
+  const keysOf5 = Object.keys(clientExports.CLIENT_PROBES)
+  const itemById5 = {}
+  for (const it of hc5.items) itemById5[it.item] = it
+  const clientFaceOk5 = hc5.clientProbes.every((p) => {
+    const it = itemById5[p.item]
+    return it !== undefined && it.kind === p.kind && (it.face === 2 || it.face === 3)
+  })
+  check('COMPAT-005 D1④ 数据源单一：契约 clientProbes ≡ CLIENT_PROBES 常数 ≡ client.js 源码面（三向同集）+ 每项 item 真实在册且 kind 对账 + 面 4/5/6 零伪造',
+    CLIENT_PROBES_SRC5.length === 8
+      && srcClientIds5.length === 8 && CLIENT_PROBES_SRC5.every((k) => srcClientIds5.includes(k))
+      && JSON.stringify([...contractProbeIds5].sort()) === JSON.stringify([...CLIENT_PROBES_SRC5].sort())
+      && JSON.stringify([...keysOf5].sort()) === JSON.stringify([...CLIENT_PROBES_SRC5].sort())
+      && clientFaceOk5
+      && keysOf5.every((k) => typeof clientExports.D_PROBE_ITEM[k] === 'string' && itemById5[clientExports.D_PROBE_ITEM[k]] !== undefined)
+      && hc5.clientProbes.filter((p) => p.item.startsWith('4.') || p.item.startsWith('5.') || p.item.startsWith('6.')).length === 0,
+    'src=' + srcClientIds5.length + ' contract=' + JSON.stringify(contractProbeIds5) + ' keys=' + JSON.stringify(keysOf5) + ' kindOk=' + clientFaceOk5)
+
+  // ⑤ 面覆盖台账算术（验收①「披露 notCovered 面 2~6 = 数量摘要」）：探测项总数 ≤ 契约项总数，
+  //    未覆盖数 = 契约项 − 服务端探测 − 客户端探测；面 4/5/6 探测数 0（未实现面不伪造状态）。
+  const serverProbeCount5 = serverMock5.report.probes.length
+  const contractItemTotal5 = hc5.items.length
+  const coveredByProbe5 = diag5 === null ? 0 : diag5.faces.reduce((s, f) => s + f.probed, 0)
+  const notCoveredSum5 = diag5 === null ? 0 : diag5.faces.reduce((s, f) => s + f.notCovered, 0)
+  const face456Probed5 = diag5 === null ? -1 : [4, 5, 6].reduce((s, id) => { const f = diag5.faces.find((x) => x.id === id); return s + (f === undefined ? 0 : f.probed) }, 0)
+  check('COMPAT-005 D1⑤ 面覆盖台账：探测项 ' + serverProbeCount5 + '（面1）+ 8（客户端）= ' + (serverProbeCount5 + 8)
+      + ' ≤ 契约 ' + contractItemTotal5 + ' 项；未覆盖 ' + notCoveredSum5 + ' 项 = 48 − 19；面 4/5/6 探测数 = 0（未实现面不伪造）',
+    diag5 !== null && coveredByProbe5 === serverProbeCount5 + 8
+      && coveredByProbe5 + notCoveredSum5 === contractItemTotal5 && face456Probed5 === 0,
+    'probed=' + coveredByProbe5 + ' notCovered=' + notCoveredSum5 + ' f456=' + face456Probed5)
+
+  // ⑥ 服务端路由（数据源出口）：`api('compat')` 在既有 webServer 路由模式内；只读、契约投影仅
+  //    item/face/kind/necessity（file/line 不出网关）；探测抛错如实 { ok:false } 不伪造绿。
+  const compatRouteOk5 = hostSrc5.includes("api('compat'")
+    && hostSrc5.includes('detectHostCapabilities(ctxNow)')
+    && hostSrc5.includes("return { ok: false, error: 'probe-unavailable' }")
+    && hostSrc5.includes('report,')
+    && /items: hostContract\.items\.map\(\(it\) => \(\{ item: it\.item, face: it\.face, kind: it\.kind, necessity: it\.necessity \}\)\)/.test(hostSrc5)
+    && !/api\('compat'[\s\S]{0,1200}?\bit\.(file|line)\b/.test(hostSrc5)
+  check('COMPAT-005 D1⑥ 服务端路由：既有 webServer 路由模式新增只读 `api(\'compat\')`——同源 detectHostCapabilities + 契约投影仅 item/face/kind/necessity（file/line 不出网关）+ 探测失败如实 ok:false',
+    compatRouteOk5, 'compat-route=' + compatRouteOk5)
+
+  // ⑦ 客户端面板接入点：设置页 section 内渲染诊断面板 + 单一数据源调用（apiJson 取服务端报告）+ 刷新钮；
+  //    负向断言：诊断面板自身**不直连宿主 API**（只经 props.api，经 makeHostApi 收口）。
+  const diagWiredOk5 = clientCode.includes("el(DiagnosticsPanel, { api, t })")
+    && clientCode.includes("apiJson('/novel-writing/api/compat')")
+    && clientCode.includes("t('diagRefresh')")
+    && (() => {
+      const block = clientSrc.slice(clientSrc.indexOf('function DiagnosticsPanel('), clientSrc.indexOf('function diagTable('))
+      return block.includes('buildDiagReport(') && !/ctx\.[A-Za-z_$]/.test(block)
+    })()
+  check('COMPAT-005 D1⑦ 设置页接入：DiagnosticsPanel 渲染于 settings.section 内 + 单一数据源（buildDiagReport 投影）+ 服务端报告经 apiJson 读取 + 面板零直连宿主 API',
+    diagWiredOk5, 'wired=' + diagWiredOk5)
+
+  // ⑧ N3/N4 契约登记（验收④）+ ctxGetSemantics 诚实保持（验收「若有新证据才转 verified」——本轮无新证据）。
+  const item213 = hc5.items.find((it) => it.item === '2.13')
+  const n3Ok5 = item213 !== undefined && typeof item213.note === 'string'
+    && item213.note.includes('前提未证实') && item213.note.includes('宿主在 locale 变化后重渲染自身 shell')
+    && item213.note.includes('渲染期惰性取值')
+  const n4Ok5 = item213 !== undefined && typeof item213.note === 'string'
+    && item213.note.includes('N4') && item213.note.includes('撤离') && item213.note.includes('保持最后一次快照')
+  check('COMPAT-005 D1⑧ N3/N4 契约登记：item 2.13 note 含「宿主重渲染自身 shell 前提未证实」（N3）+ locale 撤离保持最后快照为已知边界（N4）',
+    n3Ok5 && n4Ok5, 'n3=' + n3Ok5 + ' n4=' + n4Ok5)
+  const sem5 = hc5.ctxGetSemantics
+  check('COMPAT-005 D1⑧b ctxGetSemantics 诚实保持：本轮未取得宿主源码/真机新证据 ⇒ status 仍 unverified + recheck 留痕可复核（不虚假转 verified）',
+    sem5 !== undefined && sem5.status === 'unverified'
+      && typeof sem5.recheck === 'string' && sem5.recheck.includes('COMPAT-005')
+      && sem5.recheck.includes('保持 unverified') && sem5.recheck.includes('转 verified 的判据'),
+    'status=' + String(sem5 === undefined ? null : sem5.status))
+}
+
 }
 
 console.log(`\nSMOKE DONE: ${passed} passed, ${failed} failed`)
