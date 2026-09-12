@@ -24,7 +24,7 @@
 | 1 | CHANGELOG 已更新 | 覆盖本次全部变更，与 commit 对照一致 | ✅ | `## [0.5.2] - 2026-09-12` + `### 修复` + BUG-006 条目（自 `[Unreleased]` **逐字移动**：diff 仅 4 行插入，BUG-006 条目行无 ± 变化） |
 | 2 | 破坏性变更已高亮 | 不兼容变更有说明与迁移指引 | ✅ **无 breaking change** | BUG-006 内已证「旧布局行为完全不变」；条目内含双通道说明 |
 | 3 | 依赖变更已记录 | 新/升级依赖有版本与原因 | ✅ **无依赖变更** | `package.json` dependencies / peerDependencies 未改 |
-| 4 | 已知问题已列出 | 有说明与 workaround | ✅ | 发布记录 §7（R1~R7）；本版主残余 = RISK-004（push 未执行） |
+| 4 | 已知问题已列出 | 有说明与 workaround | ✅ | 发布记录 §7（R1~R8）；本版主残余 = RISK-004（push 未执行） |
 
 **分层机检（程序化）**：`[0.5.2]` 段（843 字符）`contains BUG-006: True` ∧ `contains COMPAT-: False`；`[Unreleased]` 段 `COMPAT-` 70 次 ∧ `contains BUG-006: False` ⇒ 满足「v0.5.2 不含 COMPAT-* 条目（属 v0.6.0 线）」硬门槛。
 
@@ -33,7 +33,7 @@
 | # | 检查项 | 通过标准 | 结论 | 证据 |
 | --- | --- | --- | --- | --- |
 | 1 | 回滚方案已编写 | 具体步骤（非泛化描述） | ✅ | `docs/release/rollback-plan-0.5.2.md`（A/B/C 三路径，命令级） |
-| 2 | 回滚方案已验证 | 测试环境实际执行过 | ⚠️ **未执行**（如实标注） | 回滚对象为本地 tag / 安装版本（非运行态系统）；步骤为确定性 git/安装操作。**不主张已验证** |
+| 2 | 回滚方案已验证 | 测试环境实际执行过 | ✅ **已执行（隔离环境）** | 2026-09-12 于隔离根 `%TEMP%\rel006-drill-20260912` 执行 `rollback-plan-0.5.2.md` §3 **路径 A** 往返（隔离等价物：`git archive` 导出 v0.5.1/v0.5.2 树 → 就地换树 → 重跑 `install.ps1`，**不切换当前工作树**）。**隔离环境安装冒烟（环境变量重定向至临时目录）通过**：A1 v0.5.1 → A3 v0.5.2 → A5 回滚 v0.5.1，逐 leg exit 0、有效版本 0.5.1 / 0.5.2 / 0.5.1；同版本重装幂等 diff=0（A1→A2、A3→A4）；回滚 leg A4→A5 diff=0；旧布局 B1→B2 diff=0。**已知残留（如实记录）**：往返闭环 A2→A5 diff=4——v0.5.2 新增的新布局注册（`profiles/web/node_modules` 链接 + `profiles/web/package.json` 280→408 B）回滚到 v0.5.1 后**不被清理**（v0.5.1 脚本无新布局感知），有效版本仍正确 ⇒ 回滚 = 版本回退、非 DSH_HOME 状态还原。逐命令原始记录见 `rollback-plan-0.5.2.md` §7 |
 | 3 | 数据兼容性 | 回滚后数据兼容 | ✅（不涉及） | 本版无 schema/数据迁移；`settings` ns `novel-writing` 字段未变 |
 | 4 | 回滚影响范围已评估 | 不造成额外损失 | ✅ | 三路径影响面见回滚方案 §3 |
 
@@ -41,7 +41,7 @@
 
 | # | 检查项 | 通过标准 | 结论 | 证据 |
 | --- | --- | --- | --- | --- |
-| 1 | 核心功能验证清单 | 列出发布后需验证项 | ✅ | 三件套（§G）+ 用户侧实机使用（BUG-006 安装通道证据来自其交付内**隔离实例**实测，本版不新增安装验证） |
+| 1 | 核心功能验证清单 | 列出发布后需验证项 | ✅（口径已订正，F5） | 三件套（§G）+ 本版**唯一交付面 = 安装通道**的**被发布树**实测：**隔离环境安装冒烟（环境变量重定向至临时目录）通过**——隔离根 `%TEMP%\rel006-drill-20260912`，对 `git archive v0.5.2` 导出树执行安装/重装/回滚往返，有效版本正确 + 幂等 diff=0（证据 `rollback-plan-0.5.2.md` §7）。**订正说明**：本项原标 ✅ 但**证据面错位**（证据来自 BUG-006 交付内、早于发布树 ⇒ 证据对象 ≠ 被发布树）；现由本次对**被发布树**（隔离环境，非无限定语的「真实安装」）的实测替代 |
 | 2 | 监控指标基线 | 发布前基线已记录 | N/A | 插件无生产监控面（如实标注，不伪造） |
 | 3 | 告警规则就绪 | 相关告警已配置 | N/A | 同上；既有结构化告警面为 `[nv-compat]` 加载期告警（v0.6.0 线，不在本版范围） |
 | 4 | 验证责任人 | 每项有负责人 | ✅ | 执行 = Release Agent；复核/收尾 = Coordinator（EVD-097）；后置审查 = Release Reviewer |
@@ -72,4 +72,8 @@
 | 归档触发 | `python "<plugin>/infra/archive.py" migrate --auto --dry-run` | 跳过（已发布版本数解析 0<2；exit 0） | 不阻断（SYSGAP-001 家族边缘，无数据损失） |
 | 发布就绪 | `python "<plugin>/infra/verify_workflow.py" check-release --version 0.5.2 --require-changelog --lineage-mode candidate` | **FAILED — 21 issue(s)**（exit 1） | **不可用（跨根期望源缺陷）** —— 见独立发现 #2；**不包装为 PASS**，已升级 Coordinator 裁定 |
 
-> **诚实声明**：`stage-release` SKILL 退出条件含「候选态 `check-release` PASS」——本次**未满足**（工具缺陷，非本版交付缺陷）；本清单不主张该条通过。
+> **诚实声明**：`stage-release` SKILL 退出条件含「候选态 `check-release` PASS」——本次**未满足**（工具缺陷，非本版交付缺陷）；本清单不主张该条通过。**状态维持 `FAILED — 21 issue(s)` / 门禁不可用，不得改写为 PASS**（F3 处置归 Coordinator：SYSGAP 登记 + RISK-002/RISK-005，不属本任务范围）。
+
+> **替代判据集合（F3 修复建议②，本仓发布就绪的可复查替代口径；不替代该门禁的 PASS 结论，仅作为「门禁不可用」期间的过渡判据）**：
+> ① `node --check` × 12 文件 **0 错**（§G 行 1）；② `node test/validate-preset.mjs` **PASSED**（29/29，exit 0）；③ `node test/smoke.mjs` **不劣化**（282 passed / 0 failed，与基线一致）；④ **版本三方一致**（`CHANGELOG` 段头 `[0.5.2]` ≡ `package.json` `0.5.2` ≡ tag 名 `v0.5.2`）；⑤ **CHANGELOG 分层机检**（`[0.5.2]` contains BUG-006 ∧ ¬COMPAT-；`[Unreleased]` COMPAT- 70 次 ∧ ¬BUG-006）；⑥ **发布工件齐备**（`docs/release/{release-checklist,feature-flags,rollback-plan}-0.5.2.md` + `docs/review/REL-006-release-notes.md` 四件在仓）。
+> 上述 ①③⑤ 已于 2026-09-12 返工轮复跑实测（见 `release-notes` §4 与 §10）；⑥ 为文件存在性核对；④ 见 §B 分层机检行。**该集合不构成 `check-release` 的替代 PASS —— 该门禁仍记 `FAILED`。**

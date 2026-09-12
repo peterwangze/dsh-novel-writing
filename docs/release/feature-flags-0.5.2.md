@@ -14,7 +14,9 @@
 | 取证项 | 命令/位置 | 实测结果 |
 | --- | --- | --- |
 | 产品代码无 feature flag 机制 | grep `featureFlag\|feature_flag\|FEATURE_FLAG\|flagEnabled` 于 `lib/*.js` `lib/*.mjs` | **0 命中** |
-| 本版改动面不含代码 | `git diff HEAD~1 HEAD --name-only`（发布提交） | 恰 4 文件：`CHANGELOG.md` / `package.json` / `.governance/plan-tracker.md` / `docs/review/REL-006-release-notes.md` —— **零 `lib/**` 改动** |
+| 本版改动面不含代码 | `git diff e1f25df8^ e1f25df8 --name-only`（**绝对 SHA**；`e1f25df8` = v0.5.2 发布提交） | 恰 4 文件：`CHANGELOG.md` / `package.json` / `.governance/plan-tracker.md` / `docs/review/REL-006-release-notes.md` —— **零 `lib/**` 改动** |
+
+> **取证时点（F9 订正）**：上表取证命令原为相对引用 `git diff HEAD~1 HEAD --name-only`——当时 HEAD = `e1f25df8`，此后 HEAD 前进（`e093e72` 及后续治理提交）⇒ 原命令**事后不可复算**。现改为**绝对 SHA** `git diff e1f25df8^ e1f25df8 --name-only`，任何时点复跑结果恒为上述 4 文件。**原始取证时点 = 2026-09-12**（REL-006 发布提交落盘后、本工件补建时）；**订正时点 = 2026-09-12 返工轮**（REL-006 R1 复审 F9）。
 
 ## 3. 既有等效控制面（本版行为零变化，仅登记）
 

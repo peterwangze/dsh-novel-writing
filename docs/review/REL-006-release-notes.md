@@ -49,6 +49,17 @@
 3. **发布提交可推送性**：方案 A 的 tag target 位于本地 main 线性历史内，RISK-004 解阻后可随 `main` 一并推送（无额外合并/切分动作）；方案 B 的 target 已在远端，但发布记录本身仍滞留本地，一致性由本次范围声明承担。
 4. **回滚语义不受影响**：需要「BUG-006-only 代码面」时直接 `checkout 3442f39`（§6 路径 B）——方案 A 不封闭该路径。
 
+### 3.1.1 push 范围声明（F2 补强 —— 可见面变化与授权状态）
+
+> **`git push origin main v0.5.2` 将同时把本机领先远端的 44 commits（含 COMPAT-002~016 的 v0.6.0 线工作树内容）推送至远端主线。**
+>
+> - **可见面变化**：远端主线将**公开未发布的 v0.6.0 线内容**（含 `.github/workflows/ci.yml` 探测轨、宿主契约层 `lib/host-contract.mjs` / 边界层 `lib/host-boundary.js`、fixtures 快照与探测脚本、诊断面板等）。
+> - **动作性质**：该动作属**发布决策**（关键决策，非普通 git 操作）——**须用户授权**。
+> - **授权状态**：**待用户裁决**（由 Coordinator 处理，非本 Release Agent 可执行项）。本次**未执行 push**（硬边界：不 push）。
+> - **若不接受公开 v0.6.0 线**：须先切分主线（在 `3442f39` 之上重建发布提交后重打 tag）——与 §7 R8 的 tag 边界三选一**合并决策**。
+>
+> **发布纪律（一句）**：**先补齐审查项、后 push** —— 在 R1 复审列出的补强项（回滚演练 / tag 边界处置 / push 范围声明 / `check-release` 替代口径裁定）全部闭合**之前**，不得执行 push；因为一旦 push，F2/F4 的不一致将固化为不可逆事实（此后修正须走 revert + 新版本号）。
+
 ### 3.2 残余风险（如实标注，不掩盖）
 
 - **tag 树 ⊃ 本版代码范围**：本机 `HEAD` 领先 `origin/main` **44 commits**（含 COMPAT-002~016 全部工作）。方案 A 的 `v0.5.2` tag 树因此包含 v0.6.0 线内容——即 **「v0.5.2 tag 的代码范围声明」与「tag 树实际内容」不严格相等**。
@@ -68,13 +79,13 @@
 | 2 | `node test/validate-preset.mjs` | `mode: full (profile dir available)` … `PRESET VALIDATION PASSED` / `validate-preset exit=0`（29/29 ok，含 skills 索引 29/29） | **PASS** |
 | 3 | `node test/smoke.mjs` | `SMOKE DONE: 282 passed, 0 failed` / `smoke exit=0`（末条断言：README 声明 282 ≡ 实测 282） | **PASS（基线 282/0 未劣化）** |
 
-### 4.1 本次未执行的验证（诚实披露）
+### 4.1 验证执行状态（诚实披露；本返工轮补执行了原「未执行」的两项）
 
 | 项 | 状态 | 说明 |
 | --- | --- | --- |
-| 安装冒烟（真实/隔离安装） | **未执行** | 本次发布不含安装动作，也未为发布单独安装；BUG-006 安装通道证据来自其交付内的**隔离实例实测**（见 `CHANGELOG [0.5.2]` 条目与 BUG-006 EVD），本记录**不主张**新增安装验证。措辞边界：不写「真实安装通过」；BUG-006 的实测口径为隔离实例（`DSH_HOME`/`npm_config_*` 重定向）。 |
-| `check-release --version 0.5.2 --require-changelog --lineage-mode candidate` | **FAILED（21 issues，exit 1）——跨根期望源缺陷** | 已实际执行并**如实记录为 FAIL，不包装为 PASS**；归因见 §7 R5：该 CLI 对本仓结构性不可用（`changelog` 检查读插件仓自身 `project/CHANGELOG.md`、期望 `REQ-059~064`/`1.0.0 依赖链`、执行插件自家测试路径），与本项目 REL-003/REL-004 记载的 SYSGAP-001 家族一致。**未以三件套或其它检查替代其结论**——该门禁状态为「不可用」，需 Coordinator/Release Reviewer 裁定 |
-| 回滚演练（release-checklist 要求「已在测试环境实际执行」） | **未执行** | 回滚对象为本地 tag/安装版本（非运行态系统），方案见 §6；此项差距如实标注：**回滚方案已定义、步骤确定性可执行，但未演练** |
+| 安装冒烟（**对被发布树**，隔离环境） | **已执行（2026-09-12 返工轮）** | 按 `docs/release/rollback-plan-0.5.2.md` §7 在隔离根 `%TEMP%\rel006-drill-20260912` 实跑：对 `git archive v0.5.2` **导出树**（= 被发布树内容）执行安装 → 重装 → 回滚往返 ⇒ **隔离环境安装冒烟（环境变量重定向至临时目录）通过**（逐 leg exit 0、有效版本 0.5.1→0.5.2→0.5.1、同版本重装幂等 diff=0）。**F5 口径订正**：原记载的安装通道证据来自 BUG-006 交付内、早于发布树（证据对象 ≠ 被发布树）；现由对**被发布树**的隔离实测替代。措辞边界：**不写**「真实安装通过」——口径恒为「隔离环境（临时根 + 环境变量重定向）」。**真实 `~/.dsh` 未触碰**（§10 返工轮 fingerprint 对照）。 |
+| `check-release --version 0.5.2 --require-changelog --lineage-mode candidate` | **FAILED（21 issues，exit 1）——跨根期望源缺陷** | 已实际执行并**如实记录为 FAIL，不包装为 PASS**；归因见 §7 R5：该 CLI 对本仓结构性不可用（`changelog` 检查读插件仓自身 `project/CHANGELOG.md`、期望 `REQ-059~064`/`1.0.0 依赖链`、执行插件自家测试路径），与本项目 REL-003/REL-004 记载的 SYSGAP-001 家族一致。**未以三件套或其它检查替代其结论**——该门禁状态为「不可用」，需 Coordinator/Release Reviewer 裁定（替代判据集合见 `release-checklist` §G 说明，**不构成该门禁的替代 PASS**） |
+| 回滚演练（release-checklist 要求「已在测试环境实际执行」） | **已执行（隔离环境，2026-09-12 返工轮）** | 路径 A 往返在隔离根实跑（A1 v0.5.1 → A3 v0.5.2 → A5 回滚 v0.5.1），另跑旧布局分支（B1→B2 `diff=0`，实证「旧布局行为完全不变」）。逐步命令级记录 + 快照 diff 见 `docs/release/rollback-plan-0.5.2.md` §7。**已知残留（如实记录）**：回滚不还原 DSH_HOME 状态——v0.5.2 新增的新布局注册项在回滚后保留（有效版本仍正确）；详见该 §7.4 |
 | 监控/发布后观察期 | 不适用 | 本插件无生产监控面；发布后验证以三件套 + 用户侧实机使用为准 |
 | `.github/workflows/ci.yml` 相关 CI | **未运行/未触碰** | 本任务明确不触碰 CI 配置；且 RISK-004 约束下不做任何推送（无远端 CI 触发） |
 
@@ -90,7 +101,9 @@
 | `docs/review/REL-006-release-notes.md` | 本记录（新增） |
 | `docs/release/release-checklist-0.5.2.md` · `docs/release/feature-flags-0.5.2.md` · `docs/release/rollback-plan-0.5.2.md` | 三件发布工件（**REL-006 补充提交**新增；Coordinator 授权补建；内容 = 本记录 §6/§8 等价抽取 + 逐项门禁实测 + feature flag 取证「不适用」） |
 
-**未触碰**：`.github/workflows/ci.yml`、`lib/**`、`test/**`、`install.ps1`、`install.sh`、`README.md`（本版代码面零改动——发布为纯元数据 + 治理记录动作）。
+**未触碰**：`.github/workflows/ci.yml`、`lib/**`、`test/**`、`install.ps1`、`install.sh`、`README.md`（本次发布动作 = 纯元数据 + 治理记录，不改代码）。
+
+> **口径精度补充（返工轮实测发现，P-01）**：上句的判据面 = **发布提交 `e1f25df8` 相对其父 `dd6b5ef` 的 diff**（即「本次发布动作」的改动面），**不等于**「v0.5.2 相对 v0.5.1 的代码面」。后者实测为 **48 commits**，含 `install.ps1` / `install.sh`（**+304/−10**：BUG-006 版本自适应 + COMPAT-015 布局契约注释块）、`lib/**`（含 `host-contract.mjs` / `host-boundary.js` / `index.js` / `client.js`）、`test/**`、`.github/workflows/ci.yml` 等——即 §1.2 所列未发布 v0.6.0 线内容随本机线性历史一并落在 tag 树内，**正是 §3.2 / §7 R8 的范围口径问题**。**本版的实际交付面 = BUG-006 安装通道适配**（安装脚本版本自适应双通道）；本次发布的**动作**不改代码，但**版本区间**含代码改动——两者判据面不同，勿混用。
 
 ---
 
@@ -105,7 +118,7 @@
 - **数据兼容性**：本版无 schema/数据迁移、无宿主配置结构变更 ⇒ 回滚不涉及数据面（`settings` ns `novel-writing` 字段不变）。
 - **独立工件**：`docs/release/rollback-plan-0.5.2.md`（触发条件 + 三路径 + 验证方式 + 演练状态）。
 - **预计回滚时间**：< 1 分钟（git checkout + 幂等安装脚本；无服务重启以外动作）。
-- **状态**：**已定义、未演练**（§4.1 如实标注）。
+- **状态**：**已定义、已演练（隔离环境）**——2026-09-12 返工轮于隔离根 `%TEMP%\rel006-drill-20260912` 实跑路径 A 往返（v0.5.1 → v0.5.2 → 回滚 v0.5.1），逐步 exit 0、有效版本正确、同版本重装幂等 diff=0；原始记录见 `docs/release/rollback-plan-0.5.2.md` §7。**已知残留**：回滚不还原 DSH_HOME 状态（新布局注册项保留，有效版本仍正确）。
 
 ---
 
@@ -137,6 +150,21 @@
   Result: FAILED - 21 issue(s).        (exit 1)
 ```
 
+**R8 补记（R1 Release Reviewer 对 tag 边界的专门裁决 —— 四条，2026-09-12）**：
+
+> 来源：`.governance/review-REL-006.md` §4「tag 边界与范围口径判断（专门裁决）」。**以下为 Reviewer 裁决的原文要点转录，非本 Agent 的处置结论**；**处置状态 = 待用户裁决**（本 Release Agent **未执行任何 tag 命令**：未重定、未删除、未创建、未 push）。
+
+| # | Reviewer 裁决 | 要点 |
+| --- | --- | --- |
+| ① | **边界方向可接受，状态不可接受（须处置）** | 「tag 指向发布提交（含版本 bump）」是仓库**既定惯例**（v0.3.0/v0.4.0/v0.5.0/v0.5.1 四个历史 tag 同构）⇒ 方案 A 的选择**有据、非失误** |
+| ② | **不建议重定到 `3442f39`** | 「范围 = BUG-006 代码面」与「tag 树内 version = 0.5.2」在当前线性历史上**不可兼得**；重定到 `3442f39` 会以牺牲版本一致性换取范围精确性——**以更严重的错误替换较轻的错误，不采纳** |
+| ③ | **三选一必须留痕** | 可行选项按优先级：**① 重定至 `e093e72`**（消除「发布工件不在 tag 树内」这一可机器观测的不一致，成本为零）／**② 在 `3442f39` 之上重建发布提交后重打 tag**（同时满足范围与版本一致性，需改写本地未推送历史 + 重新生成记录 SHA）／**③ 保持现状 + 用户显式确认**。**三选一必须留痕**，且须与 `check-release --lineage-mode released --release-commit <SHA>` 的最终取值一致 |
+| ④ | **未 push 使一切可逆** | tag 与发布提交**均未 push**（远端 main = `3442f396`、远端无该 tag）⇒ 复议、重定、甚至整体重做**零远端副作用**。这**降低**了该边界项的紧迫度（故判 P1 而非 P0），但**不消除**——一旦按现状 push，边界即固化，此后修正须走 `revert` + 新版本号 |
+
+**补充（Reviewer 对口径效力的判断）**：现口径「v0.5.2 代码范围 = BUG-006 安装通道适配；COMPAT-* 属未发布 v0.6.0 线」**仅存在于声明面**（本记录 §1.1 + §3.2 + 路线图行 + `checklist` §B 分层机检），**声明面不可机检**——任何下游消费者若改用 tag 树/工作树作判据即会偏离。因此口径**有效但不自证**。
+
+**处置状态：待用户裁决**（三选一未决）；本记录与 `docs/release/release-checklist-0.5.2.md` 为仓库内可读的留痕面。**Release Agent 硬边界：不重定 tag、不删除 tag、不 push**（tag 目标与 push 授权 = 用户决策，Coordinator 另行处理）。
+
 **结论**：该 CLI 的失败项全部可由「跨根期望源 / 插件自家路径」解释，与本版交付内容无关；但**本记录不主张该门禁通过**——状态记 `FAIL（不可用）`，升级裁定见 §9-5。
 
 ---
@@ -152,7 +180,7 @@
 | 二 | CHANGELOG 覆盖本次全部变更 | ✅ | `[0.5.2]` 段（逐字移动，无改写、无遗漏） |
 | 二 | breaking change 已高亮 | ✅（无 breaking） | 旧布局行为零变化；条目内含兼容性说明 |
 | 二 | 依赖变更已记录 | ✅（无依赖变更） | `package.json` dependencies/peerDependencies 未改 |
-| 二 | 已知问题已列出 | ✅ | §7（R1~R7） |
+| 二 | 已知问题已列出 | ✅ | §7（R1~R8） |
 | 三 | 回滚方案已编写（具体步骤） | ✅ | §6（A/B/C 三路径，命令级） |
 | 三 | 回滚方案已验证（测试环境执行） | ⚠️ **未执行** | §4.1 如实标注（非运行态系统；步骤确定性） |
 | 三 | 数据兼容性 | ✅（不涉及） | §6 |
@@ -170,6 +198,9 @@
 ## 9. 发布后待办（移交 Coordinator）
 
 1. **push（用户授权后）**：`git push origin main v0.5.2`；随后 `check-release --version 0.5.2 --require-changelog --lineage-mode released --release-commit <发布提交 SHA>`（fail-closed，禁止以候选态 PASS 代替）。
+   - **⚠️ 可见面声明（F2 补强）**：`git push origin main v0.5.2` 将**同时把本机领先远端的 44 commits（含 COMPAT-002~016 的 v0.6.0 线工作树内容）**推送至远端主线——即可见面变化：**远端主线将公开未发布的 v0.6.0 线内容**。该动作属**发布决策，须用户授权**；**授权状态：待用户裁决**（Coordinator 处理）。
+   - **发布纪律**：**先补齐审查项、后 push** —— 补强项（回滚演练 / tag 边界三选一 / push 范围声明 / `check-release` 替代口径裁定）未全部闭合前不得 push；push 后边界不可逆。
+   - **建议顺序**：① tag 边界三选一留痕（§7 R8 补记）→ ② 用户授权 → ③ push → ④ `--lineage-mode released` 完成态证据。
 2. **EVD-097**：证据行写入（含三件套输出、分层 diff、tag 基准选择、push 未执行说明、SHA 补录）。
 3. **Release Reviewer 后置审查**（R6）。
 4. 可选：里程碑表 `v0.5.1 发布` 行补录（R3）。
@@ -192,5 +223,20 @@
 | 2026-09-12 | `git tag -a v0.5.2 -m "…"` | 本地 annotated tag（**未 push**）；`git tag -l v0.5.2` 可查 |
 | 2026-09-12 | 补建 `docs/release/{release-checklist,feature-flags,rollback-plan}-0.5.2.md`（Coordinator 授权）+ `git commit`（REL-006 补充提交） | 发布工件入仓（**未 push**）；tag 仍指向发布提交 `e1f25df`（见 R8） |
 | 2026-09-12 | 补充提交后复跑三件套 | 见 §4（复跑结果不劣化） |
+
+**返工轮（R1 复审 `NEEDS_CHANGE` → 补强）命令级日志**：
+
+| 时间 | 命令 | 结果 |
+| --- | --- | --- |
+| 2026-09-12（返工轮） | `git -C <repo> rev-parse v0.5.2` / `'v0.5.2^{commit}'` / `v0.5.1` / `'v0.5.1^{commit}'`；`git for-each-ref refs/tags` | `v0.5.2` tag=`7ca99d6d612d90aadeba83d4c7ad40ed61feafa4` → peel `e1f25df84ead0a4d07c655f9afcd379a8a96a2a8`；`v0.5.1` tag=`7d4d89923e4e572d9af0003182a344d0acb0f2e9` → peel `cd1911e9f1e3bbb90b6197fa3cf7a5e95a1ea373`（与 `.governance/review-REL-006.md` 头部一致） |
+| 2026-09-12（返工轮） | `git -C <repo> archive --format=tar -o <ISO>\tree-v0.5.1.tar v0.5.1` + `tar -xf <ISO>\tree-v0.5.1.tar -C <ISO>\tree-v0.5.1`（v0.5.2 同法） | 两树导出至隔离根（v0.5.1 = 114 文件 / `install.ps1` 10745 B；v0.5.2 = 177 文件 / `install.ps1` 19166 B）；**未使用 `git checkout`**，当前工作树未被切换 |
+| 2026-09-12（返工轮） | 只读取样：`Get-Content C:\Users\peter\.dsh\profiles\web\package.json` | 用于按真实形态建模隔离夹具（**只读**，未写入） |
+| 2026-09-12（返工轮） | `<ISO>\run-drill.ps1`（= `. <ISO>\isolate-env.ps1` + 6 次 `Invoke-IsoInstall` + 7 次文件面快照 + `Compare-Object`） | 见 §4.1 与 `rollback-plan-0.5.2.md` §7.2/§7.3：A1→A2 `diff=0`、A3→A4 `diff=0`、A4→A5（回滚）`diff=0`、A2→A5（闭环）`diff=4`、A1→A3 `diff=4`、B1→B2 `diff=0`；6 次安装全部 `exit=0`、`realPathLeak=0` |
+| 2026-09-12（返工轮） | `Compare-Object`（真实 `~/.dsh` 演练前/后 fingerprint） | `LastWriteTime` 恒为 `2026/9/12 12:05:06` 未变；唯一差异 = `sessions`/`storages` 字节增长（**本 agent 会话自身**的实时写入，非演练所致）⇒ 真实 `~/.dsh` 未被触碰 |
+| 2026-09-12（返工轮） | **如实记录**：首轮演练（守卫加入前）因 `$home` 与 PowerShell 只读自动变量 `$HOME` 冲突，误将 `DSH_HOME` 解析为真实 `C:\Users\peter`，在真实用户目录写入 3 项（`profiles/`、`.agent-presets/`、`settings.yaml`，均新建） | **已清理**：删除前断言 `CreationTime ∈ 演练窗口`（否则 `throw`）→ 断 junction → 删 3 项 → 核验 `exists=False` × 3；真实 `~/.dsh` 全程未触碰。**纠正措施**：变量重命名 + `Assert-IsoPath` fail-closed 守卫 + 环境生效值二次断言 + 真实路径泄漏检测器 + 调用侧 `$ErrorActionPreference='Stop'`；§7.2/§7.3 结果全部来自加守卫之后的运行。详见 `rollback-plan-0.5.2.md` §7.5 |
+| 2026-09-12（返工轮） | `git diff e1f25df8^ e1f25df8 --name-only`（F9 绝对 SHA 复算） | 恰 4 文件：`.governance/plan-tracker.md` / `CHANGELOG.md` / `docs/review/REL-006-release-notes.md` / `package.json`（0 个 `lib/**`）——满足 F9 复审验证点 |
+| 2026-09-12（返工轮） | `git diff HEAD~1 HEAD --name-only`（原相对引用，**已废弃**） | 6 文件（治理记录面）——与发布提交的 4 文件集合不同 ⇒ **实证原取证命令事后不可复算**（F9 现象成立） |
+| 2026-09-12（返工轮） | 三件套复跑：`node --check` × 12 文件 / `node test/validate-preset.mjs` / `node test/smoke.mjs` | `NODE --CHECK SUMMARY: 12 files, 0 failures` / `PRESET VALIDATION PASSED`（29/29，exit 0）/ `SMOKE DONE: 282 passed, 0 failed`（exit 0）——**基线 282/0 未劣化** |
+| 2026-09-12（返工轮） | tag 相关命令 | **未执行任何 tag 命令**（无 `tag -d` / `tag -a` / `push`）——F4 处置属用户裁决，Release Agent 硬边界 |
 
 > **真实性声明**：本记录所有数值均来自上表命令的真实输出（本次执行）；未执行项一律标 `未执行`/`N/A`，不以推测填充。本文件随发布提交入仓，故不包含其自身提交 SHA 与 tag SHA（§7 R7）。
