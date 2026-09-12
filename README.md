@@ -165,10 +165,11 @@ curl -fsSL https://raw.githubusercontent.com/peterwangze/dsh-novel-writing/main/
 ```sh
 node --check lib/index.js && node --check lib/tools.js && node --check lib/client.js
 node test/validate-preset.mjs   # 预设挂载级校验（loader 同源解析 + 逐行模块解析）
-node test/smoke.mjs             # 宿主逻辑 + 挂载契约 279 项断言（状态/门禁/审计/发布/信号/注册面/BUG-004 适配层与联动守卫；计数由 smoke 末条断言机检 ≡ 本行 ⇒ 改断言数须同 commit 改本行）
+node test/smoke.mjs             # 宿主逻辑 + 挂载契约 282 项断言（状态/门禁/审计/发布/信号/注册面/BUG-004 适配层与联动守卫；计数由 smoke 末条断言机检 ≡ 本行 ⇒ 改断言数须同 commit 改本行）
 # 宿主发版探测轨（CI scheduled 每日一次；只读 npm view，无 install / 无宿主代码执行）：
 npm view @deepseek-ai/dsh versions --json   # 与 fixtures 覆盖版本对账 ⇒ 新版本即红（见下「探测轨与窗口期」）
-node test/fixtures/host-surfaces/probe-face.mjs   # 探测轨判据的**离线机检**（PR 门禁：提取 ci.yml heredoc → node --check → 构造 JSON 驱动判据真跑；不触网、不 install）
+node test/fixtures/host-surfaces/probe-face.mjs   # 探测轨判据的**离线机检** + install 头部布局契约对账（PR 门禁：提取 ci.yml heredoc → node --check → 构造 JSON 驱动判据真跑；不触网、不 install）
+node scripts/probe-host.mjs --self-check          # 宿主能力探针**离线自检**（契约 × fixtures 能力面 6 层对账；零网络 / 零宿主进程；实机模式见「维护者：一条命令定位断在哪一层」）
 # 隔离 boot（最接近真实安装路径）：
 $env:DSH_HOME="$env:TEMP\dsh-novel-test"; dsh plugin --profile web add link:<本仓库>
 dsh web --port 3100 --no-open   # 另一终端 curl http://127.0.0.1:3100/novel-writing/api/overview → 200
@@ -182,13 +183,27 @@ dsh web --port 3100 --no-open   # 另一终端 curl http://127.0.0.1:3100/novel-
 |---|---|---|
 | `0.1.5-rc.2`（现行闭包内子包实测版本；CLI `0.1.5-rc.1` = registry `latest`） | ✅ 完整支持 | 宿主表面 fixtures 现行快照（`test/fixtures/host-surfaces/`）+ per-profile 布局隔离实例全链路实测（BUG-006） |
 | `0.1.2-rc.1` | ✅ 支持（**最低支持线**） | fixtures 快照 + 客户端双表面适配层；**v1.0 起为声明下限**（`peerDependencies` 加下限 + 移除 `connection.api` 回退〔过渡期保留一个版本期的 `__NV_LEGACY_API__` 开关〕）——A1 绑定 v1.0 major 边界，**当前 A3 阶段尚未生效** |
-| `0.1.0-rc.7` / `0.1.1-rc.2`（0.1.x 旧表面线） | ⚠️ 最佳努力（A3 保留旧表面回退） | 依据 = `docs/RESEARCH.md` §3.1 实测（`0.1.0-rc.7`）+ `docs/DESIGN.md` 兼容矩阵 + fixtures 快照（`0.1.1-rc.2` 为 0.1.x 旧表面线代表，与 `0.1.2-rc.1` 构成 BUG-003/004 断点对照——**该版本无仓内 fixture**，勿读作「fixtures 快照」）；**v1.0 起断供**——旧宿主上 `remote.*` 全缺而 `connection.api` 域对象在场 ⇒ 设置页「诊断」区明确提示「宿主版本低于最低支持」，并指向 v0.5.x tag 回退路径（DEC-026） |
+| `0.1.0-rc.7` / `0.1.1-rc.2`（0.1.x 旧表面线） | ⚠️ 最佳努力（A3 保留旧表面回退） | 依据 = `docs/RESEARCH.md` §3.1 实测（`0.1.0-rc.7`）+ `docs/DESIGN.md` 兼容矩阵 + fixtures 快照（`0.1.1-rc.2` 为 0.1.x 旧表面线代表，与 `0.1.2-rc.1` 构成 BUG-003/004 断点对照）；**fixture 归属精确化**：本行两版本中——`0.1.0-rc.7` **无仓内 fixture**（勿把本行的「实测」依据读作适用于它的快照；其依据是 `RESEARCH`/`DESIGN` 的历史实机实测），`0.1.1-rc.2` **有**仓内 fixture 快照（`test/fixtures/host-surfaces/0.1.1-rc.2.json`，由 smoke ① 目录 ≡ 契约键集机检）；**v1.0 起断供**——旧宿主上 `remote.*` 全缺而 `connection.api` 域对象在场 ⇒ 设置页「诊断」区明确提示「宿主版本低于最低支持」，并指向 v0.5.x tag 回退路径（DEC-026） |
 | 未列版本（含 `next` / `alpha` tag 上的预发布） | 未验证 | 向前兼容以实测为准；`*` 无下限 = 不设防（契约 6.1） |
 
 ### 宿主发版探测轨与探测窗口期（COMPAT-007；DEC-025 决策②② / RB-01）
 
 - **探测轨**：CI **每日一次**（`cron: '17 3 * * *'`，UTC）以**只读 npm 元数据**（仅 `npm view <pkg> versions --json`——**不 install、不 pack、不执行宿主代码**）把上游已发布版本与 fixtures 覆盖版本对账；判定口径（与实现逐字一致，判据④）：**高于最新覆盖车**的新版本、或**已覆盖车内高于已覆盖版本**者 ⇒ job 红并输出 `detected new host version X, fixtures covered Y`；**低于最新覆盖车的中间车**版本**不判红**（例如覆盖 `0.1.5-rc.2` 时上游 `0.1.4-rc.9` 不触发）——请勿按「任何新版本都红」理解。红按类别给差异化处置（`version-drift` 版本推进 / `version-form` 受限口径外形态〔需扩口径或人工审阅，**更新 fixtures 关不掉**〕/ `coverage` 覆盖声明失配 / `surface` 探测面或契约版本面失配 / `input` 探测输入缺失或不可解析〔退出码 2〕）；亦可 `workflow_dispatch` 手动触发。**每日执行面 = 仅本探测 job**（`sanity` / `host-logic` 已加反向 `if` ⇒ `schedule` 下 skipped；push / pull_request / 手动 dispatch 仍全量执行，故每日不会无人值守跑第三方安装）。**已知盲区（如实披露）**：上游客包**新增子包**不在判据范围——契约 `hostSurface.packages` 是探测目标集单一事实源，新增子包须同步契约与探测行（判据① 双向对账是兜底）。本地等效：`npm view @deepseek-ai/dsh versions --json`（及 `dsh-settings` / `dsh-api-gateway` / `dsh-client-modules` / `dsh-client-connection` / `dsh-tools` / `dsh-home-paths` / `cordis` / `schemastery`）；判据本身的离线机检 = `node test/fixtures/host-surfaces/probe-face.mjs`（PR 门禁内执行，提取 ci.yml heredoc → `node --check` → 构造 JSON 驱动判据，零网络）。
+- **代价（A-F1 收敛的取舍，如实留档）**：`sanity` / `host-logic` 已加反向 `if` ⇒ 每日面只剩只读探测 job——即**「每日一次的真实 schemastery 漂移可见性」随本次收敛一并消失**（它曾是收敛前的附带收益，REVIEW-COMPAT-007-R1 F1 曾列明）。若需要该信号：用 `workflow_dispatch` 手动随查（dispatch 下三 job 全量执行）或另立定时任务——**勿误以为每日仍在跑真实包安装 + 全量 smoke**。取舍动因 = 避免每日无人值守执行未钉版本的第三方安装（供应链面）；采纳方案 (a)「收敛 + 披露」。
 - **⚠️ 探测窗口期（已知残余，RB-01）**：探测是**每日一次、且只在 CI 侧**的检测——**窗口期内（≤ 1 天）宿主升级仍可能先于探测到达用户**：在探测变红、修复发布之前升级宿主的用户，仍会先遇到不适配（探测不是实时防护，也不能替代升级前的兼容核对）。该窗口由**加载期防线**兜底（不依赖 CI）：① `[nv-compat]` 结构化告警（缺面时 console 一次性告警，含缺面域名 / 方法名 / 服务名与契约 item）；② 客户端 `apiHas` 按域降级 + 设置页「诊断」区如实报告缺失面——**降级不白屏**。即：**「有探测」≠「无窗口」**。
+
+### 维护者：一条命令定位「断在哪一层」（COMPAT-008 探针固化）
+
+宿主/浏览器侧行为异常（BUG-004/005 一类）时，先用探针把「断点层」定位到六面之一，再进代码——不必重走一遍人工排查：
+
+```sh
+node scripts/probe-host.mjs --self-check        # ① 离线自检（零网络 / 零宿主进程）：契约 × fixtures 能力面 6 层对账 + 打印隔离方案与命令计划
+node scripts/probe-host.mjs --run --port 3210   # ② 实机探针：隔离实例起宿主 → 只读探测 → 与契约的能力 diff 报告
+```
+
+- **① `--self-check`（本仓已验证，CI sanity 常态步骤）**：不启宿主、不联网、不起浏览器；逐层断言 6 个依赖面（服务端 API / 客户端 API / DOM·前端约定 / 安装注册 / 预设 manifest / 版本环境）在**仓内实证**（fixtures / 源码 / 安装脚本 / 预设目录）中成立，并打印 ② 将要执行的**命令计划 + 环境变量重定向**（逐条留痕）。
+- **② `--run` —— 固定标记 `REAL-RUN: UNVERIFIED`（**未验证**，如实标注）**：需**运行中的宿主环境**（`dsh` 在 PATH、可用的浏览器自动化依赖或宿主 DOM）。本仓开发环境与 CI **均未执行过**该模式，其输出 MUST 经人工确认后才可作为宿主兼容性证据——**不得据此宣称「实机已验证」**（脚本自带该固定标记，并由 smoke 接线守卫断言其存在，防静默转「已验证」）。
+- **安全口径（② 执行时生效，硬约束）**：`DSH_HOME` 重定向到 `os.tmpdir()` 下的隔离实例 + `npm_config_cache` / `npm_config_userconfig` / `npm_config_globalconfig` 三重定向 ⇒ 插件的全部写入面（profiles / `.agent-presets` / `settings.yaml`）落在临时根内；`DSH_HOME` 解析结果不在临时根内则**拒绝执行**（fail-closed）；只 `GET` 只读路由（liveness + `/novel-writing/api/compat`），**不 install、不写宿主目录、不触碰真实 `$HOME` / `$DSH_HOME`**。
 
 ## 卸载
 

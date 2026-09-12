@@ -18,6 +18,19 @@
 #   3) 同步 agent 预设到 <DSH_HOME>\.agent-presets\novel-writing\（agent.cordis.yml +
 #      26+ SKILL + agents 参考文档，之后 roster 里可直接选择「小说写作工作流」）；
 #   4) 若 settings.yaml 没有 novel-writing 节，写入默认配置（开箱即用）。
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# 宿主布局契约（HOST LAYOUT CONTRACT）——单点清单；唯一事实源 = lib/host-contract.mjs 面 4 / 面 5。
+# host-contract:v1
+#   [4.1] 布局特征名 = profiles/<Profile>/package.json
+#   [4.2] 接入通道名 = junction/symlink
+#   [4.3] 注册通道名 = dependencies.dsh-novel-writing + dsh.profile.bundles
+#   [4.4] 兜底注册通道 = cordis.patch.yml
+#   [5.5] 预设目录约定 = .agent-presets/<preset-id>/
+# 固定标记行 `host-contract:v1` 是 CI 正则对账锚点（test/fixtures/host-surfaces/probe-face.mjs ⑧，在 sanity 步骤内
+# 执行）：改动任一约定字面量 MUST 同步本块 + lib/host-contract.mjs 对应条目——三者不一致即 CI 红（防「脚本知识
+# vs 契约声明」静默漂移）。本块为纯注释、无可执行语句：install 行为零变化（COMPAT-009 强等价证据见 CHANGELOG）。
+# ─────────────────────────────────────────────────────────────────────────────
 
 param(
   [string]$RepoUrl = 'https://github.com/peterwangze/dsh-novel-writing.git',

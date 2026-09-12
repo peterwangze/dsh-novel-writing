@@ -1903,16 +1903,52 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   check('COMPAT-003 F1 互证（C6 4/4）：' + faces.length + ' 个 mock 静态解析导出面 ≡ 动态 import 键集（两法独立证据）',
     staticBad.length === 0, staticBad.join(' | ') || 'clean')
 
-  // ⑧b COMPAT-014 A-F2**接线守卫**：探测轨判据的离线机检必须留在 sanity（PR 门禁）内——该步骤若被删，
-  // 判据脚本又回到「只能等首次 schedule 暴露」的零机检态（正是 REVIEW-COMPAT-007-R1 F2 的失效模式本身），
-  // 且提取口径（ci-mock-face 的 extractHeredocs 泛化）是 PR 面唯一消费点。故在 smoke 侧再钉一次接线。
+  // ⑧b COMPAT-014 A-F2**接线守卫**（COMPAT-015 F2 强化：全文子串 ⇒ **sanity 段绑定**）：探测轨判据的离线机检
+  // 必须留在 sanity（PR 门禁）内——该步骤若被删，判据脚本又回到「只能等首次 schedule 暴露」的零机检态（正是
+  // REVIEW-COMPAT-007-R1 F2 的失效模式本身）。**原实现为 `ciYmlSrc.includes(...)` 全文匹配**：把该步骤移入
+  // host-latest-probe（或被注释/步骤名提及）时字符串仍在 ⇒ 守卫仍绿，而 PR 面重新变为零机检 —— 表述强度 > 实现
+  // 强度（REVIEW-COMPAT-014-R1 F2）。现改为**段绑定**：命令行 MUST 落在 `jobSection(yml,'sanity')` 段内。
+  // 口径镜像说明：probe-face.mjs 内的 `jobSection()` 是同一实现；本文件**不能** import 它（该文件是顶层脚本，
+  // import 即执行其全量机检并落临时目录），故此处镜像同款实现——口径一致性由 probe-face 的 ②/⑦ 自断言
+  // （段绑定断言 + 「移出 sanity ⇒ 必红」变异负例）兜底。
+  const ciJobSection = (src, job) => {
+    const lines = src.split('\n')
+    const j = lines.findIndex((l) => l === 'jobs:')
+    const start = lines.findIndex((l, i) => i > (j < 0 ? -1 : j) && l === '  ' + job + ':')
+    if (start < 0) return null
+    let end = lines.length
+    for (let i = start + 1; i < lines.length; i++) if (/^  [A-Za-z0-9_-]+:\s*$/.test(lines[i])) { end = i; break }
+    return lines.slice(start, end)
+  }
+  const ciCmdOf = (l) => l.trim().replace(/^run:\s*/, '')
   const probeFaceUrl = new URL('./fixtures/host-surfaces/probe-face.mjs', import.meta.url)
-  const probeFaceWired = ciYmlSrc.includes('node test/fixtures/host-surfaces/probe-face.mjs')
-    && ciYmlSrc.includes('node --check test/fixtures/host-surfaces/probe-face.mjs')
+  const sanityCmds = (ciJobSection(ciYmlSrc, 'sanity') ?? []).map(ciCmdOf)
+  const probeFaceWired = sanityCmds.includes('node test/fixtures/host-surfaces/probe-face.mjs')
+    && sanityCmds.includes('node --check test/fixtures/host-surfaces/probe-face.mjs')
     && existsSync(probeFaceUrl)
-  check('COMPAT-014 A-F2 接线守卫：ci.yml sanity 含探测轨离线机检步骤（`node test/fixtures/host-surfaces/probe-face.mjs`）+ 语法检查清单含该文件 + 工具文件在仓（删除接线 = 判据回到零机检态）',
-    probeFaceWired,
-    'wired=' + probeFaceWired + ' run=' + ciYmlSrc.includes('node test/fixtures/host-surfaces/probe-face.mjs') + ' check=' + ciYmlSrc.includes('node --check test/fixtures/host-surfaces/probe-face.mjs') + ' file=' + existsSync(probeFaceUrl))
+  // 负例（构造，零落盘）：把两条接线行移入 host-latest-probe 段 ⇒ 旧「全文子串」守卫**仍绿**而段绑定守卫必红。
+  const movedCiYml = (() => {
+    const isWiring = (l) => ['node test/fixtures/host-surfaces/probe-face.mjs', 'node --check test/fixtures/host-surfaces/probe-face.mjs'].includes(ciCmdOf(l))
+    const out = ciYmlSrc.split('\n').filter((l) => !isWiring(l))
+    const at = out.findIndex((l) => l === '  host-latest-probe:')
+    out.splice(at < 0 ? out.length : at + 1, 0, '          run: node test/fixtures/host-surfaces/probe-face.mjs')
+    return out.join('\n')
+  })()
+  const oldSubstringGreen = movedCiYml.includes('node test/fixtures/host-surfaces/probe-face.mjs')
+  const sectionBoundRed = !(ciJobSection(movedCiYml, 'sanity') ?? []).map(ciCmdOf).includes('node test/fixtures/host-surfaces/probe-face.mjs')
+  check('COMPAT-014 A-F2 接线守卫（COMPAT-015 F2 强化为 **sanity 段绑定**）：ci.yml sanity 段内含探测轨离线机检步骤（`node test/fixtures/host-surfaces/probe-face.mjs`）+ 语法检查清单含该文件 + 工具文件在仓（删除接线 = 判据回到零机检态）；**负例**：接线行移出 sanity ⇒ 旧全文子串守卫仍绿（' + oldSubstringGreen + '）而本守卫必红（' + sectionBoundRed + '）',
+    probeFaceWired && oldSubstringGreen && sectionBoundRed,
+    'wired=' + probeFaceWired + ' inSanity=' + sanityCmds.includes('node test/fixtures/host-surfaces/probe-face.mjs') + ' checkInSanity=' + sanityCmds.includes('node --check test/fixtures/host-surfaces/probe-face.mjs') + ' file=' + existsSync(probeFaceUrl) + ' oldSubstringGreen=' + oldSubstringGreen + ' sectionBoundRed=' + sectionBoundRed)
+
+  // ⑧c COMPAT-008（探针固化 `scripts/probe-host.mjs`）接线守卫：脚本在仓 ∧ `node --check` ∧ **离线自检**步骤落在
+  // sanity 段内（`--self-check` 是唯一可在 CI 常态执行的面；实机 `--run` 需运行中宿主环境，不进 CI）∧ 脚本自述
+  // 保留「实机未验证」固定标记（`REAL-RUN: UNVERIFIED`）——**防「静默转已验证」**（不得伪造实机验证）。
+  const probeHostUrl = new URL('../scripts/probe-host.mjs', import.meta.url)
+  const probeHostSrc = existsSync(probeHostUrl) ? readFileSync(probeHostUrl, 'utf8') : ''
+  const probeHostWired = sanityCmds.includes('node --check scripts/probe-host.mjs') && sanityCmds.includes('node scripts/probe-host.mjs --self-check')
+  check('COMPAT-008 探针接线守卫：`scripts/probe-host.mjs` 在仓 ∧ sanity 段内含 `node --check` 与 `node scripts/probe-host.mjs --self-check`（离线自检）∧ 脚本保留固定标记 `REAL-RUN: UNVERIFIED`（实机模式未验证——不得静默转为「已验证」）',
+    existsSync(probeHostUrl) && probeHostWired && probeHostSrc.includes('REAL-RUN: UNVERIFIED') && probeHostSrc.includes('SELF-CHECK: VERIFIED-IN-REPO'),
+    'exists=' + existsSync(probeHostUrl) + ' wired=' + probeHostWired + ' realRunMark=' + probeHostSrc.includes('REAL-RUN: UNVERIFIED') + ' selfCheckMark=' + probeHostSrc.includes('SELF-CHECK: VERIFIED-IN-REPO'))
 
   // ⑨ fixtures 内容安全边界（BC-05）：无绝对路径/宿主缓存路径/凭据形态（仅导出名·方法名·形状布尔）
   const SENSITIVE = /[A-Za-z]:\\|\/Users\/|\/home\/|AppData|npm-cache|Bearer\s|password|api[_-]?key/i
@@ -2012,13 +2048,13 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   //   ④ 终点不截断同一构造：终点行的**行首点号调用前缀**（如 `ctx.slots.inject(`）不得在终点之后再次
   //      作为行首出现。实证：2.13 旧值 `L4422-4454` 止于第 5 处 `ctx.slots.inject(`，第 6 处在 L4458 ⇒ 红。
   //      **强度边界（COMPAT-013 F-2 如实披露）**：④ 为 **opportunistic**——仅当「终点行恰以点号调用起行」
-  //      时生效；2.13 修复后终点 `L4461 = ))` ⇒ `callPrefix` 取 null ⇒ **对该条目已真空**，其终点的持续
+  //      时生效；2.13 修复后终点为**闭合行**（现行范围见契约 2.13 `line` 字段）⇒ `callPrefix` 取 null ⇒ **对该条目已真空**，其终点的持续
   //      机检力改由判据⑤a（出现次数完整性：截断 ≥1 处注册即 5 ≠ 6 ⇒ 红）承接。保留 ④ 而非删除：对
   //      「终点行即下一次同构造起行」形态（旧值 `L4454` 即此类）④ 是唯一判据，删除会让该形态重新裸奔。
-  //      **残余缝（同次实测，未闭合）**：若 2.13 只删**终点闭合行**（`L4429-4460`——6 处注册仍全在范围内）
+  //      **残余缝（同次实测，未闭合）**：若 2.13 只删**终点闭合行**（**历史锚点**：COMPAT-013 时期值 `L4429-4460`——6 处注册仍全在范围内）
   //      则 ①②③④⑤ **全绿**（实测 262/0：⑤a 计数仍 6 ≡ 6、④ callPrefix = null、⑤b 无 `键: {` 形态构造）
   //      ⇒ 该形态目前无持续机检力。根治需「构造闭合行」口径，而 JS 范围本就可能是**合法语义片段**
-  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L4374-L4377` +1 / 3.8 `L2411-2421` +1 实测均非配平）——
+  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L4804-L4806` +1 / 3.8 `L2829-2839` +1 实测均非配平）——
   //      无差别要求配平会误报上述 3 项，故如实留档待另案（非本任务可安全落地）。
   // R1 承继偏移（2.12 −6 / 2.13 −7）在修复前正是 ①③④ 三项的失败用例，修复后全绿（见 CHANGELOG COMPAT-012）。
   //   ⑤ 范围**完整覆盖**所声明构造（COMPAT-013 F-1 新增，两子句，实现见下方 ⑫c）——见 ⑫c 处的口径论证。
@@ -2026,7 +2062,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   const GOLDEN_RANGE_ITEMS = 21
   // COMPAT-013 F-5②：严格面条目数提为 golden——原守卫 `rangeStrict.length > 0` 允许严格面退化到 1 项仍绿
   // （golden 只锁了总范围条目 21 项）。面 2 实测 11 项（13 项中 **2.2**〔`L97` 单行号形态〕与 **2.4**〔多段〕非单段
-  // 范围形态——COMPAT-014 C-F-2 订正：原注释写「2.3/2.4」，而 2.3 `L4374-L4377` 命中 RANGE_LINE 属**单段范围**条目），
+  // 范围形态——COMPAT-014 C-F-2 订正：原注释写「2.3/2.4」，而 2.3 `L4804-L4806` 命中 RANGE_LINE 属**单段范围**条目），
   // RANGE_STRICT_FACES 的覆盖面即 11 ⇒ 与 GOLDEN_RANGE_ITEMS 同款漂移探测约定（brittle-by-design，扩面/删项须显式改 golden）。
   const GOLDEN_RANGE_STRICT_ITEMS = 11
   const RANGE_LINE = /^L(\d+)-L?(\d+)$/
@@ -2148,7 +2184,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // 首行起构造者恰 3 项 = 4.6 `"dsh": {` / 6.1 `"peerDependencies": {` / 6.2 `"engines": {`（面 6 三项
   // JSON 根级子对象；其余 18 项首行为 JS 调用/声明/注释 ⇒ 不适用），项数入 golden（防空转）。
   // **只取首行、不取范围内全部 opener 的理由**：JS 范围可为**合法语义片段**（2.1 `L92-94` 净差 +2 / 2.3
-  // `L4374-L4377` +1 / 3.8 `L2411-2421` +1 实测均非配平，⑤ 注释已留档）——无差别要求范围内每个 opener 配平
+  // `L4804-L4806` +1 / 3.8 `L2829-2839` +1 实测均非配平，⑤ 注释已留档）——无差别要求范围内每个 opener 配平
   // 会误报这些条目；而「范围未包住自身构造闭合行」的形态恰以构造键行起段（首行 opener 即充分判据）。
   // 口径边界同 ⑤b（裸字符配平，不剥注释/字符串中的 `{`/`}`）。
   const KEY_OPEN6 = /^\s*(?:"([^"]{1,60})"|'([^']{1,60})'|([A-Za-z_$][\w$.-]{0,60}))\s*:\s*\{\s*$/
@@ -2180,11 +2216,11 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // ⑫d F-3 披露数字入机检（COMPAT-013）：非严格面（**由 rangeItems 动态生成**；实测 **3/4/5/6 共 10 项**——
   // COMPAT-014 C-F-1 订正：原标签「3/5/6」漏面 4，且与下方列举清单自含 `4.6 L17`（面 4）自相矛盾；条目数同时
   // 入 golden）范围条目中「起于注释/空行」者 MUST 恰 2 项
-  //（3.1 起于 `/**` JSDoc L838、3.5 起于 `//` 互操作说明 L896）。动因 = 该计数原为**人工转写**且写错
+  //（3.1 起于 `/**` JSDoc L978、3.5 起于**空行** L1028——互操作说明在本段内、非起点）。动因 = 该计数原为**人工转写**且写错
   //（CHANGELOG 曾披露「三处」）——与 COMPAT-004 FIND-1 的 tier 串转写漂移同类，故沿用同款处置：实测值
-  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.8 `L2411` 函数行 / 4.6 `L17`
+  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.8 `L2829` 函数行 / 4.6 `L17`
   // `"dsh": {` / 5.1 `L1` `name:` / 5.2 `L16` `- id:` / 5.4 `L77` `- id:` / 6.1 `L39`（修正后真值；修正前
-  // `L38` 亦非注释）/ 6.2 `L8` `"engines": {` / 6.4 `L77` `mkdir -p`。严格面（面 2 = 11 项）已由 ③ 逐项约束，
+  // `L38` 亦非注释）/ 6.2 `L8` `"engines": {` / 6.4 `L105`（ci.yml `#` 注释起段——JS 口径不计为注释，见下句口径边界）。严格面（面 2 = 11 项）已由 ③ 逐项约束，
   // 本项只覆盖未纳入严格面的面（动态生成：实测 3/4/5/6）；注释口径同 ③（JS 风格），YAML `#` 不在识别面内（与 F-5① 同源前提）。
   const GOLDEN_RANGE_COMMENT_START = 2
   const rangeNonStrict = rangeItems.filter((it) => !RANGE_STRICT_FACES.includes(it.face))
@@ -2914,7 +2950,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // ⑩ R1 返工 F5~F9 落点机检：
   //    F5 契约 note 与行号**解耦**（不内嵌「现 L…」——字段值才是唯一事实源；原 2.3/3.1/3.6/1.8 note 残留旧值）；
   //    **B-N2（COMPAT-014，收口 REVIEW-COMPAT-005-R2 N2）**：原守卫只匹配 `/现\s*L\d/` 且只扫 note ⇒ 两条**现役**
-  //    行号副本逃逸（1.3 note「index.js 现调用点 L170/L1367」——「现…L…」中间隔词；1.10 note「emit L155 / logger L122」
+  //    行号副本逃逸（**历史锚点**：COMPAT-014 时期值——1.3 note「index.js 现调用点 L170/L1367」——「现…L…」中间隔词；1.10 note「emit L155 / logger L122」
   //    ——无「现」字）。现：① 词法覆盖「现…L…」与「emit|logger|logWarn + L…」两形态；② 扫描面扩至 items[].symbol、
   //    faces[].scope、revisions[].scope、regionLiterals、ctxGetSemantics、hostSurface（深度遍历字符串值）——
   //    行号唯一事实源 = 各条 `line` 字段，free-text 不得承载**现役**副本（带「原/收口前」限定的历史锚点不受限）。
@@ -2957,6 +2993,74 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
     staleNoteRefs5.length === 0 && fHostEnum5 && f6Dead5 && f6ReasonCovered5 && f7Boundary5 && f9Desc5 && f1TextOk5,
     'staleNote=' + JSON.stringify(staleNoteRefs5.map((n) => n.slice(0, 20))) + ' hostEnum=' + fHostEnum5 + ' f6Dead=' + f6Dead5 + ' f6Codes=' + f6ReasonCovered5
       + ' f7=' + f7Boundary5 + ' f9=' + f9Desc5 + ' f1Text=' + f1TextOk5)
+
+  // ⑩b COMPAT-015 F3（收口 REVIEW-COMPAT-014-R1 F3）：**行号引用 ↔ 契约 `line` 字段** 对账——防「陈旧行号副本」
+  //   复发（F3 的 4 处中 3 处在本文件注释：旧值 2.3 `L4374-L4377`、3.1/3.5 的 `L838`/`L896`、3.8 `L2411-2421`
+  //   ——均已按契约各条 `line` 字段订正）。
+  //   扫描面（**精确口径，不夸大**）：
+  //     面 A = 本文件**注释行**（`//` / `/*` / `*` 起首——现状声明的实际承载面）；
+  //     面 B = `CHANGELOG.md` 的**当前未发布条目**（锚点 `- **COMPAT-015` 顶层 bullet 起至下一条顶层 bullet 止）。
+  //     **口径边界（如实披露）**：CHANGELOG 的**历史条目**不在扫描面内——那里的行号是各批次落地时点的记录，对其
+  //     施加「与当前契约一致」会系统性假阳并要求改写历史（P-01：不改写记录；同 COMPAT-014 C-F-6「历史锚点」纪律）。
+  //   判定：注释行内 `<item> L<n>`（或 `<item> … client.js:<n>`）的 n MUST 落在契约该条 `line` 字段的行界内；
+  //   带**历史限定词**的行（旧值 / 历史锚点 / 修正前 / 收口前 / 原实现…）豁免。多段/混合形态的 `line`
+  //   （如 `L837-850 / L4554 / L4689`）取各段 min…max 为**宽松界**——该形态下只拦「明显无关」的副本（强度边界如实披露）。
+  //   判别力正向对照：注入一处**构造**的陈旧引用（代码行拼装，不入自身注释面）⇒ 扫描器 MUST 命中（防空转/恒真面）。
+  const ITEM_LINE_REF5 = /(\d+\.\d+)[^\n]{0,20}?(?:L|client\.js:)(\d+)/g
+  const HIST_MARK5 = /旧值|历史锚点|修正前|收口前|原实现|原记|原注释|原范围/
+  const COMMENT_LINE_RE5 = /^\s*(\/\/|\*|\/\*)/
+  const COMMENT_FACE5 = (l) => COMMENT_LINE_RE5.test(l)
+  const itemLineRange5 = (id) => {
+    const it = hc5.items.find((x) => x.item === id)
+    if (it === undefined || it.line === null) return null
+    // 行段形态：`L17-29`（同段简写）与 `L92-94 / L4554`（多段）——逐段取两端（同 smoke 的 LINE_SEG 口径）
+    const ns = []
+    for (const m of String(it.line).matchAll(/L(\d+)(?:-L?(\d+))?/g)) { ns.push(Number(m[1])); if (m[2] !== undefined) ns.push(Number(m[2])) }
+    return ns.length === 0 ? null : [Math.min(...ns), Math.max(...ns)]
+  }
+  const scanItemLineRefs5 = (lines, opts = {}) => {
+    const face = opts.face ?? COMMENT_FACE5
+    const base = opts.base ?? 0
+    const out = []
+    lines.forEach((l, i) => {
+      if (!face(l) || HIST_MARK5.test(l)) return
+      for (const m of l.matchAll(ITEM_LINE_REF5)) {
+        const r = itemLineRange5(m[1])
+        if (r !== null && (Number(m[2]) < r[0] || Number(m[2]) > r[1])) out.push('L' + (base + i + 1) + ': ' + m[1] + ' L' + m[2] + ' ∉ ' + JSON.stringify(r))
+      }
+    })
+    return out
+  }
+  const smokeSrc15 = readFileSync(new URL('./smoke.mjs', import.meta.url), 'utf8')
+  const smokeLines15 = smokeSrc15.split('\n')
+  const changelogLines15 = readFileSync(new URL('../CHANGELOG.md', import.meta.url), 'utf8').split('\n')
+  const entryStart15 = changelogLines15.findIndex((l) => l.startsWith('- **COMPAT-015'))
+  let entryEnd15 = changelogLines15.length
+  if (entryStart15 >= 0) for (let i = entryStart15 + 1; i < changelogLines15.length; i++) if (/^- \*\*/.test(changelogLines15[i])) { entryEnd15 = i; break }
+  const changelogEntryLines15 = entryStart15 < 0 ? [] : changelogLines15.slice(entryStart15, entryEnd15)
+  const staleRefs15 = [...scanItemLineRefs5(smokeLines15), ...scanItemLineRefs5(changelogEntryLines15, { face: () => true, base: entryStart15 })]
+  const injectedStaleRef15 = '// ' + '2.3' + ' `L' + '4374-L4377`'   // 拼装：避免本守卫自身文本入注释扫描面
+  const injectedHit15 = scanItemLineRefs5([injectedStaleRef15]).length
+  const smokeCommentCount15 = smokeLines15.filter((l) => COMMENT_LINE_RE5.test(l)).length
+  check('COMPAT-015 F3 行号引用对账（smoke 注释 ' + smokeCommentCount15 + ' 行 + CHANGELOG 当前条目 ' + changelogEntryLines15.length + ' 行）：注释/条目内 `<item> L<n>` 引用 MUST 落在契约该条 `line` 字段界内（0 处陈旧副本；历史限定词行豁免）；**判别力正向对照**：注入构造陈旧对 ⇒ 扫描器命中 ' + injectedHit15 + ' 处（>0 ⇒ 非恒真）',
+    staleRefs15.length === 0 && injectedHit15 > 0 && smokeCommentCount15 >= 400 && changelogEntryLines15.length >= 5,
+    'stale=' + JSON.stringify(staleRefs15.slice(0, 6)) + '(total ' + staleRefs15.length + ') injectedHit=' + injectedHit15 + ' smokeComments=' + smokeCommentCount15 + ' changelogEntryLines=' + changelogEntryLines15.length)
+
+  // ⑩c COMPAT-015 F9（收口 REVIEW-COMPAT-014-R1 F9）：B-N2 扩宽词法的**正向对照**——原断言只有负向（「契约 free-text
+  //   内 0 处现役副本」），词法若被误改为更窄形态仍会全绿（退化为「零命中 = 无副本」的恒真面）。仓库先例要求
+  //   扩宽能力必须带正向对照（COMPAT-012 N1 ①a「R1 口径漏检 ∧ 现行口径命中」/ COMPAT-005 F2「注入 ⇒ 扫描器必红」）。
+  //   此处把两个**历史逃逸形态**固化为正例，并把「原…」历史锚点形态固化为面外负例（词法边界双向）。
+  const LEXER_NOW15 = /现[^。；]{0,10}L\d/
+  const LEXER_EMIT15 = /(?:emit|logger|logWarn|emitChanged)\s*(?:\/|,|、)?\s*L\d/
+  const lexerProbes15 = [
+    { form: '「现…（间隔 ≤10 字）L…」', sample: 'index.js ' + '现调用点 ' + 'L' + '170', re: LEXER_NOW15 },
+    { form: '「emit/logger… + L…」（无「现」字）', sample: 'emit ' + 'L' + '155', re: LEXER_EMIT15 },
+    { form: '历史锚点「原…L…」（词法面外，Must NOT 命中）', sample: 'index.js ' + '原调用点 ' + 'L' + '170', re: LEXER_NOW15 },
+  ]
+  const lexerProbeHits15 = lexerProbes15.map((p) => p.re.test(p.sample))
+  check('COMPAT-015 F9 B-N2 词法正向对照：两个历史逃逸形态（「现…L…」带间隔词 / 「emit|logger(+L…)」无「现」字）MUST 被现行词法命中 ∧ 历史锚点形态（「原…L…」）MUST NOT 命中（3 例双向——词法被改窄或改宽均红）',
+    lexerProbeHits15[0] === true && lexerProbeHits15[1] === true && lexerProbeHits15[2] === false,
+    'hits=' + JSON.stringify(lexerProbes15.map((p, i) => p.form + '=' + lexerProbeHits15[i])))
 }
 
 // ⑪ COMPAT-014 A-F9：README 验证管线段的 smoke 断言计数 ≡ 实测（含本断言自身）——原为**人工转写**且已陈旧

@@ -1,5 +1,9 @@
 /**
- * probe-face.mjs — 宿主发版探测轨（`host-latest-probe` job 内联判据）的**离线机检**工具。
+ * probe-face.mjs — CI 门禁（sanity）内的**离线结构对账**工具，三面职责：
+ *   A. 探测轨判据机检（ci.yml `host-latest-probe` job 的 heredoc 判据脚本）；
+ *   B. 探测轨**接线**自断言（机检步骤 MUST 留在 sanity 段内）；
+ *   C. install 头部「宿主布局契约」块 ↔ 契约面 4/5 声明 正则对账（COMPAT-009）。
+ * 三面共用同一判据：**只读仓库文件 + 构造隔离目录**，零网络 / 零 install / 不因宿主发版误红。
  *
  * 动因（COMPAT-014，收口 REVIEW-COMPAT-007-R1 F1/F2/F4/F5；F3/F6/F7 一并行为断言）：判据脚本内联在 ci.yml
  * 的 heredoc 里，而该 job 被 `if` 排除于 PR/push ⇒ 脚本的**语法/逻辑缺陷在 PR 面零机检**，只能等首次
@@ -8,27 +12,54 @@
  * 无网络、无 install、不读 registry、不因宿主发版误红（检查的是**脚本与结构**，不是宿主版本 ⇒ 不违背
  * 「只读网络探测不进 PR 门禁」原意）。
  *
+ * COMPAT-015 增补（收口 REVIEW-COMPAT-014-R1；逐项对应）：
+ *   F1 → ② 补「`on` 四键」正则断言（原只检 `  schedule:` ⇒ 删 push/pull_request/workflow_dispatch 三者时
+ *        记录仍全绿：PR 门禁 / 手动随查静默消失，假绿方向）＋ ⑦ 四键逐一删除的**变异负例**；
+ *   F2 → ② 增接线**自断言**：两条接线行 MUST 落在 `jobSection(yml,'sanity')` 段内（全文子串匹配会被
+ *        「步骤移出 sanity」骗过）＋ ⑦ 变异负例（同一条步骤文本移入 host-latest-probe ⇒ 旧全文守卫仍绿、
+ *        段绑定守卫必红）；
+ *   F4 → ④ 补判据 ① / ③ / ⑤ 三段**构造负例**（各 1 例：探测面缺包 ⇒ exit 2 + 归因 / fixtures 自洽破坏
+ *        ⇒ exit 1 coverage / 受限版本口径外形态 ⇒ exit 1 version-form）；三段此前零负例，逻辑缺陷只能靠人工审查；
+ *   F5 → ④ 补「输入异常 + 宿主新版本**同轮并报**」例（ci.yml 判据脚本同步改：input 分支退出前并报 failures）；
+ *   F6 → ⑥ 补白名单**自指面**：判据脚本本体（由 node 执行 ⇒ 等效命令面）零 install/npx/pack/子进程/fetch/URL；
+ *        并把 ci.yml 探测 job 注释里的「允许 / 禁止」声明面与 ALLOWED / FORBIDDEN 常量做**双向对账**；
+ *   F7 → runNode 加 `spawnSync` timeout（60s）+ 超时归类；⑦ 含**真跑实测**（阻塞脚本在 1.2s 上限下被终止）；
+ *   F8 → die() 归因分型（「输入缺失」vs「工具与契约失配」）+ `hostSurface.packages` 结构守卫（原会走未捕获
+ *        TypeError）+ `process.on('exit')` 清理 tmp（原 die/异常路径不清理，与头注释「用毕删除」不符）；
+ *   COMPAT-009 → ⑧ install.ps1/install.sh 头部「宿主布局契约」块（固定标记行 `host-contract:v1`，RB-02）
+ *        ↔ 契约面 4/5 对应声明 正则对账 + 变异负例（删标记 / 改约定字面量 / 丢约定项 ⇒ 必红）。
+ *
  * 职责（检查项）：
  *   ① 提取 ci.yml 内联判据（heredoc，定界约定泛化）→ `node --check`（语法机检）；
- *   ② 事件门禁结构断言（A-F1）：`schedule` 只跑探测 job（sanity/host-logic 反向 if）∧ 各 job `permissions:
- *      contents: read` ∧ `on` 含四类事件；
+ *   ② 事件门禁结构断言（A-F1）：`on` 含**四类事件键**（F1）∧ `schedule` 只跑探测 job（sanity/host-logic 反向
+ *      if）∧ 各 job `permissions: contents: read` ∧ **接线自断言**（F2：两条机检接线行落在 sanity 段内）；
  *   ③ 命令白名单 + stem↔命令一一对应（A-F5）：探测 job 的 shell 命令逐条 ∈ 白名单（禁 install/ci/npx/pack/
  *      cache/tar），每个探测目标恰 1 条 `npm view @deepseek-ai/<stem> versions --json > "$PROBE_DIR/<stem>…"`，
  *      且无越界探测；
  *   ④ 构造 probe JSON + fixtures + 契约**驱动判据真跑**（A-F2）并断言退出码语义：
  *      绿例（exit 0）/ 新版本红例（exit 1，version-drift）/ 非 CLI 子句②红例（exit 1，coverage）/
  *      CLI 代理例（A-F3：CLI 覆盖版本不在上游列表 ⇒ **仍须绿**，报文含代理限定语）/
- *      输入缺失例（A-F7：空文件 ⇒ **exit 2** + 逐包归因）/ 版本维失配例（A-F4：契约侧与 fixtures 侧各一）；
+ *      输入缺失例（A-F7：空文件 ⇒ **exit 2** + 逐包归因）/
+ *      判据 ① 负例（F4：探测面缺契约声明包 ⇒ exit 2 + 面/输入双归因）/
+ *      判据 ③ 负例（F4：fixtures 自洽破坏 ⇒ exit 1 + 类别 coverage）/
+ *      判据 ⑤ 负例（F4：受限版本口径外形态 ⇒ exit 1 + 类别 version-form）/
+ *      输入 + 版本漂移**同轮并报**例（F5：退出码 2 且 drift 明细不丢）/
+ *      版本维失配例（A-F4：契约侧与 fixtures 侧各一）；
  *   ⑤ 失败分类处置覆盖（A-F6）：`fail()` 使用的**全部类别** ≡ `DISPOSAL` 表键集（双向）——新增类别不写处置
- *      文案即红。
+ *      文案即红；
+ *   ⑥ 白名单自指面（F6）：判据脚本本体零禁用面命中 ∧ ci.yml 注释声明面 ↔ ALLOWED/FORBIDDEN 常量双向对账；
+ *   ⑦ 守卫负例与运行器健壮性（F1/F2/F7）：变异构造「删键 / 移出 sanity 段」必红；阻塞脚本必被 timeout 终止；
+ *   ⑧ install 头部布局契约对账（COMPAT-009）：两脚本标记块存在 ∧ 约定项键集一致 ∧ 每项字面量在契约对应
+ *      item 的 symbol 内；变异负例（删标记 / 改字面量 / 丢项）必红。
  *
- * 只读纪律：只读 `.github/workflows/ci.yml` / `lib/host-contract.mjs` / `test/fixtures/host-surfaces/*.json`；
- * 写操作仅发生在 `os.tmpdir()` 下 `mkdtempSync` 的隔离目录（构造用例 + 子进程日志），用毕删除。
+ * 只读纪律：只读 `.github/workflows/ci.yml` / `lib/host-contract.mjs` / `test/fixtures/host-surfaces/*.json` /
+ * `install.ps1` / `install.sh`；写操作仅发生在 `os.tmpdir()` 下 `mkdtempSync` 的隔离目录（构造用例 + 子进程
+ * 日志），**成功 / 失败 / 未捕获异常三条路径均清理**（F8：`process.on('exit')` 兜底，原仅成功路径清理）。
  * 子进程输出经**临时文件 fd** 收集（非管道）——避免受限沙箱下管道不可用的环境依赖。
  *
  * 直接运行（CI sanity 步骤；离线、零依赖）：
  *   node test/fixtures/host-surfaces/probe-face.mjs [--json-out <path>]
- * 退出码：0 = 全部通过；1 = 有失败项；2 = 输入缺失（ci.yml / 契约 / fixtures 不可读）。
+ * 退出码：0 = 全部通过；1 = 有失败项；2 = 输入缺失**或**工具与契约失配（报文字首区分归因，F8）。
  */
 import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync, existsSync, openSync, closeSync, readdirSync } from 'node:fs'
 import { join, dirname } from 'node:path'
@@ -45,13 +76,39 @@ const FIXTURES_DIR = HERE
 const PROBE_SCRIPT_SUFFIX = 'nv-host-latest-probe.mjs'
 const PROBE_JOB = 'host-latest-probe'
 const GATE_BASIC_JOBS = ['sanity', 'host-logic']
-
+// F1：`on` 必须含的四类事件键（缺任一 ⇒ 对应触发面静默消失：pull_request ⇒ PR 门禁、workflow_dispatch ⇒ 手动随查）
+const EVENT_KEYS = ['push', 'pull_request', 'schedule', 'workflow_dispatch']
+// F2：本工具的接线行——MUST 落在 sanity 段内（step run 行 + 语法检查清单行）
+const SELF_INVOCATION = 'node test/fixtures/host-surfaces/probe-face.mjs'
+const SELF_CHECK = 'node --check test/fixtures/host-surfaces/probe-face.mjs'
+// F7：判据子进程超时上限（秒级离线机检不该退化为 job 级超时）
+const RUN_TIMEOUT_MS = 60000
+// COMPAT-009：install 头部布局契约块
+const INSTALL_FILES = ['install.ps1', 'install.sh']
+const INSTALL_MARKER = 'host-contract:v1'
+const INSTALL_HEAD_LIMIT = 60
+const INSTALL_GOLDEN_ENTRIES = 5
+// COMPAT-008：探针固化脚本的接线（离线自检模式在 sanity 内执行 ⇒ PR 面即可发现脚本回归）
+const PROBE_HOST = 'scripts/probe-host.mjs'
+const PROBE_HOST_INVOCATION = 'node scripts/probe-host.mjs --self-check'
+// 互斥词法：两正则不同时命中（写入时即校验，见 ④ 后置断言）
 const results = []
 const record = (name, ok, detail) => { results.push({ name, ok, detail }); return ok }
-const die = (msg) => { console.error('[probe-face] 输入缺失：' + msg); process.exit(2) }
+
+// F8：失败归因分型——原 die() 对所有情形统一输出「输入缺失」，会把「工具与契约结构失配」误导为「文件不可读」。
+// 两类共用退出码 2（A-F7 口径：2 = 用法/输入类，与「检测到新版本」的 1 区分），报文字首点名归因。
+const die = (kind, msg) => { console.error('[probe-face] ' + kind + '：' + msg); process.exit(2) }
+
+// F8：tmp 清理兜底——die()/未捕获异常发生在 mkdtempSync 之后时，原实现不清理（与头注释「用毕删除」不符）。
+let tmpRoot = null
+process.on('exit', () => {
+  if (tmpRoot !== null) {
+    try { rmSync(tmpRoot, { recursive: true, force: true }) } catch { /* 清理失败不掩盖退出码 */ }
+  }
+})
 
 // ── 提取/结构工具 ────────────────────────────────────────────────────────────
-/** 判据脚本源码（契约：ci.yml 内 target 以 `nv-host-latest-probe.mjs` 结尾的 heredoc；缺失即结构性失败）。 */
+/** 判据脚本源码（契约：ci.yml 内 target 以 `nv-host-latest-probe.mjs` 结尾的 heredoc；缺失即结构性失配）。 */
 function probeScriptSource(yml) {
   const heredocs = extractHeredocs(yml)
   for (const [target, body] of heredocs) if (target.endsWith(PROBE_SCRIPT_SUFFIX)) return { target, body }
@@ -116,37 +173,133 @@ function evaluateGate(expr, event) {
   return null
 }
 
-/** 运行 node 子进程：输出经临时文件 fd 收集（非管道，避免受限沙箱下命名管道不可用）。 */
-function runNode(args, logPath) {
+/** F1：`on` 四键完整性——返回缺失键列表（空数组 = 齐全）。 */
+const eventKeysMissing = (src) => EVENT_KEYS.filter((k) => !new RegExp('^  ' + k + ':', 'm').test(src))
+
+/** F1 变异工具：删除 `on:` 下的某个子键及其缩进子行（用于四键负例构造）。 */
+function deleteOnChild(src, key) {
+  const out = []
+  let skipping = false
+  for (const l of src.split('\n')) {
+    if (/^  [A-Za-z_]+:/.test(l)) skipping = new RegExp('^  ' + key + ':').test(l)
+    if (!skipping) out.push(l)
+  }
+  return out.join('\n')
+}
+
+/** F2：接线行是否落在 sanity 段内（**段绑定**，非全文子串）。行形态兼容两种写法：
+ *  YAML 块标量内独立一行（`          node …`）与同一步骤的 `run:` 单行（`run: node …`）。 */
+function wiringInSanity(src) {
+  const section = jobSection(src, 'sanity')
+  if (section === null) return { ok: false, why: 'sanity 段缺失' }
+  const cmdOf = (l) => l.trim().replace(/^run:\s*/, '')
+  const cmds = section.map(cmdOf)
+  const run = cmds.includes(SELF_INVOCATION)
+  const check = cmds.includes(SELF_CHECK)
+  const host = cmds.includes(PROBE_HOST_INVOCATION)
+  return { ok: run && check && host, why: 'run=' + run + ' check=' + check + ' probeHost=' + host + '（sanity 段 ' + section.length + ' 行）' }
+}
+
+/** F2 变异工具：把接线行移入 `host-latest-probe` 段（同一步骤文本仍在文件中 ⇒ 旧「全文子串」守卫仍绿）。 */
+function moveWiringOutOfSanity(src) {
+  const isWiring = (l) => {
+    const t = l.trim().replace(/^run:\s*/, '')
+    return t === SELF_INVOCATION || t === SELF_CHECK || t === PROBE_HOST_INVOCATION
+  }
+  const out = src.split('\n').filter((l) => !isWiring(l))
+  const probeJobStart = out.findIndex((l) => l === '  ' + PROBE_JOB + ':')
+  const insertAt = probeJobStart < 0 ? out.length : probeJobStart + 1
+  out.splice(insertAt, 0, '          run: ' + SELF_INVOCATION, '          run: ' + SELF_CHECK, '          run: ' + PROBE_HOST_INVOCATION)
+  return out.join('\n')
+}
+
+/** 运行 node 子进程：输出经临时文件 fd 收集（非管道，避免受限沙箱下命名管道不可用）。
+ *  F7：带 `timeout`（默认 60s）——判据脚本若阻塞，原实现会同步挂起至 CI job 级超时；超时归类为失败项。 */
+function runNode(args, logPath, timeoutMs = RUN_TIMEOUT_MS) {
   const fd = openSync(logPath, 'w')
   let r
   try {
-    r = spawnSync(process.execPath, args, { stdio: ['ignore', fd, fd], cwd: REPO_ROOT })
+    r = spawnSync(process.execPath, args, { stdio: ['ignore', fd, fd], cwd: REPO_ROOT, timeout: timeoutMs })
   } finally {
     closeSync(fd)
   }
-  return { status: r.status, error: r.error === undefined ? null : String(r.error), output: existsSync(logPath) ? readFileSync(logPath, 'utf8') : '' }
+  const err = r.error === undefined || r.error === null ? null : r.error
+  return {
+    status: r.status,
+    signal: r.signal === undefined ? null : r.signal,
+    error: err === null ? null : String(err.code ?? err.message ?? err),
+    timedOut: err !== null && (err.code === 'ETIMEDOUT' || String(err.message ?? '').includes('ETIMEDOUT')),
+    output: existsSync(logPath) ? readFileSync(logPath, 'utf8') : '',
+  }
+}
+
+// COMPAT-009：install 头部布局契约块解析（`#   [<item>] <名> = <字面量>`）+ 契约对账（纯函数，便于负例构造）
+const INSTALL_KEY_RE = /^\s*#\s*\[(\d+\.\d+)\]\s*([^=]+?)\s*=\s*(.+?)\s*$/
+// RB-02：固定标记行 = **整行恰为 `# host-contract:v1`**（正文中提及该串的说明行不算标记——防「标记被删而说明行残留」假绿）。
+const INSTALL_MARKER_LINE_RE = new RegExp('^\\s*#\\s*' + INSTALL_MARKER + '\\s*$')
+function parseInstallContract(src) {
+  const lines = src.replace(/^\uFEFF/, '').split('\n')
+  const entries = []
+  for (const l of lines) {
+    const m = INSTALL_KEY_RE.exec(l)
+    if (m !== null) entries.push({ item: m[1], label: m[2], literal: m[3] })
+  }
+  return { markerAt: lines.findIndex((l) => INSTALL_MARKER_LINE_RE.test(l)), entries }
+}
+/** 返回问题清单（空数组 = 对账通过）；契约 `symbol` 是宿主耦合声明的单一事实源。 */
+function installContractProblems(ps1, sh, hc) {
+  const problems = []
+  const parsed = {}
+  for (const [name, text] of [[INSTALL_FILES[0], ps1], [INSTALL_FILES[1], sh]]) {
+    const p = parseInstallContract(text)
+    parsed[name] = p
+    if (p.markerAt < 0) problems.push(name + '：缺少固定标记行 `' + INSTALL_MARKER + '`')
+    else if (p.markerAt >= INSTALL_HEAD_LIMIT) problems.push(name + '：标记行不在头部 ' + INSTALL_HEAD_LIMIT + ' 行内（第 ' + (p.markerAt + 1) + ' 行）')
+    if (p.entries.length === 0) problems.push(name + '：未解析到任何 `[<item>] 名 = 字面量` 约定行')
+    for (const e of p.entries) {
+      const it = hc.items.find((x) => x.item === e.item)
+      if (it === undefined) { problems.push(name + '：约定项 [' + e.item + '] 不在契约 items[] 内（面 4/5 安装注册项）'); continue }
+      // 字面量口径：` + ` 分隔 = **合取式**（多段约定名逐段对账），任一片段缺失即红。
+      const miss = e.literal.split(' + ').map((s) => s.trim()).filter((s) => s !== '').filter((f) => !String(it.symbol).includes(f))
+      if (miss.length > 0) problems.push(name + '：[' + e.item + '] 字面量片段 ' + JSON.stringify(miss) + ' 未出现在契约该项 symbol 内')
+    }
+  }
+  const keysA = parsed[INSTALL_FILES[0]].entries.map((e) => e.item).sort().join(',')
+  const keysB = parsed[INSTALL_FILES[1]].entries.map((e) => e.item).sort().join(',')
+  if (keysA !== keysB) problems.push('两脚本约定项键集不一致：' + INSTALL_FILES[0] + '=[' + keysA + '] vs ' + INSTALL_FILES[1] + '=[' + keysB + ']')
+  if (parsed[INSTALL_FILES[0]].entries.length !== INSTALL_GOLDEN_ENTRIES) {
+    problems.push('约定项数 ' + parsed[INSTALL_FILES[0]].entries.length + ' ≠ golden ' + INSTALL_GOLDEN_ENTRIES + '（扩项/删项须显式改 golden）')
+  }
+  return problems
 }
 
 // ── 主流程 ──────────────────────────────────────────────────────────────────
-if (!existsSync(CI_YML)) die('ci.yml 不存在：' + CI_YML)
-if (!existsSync(CONTRACT)) die('契约不存在：' + CONTRACT)
+if (!existsSync(CI_YML)) die('输入缺失', 'ci.yml 不存在：' + CI_YML)
+if (!existsSync(CONTRACT)) die('输入缺失', '契约不存在：' + CONTRACT)
+for (const f of INSTALL_FILES) if (!existsSync(join(REPO_ROOT, f))) die('输入缺失', '安装脚本不存在：' + f)
 const yml = readFileSync(CI_YML, 'utf8')
 const probe = probeScriptSource(yml)
-if (probe === null) die('ci.yml 未找到判据 heredoc（target 以 ' + PROBE_SCRIPT_SUFFIX + ' 结尾）')
+if (probe === null) die('工具与契约失配', 'ci.yml 未找到判据 heredoc（target 以 ' + PROBE_SCRIPT_SUFFIX + ' 结尾）——heredoc 约定变更后需同步本工具')
 const { hostContract } = await import(pathToFileURL(CONTRACT).href)
+// F8：契约结构守卫——`hostSurface.packages` 形态变化（改名/置空）原会走未捕获 TypeError（exit 1 + 栈回溯），
+// 现归因为「工具与契约失配」。
+if (hostContract?.hostSurface?.packages === null || typeof hostContract?.hostSurface?.packages !== 'object') {
+  die('工具与契约失配', '契约 hostSurface.packages 形态异常（缺失/非普通对象）——契约结构变更后需同步本工具')
+}
 const declared = [...new Set(Object.values(hostContract.hostSurface.packages).flat())].sort()
 const targets = [...declared, 'dsh'].sort()
 
 // ① 判据脚本提取 + 语法机检
 record('① 判据 heredoc 提取（' + probe.target + '，' + probe.body.split('\n').length + ' 行）', probe.body.trim().length > 0, 'len=' + probe.body.length)
 const tmp = mkdtempSync(join(tmpdir(), 'probe-face-'))
+tmpRoot = tmp
 const probeScript = join(tmp, 'nv-host-latest-probe.mjs')
 writeFileSync(probeScript, probe.body)
 const checkRun = runNode(['--check', probeScript], join(tmp, 'check.log'))
-record('① `node --check` 判据脚本（语法机检；PR 门禁内覆盖，原为零机检）', checkRun.status === 0, 'status=' + String(checkRun.status) + (checkRun.status === 0 ? '' : ' :: ' + checkRun.output.split('\n').slice(0, 4).join(' | ')))
+record('① `node --check` 判据脚本（语法机检；PR 门禁内覆盖，原为零机检）', checkRun.status === 0 && !checkRun.timedOut,
+  'status=' + String(checkRun.status) + (checkRun.timedOut ? ' ⏱ 超时（' + RUN_TIMEOUT_MS + 'ms）' : '') + (checkRun.status === 0 ? '' : ' :: ' + checkRun.output.split('\n').slice(0, 4).join(' | ')))
 
-// ② 事件门禁结构（A-F1）+ 最小 permissions
+// ② 事件门禁结构（A-F1）+ 最小 permissions + 接线自断言（F2）
 const gates = jobGates(yml)
 const jobNames = [...gates.keys()]
 const expectedByEvent = {
@@ -175,10 +328,19 @@ record('② A-F1 事件门禁结构断言：schedule ⇒ 仅 ' + PROBE_JOB + '�
   'mismatch=' + JSON.stringify(gateMismatch) + ' unknown=' + JSON.stringify(gateUnknown) + ' jobs=' + JSON.stringify(jobNames))
 const permsBad = jobNames.filter((j) => JSON.stringify(jobPermissions(yml, j)) !== JSON.stringify(['contents: read']))
 record('② A-F1 最小 permissions：三个 job 均显式 `contents: read`（含既有 sanity/host-logic）', permsBad.length === 0, 'bad=' + JSON.stringify(permsBad))
+// F1：原实现只检 `  schedule:` ⇒ 从 `on:` 删除 pull_request / workflow_dispatch 时 ② 记录**仍全绿**（PR 门禁 /
+// 手动随查静默消失，假绿方向；evaluateGate 是 `if` 表达式纯函数，与 `on:` 无关）。四键各自断言存在。
+const missingEventKeys = eventKeysMissing(yml)
+record('② A-F1 `on` 四键完整性：push / pull_request / schedule / workflow_dispatch 各存一（REVIEW-COMPAT-014-R1 F1）',
+  missingEventKeys.length === 0, 'missing=' + JSON.stringify(missingEventKeys))
+// F2：接线守卫 MUST 是**段绑定**的（全文子串匹配会被「把步骤移出 sanity」骗过——正是 R1 F2 的失效模式本身）。
+const selfWiring = wiringInSanity(yml)
+record('② A-F2 接线**自断言**：`' + SELF_INVOCATION + '` / `' + SELF_CHECK + '` / `' + PROBE_HOST_INVOCATION + '` 均落在 jobSection(yml,"sanity") 段内（非全文子串）',
+  selfWiring.ok, selfWiring.why)
 
 // ③ 命令白名单 + stem↔命令一一对应（A-F5）
 const section = jobSection(yml, PROBE_JOB)
-if (section === null) die('ci.yml 未找到 job 段：' + PROBE_JOB)
+if (section === null) die('工具与契约失配', 'ci.yml 未找到 job 段：' + PROBE_JOB + '——job 改名后需同步本工具')
 const commandLines = []
 {
   let inRun = false
@@ -223,7 +385,7 @@ record('③ A-F5 stem↔命令一一对应：' + targets.length + ' 个探测目
   stemBad.length === 0 && viewLines.filter((l) => l.includes('dist-tags')).length === 1,
   'bad=' + JSON.stringify(stemBad))
 
-// ④ 构造 probe JSON 驱动判据真跑（A-F2 / A-F3 / A-F4 / A-F7）
+// ④ 构造 probe JSON 驱动判据真跑（A-F2 / A-F3 / A-F4 / A-F7 / F4 / F5）
 const fixtures = readdirSync(FIXTURES_DIR).filter((f) => f.endsWith('.json')).map((f) => JSON.parse(readFileSync(join(FIXTURES_DIR, f), 'utf8')))
 const greenLists = {}
 for (const p of declared) {
@@ -252,13 +414,24 @@ function makeFourthFixtureDir() {
   writeFileSync(join(dir, 'zz-0.1.6-rc.1.json'), JSON.stringify(four, null, 2) + '\n')
   return dir
 }
+/** F4（判据③）：拷贝 fixtures 并把一个**非例外包**的版本改成 ≠ hostVersion（破坏 fixtures 自洽）。 */
+function makeSelfInconsistentFixtureDir() {
+  const dir = join(tmp, 'fixtures-self')
+  mkdirSync(dir, { recursive: true })
+  for (const [i, fx] of fixtures.entries()) {
+    const clone = JSON.parse(JSON.stringify(fx))
+    if (i === fixtures.length - 1) clone.packages['dsh-tools'].version = '0.1.3-rc.9'   // dsh-tools 非例外包 ⇒ ③ 必报
+    writeFileSync(join(dir, 'copy-' + i + '.json'), JSON.stringify(clone, null, 2) + '\n')
+  }
+  return dir
+}
 const runCase = (label, probeDir, fixturesDir = FIXTURES_DIR, contractPath = CONTRACT) =>
   runNode([probeScript, probeDir, fixturesDir, contractPath], join(tmp, 'case-' + label + '.log'))
 const cases = []
 const expectCase = (label, run, wantStatus, mustInclude = []) => {
-  const ok = run.status === wantStatus && mustInclude.every((s) => run.output.includes(s))
-  cases.push({ label, ok, status: run.status, wantStatus })
-  record('④ ' + label, ok, 'status=' + String(run.status) + '（期望 ' + wantStatus + '）' + (ok ? '' : ' :: ' + run.output.split('\n').slice(0, 3).join(' | ')))
+  const ok = !run.timedOut && run.status === wantStatus && mustInclude.every((s) => run.output.includes(s))
+  cases.push({ label, ok, status: run.status, wantStatus, timedOut: run.timedOut })
+  record('④ ' + label, ok, 'status=' + String(run.status) + '（期望 ' + wantStatus + '）' + (run.timedOut ? ' ⏱ 超时（' + RUN_TIMEOUT_MS + 'ms）' : '') + (ok ? '' : ' :: ' + run.output.split('\n').slice(0, 3).join(' | ')))
 }
 
 const greenProbe = makeProbeDir('green')
@@ -280,7 +453,7 @@ expectCase('A-F7 输入缺失例：空文件（npm view 失败残留）⇒ exit 
 const contract4thKey = join(tmp, 'contract-extra-version.mjs')
 // EOL 口径：契约文件为 CRLF（仓内既有约定）——构造前规范为 LF，仅用于临时副本，不写回仓库。
 const contractMutated = readFileSync(CONTRACT, 'utf8').replace(/\r\n/g, '\n').replace("    packages: {\n      '0.1.1-rc.2':", "    packages: {\n      '0.1.9-rc.9': ['dsh-tools'],\n      '0.1.1-rc.2':")
-if (!contractMutated.includes("'0.1.9-rc.9'")) die('A-F4 构造失败：契约 packages 键锚点未命中（契约结构变更后需同步本工具）')
+if (!contractMutated.includes("'0.1.9-rc.9'")) die('工具与契约失配', 'A-F4 构造失败：契约 packages 键锚点未命中（契约结构变更后需同步本工具）')
 writeFileSync(contract4thKey, contractMutated)
 const contractBadRun = runCase('contract-extra', greenProbe, FIXTURES_DIR, contract4thKey)
 expectCase('A-F4 契约侧版本维失配（构造：契约多声明一个版本键）⇒ exit 1', contractBadRun, 1, ['版本维双向对账'])
@@ -288,6 +461,24 @@ expectCase('A-F4 契约侧版本维失配（构造：契约多声明一个版本
 const fourth = makeFourthFixtureDir()
 const fourthRun = runCase('fixtures-4th', greenProbe, fourth)
 expectCase('A-F4 fixtures 侧版本维失配（构造：新增第 4 份快照）⇒ exit 1', fourthRun, 1, ['版本维双向对账'])
+
+// F4：判据 ①/③/⑤ 三段（A-F2 残留面）此前**零负例** ⇒ 逻辑缺陷只能靠人工审查。各补 1 例：
+const missingStemDir = makeProbeDir('missing-stem')
+rmSync(join(missingStemDir, 'cordis.versions.json'))
+const missingStemRun = runCase('missing-stem', missingStemDir)
+expectCase('F4 判据① 负例（探测面缺契约声明包）：删一个 stem ⇒ exit 2 + 面归因（「探测面缺契约声明包」）+ 输入归因（「探测输入缺失」）——两向均不静默',
+  missingStemRun, 2, ['探测面缺契约声明包 cordis', '探测输入缺失', '退出码 2'])
+
+const selfInconsistentRun = runCase('fixtures-self', greenProbe, makeSelfInconsistentFixtureDir())
+expectCase('F4 判据③ 负例（fixtures 自洽）：非例外包 dsh-tools 版本 ≠ hostVersion ⇒ exit 1 + 类别 coverage + 「fixtures 自洽」',
+  selfInconsistentRun, 1, ['fixtures 自洽', '类别 coverage'])
+
+const versionFormRun = runCase('version-form', makeProbeDir('version-form', { cordis: [...greenLists['cordis'], '0.1.5-beta.1'] }))
+expectCase('F4 判据⑤ 负例（受限版本口径）：上游串 `0.1.5-beta.1`（track 表外）⇒ exit 1 + 类别 version-form + 「重建 fixtures 关不掉」处置', versionFormRun, 1, ['形态超出受限口径', '类别 version-form', '重建 fixtures 关不掉'])
+
+const inputDriftRun = runCase('input-drift', makeProbeDir('input-drift', { 'dsh-settings': [...greenLists['dsh-settings'], '0.1.5-rc.3'].sort() }, ['cordis.versions.json']))
+expectCase('F5 输入异常 + 宿主新版本**同轮并报**：空文件（input ⇒ 退出码 2）∧ dsh-settings 新版本（version-drift）——两者 MUST 同时出现在报文（原实现 input 分支先 exit(2)，drift 明细被吞 ⇒ 发版暴露延后一轮）',
+  inputDriftRun, 2, ['探测输入异常', '探测输入不可解析（cordis.versions.json）', '同轮另检出', '类别 version-drift', 'detected new host version 0.1.5-rc.3'])
 
 // ⑤ A-F6 失败分类处置覆盖（fail() 类别 ≡ DISPOSAL 键集，双向）
 const disposalStart = probe.body.indexOf('const DISPOSAL = {')
@@ -298,9 +489,76 @@ record('⑤ A-F6 分类处置覆盖：fail() 类别 ' + JSON.stringify(usedClass
   disposalKeys.length > 0 && JSON.stringify(usedClasses) === JSON.stringify(disposalKeys) && probe.body.includes('── 类别 '),
   'used=' + JSON.stringify(usedClasses) + ' declared=' + JSON.stringify(disposalKeys))
 
+// ⑥ 白名单**自指面**（F6）：③ 的 FORBIDDEN 只施加于 run 块命令面，而判据脚本体由 node 执行（等效命令面）
+// ——若未来在其内部加入 npm/网络/子进程调用，「白名单/禁词」检查**无信号**；同时 ci.yml 注释里的「允许/禁止」
+// 声明面与 ALLOWED/FORBIDDEN 常量之间原亦零对账（声明与实现可各说各话）。
+const SCRIPT_FORBIDDEN = [
+  { re: /\bnpm\s+(install|ci|i|add)\b/, why: 'install 类命令' },
+  { re: /\bnpx\b/, why: 'npx' },
+  { re: /\bnpm\s+pack\b/, why: 'npm pack' },
+  { re: /\bchild_process\b/, why: '子进程调用' },
+  { re: /\bfetch\s*\(/, why: 'fetch 网络面' },
+  { re: /\bhttps?:\/\//, why: 'URL 字面量（网络面）' },
+]
+const selfHits = SCRIPT_FORBIDDEN.filter((f) => f.re.test(probe.body)).map((f) => f.why)
+record('⑥ 白名单自指面（判据脚本本体）：heredoc JS 内零 install/npx/pack/child_process/fetch/URL 命中（' + SCRIPT_FORBIDDEN.length + ' 类禁词）',
+  selfHits.length === 0, 'hit=' + JSON.stringify(selfHits))
+
+// 声明面（ci.yml 探测 job 的「允许/禁止」注释块）↔ 实现面（ALLOWED / FORBIDDEN 常量）双向对账：
+//   （i）每条声明项 MUST 在注释块内出现（声明真实存在）；（ii）每个声明**禁用**项 MUST 被某条 FORBIDDEN 常量拦截；
+//   （iii）每条 FORBIDDEN 常量 MUST 有被声明的样本触发（无「常量里悄悄多一条没声明的禁令」）；
+//   （iv）允许样本 MUST ∈ ALLOWED 且 MUST NOT 被 FORBIDDEN 命中。
+const declText = (section ?? []).filter((l) => l.trim().startsWith('#')).map((l) => l.trim()).join('\n')
+const DECL_ALLOWED = [{ label: 'npm view', sample: 'npm view @deepseek-ai/dsh versions --json > "$PROBE_DIR/dsh.versions.json"' }]
+const DECL_FORBIDDEN = [
+  { label: 'npm install', samples: ['npm install x'] },
+  { label: 'npm ci', samples: ['npm ci'] },
+  { label: 'npx', samples: ['npx foo'] },
+  { label: 'npm pack', samples: ['npm pack'] },
+  { label: '解包 tarball', samples: ['tar -xzf pkg.tgz', 'unpack pkg'] },
+  { label: 'actions/cache', samples: ['uses: actions/cache@v4'] },
+]
+const declMissing = [...DECL_ALLOWED, ...DECL_FORBIDDEN].filter((d) => !declText.includes(d.label)).map((d) => d.label)
+const declNotBlocked = DECL_FORBIDDEN.filter((d) => !d.samples.some((s) => FORBIDDEN.some((re) => re.test(s)))).map((d) => d.label)
+const constUncovered = FORBIDDEN.map((re, i) => ({ re, i })).filter(({ re }) => !DECL_FORBIDDEN.some((d) => d.samples.some((s) => re.test(s)))).map(({ i }) => i)
+const allowedSampleOk = DECL_ALLOWED.every((d) => ALLOWED.some((re) => re.test(d.sample)) && !FORBIDDEN.some((re) => re.test(d.sample)))
+record('⑥ 白名单声明面 ↔ 常量双向对账：声明项（允许 ' + DECL_ALLOWED.length + ' / 禁止 ' + DECL_FORBIDDEN.length + '）全部在探测 job 注释块内 ∧ 声明禁用面逐项可被 FORBIDDEN 拦截 ∧ 每条 FORBIDDEN 常量均有声明来源（未覆盖常量 ' + JSON.stringify(constUncovered) + '）∧ 允许样本 ∈ ALLOWED',
+  declMissing.length === 0 && declNotBlocked.length === 0 && constUncovered.length === 0 && allowedSampleOk,
+  'declMissing=' + JSON.stringify(declMissing) + ' notBlocked=' + JSON.stringify(declNotBlocked) + ' constUncovered=' + JSON.stringify(constUncovered) + ' allowedSample=' + allowedSampleOk)
+
+// ⑦ 守卫负例（F1/F2）+ 运行器健壮性真跑（F7）
+const eventNegNotRed = EVENT_KEYS.filter((k) => eventKeysMissing(deleteOnChild(yml, k)).length === 0)
+record('⑦ 守卫负例（F1 四键）：逐一删除 `on` 下的 ' + EVENT_KEYS.join(' / ') + ' 键 ⇒ 四键断言**均必红**（未变红者 = 守卫对该键无判别力）',
+  eventNegNotRed.length === 0, 'notRed=' + JSON.stringify(eventNegNotRed))
+const movedYml = moveWiringOutOfSanity(yml)
+const oldSubstringStillGreen = movedYml.includes(SELF_INVOCATION) && movedYml.includes(SELF_CHECK) && movedYml.includes(PROBE_HOST_INVOCATION)
+const newSectionRed = !wiringInSanity(movedYml).ok
+record('⑦ 守卫负例（F2 接线强度）：把接线行移入 ' + PROBE_JOB + ' 段 ⇒ **旧「全文子串」守卫仍绿**（' + oldSubstringStillGreen + '）而段绑定守卫必红（' + newSectionRed + '）——本负例即 REVIEW-COMPAT-014-R1 F2 的失效模式本身',
+  oldSubstringStillGreen && newSectionRed, 'oldSubstringGreen=' + oldSubstringStillGreen + ' sectionBoundRed=' + newSectionRed)
+const hangRun = runNode(['-e', 'setTimeout(() => {}, 300000)'], join(tmp, 'hang.log'), 1200)
+record('⑦ 运行器健壮性（F7）：阻塞脚本在上限下被 `spawnSync` timeout 终止并归类（真跑实测：1.2s 上限 → timedOut=' + hangRun.timedOut + ', status=' + String(hangRun.status) + ', signal=' + String(hangRun.signal) + '）——原无 timeout ⇒ 判据阻塞时 sanity 挂到 job 级超时且无归因',
+  hangRun.timedOut && hangRun.status === null, 'timedOut=' + hangRun.timedOut + ' status=' + String(hangRun.status) + ' signal=' + String(hangRun.signal) + ' error=' + String(hangRun.error))
+
+// ⑧ install 头部「宿主布局契约」块 ↔ 契约面 4/5 声明 正则对账（COMPAT-009）
+// 动因：安装脚本头部承载「宿主布局/注册通道/目录约定」知识，历史上只靠人工同步契约（轴②安装面）——
+// 两处（脚本知识 vs 契约声明）静默漂移时零信号。本段把「标记块存在 + 约定项键集一致 + 字面量 ∈ 契约 symbol」
+// 机检化；**install 脚本行为零变化**（本块为纯注释，独立证据见 COMPAT-015 CHANGELOG「强等价」）。
+const installPs1Text = readFileSync(join(REPO_ROOT, INSTALL_FILES[0]), 'utf8')
+const installShText = readFileSync(join(REPO_ROOT, INSTALL_FILES[1]), 'utf8')
+const installProblems = installContractProblems(installPs1Text, installShText, hostContract)
+const installEntries = parseInstallContract(installPs1Text).entries
+record('⑧ COMPAT-009 install 头部布局契约对账：两脚本标记块（固定标记行 `' + INSTALL_MARKER + '`）存在且在头部 ' + INSTALL_HEAD_LIMIT + ' 行内 ∧ 约定项键集跨脚本一致 ∧ 每项字面量 ∈ 契约对应 item 的 symbol（' + installEntries.length + ' 项 / golden ' + INSTALL_GOLDEN_ENTRIES + '：' + installEntries.map((e) => e.item).join(',') + '）',
+  installProblems.length === 0, 'problems=' + JSON.stringify(installProblems))
+const markerStripped = installContractProblems(installPs1Text.replace(/^\s*#\s*host-contract:v1\s*$/m, ''), installShText, hostContract)
+const literalChanged = installContractProblems(installPs1Text, installShText.replace('.agent-presets/<preset-id>/', '.agent-presets/wrong-id/'), hostContract)
+const entryDropped = installContractProblems(installPs1Text.replace(/^\s*#\s*\[4\.3\].*$/m, ''), installShText, hostContract)
+record('⑧ COMPAT-009 对账负例：删标记行 ⇒ 红（' + markerStripped.length + ' 项）∧ 改预设目录字面量 ⇒ 红（' + literalChanged.length + ' 项）∧ 删一个约定项 ⇒ 红（' + entryDropped.length + ' 项）',
+  markerStripped.some((p) => p.includes('缺少固定标记行')) && literalChanged.some((p) => p.includes('未出现在契约该项 symbol 内')) && entryDropped.some((p) => p.includes('键集不一致')),
+  'marker=' + JSON.stringify(markerStripped) + ' literal=' + JSON.stringify(literalChanged) + ' dropped=' + JSON.stringify(entryDropped))
+
 // ── 报告 ────────────────────────────────────────────────────────────────────
 const failed = results.filter((r) => !r.ok)
-console.log('[probe-face] COMPAT-014 探测轨判据离线机检（ci.yml → ' + probe.target + '；零网络 / 零 install）')
+console.log('[probe-face] COMPAT-014/015 门禁离线机检（ci.yml → ' + probe.target + '；零网络 / 零 install）')
 for (const r of results) console.log((r.ok ? '  ✅ ' : '  ❌ ') + r.name + (r.ok ? '' : ' :: ' + r.detail))
 console.log('[probe-face] 构造用例 ' + cases.length + ' 例（' + cases.map((c) => c.label + '=' + String(c.status)).join(' / ') + '）')
 const jsonOutIdx = process.argv.indexOf('--json-out')
@@ -312,4 +570,4 @@ if (failed.length > 0) {
   console.error('[probe-face] FAIL：' + failed.length + ' 项失败 / ' + results.length + ' 项')
   process.exit(1)
 }
-console.log('[probe-face] OK：' + results.length + ' 项机检全通过（判据语法/门禁/白名单/构造退出码语义/分类处置）')
+console.log('[probe-face] OK：' + results.length + ' 项机检全通过（判据语法/门禁+四键/白名单+自指面/构造退出码语义/分类处置/守卫负例/install 头部契约对账）')

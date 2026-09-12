@@ -33,6 +33,7 @@ jobs:
           node --check test/fixtures/host-surfaces/extract.mjs
           node --check test/fixtures/host-surfaces/ci-mock-face.mjs
           node --check test/fixtures/host-surfaces/probe-face.mjs
+          node --check scripts/probe-host.mjs
       - name: 依赖架构守卫（防双闭包陷阱）
         run: |
           node -e "
@@ -58,8 +59,16 @@ jobs:
       # 语法/逻辑缺陷只能等首次 schedule 暴露。本步骤把提取 + 语法机检 + 构造 JSON 驱动判据真跑搬进 PR 门禁——
       # 全程离线：无网络、无 install、不因宿主发版误红（检查的是**脚本**而非宿主版本，故不违背「只读网络探测不进
       # PR 门禁」原意）。同步骤附事件门禁结构断言（A-F1）与命令白名单 / stem↔命令一一对应校验（A-F5）。
-      - name: 探测轨判据离线机检（提取 heredoc → node --check → 构造 JSON 驱动判据；白名单/门禁结构断言）
+      # COMPAT-015 增补：`on` **四键**完整性（F1）、接线**自断言**（F2：本步骤 MUST 留在 sanity 段内）、判据 ①/③/⑤
+      # 负例与 input×drift 同轮并报（F4/F5）、白名单自指面（F6）、timeout 与失败态归因（F7/F8）、以及
+      # **install 头部布局契约对账**（COMPAT-009 ⑧：两脚本 `host-contract:v1` 标记块 ↔ 契约 face 4/5 逐项正则对账）。
+      - name: 探测轨判据离线机检 + install 头部布局契约对账（提取 heredoc → node --check → 构造 JSON 驱动判据；白名单/门禁/契约对账断言）
         run: node test/fixtures/host-surfaces/probe-face.mjs
+      # COMPAT-008：宿主能力探针 `scripts/probe-host.mjs` 的**离线自检**（零网络 / 零宿主进程）：断言脚本可加载 +
+      # 契约 × fixtures 能力面双向对账。**实机模式（--run：隔离实例起宿主 + 无头浏览器能力探测）需运行中的宿主环境，
+      # 不在 CI 执行**（用法见 README「维护者：一条命令定位断在哪一层」节；该模式在本仓**未验证**，输出须人工确认）。
+      - name: 宿主能力探针离线自检（COMPAT-008；零网络 / 零宿主）
+        run: node scripts/probe-host.mjs --self-check
       - name: 包结构检查
         run: |
           node -e "
@@ -341,28 +350,44 @@ jobs:
             try { console.log('  ℹ️ @deepseek-ai/dsh dist-tags（上下文，非判据）：' + JSON.stringify(readJson(distTagsFile))) }
             catch { console.log('  ℹ️ @deepseek-ai/dsh dist-tags 文件不可解析（上下文，非判据，不影响结论）') }
           }
-          // 输入异常优先（A-F7）：退出码 2 = 用法/输入缺失，与「检测到新版本」区分，逐包归因
+          // 失败分类打印（单点）——两条退出路径（input 优先 / 常规）共用，避免两处各写一份后漂移。
+          const groupFailures = () => {
+            const byClass = new Map()
+            for (const [msg, cls] of failures) {
+              if (!byClass.has(cls)) byClass.set(cls, [])
+              byClass.get(cls).push(msg)
+            }
+            return byClass
+          }
+          const printFailureClasses = () => {
+            for (const [cls, msgs] of groupFailures()) {
+              console.error(`  ── 类别 ${cls}（${msgs.length} 项）`)
+              for (const m of msgs) console.error('     - ' + m)
+              console.error('     ⇒ 处置：' + DISPOSAL[cls])
+            }
+          }
+          // 输入异常优先（A-F7）：退出码 2 = 用法/输入缺失，与「检测到新版本」区分，逐包归因。
+          // COMPAT-015 F5（收口 REVIEW-COMPAT-014-R1 F5）：原实现本分支直接 process.exit(2) 且位于 failures 报告**之前**
+          // ⇒ 同轮「一包输入异常 + 其它包检出宿主新版本」时，发版检出被**完全吞掉**（报文只有 input），宿主发版暴露延后
+          // 一轮。现本分支在退出前**并报**已累计的 failures（分类摘要 + 明示退出码仍取 2 = 输入类优先）：input 类不掩盖
+          // drift 类，退出码语义（A-F7 归因正确性）保持不变。
           if (inputProblems.length > 0) {
             console.error(`❌ [COMPAT-007 探测轨] 探测输入异常 ${inputProblems.length} 项（退出码 2 = 用法/输入缺失，**非**宿主发版）：`)
             for (const f of inputProblems) console.error('  - ' + f)
             console.error('⇒ 处置（input）：' + DISPOSAL.input)
+            if (failures.size > 0) {
+              console.error(`⚠️ 同轮另检出 ${failures.size} 项判据失败（**未被输入异常掩盖**；退出码仍取 2 = 输入类优先——修复输入后重跑，同一结论会以退出码 1 复现）：`)
+              printFailureClasses()
+            }
             process.exit(2)
           }
           if (failures.size === 0) {
             console.log('✅ 无新宿主版本：上游已发布版本均未超出 fixtures 覆盖（探测频率每日一次；窗口期残余见 README「探测窗口期」）')
             process.exit(0)
           }
-          const byClass = new Map()
-          for (const [msg, cls] of failures) {
-            if (!byClass.has(cls)) byClass.set(cls, [])
-            byClass.get(cls).push(msg)
-          }
-          console.error(`❌ [COMPAT-007 探测轨] 检出 ${failures.size} 项（按类别处置，退出码 1）：`)
-          for (const [cls, msgs] of byClass) {
-            console.error(`  ── 类别 ${cls}（${msgs.length} 项）`)
-            for (const m of msgs) console.error('     - ' + m)
-            console.error('     ⇒ 处置：' + DISPOSAL[cls])
-          }
+          const byClass = groupFailures()
+          console.error(`❌ [COMPAT-007 探测轨] 检出 ${failures.size} 项（按类别处置，退出码 1；${byClass.size} 类）：`)
+          printFailureClasses()
           process.exit(1)
           PROBE_EOF
           node "$RUNNER_TEMP/nv-host-latest-probe.mjs" "$PROBE_DIR" test/fixtures/host-surfaces lib/host-contract.mjs
