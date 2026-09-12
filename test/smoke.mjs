@@ -22,7 +22,10 @@
  *       体系 NV_ICONS/nvIcon + 焦点双环统一 + 光效收敛〔扫光删除〕+
  *       color-mix 令牌化兜底 + 选中态类化 + 空态 24px 图标）+
  *       UX-059 工作流控制条（标题栏启动钮迁移 / 停止·继续合并主按钮
- *       形态切换 / 压缩上下文 /compact / 绑定新会话——不自动打开）。
+ *       形态切换 / 压缩上下文 /compact / 绑定新会话——不自动打开）+
+ *       COMPAT-002 宿主契约对账（lib/host-contract.mjs 六面 47 项结构 / F10 口径 /
+ *       纯数据守卫 + 槽位名·服务名·CSS 令牌·DOM selector 四类 region 字面量
+ *       与 lib/client.js 源码双向对账）。
  */
 import { mkdtempSync, writeFileSync, mkdirSync, readFileSync, rmSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -1694,6 +1697,79 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   check('BUG-005 适配层零改动：makeHostApi 单点收口与 connection.api 唯一引用保持',
     codeSrc.includes('function makeHostApi(') && codeSrc.includes('makeHostApi((name) => ctx.get(name), connection)')
     && (codeSrc.match(/connection\.api/g) ?? []).length === 1)
+}
+
+// ── COMPAT-002：宿主契约清单（lib/host-contract.mjs）× lib/client.js region 字面量对账（F8 首批）──
+{
+  const { hostContract } = await import('../lib/host-contract.mjs')
+  const contractSrc = readFileSync(new URL('../lib/host-contract.mjs', import.meta.url), 'utf8')
+  const codeOnly = clientSrc.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '') // 剥注释——对账提取一律代码级（同 ⑩ 口径）
+
+  // ① 契约结构：六面 47 项分布 11/13/7/6/5/5
+  const faceCount = {}
+  for (const it of hostContract.items) faceCount[it.face] = (faceCount[it.face] ?? 0) + 1
+  check('COMPAT-002 契约：六面 47 项全覆盖（面分布 11/13/7/6/5/5）',
+    hostContract.items.length === 47 && [1, 2, 3, 4, 5, 6].every((f) => faceCount[f] === [11, 13, 7, 6, 5, 5][f - 1]),
+    'items=' + hostContract.items.length + ' faces=' + JSON.stringify(faceCount))
+  // ② schema：七字段齐全 + item 编号 face 前缀正确且面内连续（§3 溯源结构机检）
+  const FIELDS = ['face', 'item', 'kind', 'symbol', 'file', 'line', 'necessity']
+  check('COMPAT-002 契约：schema 七字段齐全 + item 编号面内连续（逐项可溯源分析 §3）',
+    hostContract.items.every((it, i, arr) => FIELDS.every((k) => it[k] !== undefined)
+      && it.item === it.face + '.' + it.item.split('.')[1]
+      && (arr[i - 1] !== undefined && arr[i - 1].face === it.face
+        ? Number(it.item.split('.')[1]) === Number(arr[i - 1].item.split('.')[1]) + 1
+        : Number(it.item.split('.')[1]) === 1)),
+    'fields/numbering')
+  // ③ F10 口径：自有恰 1 项（3.7）+ 已消除恰 1 项（1.4）在册供历史勾稽
+  const nec = {}
+  for (const it of hostContract.items) nec[it.necessity] = (nec[it.necessity] ?? 0) + 1
+  check('COMPAT-002 契约：F10 口径在册——自有恰 1 项（3.7）+ 已消除恰 1 项（1.4）',
+    (nec.own ?? 0) === 1 && (nec.eliminated ?? 0) === 1
+      && hostContract.items.some((it) => it.item === '3.7' && it.necessity === 'own')
+      && hostContract.items.some((it) => it.item === '1.4' && it.necessity === 'eliminated'),
+    JSON.stringify(nec))
+  // ④ 纯数据守卫：零 import 语句 / 零函数定义 / 零箭头 / 零模板求值 + JSON 往返无损
+  check('COMPAT-002 契约：纯数据零宿主 import 零运行时逻辑（JSON 往返无损）',
+    !/^\s*import\b/m.test(contractSrc) && !contractSrc.includes('=>') && !/\bfunction\b/.test(contractSrc)
+      && !contractSrc.includes('${') && JSON.stringify(JSON.parse(JSON.stringify(hostContract))) === JSON.stringify(hostContract),
+    'pure-data guard')
+  // ⑤ F8 槽位名双向对账：client.js slots.inject 提取面 ≡ 契约清单
+  const rl = hostContract.regionLiterals
+  const srcSlots = [...new Set([...codeOnly.matchAll(/slots\.inject\('([^']+)'/g)].map((m) => m[1]))]
+  check('COMPAT-002 F8 槽位名对账：client.js slots.inject 提取面 ≡ 契约清单（双向 ⊆，3 槽位）',
+    srcSlots.length === rl.slotNames.length && rl.slotNames.every((s) => srcSlots.includes(s)) && srcSlots.every((s) => rl.slotNames.includes(s)),
+    'src=' + JSON.stringify(srcSlots) + ' contract=' + JSON.stringify(rl.slotNames))
+  // ⑥ F8 服务名——inject 表双向对账
+  const injectDecl = codeOnly.match(/const inject = \[([^\]]*)\]/)
+  const srcInject = injectDecl !== null ? [...injectDecl[1].matchAll(/'([^']+)'/g)].map((m) => m[1]) : []
+  check('COMPAT-002 F8 服务名对账（inject 表）：client.js 声明三服务 ≡ 契约清单',
+    srcInject.length === rl.serviceNames.inject.length && rl.serviceNames.inject.every((s) => srcInject.includes(s)) && srcInject.every((s) => rl.serviceNames.inject.includes(s)),
+    'src=' + JSON.stringify(srcInject))
+  // ⑦ F8 服务名——ctx.get 字面目标双向对账
+  const srcCtxGet = [...new Set([...codeOnly.matchAll(/ctx\.get\('([^']+)'\)/g)].map((m) => m[1]))]
+  check('COMPAT-002 F8 服务名对账（ctx.get 目标）：connection/locale/sessions ≡ 契约清单（双向 ⊆）',
+    rl.serviceNames.ctxGet.every((s) => srcCtxGet.includes(s)) && srcCtxGet.every((s) => rl.serviceNames.ctxGet.includes(s)),
+    'src=' + JSON.stringify(srcCtxGet))
+  // ⑧ F8 服务名——makeHostApi svc 域名双向对账（ctx.get(name) 的动态目标全集）
+  const srcSvc = [...new Set([...codeOnly.matchAll(/\bsvc\('([^']+)'\)/g)].map((m) => m[1]))]
+  check('COMPAT-002 F8 服务名对账（svc 域名）：remote.*/workspaces 六域 ≡ 契约清单（双向 ⊆）',
+    rl.serviceNames.svcDomains.every((s) => srcSvc.includes(s)) && srcSvc.every((s) => rl.serviceNames.svcDomains.includes(s)),
+    'src=' + JSON.stringify(srcSvc))
+  // ⑨ F8 事件名——internal/service 监听字面量在源码代码级在册
+  check('COMPAT-002 F8 事件名对账：internal/service 字面量在 client.js 代码级在册',
+    rl.serviceNames.events.every((e) => codeOnly.includes("'" + e + "'")),
+    'events=' + JSON.stringify(rl.serviceNames.events))
+  // ⑩ F8 CSS 令牌——--dsw-alias-* 去重恰 12 且双向对账
+  const srcTokens = [...new Set([...codeOnly.matchAll(/--dsw-alias-[a-z0-9-]+/g)].map((m) => m[0]))]
+  check('COMPAT-002 F8 CSS 令牌对账：--dsw-alias-* 去重恰 12 个 ≡ 契约清单（双向 ⊆）',
+    srcTokens.length === 12 && rl.cssTokens.length === 12
+      && rl.cssTokens.every((t) => srcTokens.includes(t)) && srcTokens.every((t) => rl.cssTokens.includes(t)),
+    'src=' + srcTokens.length + ' contract=' + rl.cssTokens.length)
+  // ⑪ F8 DOM selector——宿主耦合选择器提取面 ≡ 契约清单（.nv- 自有前缀除外）
+  const srcSels = [...new Set([...codeOnly.matchAll(/querySelector(?:All)?\('([^']+)'\)/g)].map((m) => m[1]))].filter((s) => !s.startsWith('.nv-'))
+  check('COMPAT-002 F8 DOM selector 对账：宿主耦合选择器提取面 ≡ 契约清单（.nv- 自有前缀除外，双向 ⊆）',
+    rl.domSelectors.every((s) => srcSels.includes(s)) && srcSels.every((s) => rl.domSelectors.includes(s)),
+    'src=' + JSON.stringify(srcSels))
 }
 
 console.log(`\nSMOKE DONE: ${passed} passed, ${failed} failed`)
