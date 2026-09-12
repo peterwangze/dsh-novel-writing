@@ -2,30 +2,90 @@
   "schema_version": 1,
   "task_id": "COMPAT-015",
   "title": "终批收口：REVIEW-COMPAT-014-R1 F1~F11（P2×2+P3×9）+ COMPAT-008 探针脚本 scripts/probe-host.mjs（离线自检模式）+ COMPAT-009 install 头部布局契约注释块 + CI 正则对账",
-  "priority": "P3",
+  "priority": "P2",
   "target_version": "0.6.0",
-  "depends_on": ["COMPAT-014（已完成 ✅）", "COMPAT-002/004（契约与探测函数 ✅）"],
-  "files": ["test/fixtures/host-surfaces/probe-face.mjs", "test/smoke.mjs", "CHANGELOG.md", "README.md", "scripts/probe-host.mjs", "install.ps1", "install.sh", ".github/workflows/ci.yml", "lib/host-contract.mjs"],
+  "depends_on": [
+    "COMPAT-014（已完成 ✅）",
+    "COMPAT-002/004（契约与探测函数 ✅）"
+  ],
+  "files": [
+    "test/fixtures/host-surfaces/probe-face.mjs",
+    "test/smoke.mjs",
+    "CHANGELOG.md",
+    "README.md",
+    "scripts/probe-host.mjs",
+    "install.ps1",
+    "install.sh",
+    ".github/workflows/ci.yml",
+    "lib/host-contract.mjs"
+  ],
   "reason": "REVIEW-COMPAT-014-R1（APPROVED_WITH_NOTES 0 阻断）P2×2+P3×9 收口 + 分析 §8 尾部两项（COMPAT-008 D3 探针固化 / COMPAT-009 install 知识规范化）——演进链最后一批",
   "created_at": "2026-09-12",
   "tool": "change-triage",
   "tool_version": "0.80.0-manual",
   "analysis": {
-    "dependency": { "unblocked": [], "blocked": [], "blocked_by": [], "unknown_deps": [], "cycles": [], "cycle_warning": false, "new_task_cycle": false },
-    "priority_context": { "proposed": "P3", "in_flight": { "P0": 0, "P1": 0, "P2": 5 }, "version_chain": [] },
+    "dependency": {
+      "unblocked": [],
+      "blocked": [],
+      "blocked_by": [],
+      "unknown_deps": [],
+      "cycles": [],
+      "cycle_warning": false,
+      "new_task_cycle": false
+    },
+    "priority_context": {
+      "proposed": "P3",
+      "in_flight": {
+        "P0": 0,
+        "P1": 0,
+        "P2": 5
+      },
+      "version_chain": []
+    },
     "conflicts": [],
-    "version": { "target": "0.6.0", "current": "0.5.1", "planned_next": "0.5.2", "issues": [] },
+    "version": {
+      "target": "0.6.0",
+      "current": "0.5.1",
+      "planned_next": "0.5.2",
+      "issues": []
+    },
     "side_effect": {
-      "detected": false, "touches_real_env": false, "requires_r1": true,
+      "detected": false,
+      "touches_real_env": false,
+      "requires_r1": true,
       "declared": "COMPAT-008 脚本默认离线自检模式（实机 run 转用户侧）；COMPAT-009 零行为变化（强等价 diff 验收）",
-      "blast_radius": ["install.ps1/install.sh（注释块）", "ci.yml（正则对账步骤）", "新增 scripts/probe-host.mjs"],
-      "review_conditions": ["Code Reviewer 后置审查必达", "install 脚本强等价 diff 核验"], "issues": []
+      "blast_radius": [
+        "install.ps1/install.sh（注释块）",
+        "ci.yml（正则对账步骤）",
+        "新增 scripts/probe-host.mjs"
+      ],
+      "review_conditions": [
+        "Code Reviewer 后置审查必达",
+        "install 脚本强等价 diff 核验"
+      ],
+      "issues": [],
+      "r1_evidence": "隔离环境（环境变量重定向至临时目录）——命令逐条上报见对应 EVD 行（M7.7 R1 三选一之(a)）"
     }
   },
   "snapshot": {
-    "tool": "manual（task-priority-analysis 调用快照）",
+    "tool": "task-priority-analysis",
     "module_version": "manual-0.80.0",
-    "report_json": { "total": 86, "completed": 79, "blocked": [], "unblocked": ["COMPAT-015"], "recommended_next": ["COMPAT-015"], "non_executable": [], "cycles": [], "cycle_warning": false },
-    "report_text": "COMPAT-015 入账快照（2026-09-12）：演进链终批（014 审查批次 + 分析 §8 尾部两项）。"
-  }
+    "report_json": {
+      "total": 86,
+      "completed": 79,
+      "blocked": [],
+      "unblocked": [
+        "COMPAT-015"
+      ],
+      "recommended_next": [
+        "COMPAT-015"
+      ],
+      "non_executable": [],
+      "cycles": [],
+      "cycle_warning": false
+    },
+    "report_text": "COMPAT-015 入账快照（2026-09-12）：演进链终批（014 审查批次 + 分析 §8 尾部两项）。",
+    "tool_note": "手工构造（manual（task-priority-analysis 调用快照））——CLI 本机沙箱不可达/收尾补录；诚实标注"
+  },
+  "priority_note": "有效优先级 P3（批次收口）；triage schema 仅接受 P0/P1/P2"
 }

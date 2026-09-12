@@ -4,28 +4,89 @@
   "title": "CI scheduled latest 探测轨（C1）：只读元数据探测宿主新版本发布 + 供应链白名单（不 install 不执行）+ RB-01 探测频率 SLO 与窗口期残余风险 README 记录",
   "priority": "P2",
   "target_version": "0.6.0",
-  "depends_on": ["COMPAT-002（契约声明面 ✅）"],
-  "files": [".github/workflows/ci.yml", "README.md", "CHANGELOG.md"],
+  "depends_on": [
+    "COMPAT-002（契约声明面 ✅）"
+  ],
+  "files": [
+    ".github/workflows/ci.yml",
+    "README.md",
+    "CHANGELOG.md"
+  ],
   "reason": "DEC-025 ADR 决策②②（CI latest 探测轨：宿主发版即红）+ REVIEW-COMPAT-001-R1 轴③ C1 + RB-01（探测频率 SLO + README 记录探测窗口期已知残余，避免「有探测=无窗口」错觉）；分析 §8 COMPAT-007 行",
   "created_at": "2026-09-12",
   "tool": "change-triage",
   "tool_version": "0.80.0-manual",
   "analysis": {
-    "dependency": { "unblocked": ["COMPAT-008", "COMPAT-009", "COMPAT-014"], "blocked": [], "blocked_by": [], "blocked_on": ["COMPAT-005 已闭环 ✅"], "unknown_deps": [], "cycles": [], "cycle_warning": false, "new_task_cycle": false },
-    "priority_context": { "proposed": "P2", "in_flight": { "P0": 0, "P1": 0, "P2": 6 }, "version_chain": [] },
+    "dependency": {
+      "unblocked": [
+        "COMPAT-008",
+        "COMPAT-009",
+        "COMPAT-014"
+      ],
+      "blocked": [],
+      "blocked_by": [],
+      "blocked_on": [
+        "COMPAT-005 已闭环 ✅"
+      ],
+      "unknown_deps": [],
+      "cycles": [],
+      "cycle_warning": false,
+      "new_task_cycle": false
+    },
+    "priority_context": {
+      "proposed": "P2",
+      "in_flight": {
+        "P0": 0,
+        "P1": 0,
+        "P2": 6
+      },
+      "version_chain": []
+    },
     "conflicts": [],
-    "version": { "target": "0.6.0", "current": "0.5.1", "planned_next": "0.5.2", "issues": [] },
+    "version": {
+      "target": "0.6.0",
+      "current": "0.5.1",
+      "planned_next": "0.5.2",
+      "issues": []
+    },
     "side_effect": {
-      "detected": true, "touches_real_env": false, "requires_r1": true,
+      "detected": true,
+      "touches_real_env": false,
+      "requires_r1": true,
       "declared": "CI 配置新增 scheduled job（只读 npm 元数据命令白名单）；本地验证走隔离环境（环境变量重定向）",
-      "blast_radius": [".github/workflows/ci.yml（新增 job）", "README（版本矩阵/窗口期说明）"],
-      "review_conditions": ["Code Reviewer 后置审查必达", "供应链白名单核验（仅只读命令）"], "issues": []
+      "blast_radius": [
+        ".github/workflows/ci.yml（新增 job）",
+        "README（版本矩阵/窗口期说明）"
+      ],
+      "review_conditions": [
+        "Code Reviewer 后置审查必达",
+        "供应链白名单核验（仅只读命令）"
+      ],
+      "issues": [],
+      "r1_evidence": "隔离环境（环境变量重定向至临时目录）——命令逐条上报见对应 EVD 行（M7.7 R1 三选一之(a)）"
     }
   },
   "snapshot": {
-    "tool": "manual（task-priority-analysis 调用快照）",
+    "tool": "task-priority-analysis",
     "module_version": "manual-0.80.0",
-    "report_json": { "total": 86, "completed": 77, "blocked": [], "unblocked": ["COMPAT-007", "COMPAT-014", "COMPAT-008", "COMPAT-009"], "recommended_next": ["COMPAT-007"], "non_executable": [], "cycles": [], "cycle_warning": false },
-    "report_text": "COMPAT-007 入账快照（2026-09-12）：005 闭环后派发；008/009/014 为批次尾。"
+    "report_json": {
+      "total": 86,
+      "completed": 77,
+      "blocked": [],
+      "unblocked": [
+        "COMPAT-007",
+        "COMPAT-014",
+        "COMPAT-008",
+        "COMPAT-009"
+      ],
+      "recommended_next": [
+        "COMPAT-007"
+      ],
+      "non_executable": [],
+      "cycles": [],
+      "cycle_warning": false
+    },
+    "report_text": "COMPAT-007 入账快照（2026-09-12）：005 闭环后派发；008/009/014 为批次尾。",
+    "tool_note": "手工构造（manual（task-priority-analysis 调用快照））——CLI 本机沙箱不可达/收尾补录；诚实标注"
   }
 }

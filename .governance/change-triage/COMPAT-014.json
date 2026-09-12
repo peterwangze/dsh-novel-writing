@@ -1,26 +1,33 @@
 {
   "schema_version": 1,
-  "task_id": "COMPAT-013",
-  "title": "COMPAT-012 审查 F-1~F-5 收口批次（全 P3）：F-1 判据⑤范围完整性 / F-2 判据④真空处置 / F-3 CHANGELOG 计数更正 / F-4 契约 free-text 漂移 / F-5 判据③标注+防空转 golden",
+  "task_id": "COMPAT-014",
+  "title": "全量收口批次（REVIEW-COMPAT-007-R1 F1~F9 + REVIEW-COMPAT-005-R2 N1~N5 + REVIEW-COMPAT-013-R1 F-1~F-6）",
   "priority": "P2",
   "target_version": "0.6.0",
   "depends_on": [
-    "COMPAT-012（已完成 ✅）"
+    "COMPAT-013（✅）",
+    "COMPAT-005（✅）",
+    "COMPAT-007（✅）"
   ],
   "files": [
     "test/smoke.mjs",
     "lib/host-contract.mjs",
-    "CHANGELOG.md"
+    ".github/workflows/ci.yml",
+    "README.md",
+    "CHANGELOG.md",
+    "test/fixtures/host-surfaces",
+    "lib/host-boundary.js",
+    "lib/client.js"
   ],
-  "reason": "REVIEW-COMPAT-012-R1（APPROVED_WITH_NOTES 0 阻断）5 条 P3——审查者建议「登记为后续小任务（避免合并范围膨胀）」；本批为断言强度与契约准确性收口",
+  "reason": "三份审查报告的非阻断批次收口（20 项）；F1 门禁收敛决策由 Coordinator 裁定（最小行为面）。**收尾补录**（triage 于收尾补齐——诚实标注）",
   "created_at": "2026-09-12",
   "tool": "change-triage",
   "tool_version": "0.80.0-manual",
   "analysis": {
     "dependency": {
       "unblocked": [
-        "COMPAT-005",
-        "COMPAT-007"
+        "COMPAT-015",
+        "COMPAT-016"
       ],
       "blocked": [],
       "blocked_by": [],
@@ -34,7 +41,7 @@
       "in_flight": {
         "P0": 0,
         "P1": 0,
-        "P2": 7
+        "P2": 3
       },
       "version_chain": []
     },
@@ -49,13 +56,14 @@
       "detected": false,
       "touches_real_env": false,
       "requires_r1": false,
-      "declared": "纯测试/契约/CHANGELOG 侧；零产品代码行为面",
+      "declared": "批次收口（含 lib/client.js 等行数改写——Coordinator 越界裁定=认可）",
       "blast_radius": [
-        "test/smoke.mjs F5d 判据段",
-        "契约 free-text note/symbol"
+        "ci.yml 门禁结构",
+        "smoke 断言网",
+        "契约声明"
       ],
       "review_conditions": [
-        "Code Reviewer 后置审查必达"
+        "Code Reviewer R1 必达（APPROVED_WITH_NOTES 0 阻断）"
       ],
       "issues": [],
       "r1_note": "纯仓库内变更（无用户真实环境操作）——按事实校正 requires_r1=false"
@@ -65,25 +73,21 @@
     "tool": "task-priority-analysis",
     "module_version": "manual-0.80.0",
     "report_json": {
-      "total": 85,
-      "completed": 75,
+      "total": 86,
+      "completed": 78,
       "blocked": [],
       "unblocked": [
-        "COMPAT-013",
-        "COMPAT-005",
-        "COMPAT-007"
+        "COMPAT-014"
       ],
       "recommended_next": [
-        "COMPAT-013",
-        "COMPAT-005",
-        "COMPAT-007"
+        "COMPAT-014"
       ],
       "non_executable": [],
       "cycles": [],
       "cycle_warning": false
     },
-    "report_text": "COMPAT-013 入账快照（2026-09-12）：012 审查 P3 承接；与 005/007 的文件重叠（smoke/contract）→ 串行先行。",
-    "tool_note": "手工构造（manual（task-priority-analysis 调用快照））——CLI 本机沙箱不可达/收尾补录；诚实标注"
+    "report_text": "COMPAT-014 补录（终态：R1 APPROVED_WITH_NOTES 0 阻断；13 项核验通过；P2-1/P2-2→016、--run 面→017）",
+    "tool_note": "手工构造（manual（收尾补录））——CLI 本机沙箱不可达/收尾补录；诚实标注"
   },
   "priority_note": "有效优先级 P3（批次收口）；triage schema 仅接受 P0/P1/P2"
 }

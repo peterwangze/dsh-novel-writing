@@ -5,25 +5,89 @@
   "priority": "P1",
   "target_version": "0.6.0",
   "depends_on": [],
-  "files": [".github/workflows/ci.yml", "CHANGELOG.md"],
+  "files": [
+    ".github/workflows/ci.yml",
+    "CHANGELOG.md"
+  ],
   "reason": "分析 6.4 确证活性缺陷（CI mock 让已删除的宿主表面「复活」= smoke 假绿 = BUG-003 类事故温床）自称「零新设施、立即可做、第一优先」却被绑入依赖 COMPAT-002 的 COMPAT-003——Reviewer R1-F5 判时序矛盾并建议拆独立 hotfix；宿主权威面经 checkout 只读复核（dsh-settings/lib/index.js L610）",
   "created_at": "2026-09-12",
   "tool": "change-triage",
   "tool_version": "0.80.0-manual",
   "analysis": {
     "dependency": {
-      "unblocked": ["COMPAT-002", "COMPAT-003", "COMPAT-004", "COMPAT-005", "COMPAT-007", "COMPAT-008", "COMPAT-009", "REL-002", "DOC-001", "SYSGAP-001", "CLEAN-003", "CLEAN-004", "UX-054"],
-      "blocked": [], "blocked_by": [], "unknown_deps": [], "cycles": [], "cycle_warning": false, "new_task_cycle": false
+      "unblocked": [
+        "COMPAT-002",
+        "COMPAT-003",
+        "COMPAT-004",
+        "COMPAT-005",
+        "COMPAT-007",
+        "COMPAT-008",
+        "COMPAT-009",
+        "REL-002",
+        "DOC-001",
+        "SYSGAP-001",
+        "CLEAN-003",
+        "CLEAN-004",
+        "UX-054"
+      ],
+      "blocked": [],
+      "blocked_by": [],
+      "unknown_deps": [],
+      "cycles": [],
+      "cycle_warning": false,
+      "new_task_cycle": false
     },
-    "priority_context": { "proposed": "P1", "in_flight": { "P0": 0, "P1": 1, "P2": 8 }, "version_chain": [] },
+    "priority_context": {
+      "proposed": "P1",
+      "in_flight": {
+        "P0": 0,
+        "P1": 1,
+        "P2": 8
+      },
+      "version_chain": []
+    },
     "conflicts": [],
-    "version": { "target": "0.6.0", "current": "0.5.1", "planned_next": "0.5.2", "issues": [] },
-    "side_effect": { "detected": false, "touches_real_env": false, "requires_r1": true, "declared": "纯仓库内 CI 配置修正；宿主 checkout 只读参考", "blast_radius": ["CI mock 面（若产品代码仍引用 settingsNamespace 会暴露——已知已消除，EVD-076）"], "review_conditions": ["Code Reviewer 后置审查必达"], "issues": [] }
+    "version": {
+      "target": "0.6.0",
+      "current": "0.5.1",
+      "planned_next": "0.5.2",
+      "issues": []
+    },
+    "side_effect": {
+      "detected": false,
+      "touches_real_env": false,
+      "requires_r1": false,
+      "declared": "纯仓库内 CI 配置修正；宿主 checkout 只读参考",
+      "blast_radius": [
+        "CI mock 面（若产品代码仍引用 settingsNamespace 会暴露——已知已消除，EVD-076）"
+      ],
+      "review_conditions": [
+        "Code Reviewer 后置审查必达"
+      ],
+      "issues": [],
+      "r1_note": "纯仓库内变更（无用户真实环境操作）——按事实校正 requires_r1=false"
+    }
   },
   "snapshot": {
-    "tool": "manual（task-priority-analysis 调用快照；unblocked 基线=既有六项 P2 + 本批 COMPAT 新任务全链）",
+    "tool": "task-priority-analysis",
     "module_version": "manual-0.80.0",
-    "report_json": { "total": 82, "completed": 69, "blocked": [], "unblocked": ["COMPAT-010", "COMPAT-002"], "recommended_next": ["COMPAT-010", "COMPAT-002"], "non_executable": [], "cycles": [], "cycle_warning": false },
-    "report_text": "COMPAT-010 入账快照（2026-09-12）：零依赖 hotfix 立即可做；与 COMPAT-002 仅 CHANGELOG.md 串行（先后派发解决）。"
+    "report_json": {
+      "total": 82,
+      "completed": 69,
+      "blocked": [],
+      "unblocked": [
+        "COMPAT-010",
+        "COMPAT-002"
+      ],
+      "recommended_next": [
+        "COMPAT-010",
+        "COMPAT-002"
+      ],
+      "non_executable": [],
+      "cycles": [],
+      "cycle_warning": false
+    },
+    "report_text": "COMPAT-010 入账快照（2026-09-12）：零依赖 hotfix 立即可做；与 COMPAT-002 仅 CHANGELOG.md 串行（先后派发解决）。",
+    "tool_note": "手工构造（manual（task-priority-analysis 调用快照；unblocked 基线=既有六项 P2 + 本批 COMPAT 新任务全链））——CLI 本机沙箱不可达/收尾补录；诚实标注"
   }
 }

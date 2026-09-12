@@ -4,23 +4,85 @@
   "title": "004 R2 复审 P3 合并前收口：N1 smoke 收口①正则漏 this.ctx.<id> → (?<![\\w$])ctx\\.；N2 契约 2.12/2.13 line 范围精确化（L4403-4408 / L4429-4461）+ smoke F5 增范围型 line 抽核",
   "priority": "P2",
   "target_version": "0.6.0",
-  "depends_on": ["COMPAT-004（已完成 ✅）"],
-  "files": ["test/smoke.mjs", "lib/host-contract.mjs", "CHANGELOG.md"],
+  "depends_on": [
+    "COMPAT-004（已完成 ✅）"
+  ],
+  "files": [
+    "test/smoke.mjs",
+    "lib/host-contract.mjs",
+    "CHANGELOG.md"
+  ],
   "reason": "REVIEW-COMPAT-004-R2（APPROVED_WITH_NOTES 0 阻断）P3 发现 N1/N2——审查者明确建议「合并前可顺手做」（纯契约/测试侧零产品风险）；N2 偏移系 R1 已存在（−2/−7），本次机械重基如实保留未加剧",
   "created_at": "2026-09-12",
   "tool": "change-triage",
   "tool_version": "0.80.0-manual",
   "analysis": {
-    "dependency": { "unblocked": ["COMPAT-005", "COMPAT-007"], "blocked": [], "blocked_by": [], "unknown_deps": [], "cycles": [], "cycle_warning": false, "new_task_cycle": false },
-    "priority_context": { "proposed": "P2", "in_flight": { "P0": 0, "P1": 0, "P2": 7 }, "version_chain": [] },
+    "dependency": {
+      "unblocked": [
+        "COMPAT-005",
+        "COMPAT-007"
+      ],
+      "blocked": [],
+      "blocked_by": [],
+      "unknown_deps": [],
+      "cycles": [],
+      "cycle_warning": false,
+      "new_task_cycle": false
+    },
+    "priority_context": {
+      "proposed": "P2",
+      "in_flight": {
+        "P0": 0,
+        "P1": 0,
+        "P2": 7
+      },
+      "version_chain": []
+    },
     "conflicts": [],
-    "version": { "target": "0.6.0", "current": "0.5.1", "planned_next": "0.5.2", "issues": [] },
-    "side_effect": { "detected": false, "touches_real_env": false, "requires_r1": true, "declared": "纯契约/测试侧修正；零产品代码行为面", "blast_radius": ["test/smoke.mjs 收口①/F5 断言段", "契约 2.12/2.13 line 字段"], "review_conditions": ["Code Reviewer 后置审查必达"], "issues": [] }
+    "version": {
+      "target": "0.6.0",
+      "current": "0.5.1",
+      "planned_next": "0.5.2",
+      "issues": []
+    },
+    "side_effect": {
+      "detected": false,
+      "touches_real_env": false,
+      "requires_r1": false,
+      "declared": "纯契约/测试侧修正；零产品代码行为面",
+      "blast_radius": [
+        "test/smoke.mjs 收口①/F5 断言段",
+        "契约 2.12/2.13 line 字段"
+      ],
+      "review_conditions": [
+        "Code Reviewer 后置审查必达"
+      ],
+      "issues": [],
+      "r1_note": "纯仓库内变更（无用户真实环境操作）——按事实校正 requires_r1=false"
+    }
   },
   "snapshot": {
-    "tool": "manual（task-priority-analysis 调用快照）",
+    "tool": "task-priority-analysis",
     "module_version": "manual-0.80.0",
-    "report_json": { "total": 84, "completed": 74, "blocked": [], "unblocked": ["COMPAT-012", "COMPAT-005", "COMPAT-007"], "recommended_next": ["COMPAT-012", "COMPAT-005", "COMPAT-007"], "non_executable": [], "cycles": [], "cycle_warning": false },
-    "report_text": "COMPAT-012 入账快照（2026-09-12）：004 R2 合并前收口（N1/N2）；005/007 待其或并行（文件面：005=client.js/smoke/契约、007=ci.yml/CHANGELOG——与 012 的 smoke/契约部分重叠 → 012 先行）。"
+    "report_json": {
+      "total": 84,
+      "completed": 74,
+      "blocked": [],
+      "unblocked": [
+        "COMPAT-012",
+        "COMPAT-005",
+        "COMPAT-007"
+      ],
+      "recommended_next": [
+        "COMPAT-012",
+        "COMPAT-005",
+        "COMPAT-007"
+      ],
+      "non_executable": [],
+      "cycles": [],
+      "cycle_warning": false
+    },
+    "report_text": "COMPAT-012 入账快照（2026-09-12）：004 R2 合并前收口（N1/N2）；005/007 待其或并行（文件面：005=client.js/smoke/契约、007=ci.yml/CHANGELOG——与 012 的 smoke/契约部分重叠 → 012 先行）。",
+    "tool_note": "手工构造（manual（task-priority-analysis 调用快照））——CLI 本机沙箱不可达/收尾补录；诚实标注"
   }
 }

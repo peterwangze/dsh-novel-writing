@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "task_id": "COMPAT-006",
+  "title": "版本支持矩阵决策（决策型——分析 §8 唯一用户决策点）：最低支持版本/A1 收敛时点/peer 口与 connection inject 处置",
+  "priority": "P0",
+  "target_version": "0.6.0",
+  "depends_on": [
+    "COMPAT-001（✅）"
+  ],
+  "files": [
+    "README.md",
+    "package.json",
+    "lib/client.js"
+  ],
+  "reason": "DEC-024 边界②（breaking change 用户体验确认域）；用户经 ask_user_question 定案「A3 现在 + A1 绑 v1.0」→ DEC-026。**收尾补录**（决策型任务无代码变更，triage 于收尾补齐——诚实标注）",
+  "created_at": "2026-09-12",
+  "tool": "change-triage",
+  "tool_version": "0.80.0-manual",
+  "analysis": {
+    "dependency": {
+      "unblocked": [
+        "COMPAT-004（A3 执行）"
+      ],
+      "blocked": [],
+      "blocked_by": [],
+      "unknown_deps": [],
+      "cycles": [],
+      "cycle_warning": false,
+      "new_task_cycle": false
+    },
+    "priority_context": {
+      "proposed": "P0",
+      "in_flight": {
+        "P0": 1,
+        "P1": 0,
+        "P2": 6
+      },
+      "version_chain": []
+    },
+    "conflicts": [],
+    "version": {
+      "target": "0.6.0",
+      "current": "0.5.1",
+      "planned_next": "0.5.2",
+      "issues": []
+    },
+    "side_effect": {
+      "detected": true,
+      "touches_real_env": false,
+      "requires_r1": false,
+      "declared": "用户决策任务（无代码）；其实施由 COMPAT-004 A3 承载",
+      "blast_radius": [
+        "inject 表",
+        "peerDependencies（v1.0 时）",
+        "README 版本矩阵"
+      ],
+      "review_conditions": [
+        "决策经用户确认（ask_user_question 2026-09-12）"
+      ],
+      "issues": []
+    }
+  },
+  "snapshot": {
+    "tool": "task-priority-analysis",
+    "module_version": "manual-0.80.0",
+    "report_json": {
+      "total": 83,
+      "completed": 69,
+      "blocked": [],
+      "unblocked": [
+        "COMPAT-006"
+      ],
+      "recommended_next": [
+        "COMPAT-006"
+      ],
+      "non_executable": [],
+      "cycles": [],
+      "cycle_warning": false
+    },
+    "report_text": "COMPAT-006 补录（终态：DEC-026 用户定案；实施由 COMPAT-004 A3 + v1.0 边界任务承载）",
+    "tool_note": "手工构造（manual（收尾补录））——CLI 本机沙箱不可达/收尾补录；诚实标注"
+  }
+}

@@ -1,27 +1,25 @@
 {
   "schema_version": 1,
-  "task_id": "COMPAT-013",
-  "title": "COMPAT-012 审查 F-1~F-5 收口批次（全 P3）：F-1 判据⑤范围完整性 / F-2 判据④真空处置 / F-3 CHANGELOG 计数更正 / F-4 契约 free-text 漂移 / F-5 判据③标注+防空转 golden",
+  "task_id": "COMPAT-016",
+  "title": "015-R1 P2 微收口（守卫强度对齐声称）：P2-1 smoke ⑧c 防伪锚定部署常量行 / P2-2 smoke ⑩c 正控与部署体共用 RegExp / +P3-1·P3-4·P3-6·P3-10·P3-11",
   "priority": "P2",
   "target_version": "0.6.0",
   "depends_on": [
-    "COMPAT-012（已完成 ✅）"
+    "COMPAT-015（✅）"
   ],
   "files": [
     "test/smoke.mjs",
-    "lib/host-contract.mjs",
+    "test/fixtures/host-surfaces/probe-face.mjs",
+    "scripts/probe-host.mjs",
     "CHANGELOG.md"
   ],
-  "reason": "REVIEW-COMPAT-012-R1（APPROVED_WITH_NOTES 0 阻断）5 条 P3——审查者建议「登记为后续小任务（避免合并范围膨胀）」；本批为断言强度与契约准确性收口",
+  "reason": "REVIEW-COMPAT-015-R1 P2-1/P2-2（同一失效模式家族「守卫强度 < 声称」，审查者建议随批收口）+ 5 项低成本 P3",
   "created_at": "2026-09-12",
   "tool": "change-triage",
   "tool_version": "0.80.0-manual",
   "analysis": {
     "dependency": {
-      "unblocked": [
-        "COMPAT-005",
-        "COMPAT-007"
-      ],
+      "unblocked": [],
       "blocked": [],
       "blocked_by": [],
       "unknown_deps": [],
@@ -34,7 +32,7 @@
       "in_flight": {
         "P0": 0,
         "P1": 0,
-        "P2": 7
+        "P2": 2
       },
       "version_chain": []
     },
@@ -49,13 +47,13 @@
       "detected": false,
       "touches_real_env": false,
       "requires_r1": false,
-      "declared": "纯测试/契约/CHANGELOG 侧；零产品代码行为面",
+      "declared": "纯测试/脚本侧；产品代码零改动",
       "blast_radius": [
-        "test/smoke.mjs F5d 判据段",
-        "契约 free-text note/symbol"
+        "smoke 守卫断言",
+        "probe-face 变异工具"
       ],
       "review_conditions": [
-        "Code Reviewer 后置审查必达"
+        "Code Reviewer R1 必达"
       ],
       "issues": [],
       "r1_note": "纯仓库内变更（无用户真实环境操作）——按事实校正 requires_r1=false"
@@ -65,24 +63,20 @@
     "tool": "task-priority-analysis",
     "module_version": "manual-0.80.0",
     "report_json": {
-      "total": 85,
-      "completed": 75,
+      "total": 88,
+      "completed": 82,
       "blocked": [],
       "unblocked": [
-        "COMPAT-013",
-        "COMPAT-005",
-        "COMPAT-007"
+        "COMPAT-016"
       ],
       "recommended_next": [
-        "COMPAT-013",
-        "COMPAT-005",
-        "COMPAT-007"
+        "COMPAT-016"
       ],
       "non_executable": [],
       "cycles": [],
       "cycle_warning": false
     },
-    "report_text": "COMPAT-013 入账快照（2026-09-12）：012 审查 P3 承接；与 005/007 的文件重叠（smoke/contract）→ 串行先行。",
+    "report_text": "COMPAT-016 入账快照（2026-09-12）：015-R1 P2 微收口；017 为 --run 真机面（用户侧前处置）。",
     "tool_note": "手工构造（manual（task-priority-analysis 调用快照））——CLI 本机沙箱不可达/收尾补录；诚实标注"
   },
   "priority_note": "有效优先级 P3（批次收口）；triage schema 仅接受 P0/P1/P2"

@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "task_id": "COMPAT-005",
+  "title": "设置页诊断面板 D1（能力报告=契约运行时投影；BC-05 输出边界；RB-03 代理信号；N3/N4 登记）",
+  "priority": "P2",
+  "target_version": "0.6.0",
+  "depends_on": [
+    "COMPAT-004（✅）"
+  ],
+  "files": [
+    "lib/client.js",
+    "lib/index.js",
+    "lib/host-boundary.js",
+    "lib/host-contract.mjs",
+    "test/smoke.mjs",
+    "CHANGELOG.md"
+  ],
+  "reason": "DEC-025 ADR 决策③ D1 诊断面板 + 轴④ 可调测性；REVIEW-COMPAT-001-R1 F6（TP-4 交叉标注）+ RB-03 代理信号 + N3/N4 契约登记。**收尾补录**（原派发于 2026-09-12 已完成，triage 文件于收尾补齐——诚实标注）",
+  "created_at": "2026-09-12",
+  "tool": "change-triage",
+  "tool_version": "0.80.0-manual",
+  "analysis": {
+    "dependency": {
+      "unblocked": [
+        "COMPAT-007",
+        "COMPAT-015"
+      ],
+      "blocked": [],
+      "blocked_by": [],
+      "unknown_deps": [],
+      "cycles": [],
+      "cycle_warning": false,
+      "new_task_cycle": false
+    },
+    "priority_context": {
+      "proposed": "P2",
+      "in_flight": {
+        "P0": 0,
+        "P1": 0,
+        "P2": 5
+      },
+      "version_chain": []
+    },
+    "conflicts": [],
+    "version": {
+      "target": "0.6.0",
+      "current": "0.5.1",
+      "planned_next": "0.5.2",
+      "issues": []
+    },
+    "side_effect": {
+      "detected": false,
+      "touches_real_env": false,
+      "requires_r1": true,
+      "declared": "新增只读路由 + 设置页只读面板；报告载荷 BC-05 边界（symbol/file/line 不出网关）",
+      "blast_radius": [
+        "lib/client.js（面板）",
+        "lib/index.js（compat 路由）"
+      ],
+      "review_conditions": [
+        "Code Reviewer R1/R2 必达（已完成）"
+      ],
+      "issues": [],
+      "r1_evidence": "隔离环境（环境变量重定向至临时目录）——命令逐条上报见对应 EVD 行（M7.7 R1 三选一之(a)）"
+    }
+  },
+  "snapshot": {
+    "tool": "task-priority-analysis",
+    "module_version": "manual-0.80.0",
+    "report_json": {
+      "total": 84,
+      "completed": 74,
+      "blocked": [],
+      "unblocked": [
+        "COMPAT-005"
+      ],
+      "recommended_next": [
+        "COMPAT-005"
+      ],
+      "non_executable": [],
+      "cycles": [],
+      "cycle_warning": false
+    },
+    "report_text": "COMPAT-005 补录（终态：R1 NEEDS_CHANGE〔F1 P0/F2 P1〕→ 返工 e9d0760 → R2 APPROVED_WITH_NOTES 0 阻断；EVD-091/092）",
+    "tool_note": "手工构造（manual（收尾补录；task-priority-analysis 调用快照见 EVD-091 记录时点））——CLI 本机沙箱不可达/收尾补录；诚实标注"
+  }
+}
