@@ -4,6 +4,11 @@ on:
   push:
     branches: [main, master]
   pull_request:
+  # COMPAT-007 C1 探测轨（DEC-025 ADR 决策②②）：宿主发版即红的定时探测——频率 SLO = 每日一次
+  # （RB-01：每日一次仍留 ≤1 天窗口期，窗口期内宿主升级可能先于探测到达用户；兜底与披露见 README「探测窗口期」）。
+  schedule:
+    - cron: '17 3 * * *'   # UTC 03:17（北京 11:17）——每日一次，不与整点高峰期抢注册表
+  workflow_dispatch:        # 手动触发（发布前随查 / 怀疑宿主发版时随查）
 
 jobs:
   sanity:
@@ -113,3 +118,181 @@ jobs:
           printf '{ "name": "@deepseek-ai/dsh-tools", "version": "0.0.0-mock", "type": "module", "main": "index.js" }\n' > node_modules/@deepseek-ai/dsh-tools/package.json
           node -e "import('@deepseek-ai/schemastery').then((m) => console.log('schemastery real package:', typeof m.default.object))"
           node test/smoke.mjs
+
+  # ── COMPAT-007：宿主发版探测轨（C1；DEC-025 ADR 决策②②）────────────────────────────────
+  # 判据：上游已发布版本 × fixtures 覆盖版本对账——检测到新宿主版本 ⇒ 本 job 红（在用户升级前暴露适配面）。
+  # 频率 SLO：每日一次（见上方 on.schedule cron）；窗口期残余（RB-01）与兜底见 README「探测窗口期」。
+  # 触发面：仅 schedule / workflow_dispatch——只读网络探测不进 PR 门禁（宿主 rc 版直接打 latest tag，契约 6.5）。
+  host-latest-probe:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      PROBE_DIR: ${{ runner.temp }}/nv-host-probe
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # ── 供应链白名单（硬约束；BC-05：探测轨自身不得成为供应链风险源）─────────────────────
+      # 允许：仅 `npm view <pkg> <field> --json`——只读注册表元数据，无包落盘、无代码执行。
+      # 禁止（本 job 出现即违规）：npm install / npm ci / npx / npm pack / 解包 tarball 后 import 或执行、
+      #   任何形式的宿主代码运行、actions/cache 复用（防把宿主包带进工作区）。
+      # 理由：C1 的价值是「宿主发版即红」；若为此 install rc 版宿主闭包（200+ 包、rc 直接打 latest tag
+      #   ——契约 6.5 / BC-05），探测轨本身即引入供应链面与「探测轨成为事故源」风险。版本元数据足够支撑判据。
+      # 新增白名单外命令 MUST 经独立审查（同契约「新增宿主耦合字面量必须同步契约」纪律）。
+      - name: 只读探测 npm 元数据（白名单：仅 npm view）
+        run: |
+          mkdir -p "$PROBE_DIR"
+          npm view @deepseek-ai/dsh versions --json > "$PROBE_DIR/dsh.versions.json"
+          npm view @deepseek-ai/dsh dist-tags --json > "$PROBE_DIR/dsh.dist-tags.json"
+          npm view @deepseek-ai/dsh-settings versions --json > "$PROBE_DIR/dsh-settings.versions.json"
+          npm view @deepseek-ai/dsh-api-gateway versions --json > "$PROBE_DIR/dsh-api-gateway.versions.json"
+          npm view @deepseek-ai/dsh-client-modules versions --json > "$PROBE_DIR/dsh-client-modules.versions.json"
+          npm view @deepseek-ai/dsh-client-connection versions --json > "$PROBE_DIR/dsh-client-connection.versions.json"
+          npm view @deepseek-ai/dsh-tools versions --json > "$PROBE_DIR/dsh-tools.versions.json"
+          npm view @deepseek-ai/dsh-home-paths versions --json > "$PROBE_DIR/dsh-home-paths.versions.json"
+          npm view @deepseek-ai/cordis versions --json > "$PROBE_DIR/cordis.versions.json"
+          npm view @deepseek-ai/schemastery versions --json > "$PROBE_DIR/schemastery.versions.json"
+          echo "OK: 只读元数据探测完成（无 install / 无宿主代码执行）"
+      - name: 契约 × fixtures × registry 版本对账（检测到新宿主版本 ⇒ job 红）
+        run: |
+          cat > "$RUNNER_TEMP/nv-host-latest-probe.mjs" <<'PROBE_EOF'
+          // host-latest-probe.mjs — COMPAT-007 C1「latest 探测轨」判据（DEC-025 ADR 决策②②）。
+          // 只读：本脚本不联网、不发命令、不写仓库——只消费（i）上一「只读探测」步骤落盘的 npm view JSON、
+          // （ii）test/fixtures/host-surfaces/*.json（覆盖版本唯一机读事实源）、（iii）lib/host-contract.mjs 声明面（纯数据）。
+          // 退出码：0 = 无新版本（绿）；1 = 检测到新版本 / 覆盖失配（红）；2 = 用法或输入缺失（红）。
+          //
+          // 判据（逐包可归因）：
+          //   ① 探测面 ≡ 契约 hostSurface.packages 并集（双向：漏探=红、越界探=红）——契约是探测目标集单一事实源；
+          //   ② fixtures 覆盖版本 MUST 仍在上游已发布列表内（否则覆盖声明陈旧或被撤回）；
+          //   ③ fixtures 自洽：host 族包版本 MUST === hostVersion；versionExceptions 包 MUST ≠ hostVersion（防例外表腐化）；
+          //   ④ 版本车判据：已覆盖车（major.minor.patch 三元组）内的上游最大版本 MUST ≡ 已覆盖版本，且上游 MUST NOT
+          //      出现高于最新已覆盖车的车 ⇒ 违反即输出「detected new host version X, fixtures covered Y ⇒ 需审阅+更新 fixtures」。
+          //   CLI（@deepseek-ai/dsh）单列：fixtures 只记闭包子包、无 CLI 版本机读位 ⇒ 覆盖面以 hostVersion 集合为代理
+          //      （fixture 头自述「CLI 版本闭包内子包实测版本 = hostVersion」；代理只会更早判红，不掩盖更新版本）。
+          //
+          // 为何不复用各包 `npm view <pkg> version`（latest dist-tag）直接比对——本任务实测订正（P-01）：
+          //   dsh-* 子包 latest tag 停在 0.0.1-rc.X 旧线（实测 dsh-settings latest=0.0.1-rc.1、dsh-home-paths=0.0.1-rc.3），
+          //   宿主线实际发布在 next/alpha tag（0.1.5-rc.2）⇒ 用 latest 比对会对**已覆盖版本**恒判红（假阳）。
+          //   故判据取「已发布版本列表 + 版本车比较」，与 dist-tag 命名解耦；dist-tags 仅作上下文报告（非判据）。
+          // 受限版本口径：X.Y.Z 或 X.Y.Z-{alpha|rc}.N（本宿主线实测命名）。未知形态无法排序 ⇒ fail-closed 判红
+          //   （不静默跳过：无法判定的版本 = 尚未审阅的版本）。
+          import { existsSync, readFileSync, readdirSync } from 'node:fs'
+          import { join } from 'node:path'
+          import { pathToFileURL } from 'node:url'
+
+          const [probeDir, fixturesDir, contractPath] = process.argv.slice(2)
+          const die = (msg) => { console.error('[COMPAT-007 探测轨] 输入错误：' + msg); process.exit(2) }
+          if (!probeDir || !fixturesDir || !contractPath) die('用法：node host-latest-probe.mjs <probeDir> <fixturesDir> <contractPath>')
+          if (!existsSync(probeDir)) die('probe 目录不存在：' + probeDir)
+          if (!existsSync(fixturesDir)) die('fixtures 目录不存在：' + fixturesDir)
+
+          const readJson = (p) => JSON.parse(readFileSync(p, 'utf8'))
+          const { hostContract } = await import(pathToFileURL(contractPath).href)
+          const surface = hostContract.hostSurface
+          const declared = [...new Set(Object.values(surface.packages).flat())].sort()
+          const exceptions = new Set(surface.versionExceptions)
+
+          // ── 受限版本口径（train = major.minor.patch 三元组；track：alpha < rc < stable）──
+          const TRACK = { alpha: 0, rc: 1, stable: 2 }
+          const parseVersion = (v) => {
+            if (typeof v !== 'string') return null
+            const m = /^(\d+)\.(\d+)\.(\d+)(?:-([a-z]+)\.(\d+))?$/.exec(v)
+            if (!m) return null
+            const track = m[4] === undefined ? TRACK.stable : TRACK[m[4]]
+            if (track === undefined) return null
+            return { v, train: [Number(m[1]), Number(m[2]), Number(m[3])], track, pre: m[5] === undefined ? -1 : Number(m[5]) }
+          }
+          const cmpTrain = (a, b) => (a[0] - b[0]) || (a[1] - b[1]) || (a[2] - b[2])
+          const cmpVersion = (a, b) => cmpTrain(a.train, b.train) || (a.track - b.track) || (a.pre - b.pre)
+          const sameTrain = (a, b) => cmpTrain(a.train, b.train) === 0
+          const trainKey = (x) => x.train.join('.')
+
+          // ── fixtures 覆盖面（唯一机读覆盖事实源：每份 hostVersion + 各包 version）──
+          const fixtures = readdirSync(fixturesDir).filter((f) => f.endsWith('.json')).sort()
+            .map((f) => ({ file: f, ...readJson(join(fixturesDir, f)) }))
+          if (fixtures.length === 0) die('fixtures 目录无 *.json：' + fixturesDir)
+          const coveredHost = new Set()
+          const coveredByPkg = new Map()
+          for (const fx of fixtures) {
+            coveredHost.add(fx.hostVersion)
+            for (const [p, meta] of Object.entries(fx.packages ?? {})) {
+              if (!coveredByPkg.has(p)) coveredByPkg.set(p, new Set())
+              coveredByPkg.get(p).add(meta.version)
+            }
+          }
+
+          const failures = new Set()
+          const okLines = []
+          const targets = [...declared, 'dsh']   // 'dsh' = @deepseek-ai/dsh（CLI 单列探测面）
+          const probedStems = readdirSync(probeDir).filter((f) => f.endsWith('.versions.json')).map((f) => f.replace('.versions.json', ''))
+
+          // ① 探测面 ≡ 契约声明面（双向 ⊆）
+          for (const p of declared) if (!probedStems.includes(p)) failures.add(`探测面缺契约声明包 ${p}：契约 hostSurface.packages 已声明 ⇒ MUST 同步补 npm view 探测行（白名单内）`)
+          for (const s of probedStems) if (!targets.includes(s)) failures.add(`探测面含契约未声明的包 ${s}：探测目标集单一事实源是契约 hostSurface.packages（越界探测）`)
+
+          for (const p of targets) {
+            const probeFile = join(probeDir, p + '.versions.json')
+            if (!existsSync(probeFile)) { failures.add(`探测输入缺失：${p}.versions.json（npm view @deepseek-ai/${p} versions --json 未落盘）`); continue }
+            const before = failures.size
+            const isCli = p === 'dsh'
+            const raw = readJson(probeFile)
+            const list = Array.isArray(raw) ? raw : [raw]
+            const covered = [...(isCli ? coveredHost : (coveredByPkg.get(p) ?? []))]
+            const cov = covered.map(parseVersion)
+            const badCov = covered.filter((_, i) => !cov[i])
+            if (badCov.length > 0) { failures.add(`覆盖版本形态超出受限口径：${p} ${badCov.join(', ')} ⇒ 无法判定（fail-closed，需人工审阅）`); continue }
+            if (cov.length === 0) { failures.add(`契约声明面 ${p} 在 fixtures 中无覆盖版本 ⇒ 声明面与 fixtures 失配（需审阅 + 更新 fixtures）`); continue }
+            cov.sort(cmpVersion)
+            const newestCov = cov[cov.length - 1]
+            const pub = list.map(parseVersion)
+            const badPub = list.filter((_, i) => !pub[i])
+            if (badPub.length > 0) failures.add(`上游已发布版本形态超出受限口径：${p} ${badPub.join(', ')} ⇒ 无法判定新旧（fail-closed，需人工审阅）`)
+            const pubOk = pub.filter(Boolean)
+            const upstreamNewest = pubOk.slice().sort(cmpVersion).pop()
+
+            // ② 覆盖版本仍在上游已发布列表内（覆盖声明可解析）
+            for (const c of cov) if (!list.includes(c.v)) failures.add(`fixtures 覆盖版本 ${c.v} 不在上游已发布列表（${p}）⇒ 覆盖声明陈旧或被撤回，需审阅`)
+
+            // ③ fixtures 自洽（host 族 ≡ hostVersion；例外表 MUST ≠ hostVersion）
+            if (!isCli) {
+              for (const fx of fixtures) {
+                const meta = fx.packages?.[p]
+                if (!meta) continue
+                if (!exceptions.has(p) && meta.version !== fx.hostVersion) failures.add(`fixtures 自洽：${fx.file} 中 ${p}=${meta.version} ≠ hostVersion=${fx.hostVersion}（host 族包应与宿主同版本）`)
+                if (exceptions.has(p) && meta.version === fx.hostVersion) failures.add(`版本例外表腐化：${fx.file} 中 ${p}=${meta.version} ≡ hostVersion（例外包属独立版本族，MUST ≠ 宿主版本）`)
+              }
+            }
+
+            // ④ 版本车判据（同车：上游最大 vs 覆盖最大；另有高于最新覆盖车的车 ⇒ 新车）
+            const found = new Map()
+            for (const k of [...new Set(cov.map(trainKey))]) {
+              const maxCov = cov.filter((c) => trainKey(c) === k).sort(cmpVersion).pop()
+              const maxPub = pubOk.filter((x) => sameTrain(x, maxCov)).sort(cmpVersion).pop()
+              if (maxPub && cmpVersion(maxPub, maxCov) > 0) found.set(maxPub.v + '|' + maxCov.v, [maxPub.v, maxCov.v])
+            }
+            for (const x of pubOk) if (cmpTrain(x.train, newestCov.train) > 0) found.set(x.v + '|' + newestCov.v, [x.v, newestCov.v])
+            for (const [newV, covV] of found.values()) failures.add(`detected new host version ${newV}, fixtures covered ${covV} ⇒ 需审阅 + 更新 fixtures（${p}）`)
+
+            if (failures.size === before) okLines.push(`${p}：上游最新 ${upstreamNewest ? upstreamNewest.v : 'n/a'} ≡ fixtures 覆盖 ${newestCov.v}（覆盖车 ${[...new Set(cov.map(trainKey))].join(' / ')}${exceptions.has(p) ? '；独立版本族' : ''}${isCli ? '；CLI 覆盖代理 = hostVersion 集合' : ''}）`)
+          }
+
+          // ── 报告 ──
+          console.log('[COMPAT-007 探测轨] 只读判据：契约声明面 × fixtures 覆盖 × registry 已发布版本')
+          console.log(`  契约声明面包（${declared.length}）：${declared.join(', ')}（版本例外：${[...exceptions].join(', ')}）`)
+          console.log(`  fixtures 覆盖面（${fixtures.length}）：${fixtures.map((f) => String(f.hostVersion)).join(' / ')}`)
+          for (const l of okLines) console.log('  ✅ ' + l)
+          const distTagsFile = join(probeDir, 'dsh.dist-tags.json')
+          if (existsSync(distTagsFile)) console.log('  ℹ️ @deepseek-ai/dsh dist-tags（上下文，非判据）：' + JSON.stringify(readJson(distTagsFile)))
+          if (failures.size === 0) {
+            console.log('✅ 无新宿主版本：上游已发布版本均未超出 fixtures 覆盖（探测频率每日一次；窗口期残余见 README「探测窗口期」）')
+            process.exit(0)
+          }
+          console.error(`❌ [COMPAT-007 探测轨] 检出 ${failures.size} 项（宿主发版 ⇒ 需审阅）：`)
+          for (const f of failures) console.error('  - ' + f)
+          console.error('⇒ 处置：审阅新版本变更面 → 以 test/fixtures/host-surfaces/extract.mjs 只读重建 fixtures → 复核 lib/host-contract.mjs 声明面 → 适配后再关红。')
+          process.exit(1)
+          PROBE_EOF
+          node "$RUNNER_TEMP/nv-host-latest-probe.mjs" "$PROBE_DIR" test/fixtures/host-surfaces lib/host-contract.mjs

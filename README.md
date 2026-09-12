@@ -158,7 +158,7 @@ curl -fsSL https://raw.githubusercontent.com/peterwangze/dsh-novel-writing/main/
 - **依赖架构**：`@deepseek-ai/*` 全部为 `peerDependencies`，运行时解析到宿主闭包（同一实例）——规避「双闭包」导致的 boot 崩溃与版本漂移失效（详见 [docs/RESEARCH.md](./docs/RESEARCH.md) §3.2）。
 - **客户端 API 双表面**（BUG-004）：浏览器侧经 lib/client.js 内**适配层单点收口**——新宿主（0.1.2-rc.1+）走 `remote.<ns>` 服务（settings/session/workspace/agentPresets/directoryPicker）+ `workspaces`/`sessions` 快照服务；旧宿主回退 `connection.api` 域对象；两者皆缺时按域降级提示（`apiHas` 语义不变）。
 - **能力降级**：宿主行缺席 `webServer` 仅降级 API；工具行缺席 `novel-writing` 服务时注册 0 工具，预设仍可挂载。
-- **兼容矩阵**：实测 DSH `0.1.0-rc.7`、`0.1.1-rc.2` 与 `0.1.2-rc.1`（客户端经双表面适配层）；peer 声明为 `*`，向前兼容以实测为准。
+- **兼容矩阵**：见下方「宿主版本矩阵」（DEC-026 定案的实测覆盖与 v1.0 生效时点）；peer 声明为 `*`，向前兼容以实测为准。
 - **dsh 0.1.5-rc.1 布局重构兼容（BUG-006）**：v0.5.1 插件代码零改动全兼容（隔离实例全链路实测启动成功）；dsh ≥0.1.5 的 per-profile 布局（每 profile 独立 `package.json` + `node_modules`）由安装脚本自动适配（profile `dependencies`/`dsh.profile.bundles` 注册 + patch 行双保险）。升级 dsh 后若插件消失 = profile 模板重建重置了注册，重跑安装脚本即恢复。
 - **验证管线**（CI 全量执行 + 发版手动隔离 boot）：
 
@@ -166,10 +166,28 @@ curl -fsSL https://raw.githubusercontent.com/peterwangze/dsh-novel-writing/main/
 node --check lib/index.js && node --check lib/tools.js && node --check lib/client.js
 node test/validate-preset.mjs   # 预设挂载级校验（loader 同源解析 + 逐行模块解析）
 node test/smoke.mjs             # 宿主逻辑 + 挂载契约 179 项断言（状态/门禁/审计/发布/信号/注册面/BUG-004 适配层与联动守卫）
+# 宿主发版探测轨（CI scheduled 每日一次；只读 npm view，无 install / 无宿主代码执行）：
+npm view @deepseek-ai/dsh versions --json   # 与 fixtures 覆盖版本对账 ⇒ 新版本即红（见下「探测轨与窗口期」）
 # 隔离 boot（最接近真实安装路径）：
 $env:DSH_HOME="$env:TEMP\dsh-novel-test"; dsh plugin --profile web add link:<本仓库>
 dsh web --port 3100 --no-open   # 另一终端 curl http://127.0.0.1:3100/novel-writing/api/overview → 200
 ```
+
+### 宿主版本矩阵（DEC-026 定案）
+
+`peerDependencies` 当前仍为 `*`（A1 收敛**未生效**）；矩阵以 fixtures 快照与隔离实例实测为依据：
+
+| 宿主版本 | 支持状态 | 依据 / 生效时点 |
+|---|---|---|
+| `0.1.5-rc.2`（现行闭包内子包实测版本；CLI `0.1.5-rc.1` = registry `latest`） | ✅ 完整支持 | 宿主表面 fixtures 现行快照（`test/fixtures/host-surfaces/`）+ per-profile 布局隔离实例全链路实测（BUG-006） |
+| `0.1.2-rc.1` | ✅ 支持（**最低支持线**） | fixtures 快照 + 客户端双表面适配层；**v1.0 起为声明下限**（`peerDependencies` 加下限 + 移除 `connection.api` 回退〔过渡期保留一个版本期的 `__NV_LEGACY_API__` 开关〕）——A1 绑定 v1.0 major 边界，**当前 A3 阶段尚未生效** |
+| `0.1.0-rc.7` / `0.1.1-rc.2`（0.1.x 旧表面线） | ⚠️ 最佳努力（A3 保留旧表面回退） | fixtures 快照；**v1.0 起断供**——旧宿主上 `remote.*` 全缺而 `connection.api` 域对象在场 ⇒ 设置页「诊断」区明确提示「宿主版本低于最低支持」，并指向 v0.5.x tag 回退路径（DEC-026） |
+| 未列版本（含 `next` / `alpha` tag 上的预发布） | 未验证 | 向前兼容以实测为准；`*` 无下限 = 不设防（契约 6.1） |
+
+### 宿主发版探测轨与探测窗口期（COMPAT-007；DEC-025 决策②② / RB-01）
+
+- **探测轨**：CI **每日一次**（`cron: '17 3 * * *'`，UTC）以**只读 npm 元数据**（仅 `npm view <pkg> versions --json`——**不 install、不 pack、不执行宿主代码**）把上游已发布版本与 fixtures 覆盖版本对账；**出现新版本即 job 红**并输出 `detected new host version X, fixtures covered Y ⇒ 需审阅 + 更新 fixtures`，亦可 `workflow_dispatch` 手动触发。本地等效：`npm view @deepseek-ai/dsh versions --json`（及 `dsh-settings` / `dsh-api-gateway` / `dsh-client-modules` / `dsh-client-connection` / `dsh-tools` / `dsh-home-paths` / `cordis` / `schemastery`）。
+- **⚠️ 探测窗口期（已知残余，RB-01）**：探测是**每日一次、且只在 CI 侧**的检测——**窗口期内（≤ 1 天）宿主升级仍可能先于探测到达用户**：在探测变红、修复发布之前升级宿主的用户，仍会先遇到不适配（探测不是实时防护，也不能替代升级前的兼容核对）。该窗口由**加载期防线**兜底（不依赖 CI）：① `[nv-compat]` 结构化告警（缺面时 console 一次性告警，含缺面域名 / 方法名 / 服务名与契约 item）；② 客户端 `apiHas` 按域降级 + 设置页「诊断」区如实报告缺失面——**降级不白屏**。即：**「有探测」≠「无窗口」**。
 
 ## 卸载
 
