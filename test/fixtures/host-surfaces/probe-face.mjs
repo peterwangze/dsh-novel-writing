@@ -29,6 +29,13 @@
  *   COMPAT-009 → ⑧ install.ps1/install.sh 头部「宿主布局契约」块（固定标记行 `host-contract:v1`，RB-02）
  *        ↔ 契约面 4/5 对应声明 正则对账 + 变异负例（删标记 / 改约定字面量 / 丢约定项 ⇒ 必红）。
  *
+ * COMPAT-016 增补（收口 REVIEW-COMPAT-015-R1 P3；本工具为承接面）：
+ *   P3-1 → `deleteOnChild` 变异**最小化**（原「段落式跳过」在删 `on:` 最后一个子键时连带吞掉其后空行与 `jobs:`
+ *        ⇒ 变异体非最小、红点不可单独归因）+ ⑦ 增**变异体最小性**机检（`jobs:` 段与三 job 权限读数原样保留）；
+ *   P3-4 → `jobsStart` / `jobSection` / `jobCmd` 抽为**共享纯函数模块** `./yml-jobs.mjs`（`test/smoke.mjs` ⑧b 同款
+ *        消费同一对象，消除「两处各写一份镜像而无交叉机检」）；
+ *   P3-11 → ⑧ golden 由「数量 5」改**有序 id 集** `['4.1','4.2','4.3','4.4','5.5']` + 换项/删项/增项三向负例。
+ *
  * 职责（检查项）：
  *   ① 提取 ci.yml 内联判据（heredoc，定界约定泛化）→ `node --check`（语法机检）；
  *   ② 事件门禁结构断言（A-F1）：`on` 含**四类事件键**（F1）∧ `schedule` 只跑探测 job（sanity/host-logic 反向
@@ -67,6 +74,8 @@ import { tmpdir } from 'node:os'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { spawnSync } from 'node:child_process'
 import { extractHeredocs } from './ci-mock-face.mjs'
+// COMPAT-016 P3-4：job 段切分与 run 行归一由**共享纯函数模块**提供（原在 `test/smoke.mjs` 各写一份镜像、无交叉机检）。
+import { jobsStart, jobSection, jobCmd } from './yml-jobs.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(HERE, '..', '..', '..')
@@ -87,7 +96,10 @@ const RUN_TIMEOUT_MS = 60000
 const INSTALL_FILES = ['install.ps1', 'install.sh']
 const INSTALL_MARKER = 'host-contract:v1'
 const INSTALL_HEAD_LIMIT = 60
-const INSTALL_GOLDEN_ENTRIES = 5
+// COMPAT-016 P3-11（收口 REVIEW-COMPAT-015-R1 P3-11）：golden 由「数量 5」改为**有序 id 集**——原实现只锁数量 ⇒
+// 两脚本同步把 `[4.2]` 换成 `[4.6]` 并写入 ∈ 4.6 symbol 的字面量即可全绿（`keysA === keysB` 只保证两脚本自洽，
+// 面 4/5 的**覆盖面脱靶**零信号）。扩项 / 删项 / 换项 MUST 显式改 golden（同仓 golden 先例）。
+const INSTALL_GOLDEN_ENTRIES = ['4.1', '4.2', '4.3', '4.4', '5.5']
 // COMPAT-008：探针固化脚本的接线（离线自检模式在 sanity 内执行 ⇒ PR 面即可发现脚本回归）
 const PROBE_HOST = 'scripts/probe-host.mjs'
 const PROBE_HOST_INVOCATION = 'node scripts/probe-host.mjs --self-check'
@@ -115,21 +127,8 @@ function probeScriptSource(yml) {
   return null
 }
 
-/** `jobs:` 段起始行（`on:` 的子键与 job 键同为 2 空格缩进 ⇒ 必须从 jobs: 之后开始扫描）。 */
-function jobsStart(lines) {
-  const i = lines.findIndex((l) => l === 'jobs:')
-  return i < 0 ? 0 : i + 1
-}
-
-/** 某个 job 的 YAML 段（本 workflow 的 job 键 = 顶层缩进 2 空格；到下一个 job 键或文件末为止）。 */
-function jobSection(yml, job) {
-  const lines = yml.split('\n')
-  const start = lines.findIndex((l, i) => i >= jobsStart(lines) && l === '  ' + job + ':')
-  if (start < 0) return null
-  let end = lines.length
-  for (let i = start + 1; i < lines.length; i++) if (/^  [A-Za-z0-9_-]+:\s*$/.test(lines[i])) { end = i; break }
-  return lines.slice(start, end)
-}
+// `jobsStart` / `jobSection` / `jobCmd` 由共享纯函数模块 `./yml-jobs.mjs` 提供（COMPAT-016 P3-4，见文件头 import）：
+// 原实现在本文件与 `test/smoke.mjs` 各写一份**镜像**且无任何交叉机检（R1 P3-4）——现两处消费同一对象，镜像面消除。
 
 /** job → `if:` 表达式（无 `if` 记 null）。 */
 function jobGates(yml) {
@@ -176,13 +175,20 @@ function evaluateGate(expr, event) {
 /** F1：`on` 四键完整性——返回缺失键列表（空数组 = 齐全）。 */
 const eventKeysMissing = (src) => EVENT_KEYS.filter((k) => !new RegExp('^  ' + k + ':', 'm').test(src))
 
-/** F1 变异工具：删除 `on:` 下的某个子键及其缩进子行（用于四键负例构造）。 */
+/** F1 变异工具：删除 `on:` 下的某个子键及其缩进子行（用于四键负例构造）。
+ *  COMPAT-016 P3-1（收口 REVIEW-COMPAT-015-R1 P3-1）：原实现用「跳过直到下一个 `^  [A-Za-z_]+:` 键行」的**段落式**
+ *  跳过状态——删 `on:` 的**最后一个**子键（`workflow_dispatch`）时其后空行与 0 缩进的 `jobs:` 均不匹配复位正则 ⇒
+ *  被连带删除，变异体**非最小**（② 的门禁记录与权限记录同时变红，红点不可单独归因四键断言；若有人据此负例做
+ *  二分定位会被误导）。现改为**最小变异**：只删目标键行 + 其 `≥4 空格` 缩进的子行，遇空行 / 0 或 2 空格行即结束。 */
 function deleteOnChild(src, key) {
   const out = []
-  let skipping = false
+  const keyRe = new RegExp('^  ' + key + ':')
+  let inTarget = false
   for (const l of src.split('\n')) {
-    if (/^  [A-Za-z_]+:/.test(l)) skipping = new RegExp('^  ' + key + ':').test(l)
-    if (!skipping) out.push(l)
+    if (keyRe.test(l)) { inTarget = true; continue }   // 目标键行：删除并进入其子行区
+    if (inTarget && /^ {4}/.test(l)) continue          // 目标键的子行（≥4 空格缩进）：删除
+    inTarget = false
+    out.push(l)
   }
   return out.join('\n')
 }
@@ -192,8 +198,7 @@ function deleteOnChild(src, key) {
 function wiringInSanity(src) {
   const section = jobSection(src, 'sanity')
   if (section === null) return { ok: false, why: 'sanity 段缺失' }
-  const cmdOf = (l) => l.trim().replace(/^run:\s*/, '')
-  const cmds = section.map(cmdOf)
+  const cmds = section.map(jobCmd)
   const run = cmds.includes(SELF_INVOCATION)
   const check = cmds.includes(SELF_CHECK)
   const host = cmds.includes(PROBE_HOST_INVOCATION)
@@ -203,7 +208,7 @@ function wiringInSanity(src) {
 /** F2 变异工具：把接线行移入 `host-latest-probe` 段（同一步骤文本仍在文件中 ⇒ 旧「全文子串」守卫仍绿）。 */
 function moveWiringOutOfSanity(src) {
   const isWiring = (l) => {
-    const t = l.trim().replace(/^run:\s*/, '')
+    const t = jobCmd(l)
     return t === SELF_INVOCATION || t === SELF_CHECK || t === PROBE_HOST_INVOCATION
   }
   const out = src.split('\n').filter((l) => !isWiring(l))
@@ -246,6 +251,12 @@ function parseInstallContract(src) {
   }
   return { markerAt: lines.findIndex((l) => INSTALL_MARKER_LINE_RE.test(l)), entries }
 }
+/** P3-11：golden **有序 id 集**对账（双向——多 / 少 / 换项均红；原实现只比数量，覆盖面脱靶零信号）。 */
+function installGoldenProblems(items) {
+  const got = items.join(',')
+  const want = INSTALL_GOLDEN_ENTRIES.join(',')
+  return got === want ? [] : ['约定项 id 集 [' + got + '] ≠ golden [' + want + ']（双向：扩项/删项/换项均须显式改 golden）']
+}
 /** 返回问题清单（空数组 = 对账通过）；契约 `symbol` 是宿主耦合声明的单一事实源。 */
 function installContractProblems(ps1, sh, hc) {
   const problems = []
@@ -267,9 +278,8 @@ function installContractProblems(ps1, sh, hc) {
   const keysA = parsed[INSTALL_FILES[0]].entries.map((e) => e.item).sort().join(',')
   const keysB = parsed[INSTALL_FILES[1]].entries.map((e) => e.item).sort().join(',')
   if (keysA !== keysB) problems.push('两脚本约定项键集不一致：' + INSTALL_FILES[0] + '=[' + keysA + '] vs ' + INSTALL_FILES[1] + '=[' + keysB + ']')
-  if (parsed[INSTALL_FILES[0]].entries.length !== INSTALL_GOLDEN_ENTRIES) {
-    problems.push('约定项数 ' + parsed[INSTALL_FILES[0]].entries.length + ' ≠ golden ' + INSTALL_GOLDEN_ENTRIES + '（扩项/删项须显式改 golden）')
-  }
+  // P3-11：golden 对**有序 id 集**（跨脚本一致性由上式 keysA === keysB 兜住 ⇒ 单侧对 golden 即可覆盖两脚本）。
+  for (const p of installGoldenProblems(parsed[INSTALL_FILES[0]].entries.map((e) => e.item))) problems.push(p)
   return problems
 }
 
@@ -527,9 +537,18 @@ record('⑥ 白名单声明面 ↔ 常量双向对账：声明项（允许 ' + D
   'declMissing=' + JSON.stringify(declMissing) + ' notBlocked=' + JSON.stringify(declNotBlocked) + ' constUncovered=' + JSON.stringify(constUncovered) + ' allowedSample=' + allowedSampleOk)
 
 // ⑦ 守卫负例（F1/F2）+ 运行器健壮性真跑（F7）
-const eventNegNotRed = EVENT_KEYS.filter((k) => eventKeysMissing(deleteOnChild(yml, k)).length === 0)
-record('⑦ 守卫负例（F1 四键）：逐一删除 `on` 下的 ' + EVENT_KEYS.join(' / ') + ' 键 ⇒ 四键断言**均必红**（未变红者 = 守卫对该键无判别力）',
-  eventNegNotRed.length === 0, 'notRed=' + JSON.stringify(eventNegNotRed))
+const eventNegMutants = EVENT_KEYS.map((k) => ({ key: k, src: deleteOnChild(yml, k) }))
+const eventNegNotRed = eventNegMutants.filter((m) => eventKeysMissing(m.src).length === 0).map((m) => m.key)
+// P3-1（COMPAT-016）变异体**最小性**机检：除目标键（及其子行）外，`jobs:` 段与三个 job 的权限读数 MUST 原样保留——
+// 否则 ② 的门禁/权限记录会随四键断言**同时**变红，红点不可单独归因（原实现在删最后一个子键时连带吞掉空行与 `jobs:`）。
+const eventNegNonMinimal = eventNegMutants.filter((m) => {
+  const mutGates = jobGates(m.src)
+  return !m.src.includes('\njobs:')
+    || !jobNames.every((j) => mutGates.has(j) && JSON.stringify(jobPermissions(m.src, j)) === JSON.stringify(jobPermissions(yml, j)))
+}).map((m) => m.key)
+record('⑦ 守卫负例（F1 四键）：逐一删除 `on` 下的 ' + EVENT_KEYS.join(' / ') + ' 键 ⇒ 四键断言**均必红**（未变红者 = 守卫对该键无判别力）∧ 变异体**最小**（`jobs:` 段与三个 job 权限读数原样保留 ⇒ 红点可单独归因四键断言）',
+  eventNegNotRed.length === 0 && eventNegNonMinimal.length === 0,
+  'notRed=' + JSON.stringify(eventNegNotRed) + ' nonMinimal=' + JSON.stringify(eventNegNonMinimal))
 const movedYml = moveWiringOutOfSanity(yml)
 const oldSubstringStillGreen = movedYml.includes(SELF_INVOCATION) && movedYml.includes(SELF_CHECK) && movedYml.includes(PROBE_HOST_INVOCATION)
 const newSectionRed = !wiringInSanity(movedYml).ok
@@ -547,7 +566,7 @@ const installPs1Text = readFileSync(join(REPO_ROOT, INSTALL_FILES[0]), 'utf8')
 const installShText = readFileSync(join(REPO_ROOT, INSTALL_FILES[1]), 'utf8')
 const installProblems = installContractProblems(installPs1Text, installShText, hostContract)
 const installEntries = parseInstallContract(installPs1Text).entries
-record('⑧ COMPAT-009 install 头部布局契约对账：两脚本标记块（固定标记行 `' + INSTALL_MARKER + '`）存在且在头部 ' + INSTALL_HEAD_LIMIT + ' 行内 ∧ 约定项键集跨脚本一致 ∧ 每项字面量 ∈ 契约对应 item 的 symbol（' + installEntries.length + ' 项 / golden ' + INSTALL_GOLDEN_ENTRIES + '：' + installEntries.map((e) => e.item).join(',') + '）',
+record('⑧ COMPAT-009 install 头部布局契约对账：两脚本标记块（固定标记行 `' + INSTALL_MARKER + '`）存在且在头部 ' + INSTALL_HEAD_LIMIT + ' 行内 ∧ 约定项键集跨脚本一致 ∧ 每项字面量 ∈ 契约对应 item 的 symbol（' + installEntries.length + ' 项 / golden id 集 ' + INSTALL_GOLDEN_ENTRIES.join(',') + '：' + installEntries.map((e) => e.item).join(',') + '）',
   installProblems.length === 0, 'problems=' + JSON.stringify(installProblems))
 const markerStripped = installContractProblems(installPs1Text.replace(/^\s*#\s*host-contract:v1\s*$/m, ''), installShText, hostContract)
 const literalChanged = installContractProblems(installPs1Text, installShText.replace('.agent-presets/<preset-id>/', '.agent-presets/wrong-id/'), hostContract)
@@ -555,6 +574,19 @@ const entryDropped = installContractProblems(installPs1Text.replace(/^\s*#\s*\[4
 record('⑧ COMPAT-009 对账负例：删标记行 ⇒ 红（' + markerStripped.length + ' 项）∧ 改预设目录字面量 ⇒ 红（' + literalChanged.length + ' 项）∧ 删一个约定项 ⇒ 红（' + entryDropped.length + ' 项）',
   markerStripped.some((p) => p.includes('缺少固定标记行')) && literalChanged.some((p) => p.includes('未出现在契约该项 symbol 内')) && entryDropped.some((p) => p.includes('键集不一致')),
   'marker=' + JSON.stringify(markerStripped) + ' literal=' + JSON.stringify(literalChanged) + ' dropped=' + JSON.stringify(entryDropped))
+
+// P3-11（COMPAT-016）golden **有序 id 集**双向负例：原实现只锁数量 5 ⇒ 两脚本**同步换项**（`[4.2]`→`[4.6]` 并写入
+// ∈ 4.6 symbol 的字面量）时 `keysA === keysB` 与数量对账**均绿**（覆盖面脱靶零信号）。三向构造（换项 / 删项 /
+// 增项）各自必红，且现行条目集合恰等于 golden（非恒真）。
+const goldenIdCases = [
+  { label: '换项', ids: ['4.1', '4.2', '4.3', '4.4', '4.5'] },
+  { label: '删项', ids: ['4.1', '4.2', '4.3', '4.5'] },
+  { label: '增项', ids: ['4.1', '4.2', '4.3', '4.4', '5.5', '4.6'] },
+]
+const goldenIdNeg = goldenIdCases.map((c) => ({ label: c.label, problems: installGoldenProblems(c.ids).length }))
+record('⑧ COMPAT-016 P3-11 golden **有序 id 集**（' + INSTALL_GOLDEN_ENTRIES.join(',') + '）双向负例：换项 / 删项 / 增项三向构造均必红 ∧ 现行条目集合恰等于 golden（原实现只锁数量 ⇒ 两脚本同步换 id 仍全绿）',
+  installGoldenProblems(installEntries.map((e) => e.item)).length === 0 && goldenIdNeg.every((g) => g.problems > 0),
+  'negatives=' + JSON.stringify(goldenIdNeg) + ' current=' + JSON.stringify(installEntries.map((e) => e.item)))
 
 // ── 报告 ────────────────────────────────────────────────────────────────────
 const failed = results.filter((r) => !r.ok)

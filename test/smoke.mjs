@@ -42,6 +42,9 @@ import { mkdtempSync, writeFileSync, mkdirSync, readFileSync, readdirSync, rmSyn
 import { join, dirname } from 'node:path'
 import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
+// COMPAT-016 P3-4：job 段切分 / run 行归一由**共享纯函数模块**提供（与 probe-face.mjs ②/⑦ 消费同一对象；
+// 原为本文件内镜像一份 `ciJobSection`/`ciCmdOf`、无交叉机检 ⇒ R1 P3-4）。
+import { jobSection, jobCmd } from './fixtures/host-surfaces/yml-jobs.mjs'
 
 const mod = await import('../lib/index.js')
 
@@ -1908,34 +1911,25 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // REVIEW-COMPAT-007-R1 F2 的失效模式本身）。**原实现为 `ciYmlSrc.includes(...)` 全文匹配**：把该步骤移入
   // host-latest-probe（或被注释/步骤名提及）时字符串仍在 ⇒ 守卫仍绿，而 PR 面重新变为零机检 —— 表述强度 > 实现
   // 强度（REVIEW-COMPAT-014-R1 F2）。现改为**段绑定**：命令行 MUST 落在 `jobSection(yml,'sanity')` 段内。
-  // 口径镜像说明：probe-face.mjs 内的 `jobSection()` 是同一实现；本文件**不能** import 它（该文件是顶层脚本，
-  // import 即执行其全量机检并落临时目录），故此处镜像同款实现——口径一致性由 probe-face 的 ②/⑦ 自断言
-  // （段绑定断言 + 「移出 sanity ⇒ 必红」变异负例）兜底。
-  const ciJobSection = (src, job) => {
-    const lines = src.split('\n')
-    const j = lines.findIndex((l) => l === 'jobs:')
-    const start = lines.findIndex((l, i) => i > (j < 0 ? -1 : j) && l === '  ' + job + ':')
-    if (start < 0) return null
-    let end = lines.length
-    for (let i = start + 1; i < lines.length; i++) if (/^  [A-Za-z0-9_-]+:\s*$/.test(lines[i])) { end = i; break }
-    return lines.slice(start, end)
-  }
-  const ciCmdOf = (l) => l.trim().replace(/^run:\s*/, '')
+  // 口径**共享模块**（COMPAT-016 P3-4，收口 R1 P3-4）：`jobsStart`/`jobSection`/`jobCmd` 现由
+  // `test/fixtures/host-surfaces/yml-jobs.mjs` 提供，本文件与 probe-face.mjs 的 ②/⑦ 消费**同一对象**——
+  // 原为两处各写一份镜像（语义等价但无交叉机检 ⇒ ci.yml 结构演化时可能一侧红一侧绿而无法由机检判定哪侧正确）。
+  // 先例 = ci-mock-face.mjs 的 `extractHeredocs`。本文件仍**不** import probe-face（顶层脚本，import 即执行全量机检）。
   const probeFaceUrl = new URL('./fixtures/host-surfaces/probe-face.mjs', import.meta.url)
-  const sanityCmds = (ciJobSection(ciYmlSrc, 'sanity') ?? []).map(ciCmdOf)
+  const sanityCmds = (jobSection(ciYmlSrc, 'sanity') ?? []).map(jobCmd)
   const probeFaceWired = sanityCmds.includes('node test/fixtures/host-surfaces/probe-face.mjs')
     && sanityCmds.includes('node --check test/fixtures/host-surfaces/probe-face.mjs')
     && existsSync(probeFaceUrl)
   // 负例（构造，零落盘）：把两条接线行移入 host-latest-probe 段 ⇒ 旧「全文子串」守卫**仍绿**而段绑定守卫必红。
   const movedCiYml = (() => {
-    const isWiring = (l) => ['node test/fixtures/host-surfaces/probe-face.mjs', 'node --check test/fixtures/host-surfaces/probe-face.mjs'].includes(ciCmdOf(l))
+    const isWiring = (l) => ['node test/fixtures/host-surfaces/probe-face.mjs', 'node --check test/fixtures/host-surfaces/probe-face.mjs'].includes(jobCmd(l))
     const out = ciYmlSrc.split('\n').filter((l) => !isWiring(l))
     const at = out.findIndex((l) => l === '  host-latest-probe:')
     out.splice(at < 0 ? out.length : at + 1, 0, '          run: node test/fixtures/host-surfaces/probe-face.mjs')
     return out.join('\n')
   })()
   const oldSubstringGreen = movedCiYml.includes('node test/fixtures/host-surfaces/probe-face.mjs')
-  const sectionBoundRed = !(ciJobSection(movedCiYml, 'sanity') ?? []).map(ciCmdOf).includes('node test/fixtures/host-surfaces/probe-face.mjs')
+  const sectionBoundRed = !(jobSection(movedCiYml, 'sanity') ?? []).map(jobCmd).includes('node test/fixtures/host-surfaces/probe-face.mjs')
   check('COMPAT-014 A-F2 接线守卫（COMPAT-015 F2 强化为 **sanity 段绑定**）：ci.yml sanity 段内含探测轨离线机检步骤（`node test/fixtures/host-surfaces/probe-face.mjs`）+ 语法检查清单含该文件 + 工具文件在仓（删除接线 = 判据回到零机检态）；**负例**：接线行移出 sanity ⇒ 旧全文子串守卫仍绿（' + oldSubstringGreen + '）而本守卫必红（' + sectionBoundRed + '）',
     probeFaceWired && oldSubstringGreen && sectionBoundRed,
     'wired=' + probeFaceWired + ' inSanity=' + sanityCmds.includes('node test/fixtures/host-surfaces/probe-face.mjs') + ' checkInSanity=' + sanityCmds.includes('node --check test/fixtures/host-surfaces/probe-face.mjs') + ' file=' + existsSync(probeFaceUrl) + ' oldSubstringGreen=' + oldSubstringGreen + ' sectionBoundRed=' + sectionBoundRed)
@@ -1943,12 +1937,28 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // ⑧c COMPAT-008（探针固化 `scripts/probe-host.mjs`）接线守卫：脚本在仓 ∧ `node --check` ∧ **离线自检**步骤落在
   // sanity 段内（`--self-check` 是唯一可在 CI 常态执行的面；实机 `--run` 需运行中宿主环境，不进 CI）∧ 脚本自述
   // 保留「实机未验证」固定标记（`REAL-RUN: UNVERIFIED`）——**防「静默转已验证」**（不得伪造实机验证）。
+  // **COMPAT-016 P2-1（收口 REVIEW-COMPAT-015-R1 P2-1）**：原判据是**全文子串** `includes('REAL-RUN: UNVERIFIED')`，
+  // 而脚本头注释 L13 含**同一串** ⇒ 只改常量定义 L49 的取值即可在守卫全绿的情况下把实机模式自述静默改为
+  // 「已验证」（同 F2「表述强度 > 实现强度」家族；README「不得静默转已验证」的安全承诺因此可被一行改动解除）。
+  // 现判据锚定**常量赋值行**（`const <NAME> = '<标记>'` 形态——与输出面解耦，头注释保留同串不再污染）：
+  // ① 定义行字面量必须存在（改常量值 / 改名 / 删定义 ⇒ 红）；② 全文不得出现「已验证」形态（输出被硬编码为
+  // VERIFIED ⇒ 红）；③ 常量必须在输出面被**真实引用**（≥ 定义 + 2 处拼接）⇒ 关闭「定义常量但输出另写字面量」的缝。
+  // 判别力对照（零落盘构造）：把 L49 常量值改成 VERIFIED（头注释同串**保留**）⇒ 旧全文子串守卫仍绿而本守卫必红。
+  // 真机负例见 COMPAT-016 证据（改常量 → smoke 红 → 还原 + sha256 复核；与 ⑧b 同款「旧守卫仍绿 ∧ 新守卫必红」范式）。
   const probeHostUrl = new URL('../scripts/probe-host.mjs', import.meta.url)
   const probeHostSrc = existsSync(probeHostUrl) ? readFileSync(probeHostUrl, 'utf8') : ''
   const probeHostWired = sanityCmds.includes('node --check scripts/probe-host.mjs') && sanityCmds.includes('node scripts/probe-host.mjs --self-check')
-  check('COMPAT-008 探针接线守卫：`scripts/probe-host.mjs` 在仓 ∧ sanity 段内含 `node --check` 与 `node scripts/probe-host.mjs --self-check`（离线自检）∧ 脚本保留固定标记 `REAL-RUN: UNVERIFIED`（实机模式未验证——不得静默转为「已验证」）',
-    existsSync(probeHostUrl) && probeHostWired && probeHostSrc.includes('REAL-RUN: UNVERIFIED') && probeHostSrc.includes('SELF-CHECK: VERIFIED-IN-REPO'),
-    'exists=' + existsSync(probeHostUrl) + ' wired=' + probeHostWired + ' realRunMark=' + probeHostSrc.includes('REAL-RUN: UNVERIFIED') + ' selfCheckMark=' + probeHostSrc.includes('SELF-CHECK: VERIFIED-IN-REPO'))
+  const REAL_RUN_DEF = /const REAL_RUN_STATE = 'REAL-RUN: UNVERIFIED'/
+  const SELF_CHECK_DEF = /const SELF_CHECK_STATE = 'SELF-CHECK: VERIFIED-IN-REPO'/
+  const realRunGuard = (src) => REAL_RUN_DEF.test(src) && !/REAL-RUN: VERIFIED/.test(src) && (src.match(/REAL_RUN_STATE/g) ?? []).length >= 3
+  const selfCheckGuard = (src) => SELF_CHECK_DEF.test(src) && (src.match(/SELF_CHECK_STATE/g) ?? []).length >= 2
+  const forgedProbeHost = probeHostSrc.replace(REAL_RUN_DEF, "const REAL_RUN_STATE = 'REAL-RUN: VERIFIED'")
+  const forgedChanged = forgedProbeHost !== probeHostSrc
+  const oldFullTextGreen = forgedProbeHost.includes('REAL-RUN: UNVERIFIED')   // 头注释同串仍在 ⇒ 旧「全文子串」守卫仍绿（失效模式本身）
+  const anchoredRed = !realRunGuard(forgedProbeHost)
+  check('COMPAT-008 探针接线守卫（COMPAT-016 P2-1 强化：固定标记判据锚定**常量定义行**，非全文子串）：`scripts/probe-host.mjs` 在仓 ∧ sanity 段内含 `node --check` 与 `node scripts/probe-host.mjs --self-check`（离线自检）∧ 两枚固定标记的**常量赋值行**在位且在输出面被真实引用（实机模式未验证——不得静默转为「已验证」）；**判别力对照**：改常量值（头注释同串保留）⇒ 旧全文子串守卫仍绿（' + oldFullTextGreen + '）而本守卫必红（' + anchoredRed + '）',
+    existsSync(probeHostUrl) && probeHostWired && realRunGuard(probeHostSrc) && selfCheckGuard(probeHostSrc) && forgedChanged && oldFullTextGreen && anchoredRed,
+    'exists=' + existsSync(probeHostUrl) + ' wired=' + probeHostWired + ' realRunAnchor=' + realRunGuard(probeHostSrc) + ' selfCheckAnchor=' + selfCheckGuard(probeHostSrc) + ' forged=' + JSON.stringify({ changed: forgedChanged, oldFullTextGreen: oldFullTextGreen, anchoredRed: anchoredRed }))
 
   // ⑨ fixtures 内容安全边界（BC-05）：无绝对路径/宿主缓存路径/凭据形态（仅导出名·方法名·形状布尔）
   const SENSITIVE = /[A-Za-z]:\\|\/Users\/|\/home\/|AppData|npm-cache|Bearer\s|password|api[_-]?key/i
@@ -2964,7 +2974,12 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
     ...hc5.faces.map((f) => f.scope), ...hc5.revisions.map((r) => r.scope),
     ...deepStrings5(hc5.regionLiterals), ...deepStrings5(hc5.ctxGetSemantics), ...deepStrings5(hc5.hostSurface),
   ].filter((n) => typeof n === 'string')
-  const staleNoteRefs5 = contractNoteTexts5.filter((n) => /现[^。；]{0,10}L\d/.test(n) || /(?:emit|logger|logWarn|emitChanged)\s*(?:\/|,|、)?\s*L\d/.test(n))
+  // COMPAT-016 P2-2（收口 REVIEW-COMPAT-015-R1 P2-2）：两条陈旧行号词法在此**单点定义**——⑩ 的部署面（下方
+  // `staleNoteRefs5`）与 ⑩c 的**正向对照**消费**同一 RegExp 对象**（原实现把同一文本在 ⑩c 内重新声明为副本
+  // `LEXER_NOW15`/`LEXER_EMIT15` ⇒ 正控只对副本取样，部署面被改窄仍会全绿——F9 声称关闭的缝隙未被真正关闭）。
+  const STALE_RE_NOW5 = /现[^。；]{0,10}L\d/
+  const STALE_RE_EMIT5 = /(?:emit|logger|logWarn|emitChanged)\s*(?:\/|,|、)?\s*L\d/
+  const staleNoteRefs5 = contractNoteTexts5.filter((n) => STALE_RE_NOW5.test(n) || STALE_RE_EMIT5.test(n))
   // B-N3（R2 N3）：`report.host` 的**自由文本**载体已枚举化——只允许 `version: null` + `versionCode: <枚举码>`
   // （人类可读文案在客户端 i18n，不进网关；原 `versionNote` 自由文本为零散漂移面）。
   const hostPayload5 = rp5 === null || rp5.report === undefined ? null : rp5.report.host
@@ -2997,15 +3012,21 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // ⑩b COMPAT-015 F3（收口 REVIEW-COMPAT-014-R1 F3）：**行号引用 ↔ 契约 `line` 字段** 对账——防「陈旧行号副本」
   //   复发（F3 的 4 处中 3 处在本文件注释：旧值 2.3 `L4374-L4377`、3.1/3.5 的 `L838`/`L896`、3.8 `L2411-2421`
   //   ——均已按契约各条 `line` 字段订正）。
-  //   扫描面（**精确口径，不夸大**）：
-  //     面 A = 本文件**注释行**（`//` / `/*` / `*` 起首——现状声明的实际承载面）；
-  //     面 B = `CHANGELOG.md` 的**当前未发布条目**（锚点 `- **COMPAT-015` 顶层 bullet 起至下一条顶层 bullet 止）。
+  //   扫描面（**精确口径，不夸大**；COMPAT-016 P3-6 扩面后）：
+  //     面 A = 本文件**注释行**（`//` / `/*` / `*` 起首——F3 4 处订正中 3 处的实际承载面）；
+  //     面 B = `CHANGELOG.md` 的**当前任务条目**：锚点集 `['- **COMPAT-015', '- **COMPAT-016']` 各自顶层 bullet
+  //            起至下一条顶层 bullet 止（新增任务 MUST 把自身条目 id 加入锚点集，否则该条目落在面外）；
+  //     面 C = `README.md` **全文**（P3-6 扩面：文档面正文/表格同样承载契约行号引用）；
+  //     面 D = `scripts/probe-host.mjs` 与 `test/fixtures/host-surfaces/probe-face.mjs` 的**注释行**（P3-6 扩面：
+  //            本批新增文本的主要载体）。install 头部块**不在面内**——其约定行只写字面量不写行号（⑧ 已对账
+  //            字面量 ∈ 契约 symbol），无行号引用面可对。
   //     **口径边界（如实披露）**：CHANGELOG 的**历史条目**不在扫描面内——那里的行号是各批次落地时点的记录，对其
   //     施加「与当前契约一致」会系统性假阳并要求改写历史（P-01：不改写记录；同 COMPAT-014 C-F-6「历史锚点」纪律）。
   //   判定：注释行内 `<item> L<n>`（或 `<item> … client.js:<n>`）的 n MUST 落在契约该条 `line` 字段的行界内；
   //   带**历史限定词**的行（旧值 / 历史锚点 / 修正前 / 收口前 / 原实现…）豁免。多段/混合形态的 `line`
   //   （如 `L837-850 / L4554 / L4689`）取各段 min…max 为**宽松界**——该形态下只拦「明显无关」的副本（强度边界如实披露）。
-  //   判别力正向对照：注入一处**构造**的陈旧引用（代码行拼装，不入自身注释面）⇒ 扫描器 MUST 命中（防空转/恒真面）。
+  //   判别力正向对照：注入一处**构造**的陈旧引用（代码行拼装，不入自身注释面）⇒ 扫描器 MUST 命中（防空转/恒真面）；
+  //   各面另设**扫描量下限**（防空面：某面被删/改名致扫描面静默归零时必红——扩面本身入机检）。
   const ITEM_LINE_REF5 = /(\d+\.\d+)[^\n]{0,20}?(?:L|client\.js:)(\d+)/g
   const HIST_MARK5 = /旧值|历史锚点|修正前|收口前|原实现|原记|原注释|原范围/
   const COMMENT_LINE_RE5 = /^\s*(\/\/|\*|\/\*)/
@@ -3034,33 +3055,64 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   const smokeSrc15 = readFileSync(new URL('./smoke.mjs', import.meta.url), 'utf8')
   const smokeLines15 = smokeSrc15.split('\n')
   const changelogLines15 = readFileSync(new URL('../CHANGELOG.md', import.meta.url), 'utf8').split('\n')
-  const entryStart15 = changelogLines15.findIndex((l) => l.startsWith('- **COMPAT-015'))
-  let entryEnd15 = changelogLines15.length
-  if (entryStart15 >= 0) for (let i = entryStart15 + 1; i < changelogLines15.length; i++) if (/^- \*\*/.test(changelogLines15[i])) { entryEnd15 = i; break }
-  const changelogEntryLines15 = entryStart15 < 0 ? [] : changelogLines15.slice(entryStart15, entryEnd15)
-  const staleRefs15 = [...scanItemLineRefs5(smokeLines15), ...scanItemLineRefs5(changelogEntryLines15, { face: () => true, base: entryStart15 })]
+  const CHANGELOG_ENTRY_ANCHORS15 = ['- **COMPAT-015', '- **COMPAT-016']
+  const changelogEntrySlices15 = CHANGELOG_ENTRY_ANCHORS15.map((anchor) => {
+    const start = changelogLines15.findIndex((l) => l.startsWith(anchor))
+    if (start < 0) return { anchor, start: -1, lines: [] }
+    let end = changelogLines15.length
+    for (let i = start + 1; i < changelogLines15.length; i++) if (/^- \*\*/.test(changelogLines15[i])) { end = i; break }
+    return { anchor, start, lines: changelogLines15.slice(start, end) }
+  })
+  const changelogAnchorsMissing15 = changelogEntrySlices15.filter((s) => s.start < 0).map((s) => s.anchor)
+  const readmeLines15 = readFileSync(new URL('../README.md', import.meta.url), 'utf8').split('\n')
+  // 面 C/D 各读一次（本块与 ⑧b/⑧c 分属不同作用域块，不复用其 const；文件同源 ⇒ 口径一致）。
+  const probeHostLines15 = readFileSync(new URL('../scripts/probe-host.mjs', import.meta.url), 'utf8').split('\n')
+  const probeFaceLines15 = readFileSync(new URL('./fixtures/host-surfaces/probe-face.mjs', import.meta.url), 'utf8').split('\n')
+  const staleRefs15 = [
+    ...scanItemLineRefs5(smokeLines15),
+    ...changelogEntrySlices15.flatMap((s) => scanItemLineRefs5(s.lines, { face: () => true, base: s.start })),
+    ...scanItemLineRefs5(readmeLines15, { face: () => true }),
+    ...scanItemLineRefs5(probeHostLines15),
+    ...scanItemLineRefs5(probeFaceLines15),
+  ]
   const injectedStaleRef15 = '// ' + '2.3' + ' `L' + '4374-L4377`'   // 拼装：避免本守卫自身文本入注释扫描面
   const injectedHit15 = scanItemLineRefs5([injectedStaleRef15]).length
-  const smokeCommentCount15 = smokeLines15.filter((l) => COMMENT_LINE_RE5.test(l)).length
-  check('COMPAT-015 F3 行号引用对账（smoke 注释 ' + smokeCommentCount15 + ' 行 + CHANGELOG 当前条目 ' + changelogEntryLines15.length + ' 行）：注释/条目内 `<item> L<n>` 引用 MUST 落在契约该条 `line` 字段界内（0 处陈旧副本；历史限定词行豁免）；**判别力正向对照**：注入构造陈旧对 ⇒ 扫描器命中 ' + injectedHit15 + ' 处（>0 ⇒ 非恒真）',
-    staleRefs15.length === 0 && injectedHit15 > 0 && smokeCommentCount15 >= 400 && changelogEntryLines15.length >= 5,
-    'stale=' + JSON.stringify(staleRefs15.slice(0, 6)) + '(total ' + staleRefs15.length + ') injectedHit=' + injectedHit15 + ' smokeComments=' + smokeCommentCount15 + ' changelogEntryLines=' + changelogEntryLines15.length)
+  const surfaceLines15 = {
+    'smoke 注释': smokeLines15.filter((l) => COMMENT_LINE_RE5.test(l)).length,
+    'CHANGELOG 当前条目': changelogEntrySlices15.flatMap((s) => s.lines).length,
+    'README 全文': readmeLines15.length,
+    'probe-host 注释': probeHostLines15.filter((l) => COMMENT_LINE_RE5.test(l)).length,
+    'probe-face 注释': probeFaceLines15.filter((l) => COMMENT_LINE_RE5.test(l)).length,
+  }
+  // 防空面下限（P3-6 扩面的非恒真证明）：任一面被删 / 改名 / 缩到不承载文本 ⇒ 该面计数跌落下限即红。
+  const surfaceFloors15 = { 'smoke 注释': 400, 'CHANGELOG 当前条目': 5, 'README 全文': 150, 'probe-host 注释': 30, 'probe-face 注释': 80 }
+  const surfaceVacuous15 = Object.entries(surfaceFloors15).filter(([k, min]) => surfaceLines15[k] < min).map(([k, min]) => k + '=' + surfaceLines15[k] + '<' + min)
+  check('COMPAT-015 F3 行号引用对账（COMPAT-016 P3-6 扩面：' + Object.entries(surfaceLines15).map(([k, v]) => k + ' ' + v + ' 行').join(' + ') + '）：各面内 `<item> L<n>` 引用 MUST 落在契约该条 `line` 字段界内（0 处陈旧副本；历史限定词行豁免）；**判别力正向对照**：注入构造陈旧对 ⇒ 扫描器命中 ' + injectedHit15 + ' 处（>0 ⇒ 非恒真）∧ 各面扫描量 ≥ 下限（防空面）∧ CHANGELOG 锚点集齐备',
+    staleRefs15.length === 0 && injectedHit15 > 0 && surfaceVacuous15.length === 0 && changelogAnchorsMissing15.length === 0,
+    'stale=' + JSON.stringify(staleRefs15.slice(0, 6)) + '(total ' + staleRefs15.length + ') injectedHit=' + injectedHit15 + ' vacuous=' + JSON.stringify(surfaceVacuous15) + ' anchorsMissing=' + JSON.stringify(changelogAnchorsMissing15) + ' surfaces=' + JSON.stringify(surfaceLines15))
 
   // ⑩c COMPAT-015 F9（收口 REVIEW-COMPAT-014-R1 F9）：B-N2 扩宽词法的**正向对照**——原断言只有负向（「契约 free-text
   //   内 0 处现役副本」），词法若被误改为更窄形态仍会全绿（退化为「零命中 = 无副本」的恒真面）。仓库先例要求
   //   扩宽能力必须带正向对照（COMPAT-012 N1 ①a「R1 口径漏检 ∧ 现行口径命中」/ COMPAT-005 F2「注入 ⇒ 扫描器必红」）。
   //   此处把两个**历史逃逸形态**固化为正例，并把「原…」历史锚点形态固化为面外负例（词法边界双向）。
-  const LEXER_NOW15 = /现[^。；]{0,10}L\d/
-  const LEXER_EMIT15 = /(?:emit|logger|logWarn|emitChanged)\s*(?:\/|,|、)?\s*L\d/
+  //   **COMPAT-016 P2-2（收口 REVIEW-COMPAT-015-R1 P2-2）**：原实现把这两条词法在此**重新声明为副本**
+  //   （`LEXER_NOW15`/`LEXER_EMIT15`，文本与 ⑩ 部署面相同但**不是同一对象**）⇒ 正控只对副本取样：部署词法被改窄
+  //   （如 `{0,10}` → `{0,3}`、或删 emit 分支）时本断言**仍全绿**——F9 声称关闭的缝隙只被「看似」关闭。现正控直接
+  //   引用 ⑩ 的**同一 RegExp 对象**（`STALE_RE_NOW5` / `STALE_RE_EMIT5`）⇒ 正控与部署面同源、不可能分叉；
+  //   「改窄 ⇒ 必红」由两项同时证明：① 对象同一性（`lexerShared15`）；② 把部署词法本体改窄后**同一正例读数变化**
+  //   （`narrowedNowHit5 === false`）。真机负例见 COMPAT-016 证据（改窄 ⑩ 部署词法 → smoke 红 → 还原 + sha256 复核）。
   const lexerProbes15 = [
-    { form: '「现…（间隔 ≤10 字）L…」', sample: 'index.js ' + '现调用点 ' + 'L' + '170', re: LEXER_NOW15 },
-    { form: '「emit/logger… + L…」（无「现」字）', sample: 'emit ' + 'L' + '155', re: LEXER_EMIT15 },
-    { form: '历史锚点「原…L…」（词法面外，Must NOT 命中）', sample: 'index.js ' + '原调用点 ' + 'L' + '170', re: LEXER_NOW15 },
+    { form: '「现…（间隔 ≤10 字）L…」', sample: 'index.js ' + '现调用点 ' + 'L' + '170', re: STALE_RE_NOW5 },
+    { form: '「emit/logger… + L…」（无「现」字）', sample: 'emit ' + 'L' + '155', re: STALE_RE_EMIT5 },
+    { form: '历史锚点「原…L…」（词法面外，Must NOT 命中）', sample: 'index.js ' + '原调用点 ' + 'L' + '170', re: STALE_RE_NOW5 },
   ]
+  const lexerShared15 = lexerProbes15[0].re === STALE_RE_NOW5 && lexerProbes15[1].re === STALE_RE_EMIT5 && lexerProbes15[2].re === STALE_RE_NOW5
+  const narrowedNow5 = new RegExp(STALE_RE_NOW5.source.replace('{0,10}', '{0,3}'))
+  const narrowedNowHit5 = narrowedNow5.test(lexerProbes15[0].sample)
   const lexerProbeHits15 = lexerProbes15.map((p) => p.re.test(p.sample))
-  check('COMPAT-015 F9 B-N2 词法正向对照：两个历史逃逸形态（「现…L…」带间隔词 / 「emit|logger(+L…)」无「现」字）MUST 被现行词法命中 ∧ 历史锚点形态（「原…L…」）MUST NOT 命中（3 例双向——词法被改窄或改宽均红）',
-    lexerProbeHits15[0] === true && lexerProbeHits15[1] === true && lexerProbeHits15[2] === false,
-    'hits=' + JSON.stringify(lexerProbes15.map((p, i) => p.form + '=' + lexerProbeHits15[i])))
+  check('COMPAT-015 F9 B-N2 词法正向对照（COMPAT-016 P2-2 强化：正控与**部署面同源**——同一 RegExp 对象，非文本副本）：两个历史逃逸形态（「现…L…」带间隔词 / 「emit|logger(+L…)」无「现」字）MUST 被现行词法命中 ∧ 历史锚点形态（「原…L…」）MUST NOT 命中（3 例双向——词法被改窄或改宽均红）∧ 对象同一性成立（' + lexerShared15 + '）∧ 改窄部署词法（间隔上限 10 → 3）后同一正例 MUST 不再命中（' + narrowedNowHit5 + '）',
+    lexerShared15 && narrowedNowHit5 === false && lexerProbeHits15[0] === true && lexerProbeHits15[1] === true && lexerProbeHits15[2] === false,
+    'hits=' + JSON.stringify(lexerProbes15.map((p, i) => p.form + '=' + lexerProbeHits15[i])) + ' shared=' + lexerShared15 + ' narrowedNowHit=' + narrowedNowHit5)
 }
 
 // ⑪ COMPAT-014 A-F9：README 验证管线段的 smoke 断言计数 ≡ 实测（含本断言自身）——原为**人工转写**且已陈旧
