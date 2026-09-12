@@ -1,0 +1,13 @@
+REAL|DIR |.agent-presets|files=52|bytes=472841|maxMtimeUtc=2026/9/12 2:18:16
+REAL|FILE|.anonymous-user-id|bytes=37|mtimeUtc=2026/9/5 3:26:32
+REAL|FILE|.credentials.yaml|bytes=2289|mtimeUtc=2026/9/6 2:12:02
+REAL|DIR |attachments|files=143|bytes=41789464|maxMtimeUtc=2026/9/12 5:44:17
+REAL|DIR |backups|files=2|bytes=329|maxMtimeUtc=2026/9/11 10:53:50
+REAL|DIR |dsh-agent-router|files=11|bytes=1102412|maxMtimeUtc=2026/9/12 4:41:03
+REAL|DIR |llm-deepseek|files=1|bytes=20330|maxMtimeUtc=2026/9/12 5:44:18
+REAL|DIR |profiles|files=9|bytes=4260|maxMtimeUtc=2026/9/12 0:24:30
+REAL|DIR |sessions|files=278|bytes=211732735|maxMtimeUtc=2026/9/12 11:09:58
+REAL|FILE|settings.yaml|bytes=15762|mtimeUtc=2026/9/12 4:05:06
+REAL|FILE|settings.yaml.bak-20260906-stale-high|bytes=6194|mtimeUtc=2026/9/6 2:12:37
+REAL|FILE|settings.yaml.bak-20260911-pre-cleanup|bytes=15764|mtimeUtc=2026/9/11 9:27:55
+REAL|DIR |storages|files=272|bytes=5594815|maxMtimeUtc=2026/9/12 11:09:56

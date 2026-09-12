@@ -1,0 +1,52 @@
+[
+  {
+    "Step": "L1",
+    "TagCheckedOut": "v0.5.1",
+    "RepoSimVer": "0.5.1",
+    "InstallExit": 0,
+    "NewLayoutLinkVer": "0.5.1",
+    "LegacyLinkVer": "0.5.1",
+    "ProfileDepVer": "file:C:/Users/peter/AppData/Local/Temp/rel006-drill-20260912/repo-sim",
+    "Bundles": "@deepseek-ai/dsh-base,@deepseek-ai/dsh-web-app,dsh-novel-writing"
+  },
+  {
+    "Step": "L2",
+    "TagCheckedOut": "v0.5.1",
+    "RepoSimVer": "0.5.1",
+    "InstallExit": 0,
+    "NewLayoutLinkVer": "0.5.1",
+    "LegacyLinkVer": "0.5.1",
+    "ProfileDepVer": "file:C:/Users/peter/AppData/Local/Temp/rel006-drill-20260912/repo-sim",
+    "Bundles": "@deepseek-ai/dsh-base,@deepseek-ai/dsh-web-app,dsh-novel-writing"
+  },
+  {
+    "Step": "L3",
+    "TagCheckedOut": "v0.5.2",
+    "RepoSimVer": "0.5.2",
+    "InstallExit": 0,
+    "NewLayoutLinkVer": "0.5.2",
+    "LegacyLinkVer": "0.5.2",
+    "ProfileDepVer": "file:C:/Users/peter/AppData/Local/Temp/rel006-drill-20260912/repo-sim",
+    "Bundles": "@deepseek-ai/dsh-base,@deepseek-ai/dsh-web-app,dsh-novel-writing"
+  },
+  {
+    "Step": "L4",
+    "TagCheckedOut": "v0.5.2",
+    "RepoSimVer": "0.5.2",
+    "InstallExit": 0,
+    "NewLayoutLinkVer": "0.5.2",
+    "LegacyLinkVer": "0.5.2",
+    "ProfileDepVer": "file:C:/Users/peter/AppData/Local/Temp/rel006-drill-20260912/repo-sim",
+    "Bundles": "@deepseek-ai/dsh-base,@deepseek-ai/dsh-web-app,dsh-novel-writing"
+  },
+  {
+    "Step": "L5",
+    "TagCheckedOut": "v0.5.1",
+    "RepoSimVer": "0.5.1",
+    "InstallExit": 0,
+    "NewLayoutLinkVer": "0.5.1",
+    "LegacyLinkVer": "0.5.1",
+    "ProfileDepVer": "file:C:/Users/peter/AppData/Local/Temp/rel006-drill-20260912/repo-sim",
+    "Bundles": "@deepseek-ai/dsh-base,@deepseek-ai/dsh-web-app,dsh-novel-writing"
+  }
+]

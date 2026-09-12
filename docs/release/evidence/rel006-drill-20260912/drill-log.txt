@@ -1,0 +1,48 @@
+=== REL-006 隔离回滚演练（权威运行） 2026-09-12T19:09:33.4136891+08:00 ===
+ISOLATED_ROOT = C:\Users\peter\AppData\Local\Temp\rel006-drill-20260912
+REF: v0.5.1 tag=7d4d89923e4e572d9af0003182a344d0acb0f2e9 peel=cd1911e9f1e3bbb90b6197fa3cf7a5e95a1ea373
+REF: v0.5.2 tag=7ca99d6d612d90aadeba83d4c7ad40ed61feafa4 peel=e1f25df84ead0a4d07c655f9afcd379a8a96a2a8
+TREE SOURCE: git archive <tag> --format=tar -o <ISO>\<tree>.tar ; tar -xf <ISO>\<tree>.tar -C <ISO>\<tree>  (禁止 git checkout 切换工作树)
+ENV REDIRECT: DSH_HOME / USERPROFILE / HOME / APPDATA / LOCALAPPDATA / XDG_* / PNPM_HOME / npm_config_(cache|userconfig|globalconfig|prefix|ignore_scripts) 全部指向隔离根
+repo-sim node_modules junction -> D:\AI\agent\deepseek\harness\writing-workflow\node_modules (只读复用真实依赖树；工具有 node_modules 的仓库状态一致)
+
+==== LEG A1 : checkout-equivalent -> v0.5.1 (repo-sim package.json = 0.5.1) ; re-run install.ps1 ; DSH_HOME = C:\Users\peter\AppData\Local\Temp\rel006-drill-20260912\home-new ====
+  RESULT: exit=0 ; 有效版本(profile link)= ; legacy link 版本=0.5.1 ; newLink=False ; legacyLink=True ; profileDep=no ; patchRows=1 ; presetFiles=47 ; settingsNs=1 ; snapLines=87
+
+==== LEG A2 : checkout-equivalent -> v0.5.1 (repo-sim package.json = 0.5.1) ; re-run install.ps1 ; DSH_HOME = C:\Users\peter\AppData\Local\Temp\rel006-drill-20260912\home-new ====
+  RESULT: exit=0 ; 有效版本(profile link)= ; legacy link 版本=0.5.1 ; newLink=False ; legacyLink=True ; profileDep=no ; patchRows=1 ; presetFiles=47 ; settingsNs=1 ; snapLines=87
+
+==== LEG A3 : checkout-equivalent -> v0.5.2 (repo-sim package.json = 0.5.2) ; re-run install.ps1 ; DSH_HOME = C:\Users\peter\AppData\Local\Temp\rel006-drill-20260912\home-new ====
+  RESULT: exit=0 ; 有效版本(profile link)=0.5.2 ; legacy link 版本=0.5.2 ; newLink=True ; legacyLink=True ; profileDep=YES ; patchRows=1 ; presetFiles=47 ; settingsNs=1 ; snapLines=89
+
+==== LEG A4 : checkout-equivalent -> v0.5.2 (repo-sim package.json = 0.5.2) ; re-run install.ps1 ; DSH_HOME = C:\Users\peter\AppData\Local\Temp\rel006-drill-20260912\home-new ====
+  RESULT: exit=0 ; 有效版本(profile link)=0.5.2 ; legacy link 版本=0.5.2 ; newLink=True ; legacyLink=True ; profileDep=YES ; patchRows=1 ; presetFiles=47 ; settingsNs=1 ; snapLines=89
+
+==== LEG A5 : checkout-equivalent -> v0.5.1 (repo-sim package.json = 0.5.1) ; re-run install.ps1 ; DSH_HOME = C:\Users\peter\AppData\Local\Temp\rel006-drill-20260912\home-new ====
+  RESULT: exit=0 ; 有效版本(profile link)=0.5.1 ; legacy link 版本=0.5.1 ; newLink=True ; legacyLink=True ; profileDep=YES ; patchRows=1 ; presetFiles=47 ; settingsNs=1 ; snapLines=89
+
+======== 判定（新布局 HOME_A） ========
+
+==== LEG B1 : checkout-equivalent -> v0.5.1 (repo-sim package.json = 0.5.1) ; re-run install.ps1 ; DSH_HOME = C:\Users\peter\AppData\Local\Temp\rel006-drill-20260912\home-legacy ====
+  RESULT: exit=0 ; 有效版本(profile link)= ; legacy link 版本=0.5.1 ; newLink=False ; legacyLink=True ; profileDep=no ; patchRows=1 ; presetFiles=47 ; settingsNs=1 ; snapLines=86
+
+==== LEG B2 : checkout-equivalent -> v0.5.2 (repo-sim package.json = 0.5.2) ; re-run install.ps1 ; DSH_HOME = C:\Users\peter\AppData\Local\Temp\rel006-drill-20260912\home-legacy ====
+  RESULT: exit=0 ; 有效版本(profile link)= ; legacy link 版本=0.5.2 ; newLink=False ; legacyLink=True ; profileDep=no ; patchRows=1 ; presetFiles=47 ; settingsNs=1 ; snapLines=86
+
+======== 判定（旧布局 HOME_B）========
+
+======== 结构化汇总 ========
+
+Leg Ref    RepoSimVer Exit EffVer LegacyVer NewLink LegacyLink ProfileDep PatchRows
+--- ---    ---------- ---- ------ --------- ------- ---------- ---------- ---------
+A1  v0.5.1 0.5.1         0        0.5.1       False       True no                 1
+A2  v0.5.1 0.5.1         0        0.5.1       False       True no                 1
+A3  v0.5.2 0.5.2         0 0.5.2  0.5.2        True       True YES                1
+A4  v0.5.2 0.5.2         0 0.5.2  0.5.2        True       True YES                1
+A5  v0.5.1 0.5.1         0 0.5.1  0.5.1        True       True YES                1
+B1  v0.5.1 0.5.1         0        0.5.1       False       True no                 1
+B2  v0.5.2 0.5.2         0        0.5.2       False       True no                 1
+
+
+IDEMPOTENCY: A1->A2=0  A3->A4=0  A4->A5(回滚)=0  A2->A5(闭环)=4  A1->A3(升版)=4  B1->B2(旧布局)=0
+DRILL_END

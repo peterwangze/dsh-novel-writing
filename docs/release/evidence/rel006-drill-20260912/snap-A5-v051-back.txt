@@ -1,0 +1,89 @@
+DIR |.agent-presets
+DIR |.agent-presets/novel-writing
+FILE|.agent-presets/novel-writing/agent.cordis.yml|12677|4F72AACDE5213C4701045B5D50A9B954BBF0D29BB5953D7FFD6CBEFB2B667E18
+DIR |.agent-presets/novel-writing/agents
+FILE|.agent-presets/novel-writing/agents/ai-compliance-officer.md|5309|2E05EB750C2A5D1A923223E8641C2A7967780C0D239AE9F03E7C3013AC600DC1
+FILE|.agent-presets/novel-writing/agents/chapter-designer.md|3260|871B8125096CF3F9885ECF2FE4E93FC26BDC6F07C0EED71AC51DD43112DA4CD3
+FILE|.agent-presets/novel-writing/agents/character-world-reviewer.md|4739|2888BE9DA4BDC645AFAD2FCFCEAF63595544240FC569F92CE610A5C2B5C91236
+FILE|.agent-presets/novel-writing/agents/commercial-editor.md|4794|9D0A989E00B62ECD65F0AB1C01AD4737D60361DAB0489CF2FC3626E7FCA9E77F
+FILE|.agent-presets/novel-writing/agents/competitor-analyst.md|3108|3FD5EDC45FE06693F43A5E36D7DDD2DE848C1440FB647215CA4253557998AC5B
+FILE|.agent-presets/novel-writing/agents/content-writer.md|4235|5AD8001D7E68A27DB6F77314E2DC670BC81CD70A911A8737CD91B19ADCD8C43C
+FILE|.agent-presets/novel-writing/agents/continuity-reviewer.md|4440|0ED8AB4C5F6CF151E5D008DEDE512B428CB0554763ABC9E97A6A66FA1E6BAFBD
+FILE|.agent-presets/novel-writing/agents/creation-strategist.md|4096|2769338612CE24683177338A72F7467EA2E0B857668EDC5507E6B734C3C4D9AA
+FILE|.agent-presets/novel-writing/agents/data-analyst.md|3648|C3C41BA0994ACCD2955FD79FC26A1E4E286D464E57A94B96A5909EFFD492511B
+FILE|.agent-presets/novel-writing/agents/engagement-reviewer.md|5663|6C76E08E4603FE528F452F79833469BB525A83A164B408BE89452C445FC6FB86
+FILE|.agent-presets/novel-writing/agents/launch-strategist.md|3264|DD04290492B4C0F754CD6C999F39080DE5C7CA909B8D3636E5EBCA92317EE21A
+FILE|.agent-presets/novel-writing/agents/market-analyst.md|3429|255442F96C599E09E6B39363B152E3660BAB53FA00DCFFE58631C07DBFABFADB
+FILE|.agent-presets/novel-writing/agents/monetization-advisor.md|3471|B20FEA409A1AFDBCD74FA600DC0FCB0DD6E7FF5F6FC6025FBB316D67787990A5
+FILE|.agent-presets/novel-writing/agents/novel-architect.md|5574|6F27901DDDB0D3A74B7CBD32A4FFDC73E10A30AB83BE71CC1646B20D301DC363
+FILE|.agent-presets/novel-writing/agents/novel-creator.md|3627|8182F4032FF245DBDA98A89A72A0C7AE3A3CCFA9B300F32D2EB2E9633D1C6DB6
+FILE|.agent-presets/novel-writing/agents/plot-logic-reviewer.md|4353|FACB184F16A5A8D7E1146726B6150F312EA054984A26C35B7047EA599FA8CB62
+FILE|.agent-presets/novel-writing/preset.yml|412|42D299FC397B42E813C80E8081A0CF040EF3E3D29C910F18927EEB51755C5005
+DIR |.agent-presets/novel-writing/skills
+DIR |.agent-presets/novel-writing/skills/ai-compliance-check
+FILE|.agent-presets/novel-writing/skills/ai-compliance-check/SKILL.md|3684|18C91AE2578CC3B60419426222CA8A30A866589AE742DD13721E71C7CA10A537
+DIR |.agent-presets/novel-writing/skills/chapter-outline
+FILE|.agent-presets/novel-writing/skills/chapter-outline/SKILL.md|11381|5B6828B596EC82E94D84AD9C4A65D3478EE9AD17BC4469D99D416A513139BB72
+DIR |.agent-presets/novel-writing/skills/chapter-outline-review
+FILE|.agent-presets/novel-writing/skills/chapter-outline-review/SKILL.md|5856|84823579DD21AE9002492927C078112D1A687ED5B044684D155F2904C7C4A834
+DIR |.agent-presets/novel-writing/skills/character-world-check
+FILE|.agent-presets/novel-writing/skills/character-world-check/SKILL.md|3475|413439308FB252411767E7B8F012E57DC28C3649069B95F1F81AC30B80CE08E8
+DIR |.agent-presets/novel-writing/skills/commercial-check
+FILE|.agent-presets/novel-writing/skills/commercial-check/SKILL.md|3744|7D0A4EA76048E2E444211105BF7496AE4A4FB634DBE82CCC1DFACD298B1522E5
+DIR |.agent-presets/novel-writing/skills/competitor-analysis
+FILE|.agent-presets/novel-writing/skills/competitor-analysis/SKILL.md|9465|F219E55DC2F4F06B6247F7F46D49CE3CAEF0AA91499E8776ECBC05089144CE40
+DIR |.agent-presets/novel-writing/skills/content-generation
+FILE|.agent-presets/novel-writing/skills/content-generation/SKILL.md|25745|1620BA954DA66A12E4A7D369912E75906B9E6B77EFA04B533ADEC8BEFD21B27F
+DIR |.agent-presets/novel-writing/skills/continuity-check
+FILE|.agent-presets/novel-writing/skills/continuity-check/SKILL.md|3782|5CA818639617908E8C6C60B52B3CDFFF5C88B7FAE5554BF7D65B9259F711E897
+DIR |.agent-presets/novel-writing/skills/creation-planning
+FILE|.agent-presets/novel-writing/skills/creation-planning/SKILL.md|17614|72EB6E748E79833818B25F5E15178D717A2B408968FCD0A5CA6007FA014D40C0
+DIR |.agent-presets/novel-writing/skills/data-driven-optimization
+FILE|.agent-presets/novel-writing/skills/data-driven-optimization/SKILL.md|3533|47A821275AC245126738D04AEEE07F8139FB97633FC6AF024ADD5102D8E134E0
+DIR |.agent-presets/novel-writing/skills/data-monitoring
+FILE|.agent-presets/novel-writing/skills/data-monitoring/SKILL.md|16104|7A1C400DC3A1D5E5EC5F6CAF97EDD9D7C7975FA090DAB157C188AC3EA20F14A0
+DIR |.agent-presets/novel-writing/skills/engagement-check
+FILE|.agent-presets/novel-writing/skills/engagement-check/SKILL.md|4327|67CFEBA85EFA4A9BCB62FFBDD4DE1EB7C1E4D9E49D0AE1438765082694C4310E
+DIR |.agent-presets/novel-writing/skills/genre-selection
+FILE|.agent-presets/novel-writing/skills/genre-selection/SKILL.md|13361|7568CE8A9665311EAE2546B96C9968008E2E63BE467F477854FFE585B9A8F62A
+DIR |.agent-presets/novel-writing/skills/human-ai-collaboration
+FILE|.agent-presets/novel-writing/skills/human-ai-collaboration/SKILL.md|15070|0C34756DCE437B23896CA93613F6DD0A7EFCFA3B9D400A3D2DF3C6E84BDF62EC
+DIR |.agent-presets/novel-writing/skills/launch-strategy
+FILE|.agent-presets/novel-writing/skills/launch-strategy/SKILL.md|11497|B95AC9D369C3944736D82AE7F9FAAF69652024EBC9C933D455598BFAAB1C81FA
+DIR |.agent-presets/novel-writing/skills/monetization-strategy
+FILE|.agent-presets/novel-writing/skills/monetization-strategy/SKILL.md|15077|D2AD19329687BE3A5A82501181F55582A53A99A45148BDC6FFB147CD24B12CCF
+DIR |.agent-presets/novel-writing/skills/novel-confirmation
+FILE|.agent-presets/novel-writing/skills/novel-confirmation/SKILL.md|8290|4505A054A4CA2331151B75DA74E822B532FFC4A056DE90B559D033A31F1758F8
+DIR |.agent-presets/novel-writing/skills/novel-studio
+FILE|.agent-presets/novel-writing/skills/novel-studio/SKILL.md|5991|9E3404DDF923116E36E52C632D10CA202446493B7132B4BAD5241E6E78EB0FD4
+DIR |.agent-presets/novel-writing/skills/novel-style-learning
+FILE|.agent-presets/novel-writing/skills/novel-style-learning/SKILL.md|11463|4A5EEF721A13985F32972F9F296ABDD4DD7D9C936FBF751029ED2919D1FAA9E8
+DIR |.agent-presets/novel-writing/skills/opening-optimization
+FILE|.agent-presets/novel-writing/skills/opening-optimization/SKILL.md|11329|F56AAC7A3C285639535BF2D6CD4A3649FA8FDADF3238C54DE3A6710F35FAA9F6
+DIR |.agent-presets/novel-writing/skills/outline-review
+FILE|.agent-presets/novel-writing/skills/outline-review/SKILL.md|9266|A5AC7F96E3546AD3049694E72D9CE05961AE08173212A8E036B97CE03CEAFC48
+DIR |.agent-presets/novel-writing/skills/outline-writing
+FILE|.agent-presets/novel-writing/skills/outline-writing/SKILL.md|11423|78EC5AF4464AD8A7FE6ADE33246C6F5B5A4D415AA98381C6EDB84E6CCFDB7412
+DIR |.agent-presets/novel-writing/skills/platform-research
+FILE|.agent-presets/novel-writing/skills/platform-research/SKILL.md|20050|5C373BFAB383B2F0CF14A9FF6F86B0D0CAF2232856F95A00406B995CDEF96C19
+DIR |.agent-presets/novel-writing/skills/plot-logic-check
+FILE|.agent-presets/novel-writing/skills/plot-logic-check/SKILL.md|3403|300426D7936F5B11932D0E1701333FDBF8C13AD4003A2CDDB49550CA98709ED9
+DIR |.agent-presets/novel-writing/skills/publish-pipeline
+FILE|.agent-presets/novel-writing/skills/publish-pipeline/SKILL.md|3231|E9E47B921C4022E9D01716ABD0AFF5A9A272A03EFA4B514425ED42B85817E102
+DIR |.agent-presets/novel-writing/skills/quality-review
+FILE|.agent-presets/novel-writing/skills/quality-review/SKILL.md|29379|64D3ED3D7D42D21A40AD08D731C85AAB5A54B28DF2EB7C43905909A1A5EBE110
+DIR |.agent-presets/novel-writing/skills/reader-interaction
+FILE|.agent-presets/novel-writing/skills/reader-interaction/SKILL.md|12449|3A70E129D48FE1C97C4D964C16A5F99669E8726DB6A688A9D0F19C7DD807259E
+DIR |.agent-presets/novel-writing/skills/using-writing-workflow
+FILE|.agent-presets/novel-writing/skills/using-writing-workflow/SKILL.md|76946|E9CFE645A4F0D5D69EEB709461EAC28049681CA7552417C17BEDF5DA3910A606
+DIR |.agent-presets/novel-writing/skills/work-type-selection
+FILE|.agent-presets/novel-writing/skills/work-type-selection/SKILL.md|8919|BC72B714F7201D6324763AE6E2B346B6B5AA964873B1FC078711122BCC199F7C
+DIR |profiles
+DIR |profiles/node_modules
+LINK|profiles/node_modules/dsh-novel-writing|->C:\Users\peter\AppData\Local\Temp\rel006-drill-20260912\repo-sim
+DIR |profiles/web
+FILE|profiles/web/cordis.patch.yml|235|09F103355BB7CD7CE92D4DCB7F299DA5F217A7033B5B26AEF5F655EA278AE619
+DIR |profiles/web/node_modules
+LINK|profiles/web/node_modules/dsh-novel-writing|->C:\Users\peter\AppData\Local\Temp\rel006-drill-20260912\repo-sim
+FILE|profiles/web/package.json|408|608A10A09197F38E31B98BD3AC13C7C07643335EA6E9FFE572C0B1D95EA5C314
+FILE|settings.yaml|85|FC214FE401DCD64C623D40548B012A9D36C7068B2515BC40AD1765B4D228ADC9
