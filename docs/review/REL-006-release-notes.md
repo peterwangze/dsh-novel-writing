@@ -88,6 +88,7 @@
 | `package.json` | `"version": "0.5.1"` → `"0.5.2"`（**仅版本行**） |
 | `.governance/plan-tracker.md` | 路线图 v0.5.2 行：`未发布` → `已发布`、日期 `2026-09-12`、交付物列（`git tag v0.5.2` + `CHANGELOG [0.5.2]`）、范围声明（COMPAT-* 属 v0.6.0 线）；版本里程碑新增 `v0.5.2 发布` 行。**仅路线图/里程碑节**，任务行由 Coordinator 维护 |
 | `docs/review/REL-006-release-notes.md` | 本记录（新增） |
+| `docs/release/release-checklist-0.5.2.md` · `docs/release/feature-flags-0.5.2.md` · `docs/release/rollback-plan-0.5.2.md` | 三件发布工件（**REL-006 补充提交**新增；Coordinator 授权补建；内容 = 本记录 §6/§8 等价抽取 + 逐项门禁实测 + feature flag 取证「不适用」） |
 
 **未触碰**：`.github/workflows/ci.yml`、`lib/**`、`test/**`、`install.ps1`、`install.sh`、`README.md`（本版代码面零改动——发布为纯元数据 + 治理记录动作）。
 
@@ -102,6 +103,7 @@
 | **C（撤销本版发布动作，仅本地）** | `git tag -d v0.5.2` + `git reset --hard <v0.5.2 之前的提交>`（或 `git revert`） | 发布提交本身有误 | 本版提交/tag **均未 push** ⇒ 无远端影响、无他人可见面 |
 
 - **数据兼容性**：本版无 schema/数据迁移、无宿主配置结构变更 ⇒ 回滚不涉及数据面（`settings` ns `novel-writing` 字段不变）。
+- **独立工件**：`docs/release/rollback-plan-0.5.2.md`（触发条件 + 三路径 + 验证方式 + 演练状态）。
 - **预计回滚时间**：< 1 分钟（git checkout + 幂等安装脚本；无服务重启以外动作）。
 - **状态**：**已定义、未演练**（§4.1 如实标注）。
 
@@ -115,9 +117,10 @@
 | **R2** | `v0.5.2` tag 树含 v0.6.0 线内容（方案 A 固有） | 见 §3.2——范围以声明口径为准 | 范围声明已入 CHANGELOG 段外记录 + 路线图行；tag 未 push ⇒ 可复议/重做 |
 | **R3** | 版本里程碑表缺 `v0.5.1 发布` 行（历史遗留） | 里程碑表在 `v0.5.0 发布` 后直接接本次新增的 `v0.5.2 发布`，v0.5.1（2026-09-07 已发布）无对应行——REL-005 时遗漏 | 本次按任务边界**只新增 v0.5.2 行**；v0.5.1 缺口如实上报，补录由 Coordinator 裁量（治理记录，非产品代码） |
 | **R4** | `archive.py migrate --auto --dry-run` 解析边缘 | 实测输出：`📦 治理数据归档: 跳过（无可归档数据——已发布版本数不足（0 < 2），跳过归档）`，exit 0。仓库实有 8 个 tag（v0.2.0~v0.5.1），工具解析到 0 个已发布版本——与 REL-003/REL-004 同款家族边缘（SYSGAP-001 家族），**无数据损失、不阻断** | 记录留痕，不阻断发布（沿用 REL-003/REL-004 先例） |
-| **R5** | `check-release` 候选态 CLI **FAILED（21 issues）——工具跨根期望源缺陷，非本版交付缺陷** | 实测 `check-release --version 0.5.2 --require-changelog --lineage-mode candidate` ⇒ `Result: FAILED - 21 issue(s).`（exit 1）。归因（逐条可复核）：①`changelog` FAIL 读的是**插件仓自身** `project/CHANGELOG.md`（`verify_workflow.py` L7181 `ROOT / "project/CHANGELOG.md"`，且 check-release 无 `--changelog` 参数）⇒ 对宿主仓 CHANGELOG 的检查**结构性不可达**（本仓 `CHANGELOG.md` 实测含 `## [0.5.2] - 2026-09-12`）；②`release fact source` 期望 `1.0.0 依赖链` / `1.0.0 roadmap row` / `REQ-059~064` = **插件仓**自身需求编号；③`execution gates` 的 governance health（73 issues）与 unit tests（180s 超时）执行的是**插件自家测试路径**（`skills/software-project-governance/infra/tests/…`）。通过项（真实）：`version consistency` / `hot fact source` / `runtime readiness matrix` / `first session measurement` / `governance pack status` / `agent adapters` / `projection sync` / `cross references` / `archive integrity` / `release lineage`（candidate 口径）/ `gate sequence for release` / `one dot zero blockers`。 | 与本项目 REL-003/REL-004 记载的「check-release CLI 不可用（SYSGAP-001 家族）」一致 ⇒ **不作为本版门禁 PASS 依据，也不以三件套替代其结论**（状态 = 不可用）。建议：Coordinator 登记 SYSGAP + 裁定替代口径（§9-5）。**可操作子项**：`release docs` FAIL 指向 `docs/release/{release-checklist,feature-flags,rollback-plan}-0.5.2.md`（本仓 `docs/release/` 不存在；本记录 §6/§8 已含等价 checklist 与回滚方案）——是否按插件 canonical 路径补建由 Coordinator/Release Reviewer 裁定（超出本次任务书「修改文件」清单，未擅自新增） |
+| **R5** | `check-release` 候选态 CLI **FAILED（21 issues）——工具跨根期望源缺陷，非本版交付缺陷** | 实测 `check-release --version 0.5.2 --require-changelog --lineage-mode candidate` ⇒ `Result: FAILED - 21 issue(s).`（exit 1）。归因（逐条可复核）：①`changelog` FAIL 读的是**插件仓自身** `project/CHANGELOG.md`（`verify_workflow.py` L7181 `ROOT / "project/CHANGELOG.md"`，且 check-release 无 `--changelog` 参数）⇒ 对宿主仓 CHANGELOG 的检查**结构性不可达**（本仓 `CHANGELOG.md` 实测含 `## [0.5.2] - 2026-09-12`）；②`release fact source` 期望 `1.0.0 依赖链` / `1.0.0 roadmap row` / `REQ-059~064` = **插件仓**自身需求编号；③`execution gates` 的 governance health（73 issues）与 unit tests（180s 超时）执行的是**插件自家测试路径**（`skills/software-project-governance/infra/tests/…`）。通过项（真实）：`version consistency` / `hot fact source` / `runtime readiness matrix` / `first session measurement` / `governance pack status` / `agent adapters` / `projection sync` / `cross references` / `archive integrity` / `release lineage`（candidate 口径）/ `gate sequence for release` / `one dot zero blockers`。 | 与本项目 REL-003/REL-004 记载的「check-release CLI 不可用（SYSGAP-001 家族）」一致 ⇒ **不作为本版门禁 PASS 依据，也不以三件套替代其结论**（状态 = 不可用）。建议：Coordinator 登记 SYSGAP + 裁定替代口径（§9-5）。**可操作子项（已关闭）**：`release docs` FAIL 指向 `docs/release/{release-checklist,feature-flags,rollback-plan}-0.5.2.md`（本仓原先无 `docs/release/`）——**已由 Coordinator 授权补建**，随 REL-006 补充提交入仓（内容 = 本记录 §6/§8 的等价抽取 + 逐项门禁实测记录 + feature flag 取证）；`check-release` 其余失败项仍为跨根期望源缺陷（见独立发现 #2），**本门禁整体状态仍记 FAIL/不可用，不主张通过** |
 | **R6** | Release Reviewer 后置审查 | 任务书要求「Release Reviewer 后置审查（自动）」 | 待 Coordinator 派发（本记录作为审查输入） |
-| **R7** | EVD-097 与 tag/commit SHA 补录 | 本记录与路线图行**先于 tag 创建落盘**，无法自引用发布提交 SHA 与 tag 对象 SHA | Coordinator 收尾提交（EVD-097）补录：发布提交 SHA、tag 对象 SHA、tag peel 结果 |
+| **R7** | EVD-097 与 tag/commit SHA 补录 | 本记录与路线图行**先于 tag 创建落盘**，无法自引用发布提交 SHA 与 tag 对象 SHA | Coordinator 收尾提交（EVD-097）补录：发布提交 `e1f25df84ead0a4d07c655f9afcd379a8a96a2a8`、tag 对象 `7ca99d6d612d90aadeba83d4c7ad40ed61feafa4` → peel `e1f25df8…` |
+| **R8** | **tag 提交边界：发布工件位于发布提交之后的补充提交** | `v0.5.2` tag 指向**发布提交** `e1f25df`（CHANGELOG `[0.5.2]` + package.json `0.5.2` + 治理记录——与任务书「方案 A：tag 指向 CHANGELOG/package.json 修订的提交」一致）；本次按 Coordinator 授权补建的 `docs/release/*` 三件发布工件落在**其后的 REL-006 补充提交**（SHA 见 EVD-097），故 **tag 树不含这三份文件**。（早于本次补建，本版 tag 树含 COMPAT-002~016（v0.6.0 线）的工作树内容——R2。） | 若要求「tag 树 ⊇ 全部发布工件 / 代码面仅在 BUG-006」，本地 tag 未 push ⇒ 可零成本重定：`git tag -d v0.5.2 && git tag -a v0.5.2 -m "…" <目标提交>`（目标候选 = 补充提交，或 `3442f39`）。**本记录不擅自重定 tag**（tag 指错/变更属治理敏感动作，需 Coordinator/用户确认）；`check-release --lineage-mode released --release-commit <SHA>` 须使用最终确认的 tag target |
 
 **R5 补记（check-release candidate 原始报文节选）**：
 
@@ -170,7 +173,7 @@
 2. **EVD-097**：证据行写入（含三件套输出、分层 diff、tag 基准选择、push 未执行说明、SHA 补录）。
 3. **Release Reviewer 后置审查**（R6）。
 4. 可选：里程碑表 `v0.5.1 发布` 行补录（R3）。
-5. **裁定 `check-release` 跨根缺陷**（R5）：①登记 SYSGAP（SYSGAP-001 家族——跨根期望源）；②裁定是否按插件 canonical 路径补建 `docs/release/{release-checklist,feature-flags,rollback-plan}-0.5.2.md`（本记录 §6/§8 已含等价内容；补建超出本次任务书「修改文件」清单，故未擅自新增）；③裁定 stage-release「check-release PASS」退出条件在本仓的替代口径。
+5. **裁定 `check-release` 跨根缺陷**（R5）：①登记 SYSGAP（SYSGAP-001 家族——跨根期望源）；②**已闭合**——Coordinator 授权补建 `docs/release/{release-checklist,feature-flags,rollback-plan}-0.5.2.md`（随 REL-006 补充提交入仓）；③裁定 stage-release「check-release PASS」退出条件在本仓的替代口径。
 
 ---
 
@@ -187,5 +190,7 @@
 | 2026-09-12 | `python "<plugin>/infra/verify_workflow.py" check-release --version 0.5.2 --require-changelog --lineage-mode candidate` | **FAILED — 21 issue(s)**，exit 1（跨根期望源缺陷；原始报文节选见 R5 补记） |
 | 2026-09-12 | `git add CHANGELOG.md package.json .governance/plan-tracker.md docs/review/REL-006-release-notes.md` + `git commit -F <msg>`（引用 REL-006） | 本地发布提交（**未 push**）；工作树中并发的 COMPAT-016 审查产物（`docs/review/COMPAT-016-R1.md` 等）**未纳入本次提交** |
 | 2026-09-12 | `git tag -a v0.5.2 -m "…"` | 本地 annotated tag（**未 push**）；`git tag -l v0.5.2` 可查 |
+| 2026-09-12 | 补建 `docs/release/{release-checklist,feature-flags,rollback-plan}-0.5.2.md`（Coordinator 授权）+ `git commit`（REL-006 补充提交） | 发布工件入仓（**未 push**）；tag 仍指向发布提交 `e1f25df`（见 R8） |
+| 2026-09-12 | 补充提交后复跑三件套 | 见 §4（复跑结果不劣化） |
 
 > **真实性声明**：本记录所有数值均来自上表命令的真实输出（本次执行）；未执行项一律标 `未执行`/`N/A`，不以推测填充。本文件随发布提交入仓，故不包含其自身提交 SHA 与 tag SHA（§7 R7）。
