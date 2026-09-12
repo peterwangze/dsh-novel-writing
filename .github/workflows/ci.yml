@@ -73,8 +73,25 @@ jobs:
           export class Service { constructor(ctx, name) { ctx.reflect.provide(name, this) } }
           EOF
           printf '{ "name": "@deepseek-ai/cordis", "version": "0.0.0-mock", "type": "module", "main": "index.js" }\n' > node_modules/@deepseek-ai/cordis/package.json
+          # dsh-settings mock：导出面逐项对齐宿主真实面，防已删除表面在 CI「复活」（BUG-003 温床，COMPAT-010）。
+          # 权威源（宿主只读闭包，禁止写入）：node_modules/@deepseek-ai/dsh-settings/lib/index.js L610——
+          #   export { SettingsConflictError, SettingsProvider, SettingsProvider as default, redactSecrets };
+          # 形态（同文件）：SettingsConflictError=Error 子类 name/code/expected/actual（L92）；SettingsProvider=cordis
+          # Service 子类（L223）且 default 为其别名；redactSecrets(schema,value)→{value,secrets}（L66）。无 settingsNamespace。
           cat > node_modules/@deepseek-ai/dsh-settings/index.js <<'EOF'
-          export const settingsNamespace = (ns) => Symbol.for('dsh-settings:ns:' + ns)
+          import { Service } from '@deepseek-ai/cordis'
+          export class SettingsConflictError extends Error {
+            constructor(ns, expected, actual) {
+              super(`settings namespace "${ns}" changed since it was read (expected revision ${String(expected)}, now ${String(actual)})`)
+              this.name = 'SettingsConflictError'
+              this.code = 'SETTINGS_CONFLICT'
+              this.expected = expected
+              this.actual = actual
+            }
+          }
+          export class SettingsProvider extends Service {}
+          export default SettingsProvider
+          export function redactSecrets(schema, value) { return { value, secrets: [] } }
           EOF
           printf '{ "name": "@deepseek-ai/dsh-settings", "version": "0.0.0-mock", "type": "module", "main": "index.js" }\n' > node_modules/@deepseek-ai/dsh-settings/package.json
           cat > node_modules/@deepseek-ai/dsh-home-paths/index.js <<'EOF'
