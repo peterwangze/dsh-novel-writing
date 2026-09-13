@@ -2064,7 +2064,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   //      **残余缝（同次实测，未闭合）**：若 2.13 只删**终点闭合行**（**历史锚点**：COMPAT-013 时期值 `L4429-4460`——6 处注册仍全在范围内）
   //      则 ①②③④⑤ **全绿**（实测 262/0：⑤a 计数仍 6 ≡ 6、④ callPrefix = null、⑤b 无 `键: {` 形态构造）
   //      ⇒ 该形态目前无持续机检力。根治需「构造闭合行」口径，而 JS 范围本就可能是**合法语义片段**
-  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L4804-L4806` +1 / 3.8 `L2829-2839` +1 实测均非配平）——
+  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L4895-L4897` +1 / 3.8 `L2829-2839` +1 实测均非配平）——
   //      无差别要求配平会误报上述 3 项，故如实留档待另案（非本任务可安全落地）。
   // R1 承继偏移（2.12 −6 / 2.13 −7）在修复前正是 ①③④ 三项的失败用例，修复后全绿（见 CHANGELOG COMPAT-012）。
   //   ⑤ 范围**完整覆盖**所声明构造（COMPAT-013 F-1 新增，两子句，实现见下方 ⑫c）——见 ⑫c 处的口径论证。
@@ -2226,7 +2226,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // ⑫d F-3 披露数字入机检（COMPAT-013）：非严格面（**由 rangeItems 动态生成**；实测 **3/4/5/6 共 10 项**——
   // COMPAT-014 C-F-1 订正：原标签「3/5/6」漏面 4，且与下方列举清单自含 `4.6 L17`（面 4）自相矛盾；条目数同时
   // 入 golden）范围条目中「起于注释/空行」者 MUST 恰 2 项
-  //（3.1 起于 `/**` JSDoc L978、3.5 起于**空行** L1028——互操作说明在本段内、非起点）。动因 = 该计数原为**人工转写**且写错
+  //（3.1 起于 `/**` JSDoc L987、3.5 起于**空行** L1037——互操作说明在本段内、非起点）。动因 = 该计数原为**人工转写**且写错
   //（CHANGELOG 曾披露「三处」）——与 COMPAT-004 FIND-1 的 tier 串转写漂移同类，故沿用同款处置：实测值
   // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.8 `L2829` 函数行 / 4.6 `L17`
   // `"dsh": {` / 5.1 `L1` `name:` / 5.2 `L16` `- id:` / 5.4 `L77` `- id:` / 6.1 `L39`（修正后真值；修正前
@@ -3113,6 +3113,64 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   check('COMPAT-015 F9 B-N2 词法正向对照（COMPAT-016 P2-2 强化：正控与**部署面同源**——同一 RegExp 对象，非文本副本）：两个历史逃逸形态（「现…L…」带间隔词 / 「emit|logger(+L…)」无「现」字）MUST 被现行词法命中 ∧ 历史锚点形态（「原…L…」）MUST NOT 命中（3 例双向——词法被改窄或改宽均红）∧ 对象同一性成立（' + lexerShared15 + '）∧ 改窄部署词法（间隔上限 10 → 3）后同一正例 MUST 不再命中（' + narrowedNowHit5 + '）',
     lexerShared15 && narrowedNowHit5 === false && lexerProbeHits15[0] === true && lexerProbeHits15[1] === true && lexerProbeHits15[2] === false,
     'hits=' + JSON.stringify(lexerProbes15.map((p, i) => p.form + '=' + lexerProbeHits15[i])) + ' shared=' + lexerShared15 + ' narrowedNowHit=' + narrowedNowHit5)
+}
+
+// ── UX-060：创作台标题栏告警与标题栏文字重叠（告警全文须入流式可读面）─────────────────
+// 用户报障（1078×593 实机截图红框「1.告警和上面的文字重叠」）：长错误文本在标题栏 `.nv-bar-note` 里
+// max-width:46% + nowrap + ellipsis 单行截断，全文唯一出口 = 浏览器原生 title tooltip（浮层不受插件
+// 布局约束，压在标题栏居中横幅与右侧 ⇄⟳☆ 之上）。修复 = 长告警走标题栏**下方**的流式可读面
+// （in-flow、pre-wrap 不截断、可关闭），短提示保留标题栏紧凑 chip（窄栏实测相交时同升级）。
+// 本节断言「形态裁决 + 结构 + 文案零改动 + 几何占位 + 探针资产」五项；几何数值由
+// scripts/probe-nv-bar-geometry.mjs（隔离 DSH 实例 + 无头浏览器 + CDP）两视口实测，不在 smoke 内跑浏览器。
+{
+  const probeSrc60 = readFileSync(new URL('../scripts/probe-nv-bar-geometry.mjs', import.meta.url), 'utf8')
+  const idxBar60 = clientSrc.indexOf("{ ref: barRef, className: 'nv-bar' }")
+  const idxNotice60 = clientSrc.indexOf("className: 'nv-notice'")
+  const idxMain60 = clientSrc.indexOf("el('div', { className: 'nv-main'")
+  check('UX-060 ①告警形态裁决单一事实源（长文本 > NOTICE_INLINE_MAX 或**实测** chip ∩ 横幅占位区 ⇒ 流式面；短提示保留标题栏 chip）',
+    clientSrc.includes('const NOTICE_INLINE_MAX = 24')
+      && clientSrc.includes('const noticeStream = barNotice !== null && (barNotice.text.length > NOTICE_INLINE_MAX || noticeEscalate === true)')
+      && clientSrc.includes("const chip = bar.querySelector('.nv-bar-note')")
+      && clientSrc.includes('if (hit) setNoticeEscalate(true)')                       // 实测相交 ⇒ 单向升级
+      && clientSrc.includes('setNoticeEscalate(false) }, [noticeKey])')               // 告警文本变化 ⇒ 复位重测
+      && clientSrc.includes('barNotice !== null && noticeStream !== true')             // chip 路径保留（短提示）
+      && clientSrc.includes('.nv-bar-note{flex:0 1 auto;min-width:0;max-width:46%'),   // 既有 chip 样式未动
+    'inlineMax=' + clientSrc.includes('const NOTICE_INLINE_MAX = 24') + ' escalate=' + clientSrc.includes('if (hit) setNoticeEscalate(true)'))
+  check('UX-060 ②流式可读面结构（.nv-bar 兄弟节点 = 标题栏下方一行；pre-wrap 完整换行不截断；关闭钮 + 全文无 title 依赖）',
+    idxBar60 >= 0 && idxNotice60 > idxBar60 && idxMain60 > idxNotice60                 // 顺序：标题栏 → 告警条 → 主区（in-flow，非浮层）
+      && !clientSrc.includes("'nv-notice', style: { position: 'absolute'")             // 非绝对定位（负断言）
+      && clientSrc.includes('.nv-notice{flex:none;')                                   // flex:none 参与列布局（下推而非覆盖）
+      && clientSrc.includes('white-space:pre-wrap;overflow-wrap:anywhere')             // 多行换行
+      && clientSrc.includes("el('span', { className: 'nv-notice-text' }, barNotice.text)")  // 全文以**文本节点**呈现（非 title 属性）
+      && clientSrc.includes("className: 'nv-notice-close'")
+      && (clientSrc.match(/t\('noticeClose'\)/g) ?? []).length === 2                   // title + aria-label 双声明
+      && clientSrc.includes("'data-form': barNotice.text.length > NOTICE_INLINE_MAX ? 'block' : 'row'"),
+    'order=' + idxBar60 + '<' + idxNotice60 + '<' + idxMain60 + ' prewrap=' + clientSrc.includes('white-space:pre-wrap;overflow-wrap:anywhere'))
+  check('UX-060 ③文案零改动 + 新 i18n 键 zh/en 成对（noticeClose；既有告警文案逐字不变）',
+    (clientSrc.match(/noticeClose: '关闭提示'/g) ?? []).length === 1
+      && (clientSrc.match(/noticeClose: 'Dismiss notice'/g) ?? []).length === 1
+      && clientSrc.includes("promptFailPrefix: '会话已就绪，但启动指令发送失败：'")
+      && clientSrc.includes("promptFailHint: '请打开该会话手动发送启动指令。'")
+      && clientSrc.includes("presetFailPrefix: '会话已创建，但「小说写作工作流」预设挂载失败：'")
+      && clientSrc.includes("presetFailHint: '请打开该会话手动选择预设后，再发送启动指令。'")
+      && clientSrc.includes("promptFailPrefix: 'Session ready, but sending the start instruction failed: '")
+      && clientSrc.includes("presetFailHint: 'Mount that preset inside the session, then send the start instruction.'"),
+    'zh/en 成对=' + ((clientSrc.match(/noticeClose: '/g) ?? []).length === 2))
+  check('UX-060 ④告警条占位几何一致（bodyH 与对话窗拖线 top 同点扣减——拖线命中区不盖告警条右缘）',
+    clientSrc.includes('const noticeBoxH = noticeStream ? noticeH : 0')
+      && clientSrc.includes('const bodyH = g.bottom - g.top - TITLE_BAR_H - noticeBoxH')
+      && clientSrc.includes("top: (g.top + TITLE_BAR_H + noticeBoxH) + 'px',")
+      && clientSrc.includes('ref: noticeRef')                                          // 高度实测点
+      && clientSrc.includes('ro.observe(node)'),                                       // 高度变化（换行数随视口变）
+    'boxH=' + clientSrc.includes('const noticeBoxH = noticeStream ? noticeH : 0') + ' chatdiv=' + clientSrc.includes("top: (g.top + TITLE_BAR_H + noticeBoxH) + 'px',"))
+  check('UX-060 ⑤几何探针资产在仓（P-04 看护：隔离实例 + 无头浏览器 + 两视口交集判据 + 真实环境只读复核；浏览器不在 smoke 内跑）',
+    probeSrc60.includes('DSH_HOME') && probeSrc60.includes('containment')
+      && probeSrc60.includes("{ name: '1078x593'") && probeSrc60.includes("{ name: '1400x900'")
+      && probeSrc60.includes('Emulation.setDeviceMetricsOverride') && probeSrc60.includes('Fetch.fulfillRequest')
+      && probeSrc60.includes("verdict('C2-no-overlap-bar'") && probeSrc60.includes('intersectionSum === 0')
+      && probeSrc60.includes('realFingerprint') && probeSrc60.includes('realEnvAfter')
+      && probeSrc60.includes('mklink'),
+    'probe=' + probeSrc60.length + ' bytes')
 }
 
 // ── BUG-007：预设 persona 行 config 键（宿主耦合字面量，P-10）× 契约 presetRowConfig + 看护接线 ──
