@@ -3,8 +3,13 @@
  * 1) 用 dsh-agent-presets 的 scanRoot（discovery 的真实健康检查）解析 agent.cordis.yml
  *    —— 覆盖：YAML 方言（entryListSchema）、行形状（name 必填、group 递归）；
  * 2) 逐行校验组合里每个插件的 name 能否从 profile 目录解析（与 loader baseUrl 一致）；
- * 3) preset.yml 显示元数据存在。
- * 运行：node test/validate-preset.mjs
+ * 3) preset.yml 显示元数据存在；
+ * 4) **预设行 × 已装宿主插件 Config schema**（BUG-007；preset-schema-face.mjs，Check 28v 同源思路）：
+ *    用加载器自己的方言/求值/interpolate 与解析出的 cordis `resolveConfig` 逐行核对 config，
+ *    三态判定 PASS / FAIL / NOT_RUN（宿主平面不可达时**披露为 NOT_RUN，绝不当 PASS**）。
+ * 运行：node test/validate-preset.mjs [--require-schema-plane] [--no-schema-table]
+ *   --require-schema-plane：把第 4 段的 NOT_RUN 视为失败（环境保证有宿主平面时的 fail-closed 面）。
+ *   --no-schema-table：只打印第 4 段摘要，不打印逐行表。
  */
 import { createRequire } from 'node:module'
 import { readFileSync, existsSync } from 'node:fs'
@@ -17,10 +22,39 @@ const profileDir = join(process.env.USERPROFILE ?? process.env.HOME ?? '', '.dsh
 const profileAvailable = existsSync(join(profileDir, 'package.json'))
 const require = profileAvailable ? createRequire(join(profileDir, 'index.js')) : null
 
+const argv = process.argv.slice(2)
+const requireSchemaPlane = argv.includes('--require-schema-plane')
+const schemaTable = !argv.includes('--no-schema-table')
+
 let failed = 0
 const fail = (msg) => { failed += 1; console.error('FAIL ' + msg) }
 const ok = (msg) => console.log('ok   ' + msg)
 console.log(profileAvailable ? 'mode: full (profile dir available)' : 'mode: degraded (no profile dir; @deepseek-ai resolution skipped, novel rows checked via package exports)')
+
+// ── 0. 预设行 × 已装宿主 Config schema（BUG-007；三态：PASS / FAIL / NOT_RUN）────
+// 本段与下面的形状/解析段**相互独立**：形状合法（行有 name、模块可解析）并不保证 config 合法——
+// 正是 BUG-007 的失效模式（persona 行 `text` 键让整棵预设挂载被否决，而形状检查全绿）。
+let schemaVerdict = 'NOT_RUN'
+async function schemaFace(compositionPath) {
+  const { checkComposition, formatRows, VERDICT_PASS, VERDICT_FAIL } = await import('./fixtures/host-surfaces/preset-schema-face.mjs')
+  const report = await checkComposition({ composition: compositionPath })
+  schemaVerdict = report.verdict
+  console.log('  schema-face host-plane: ' + report.plane.source + (report.plane.nodeModules === null ? '' : ' (' + report.plane.nodeModules + ')')
+    + ' | oracle: ' + JSON.stringify(report.oracle?.versions ?? null))
+  if (schemaTable && report.rows.length > 0) for (const line of formatRows(report)) console.log('    ' + line)
+  if (report.verdict === VERDICT_PASS) {
+    ok(`schema-face: 预设行 × 已装宿主 Config schema PASS（启用行 ${report.coverage.enabled}；与 schema 比对 ${report.coverage.checked}；未校验 ${report.coverage.unverified} 项已逐行披露）`)
+  } else if (report.verdict === VERDICT_FAIL) {
+    fail('schema-face: ' + report.reason)
+    for (const row of report.rows.filter((r) => r.kind === 'CONFIG_INVALID')) {
+      console.error('      行 "' + row.id + '" (' + row.name + ' ' + (row.version ?? '?') + '): ' + (row.detail ?? row.message).split('\n').join('\n      '))
+    }
+  } else {
+    const line = 'schema-face: NOT_RUN（未验证 —— 不是通过）：' + report.reason
+    if (requireSchemaPlane) fail(line)
+    else console.warn('WARN ' + line)
+  }
+}
 
 // ── 1. composition 文件与 loader 同源解析 ────────────────────────────────
 const compositionPath = join(presetDir, 'agent.cordis.yml')
@@ -28,6 +62,7 @@ if (!existsSync(compositionPath)) {
   fail('agent.cordis.yml missing')
   process.exit(1)
 }
+await schemaFace(compositionPath)
 let yamlLoad = null
 try {
   yamlLoad = (await import('js-yaml')).load
@@ -75,7 +110,7 @@ if (yamlLoad !== null) {
   if (!/customSkillDirs:/.test(compositionText) || !/new URL\('skills\/', baseUrl\)/.test(compositionText)) {
     fail('skill-filesystem row lacks customSkillDirs baseUrl expression')
   } else ok('customSkillDirs expression present')
-  console.log(failed === 0 ? '\nPRESET VALIDATION PASSED (degraded)' : `\nPRESET VALIDATION FAILED (${failed})`)
+  console.log(failed === 0 ? `\nPRESET VALIDATION PASSED (degraded；schema-face: ${schemaVerdict})` : `\nPRESET VALIDATION FAILED (${failed})`)
   process.exit(failed === 0 ? 0 : 1)
 }
 if (!Array.isArray(rows)) { fail('composition must be a top-level list'); process.exit(1) }
@@ -157,5 +192,5 @@ if (!/customSkillDirs:/.test(composition) || !/new URL\('skills\/', baseUrl\)/.t
   fail('skill-filesystem row lacks customSkillDirs baseUrl expression')
 } else ok('customSkillDirs expression present')
 
-console.log(failed === 0 ? '\nPRESET VALIDATION PASSED' : `\nPRESET VALIDATION FAILED (${failed})`)
+console.log(failed === 0 ? `\nPRESET VALIDATION PASSED（schema-face: ${schemaVerdict}）` : `\nPRESET VALIDATION FAILED (${failed})`)
 process.exit(failed === 0 ? 0 : 1)

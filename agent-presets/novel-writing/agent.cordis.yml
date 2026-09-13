@@ -15,8 +15,14 @@
 
 - id: persona
   name: '@deepseek-ai/dsh-persona'
+  # config 键 = 宿主 @deepseek-ai/dsh-persona 的 Config schema（键契约见
+  # lib/host-contract.mjs item 5.6 与 test/fixtures/host-surfaces/preset-schema-face.mjs）：
+  # rc.2 起人设正文键是 `prefix`（必填；渲染为 deployment:persona-prefix 段），
+  # 旧键 `text` 已不存在 —— 用错键会让整棵预设挂载被否决（BUG-007）。
+  # 不写 `complete`：默认 false = 本行人设作为「一段」参与组装，与 preset.yml/
+  # 同族先例（治理插件 agent-presets/governance/agent.cordis.yml.template L48）一致。
   config:
-    text: |-
+    prefix: |-
       你是「小说创作工作流」的 Coordinator（协调者），由 {{model}} 模型驱动，工作目录 {{cwd}}。你负责一部网文小说「从平台调研到多平台发布与数据闭环」的端到端流水线编排。
 
       三层角色模型（唯一交互通道 = ask_user_question）：

@@ -28,7 +28,7 @@
  *       三版本差异 golden〔settingsNamespace·connection.api 两个断点 = BUG-003·BUG-004〕/
  *       ci.yml dsh-settings mock 导出面面钉〔F1：静态解析 + 动态 import 两法互证〕/
  *       契约 file·line 活性与每面锚点抽核 / 递归 own-descriptor 纯数据强化）。
- *       COMPAT-002 宿主契约对账（lib/host-contract.mjs 六面 48 项结构 / F10 口径 /
+ *       COMPAT-002 宿主契约对账（lib/host-contract.mjs 六面 49 项结构 / F10 口径 /
  *       纯数据守卫 + 槽位名·CSS 令牌·DOM selector 三类 region 字面量双向对账 + 服务名
  *       与事件名双向对账）。
  *       COMPAT-004 宿主边界层（lib/host-boundary.js 收口 lib/index.js 宿主调用——9 类直连模式 grep
@@ -1724,11 +1724,11 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   const contractSrc = readFileSync(new URL('../lib/host-contract.mjs', import.meta.url), 'utf8')
   const codeOnly = clientSrc.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '') // 剥注释——对账提取一律代码级（同 ⑩ 口径）
 
-  // ① 契约结构：六面 48 项分布 11/13/8/6/5/5（面 3 含 COMPAT-003 F1 补录的 3.8）
+  // ① 契约结构：六面 49 项分布 11/13/8/6/6/5（面 3 含 COMPAT-003 F1 补录的 3.8；面 5 含 BUG-007 补录的 5.6）
   const faceCount = {}
   for (const it of hostContract.items) faceCount[it.face] = (faceCount[it.face] ?? 0) + 1
-  check('COMPAT-002 契约：六面 48 项全覆盖（面分布 11/13/8/6/5/5）',
-    hostContract.items.length === 48 && [1, 2, 3, 4, 5, 6].every((f) => faceCount[f] === [11, 13, 8, 6, 5, 5][f - 1]),
+  check('COMPAT-002 契约：六面 49 项全覆盖（面分布 11/13/8/6/6/5）',
+    hostContract.items.length === 49 && [1, 2, 3, 4, 5, 6].every((f) => faceCount[f] === [11, 13, 8, 6, 6, 5][f - 1]),
     'items=' + hostContract.items.length + ' faces=' + JSON.stringify(faceCount))
   // ② schema：七字段齐全 + item 编号 face 前缀正确且面内连续（§3 溯源结构机检）
   const FIELDS = ['face', 'item', 'kind', 'symbol', 'file', 'line', 'necessity']
@@ -2249,16 +2249,16 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
     rangeNonStrict.length === GOLDEN_RANGE_NONSTRICT_ITEMS && commentStartRanges.length === GOLDEN_RANGE_COMMENT_START,
     'nonStrict=' + rangeNonStrict.length + '(golden ' + GOLDEN_RANGE_NONSTRICT_ITEMS + ') faces=' + JSON.stringify(rangeNonStrictFaces) + ' commentStart=' + JSON.stringify(commentStartRanges))
 
-  // ⑬ F6 necessity 九值 golden 分布（9 值全量 + 合计 48；防单值静默漂移）
-  const GOLDEN_NEC = { required: 39, consolidatable: 1, adapted: 1, optional: 1, improvable: 2, own: 1, eliminated: 1, 'adapted-drift': 1, awareness: 1 }
+  // ⑬ F6 necessity 九值 golden 分布（9 值全量 + 合计 49；防单值静默漂移）
+  const GOLDEN_NEC = { required: 40, consolidatable: 1, adapted: 1, optional: 1, improvable: 2, own: 1, eliminated: 1, 'adapted-drift': 1, awareness: 1 }
   const nec3 = {}
   for (const it of hc.items) nec3[it.necessity] = (nec3[it.necessity] ?? 0) + 1
   check('COMPAT-003 F6 necessity 九值 golden 分布（合计 ' + hc.items.length + ' = ' + Object.values(GOLDEN_NEC).reduce((a, b) => a + b, 0) + '）',
-    hc.items.length === 48 && Object.keys(nec3).length === 9
+    hc.items.length === 49 && Object.keys(nec3).length === 9
       && Object.entries(GOLDEN_NEC).every(([k, n]) => (nec3[k] ?? 0) === n),
     JSON.stringify(nec3))
 
-  // ⑭ F7a kind 封闭枚举：48 项 kind 全部 ∈ kindEnum 且枚举无空置值
+  // ⑭ F7a kind 封闭枚举：49 项 kind 全部 ∈ kindEnum 且枚举无空置值
   check('COMPAT-003 F7a kind 封闭枚举：items[].kind 全部 ∈ kindEnum（' + hc.kindEnum.length + ' 值）且无空置值',
     hc.items.every((it) => hc.kindEnum.includes(it.kind))
       && hc.kindEnum.every((k) => hc.items.some((it) => it.kind === k)),
@@ -2821,7 +2821,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   const notCoveredSum5 = diag5 === null ? 0 : diag5.faces.reduce((s, f) => s + f.notCovered, 0)
   const face456Probed5 = diag5 === null ? -1 : [4, 5, 6].reduce((s, id) => { const f = diag5.faces.find((x) => x.id === id); return s + (f === undefined ? 0 : f.probed) }, 0)
   check('COMPAT-005 D1⑤ 面覆盖台账：探测项 ' + serverProbeCount5 + '（面1）+ 8（客户端）= ' + (serverProbeCount5 + 8)
-      + ' ≤ 契约 ' + contractItemTotal5 + ' 项；未覆盖 ' + notCoveredSum5 + ' 项 = 48 − 19；面 4/5/6 探测数 = 0（未实现面不伪造）',
+      + ' ≤ 契约 ' + contractItemTotal5 + ' 项；未覆盖 ' + notCoveredSum5 + ' 项 = 49 − 19；面 4/5/6 探测数 = 0（未实现面不伪造）',
     diag5 !== null && coveredByProbe5 === serverProbeCount5 + 8
       && coveredByProbe5 + notCoveredSum5 === contractItemTotal5 && face456Probed5 === 0,
     'probed=' + coveredByProbe5 + ' notCovered=' + notCoveredSum5 + ' f456=' + face456Probed5)
@@ -2885,7 +2885,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
       && rp5.report.probes.length === 11 && rp5.report.summary.ok === 9
       && rp5.report.unprobed.length === 2 && rp5.report.unprobed.every((u) => typeof u.code === 'string' && u.reason === undefined)
       && rp5.report.notCovered.length === 5 && rp5.report.notCovered.every((n) => typeof n.code === 'string' && n.reason === undefined)
-      && rp5.contract.items.length === 48 && rp5.contract.faces.length === 6
+      && rp5.contract.items.length === 49 && rp5.contract.faces.length === 6
       && rp5.contract.revision === hc5.revisions.at(-1).task
       && rp5.contract.items.every((it) => it.item !== undefined && it.face !== undefined && it.kind !== undefined && it.necessity !== undefined
         && it.symbol === undefined && it.file === undefined && it.line === undefined)
@@ -3115,7 +3115,65 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
     'hits=' + JSON.stringify(lexerProbes15.map((p, i) => p.form + '=' + lexerProbeHits15[i])) + ' shared=' + lexerShared15 + ' narrowedNowHit=' + narrowedNowHit5)
 }
 
-// ⑪ COMPAT-014 A-F9：README 验证管线段的 smoke 断言计数 ≡ 实测（含本断言自身）——原为**人工转写**且已陈旧
+// ── BUG-007：预设 persona 行 config 键（宿主耦合字面量，P-10）× 契约 presetRowConfig + 看护接线 ──
+// 动因：宿主 @deepseek-ai/dsh-persona 0.1.5-rc.2 把 Config 收紧为 `prefix` 必填，本仓 persona 行仍写
+// `text` ⇒ 该行 config 校验失败 ⇒ **整棵预设挂载被否决**（工作台 resume/绑定新会话 + 宿主预设切换器两条
+// 消费路径同时失败）。① 本节把「组合文件里的键集」与契约 presetRowConfig[].usedKeys/keys 做**双向 ⊆ 对账**
+// ——纯文本提取，**离线可跑**（CI sanity 无宿主平面/npm 依赖时同样有效），正是本缺陷的 CI 侧回归信号；
+// ② 权威校验（用已装宿主真实 Config + cordis resolveConfig 逐行核对）在 preset-schema-face.mjs，本节断言
+// 它被 validate-preset 接线（防静默摘除）且三态自洽（PASS 只允许出现在 checked>0 时）。
+{
+  const { hostContract: hc7 } = await import('../lib/host-contract.mjs')
+  const composition7 = readFileSync(new URL('../agent-presets/novel-writing/agent.cordis.yml', import.meta.url), 'utf8')
+  const decl = Array.isArray(hc7.presetRowConfig) ? hc7.presetRowConfig.find((d) => d.row === 'persona') : undefined
+  // 组合文件内 persona 行 config 的直接子键（4 空格缩进；块标量正文更深 ⇒ 不入提取面）
+  const extraction7 = (() => {
+    const lines = composition7.split('\n')
+    const start = lines.findIndex((l) => /^- id: persona\s*$/.test(l))
+    if (start < 0) return { found: false, keys: [] }
+    const end = lines.findIndex((l, i) => i > start && /^- (id|name):/.test(l))
+    const block = lines.slice(start, end < 0 ? lines.length : end)
+    const cfg = block.findIndex((l) => /^  config:\s*$/.test(l))
+    const keys = cfg < 0 ? [] : block.slice(cfg + 1).filter((l) => /^    \S/.test(l)).map((l) => (l.match(/^ {4}([^\s:]+):/) ?? [])[1]).filter((k) => k !== undefined)
+    return { found: true, configDeclared: cfg >= 0, keys }
+  })()
+  const declKeys = decl === undefined ? [] : decl.keys
+  const declUsed = decl === undefined ? [] : decl.usedKeys
+  const declRequired = decl === undefined ? [] : decl.requiredKeys
+  const sameSet7 = (a, b) => a.length === b.length && a.every((x) => b.includes(x))
+  check('BUG-007 P-10 契约 presetRowConfig：契约存在 persona 声明（keys ' + JSON.stringify(declKeys) + ' / requiredKeys ' + JSON.stringify(declRequired) + ' / usedKeys ' + JSON.stringify(declUsed) + '）∧ 组合文件 persona 行 config 键集 ≡ usedKeys（**双向 ⊆**）∧ usedKeys ⊆ keys ∧ requiredKeys ⊆ usedKeys ∧ 键面非空（防空面恒真）',
+    decl !== undefined && decl.hostPackage === '@deepseek-ai/dsh-persona' && decl.incident === 'BUG-007'
+      && typeof decl.source === 'string' && decl.source.includes('dsh-persona@') && decl.source.includes('L23-28')
+      && extraction7.found && extraction7.configDeclared && extraction7.keys.length > 0
+      && sameSet7(extraction7.keys, declUsed)
+      && declUsed.every((k) => declKeys.includes(k)) && declRequired.every((k) => declUsed.includes(k))
+      && declKeys.length >= 4 && declRequired.length >= 1,
+    'extracted=' + JSON.stringify(extraction7.keys) + ' used=' + JSON.stringify(declUsed) + ' keys=' + JSON.stringify(declKeys) + ' required=' + JSON.stringify(declRequired))
+  // 判别力正向对照（**离线**、零宿主依赖）：把提取面喂进同一判据——历史坏形态 `text`（BUG-007 原始缺陷）
+  // 必红，现行键集必绿。判据与部署面共用同一比对函数（sameSet7），不是文本副本。
+  const mutantBad7 = sameSet7(['text'], declUsed) && ['text'].every((k) => declKeys.includes(k))
+  const mutantGood7 = sameSet7(['prefix'], declUsed)
+  check('BUG-007 判据正向对照（离线）：键集对账对历史坏形态 `text` **必红**（sameSet=' + mutantBad7 + ' ∧ ⊆ keys=' + (['text'].every((k) => declKeys.includes(k))) + '）∧ 现行 `prefix` 必绿（' + mutantGood7 + '）——对账函数与部署面同源（非恒真）',
+    mutantBad7 === false && mutantGood7 === true,
+    'bad=' + mutantBad7 + ' good=' + mutantGood7)
+  // 看护接线自断言（段/文件级，非全文子串）：validate-preset.mjs 必须调用 preset-schema-face 的三态判定；
+  // 且该模块必须导出三态常量与逐行表（摘除接线或降级成两态即红）。
+  const validatePresetSrc7 = readFileSync(new URL('./validate-preset.mjs', import.meta.url), 'utf8')
+  const guardSrc7 = readFileSync(new URL('./fixtures/host-surfaces/preset-schema-face.mjs', import.meta.url), 'utf8')
+  check('BUG-007 看护接线自断言：validate-preset.mjs 调用 checkComposition（第 4 段）∧ preset-schema-face.mjs 导出三态 VERDICT_PASS/FAIL/NOT_RUN 与 formatRows（摘除接线或退化为两态即红）',
+    validatePresetSrc7.includes('checkComposition') && validatePresetSrc7.includes('preset-schema-face.mjs')
+      && guardSrc7.includes("export const VERDICT_NOT_RUN = 'NOT_RUN'") && guardSrc7.includes("export const VERDICT_PASS = 'PASS'")
+      && guardSrc7.includes("export const VERDICT_FAIL = 'FAIL'") && guardSrc7.includes('export function formatRows'),
+    'wired=' + validatePresetSrc7.includes('checkComposition') + ' triState=' + guardSrc7.includes('VERDICT_NOT_RUN'))
+  // 三态自洽（PASS 语义不可真空）：在**本环境**跑一次看护——PASS 仅当 checked>0；NOT_RUN/FAIL 如实记录在
+  // 断言名内（宿主平面缺席的 CI 会显示 NOT_RUN，**不是**把未验证渲染成通过）。
+  const { checkComposition: checkComp7, VERDICT_PASS: vPass7 } = await import('./fixtures/host-surfaces/preset-schema-face.mjs')
+  const report7 = await checkComp7({})
+  const vacuous7 = report7.verdict === vPass7 && (report7.coverage === null || report7.coverage.checked === 0)
+  check('BUG-007 看护三态自洽（本环境判定 ' + report7.verdict + (report7.coverage === null ? '' : '，checked=' + report7.coverage.checked + '/' + report7.coverage.enabled) + '）：PASS **只允许**出现在 checked>0（发现项 ' + (report7.coverage?.findings ?? '-') + '）时——NOT_RUN 绝不渲染成 PASS',
+    vacuous7 === false && report7.rows.length > 0,
+    'verdict=' + report7.verdict + ' vacuous=' + vacuous7 + ' reason=' + String(report7.reason))
+}
 //   至少 4 个任务周期（179 vs 276，正落在 COMPAT-007 修改的代码块内）；本断言把「随 smoke 计数变更同步」由
 //   文档纪律升级为机检（改 README 计数与改 smoke 断言数必须同 commit）。**必须保持为本文件最后一条 check**
 //   （断言式用 `passed + 1` 计入自身；后续新增 check 会使其红——这正是期望的提示信号）。

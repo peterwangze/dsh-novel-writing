@@ -160,12 +160,13 @@ curl -fsSL https://raw.githubusercontent.com/peterwangze/dsh-novel-writing/main/
 - **能力降级**：宿主行缺席 `webServer` 仅降级 API；工具行缺席 `novel-writing` 服务时注册 0 工具，预设仍可挂载。
 - **兼容矩阵**：见下方「宿主版本矩阵」（DEC-026 定案的实测覆盖与 v1.0 生效时点）；peer 声明为 `*`，向前兼容以实测为准。
 - **dsh 0.1.5-rc.1 布局重构兼容（BUG-006）**：v0.5.1 插件代码零改动全兼容（隔离实例全链路实测启动成功）；dsh ≥0.1.5 的 per-profile 布局（每 profile 独立 `package.json` + `node_modules`）由安装脚本自动适配（profile `dependencies`/`dsh.profile.bundles` 注册 + patch 行双保险）。升级 dsh 后若插件消失 = profile 模板重建重置了注册，重跑安装脚本即恢复。
+- **预设行 × 已装宿主 Config schema 机检（BUG-007）**：宿主 `@deepseek-ai/dsh-persona@0.1.5-rc.2` 把 Config 收紧为 `prefix` 必填，预设 persona 行若仍写旧键 `text`，**整棵预设挂载会被否决**（工作台「继续工作流／绑定新会话」与宿主预设切换器两条消费路径同时失败）。防线三层：① `test/fixtures/host-surfaces/preset-schema-face.mjs` 用**已装宿主插件自身的 Config + 解析出的 cordis `resolveConfig`** 逐行核对组合（零 schema 复制），接入 `validate-preset` 第 4 段并随 CI 执行，三态 **PASS / FAIL / NOT_RUN**（宿主平面不可达 ⇒ NOT_RUN 并披露，**绝不渲染成 PASS**；`--require-schema-plane` 可把 NOT_RUN 变失败）；② 契约 `presetRowConfig`（item 5.6）登记「本行使用的键集」，smoke 离线双向 ⊆ 对账 ⇒ **宿主平面缺席的 CI 也有回归信号**；③ 隔离实例端到端挂载冒烟（见下管线 `isolated-preset-mount.mjs`）。**升级生效条件**：本版本起 `package.json` version 参与 `ensurePreset()` 幂等标记，升级后**下次启动自动重同步** `$DSH_HOME/.agent-presets/novel-writing/`（无需手动删目录）。
 - **验证管线**（CI 全量执行 + 发版手动隔离 boot）：
 
 ```sh
 node --check lib/index.js && node --check lib/tools.js && node --check lib/client.js
-node test/validate-preset.mjs   # 预设挂载级校验（loader 同源解析 + 逐行模块解析）
-node test/smoke.mjs             # 宿主逻辑 + 挂载契约 282 项断言（状态/门禁/审计/发布/信号/注册面/BUG-004 适配层与联动守卫；计数由 smoke 末条断言机检 ≡ 本行 ⇒ 改断言数须同 commit 改本行）
+node test/validate-preset.mjs   # 预设挂载级校验（loader 同源解析 + 逐行模块解析 + **第 4 段：预设行 × 已装宿主 Config schema**〔preset-schema-face，三态；`--require-schema-plane` 把 NOT_RUN 变失败〕）
+node test/smoke.mjs             # 宿主逻辑 + 挂载契约 286 项断言（状态/门禁/审计/发布/信号/注册面/BUG-004 适配层与联动守卫；计数由 smoke 末条断言机检 ≡ 本行 ⇒ 改断言数须同 commit 改本行）
 # 宿主发版探测轨（CI scheduled 每日一次；只读 npm view，无 install / 无宿主代码执行）：
 npm view @deepseek-ai/dsh versions --json   # 与 fixtures 覆盖版本对账 ⇒ 新版本即红（见下「探测轨与窗口期」）
 node test/fixtures/host-surfaces/probe-face.mjs   # 探测轨判据的**离线机检** + install 头部布局契约对账（PR 门禁：提取 ci.yml heredoc → node --check → 构造 JSON 驱动判据真跑；不触网、不 install）
@@ -173,6 +174,8 @@ node scripts/probe-host.mjs --self-check          # 宿主能力探针**离线�
 # 隔离 boot（最接近真实安装路径）：
 $env:DSH_HOME="$env:TEMP\dsh-novel-test"; dsh plugin --profile web add link:<本仓库>
 dsh web --port 3100 --no-open   # 另一终端 curl http://127.0.0.1:3100/novel-writing/api/overview → 200
+# 隔离实例预设挂载冒烟（BUG-007；DSH_HOME 重定向到临时目录，真实环境只读）：
+node scripts/isolated-preset-mount.mjs   # 起隔离实例 → 插件 ensurePreset 同步 → 宿主自身 mount 预设 → 读 system prompt 段
 ```
 
 ### 宿主版本矩阵（DEC-026 定案）
@@ -181,7 +184,7 @@ dsh web --port 3100 --no-open   # 另一终端 curl http://127.0.0.1:3100/novel-
 
 | 宿主版本 | 支持状态 | 依据 / 生效时点 |
 |---|---|---|
-| `0.1.5-rc.2`（现行闭包内子包实测版本；CLI `0.1.5-rc.1` = registry `latest`） | ✅ 完整支持 | 宿主表面 fixtures 现行快照（`test/fixtures/host-surfaces/`）+ per-profile 布局隔离实例全链路实测（BUG-006） |
+| `0.1.5-rc.2`（现行闭包内子包实测版本；CLI `0.1.5-rc.1` = registry `latest`） | ✅ 完整支持 | 宿主表面 fixtures 现行快照（`test/fixtures/host-surfaces/`）+ per-profile 布局隔离实例全链路实测（BUG-006）+ 预设组合行 × 已装 Config schema 逐行核对与隔离实例挂载冒烟（BUG-007：`preset-schema-face.mjs` / `scripts/isolated-preset-mount.mjs`，persona 键 = `prefix`） |
 | `0.1.2-rc.1` | ✅ 支持（**最低支持线**） | fixtures 快照 + 客户端双表面适配层；**v1.0 起为声明下限**（`peerDependencies` 加下限 + 移除 `connection.api` 回退〔过渡期保留一个版本期的 `__NV_LEGACY_API__` 开关〕）——A1 绑定 v1.0 major 边界，**当前 A3 阶段尚未生效** |
 | `0.1.0-rc.7` / `0.1.1-rc.2`（0.1.x 旧表面线） | ⚠️ 最佳努力（A3 保留旧表面回退） | 依据 = `docs/RESEARCH.md` §3.1 实测（`0.1.0-rc.7`）+ `docs/DESIGN.md` 兼容矩阵 + fixtures 快照（`0.1.1-rc.2` 为 0.1.x 旧表面线代表，与 `0.1.2-rc.1` 构成 BUG-003/004 断点对照）；**fixture 归属精确化**：本行两版本中——`0.1.0-rc.7` **无仓内 fixture**（勿把本行的「实测」依据读作适用于它的快照；其依据是 `RESEARCH`/`DESIGN` 的历史实机实测），`0.1.1-rc.2` **有**仓内 fixture 快照（`test/fixtures/host-surfaces/0.1.1-rc.2.json`，由 smoke ① 目录 ≡ 契约键集机检）；**v1.0 起断供**——旧宿主上 `remote.*` 全缺而 `connection.api` 域对象在场 ⇒ 设置页「诊断」区明确提示「宿主版本低于最低支持」，并指向 v0.5.x tag 回退路径（DEC-026） |
 | 未列版本（含 `next` / `alpha` tag 上的预发布） | 未验证 | 向前兼容以实测为准；`*` 无下限 = 不设防（契约 6.1） |
