@@ -1640,7 +1640,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // ③ 快照更新经订阅驱动重读
   st.set({ ids: ['s-1'], byId: { 's-1': { id: 's-1' } }, current: 's-1' })
   const pushed = mini.render()
-  check('BUG-005 订阅回调驱动重读：store.set → setValue → 取到新快照', JSON.stringify(pushed.ids) === '["s-1"]', JSON.stringify(pushed.ids))
+  check('BUG-005 订阅回调驱动重读：store.set → 订阅扳机 → 渲染期重算 → 取到新快照', JSON.stringify(pushed.ids) === '["s-1"]', JSON.stringify(pushed.ids))
 
   // ④ 服务撤离：退订 + 返回回 undefined（消费端容错）
   sessionsProvided = undefined
@@ -1716,6 +1716,33 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   check('BUG-005 适配层零改动：makeHostApi 单点收口与 connection.api 唯一引用保持',
     codeSrc.includes('function makeHostApi(') && codeSrc.includes('makeHostApi((name) => ctx.get(name), connection)')
     && (codeSrc.match(/connection\.api/g) ?? []).length === 1)
+
+  // ── BUG-009：绑定写入后镜像读取不得停在旧值（行为级；CLEAN-004 D-2 的插件侧机制）──
+  // 自动链的真实时序 = 「镜像先含该会话（sessions.create 的 added 事件）→ boundId 才随 overview
+  // 轮询后到位」。旧实现把选中值冻结进 useState、只在 store 通知时重算 ⇒ 该帧 selector 明明已能
+  // 命中却仍返回旧值（null）⇒ 卡片停「会话失效」，直到下一次**无关**的 store 通知才偶然收敛
+  // （实测 ≥2′06″ 未收敛；`report-run1.json` 全程不收敛）。本断言即该时序的最小复现：
+  // 第 2 帧（boundId 到位）MUST 立即命中；构造反例 = 去掉渲染期求值（恢复 useState 缓存）⇒ 必红。
+  const stB = mkStore({ ids: ['s-bound'], byId: { 's-bound': { id: 's-bound', displayTitle: 'Bound' } }, current: 's-bound' })
+  // 消费者与产品同形：selector 捕获 boundId（props 输入），命中返回 entry、未命中返回 null
+  const BoundCard = (props) => ({
+    hit: props.useSessions((s) => (props.boundId !== null && props.boundId !== undefined ? s.byId[props.boundId] ?? null : null)) !== null,
+  })
+  sessionsProvided = stB.svc
+  let bug009Err = ''
+  let b009First = null
+  let b009Second = null
+  try {
+    b009First = mini.mount(BoundCard, { boundId: null, useSessions: hook })
+    stB.set({ ids: ['s-bound'], byId: { 's-bound': { id: 's-bound', displayTitle: 'Bound' } }, current: 's-bound' })
+    b009Second = mini.render({ boundId: 's-bound', useSessions: hook })
+  } catch (e) { bug009Err = e.message }
+  check('BUG-009 基线（反例防护）：boundId 未到位时 selector 未命中（谓词能区分两态，非恒真）',
+    bug009Err === '' && b009First !== null && b009First.hit === false, bug009Err + ' hit=' + (b009First === null ? 'null' : b009First.hit))
+  check('BUG-009 镜像先更新 + boundId 后到位 ⇒ 该帧即命中镜像 entry（不得停留旧值「会话失效」）',
+    b009Second !== null && b009Second.hit === true, 'hit=' + (b009Second === null ? 'null' : b009Second.hit))
+  mini.unmount()
+  sessionsProvided = undefined
 }
 
 // ── COMPAT-002：宿主契约清单（lib/host-contract.mjs）× lib/client.js region 字面量对账（F8 首批）──
