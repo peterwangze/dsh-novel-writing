@@ -1,0 +1,3340 @@
+{
+  "tool": "probe-clean-004",
+  "task": "CLEAN-004",
+  "head": "21b100ce9ac32e534c6215e507f9835f87e0ff4c",
+  "headDirty": false,
+  "startedAt": "2026-09-14T05:13:45.162Z",
+  "isolation": {
+    "root": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-probe-WcBMlz",
+    "dshHome": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-probe-WcBMlz\\dsh-home",
+    "plane": "C:\\Users\\peter\\AppData\\Local\\npm-cache\\_npx\\1e7f6d9597241db0\\node_modules\\@deepseek-ai",
+    "browser": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+    "containment": {
+      "home": true,
+      "userprofile": true,
+      "appdata": true,
+      "localappdata": true,
+      "edge": true,
+      "tmp": true,
+      "novels": true
+    },
+    "realEnvBefore": {
+      "home": "C:\\Users\\peter\\.dsh",
+      "strict": {
+        "settingsSha": "0b5106e58ebc3b8596d2401037570c6430c97788efab5117f166414d2b6f975a",
+        "profileJsonSha": "23b43ee30c60f08d5f922f4b8b0206661b49769ea446eaba5af81b9d99c48580",
+        "presetsSha": "de05dfc21fc9d239ef71dbab3db952c5243085fea9fcd489bfda5d4d9f456c6c"
+      },
+      "inventory": {
+        ".agent-presets": {
+          "dir": true,
+          "size": 0,
+          "mtimeMs": 1789285375866
+        },
+        ".anonymous-user-id": {
+          "dir": false,
+          "size": 37,
+          "mtimeMs": 1788578792690
+        },
+        ".credentials.yaml": {
+          "dir": false,
+          "size": 2293,
+          "mtimeMs": 1789285838324
+        },
+        "attachments": {
+          "dir": true,
+          "size": 0,
+          "mtimeMs": 1788592170529
+        },
+        "backups": {
+          "dir": true,
+          "size": 0,
+          "mtimeMs": 1789124030606
+        },
+        "dsh-agent-router": {
+          "dir": true,
+          "size": 0,
+          "mtimeMs": 1789285838297
+        },
+        "llm-deepseek": {
+          "dir": true,
+          "size": 0,
+          "mtimeMs": 1789289566839
+        },
+        "profiles": {
+          "dir": true,
+          "size": 0,
+          "mtimeMs": 1789129633470
+        },
+        "sessions": {
+          "dir": true,
+          "size": 0,
+          "mtimeMs": 1789135276544
+        },
+        "settings.yaml": {
+          "dir": false,
+          "size": 16002,
+          "mtimeMs": 1789346786637
+        },
+        "settings.yaml.bak-20260906-stale-high": {
+          "dir": false,
+          "size": 6194,
+          "mtimeMs": 1788660757802
+        },
+        "settings.yaml.bak-20260911-pre-cleanup": {
+          "dir": false,
+          "size": 15764,
+          "mtimeMs": 1789118875314
+        },
+        "storages": {
+          "dir": true,
+          "size": 0,
+          "mtimeMs": 1789346808974
+        }
+      }
+    },
+    "env": {
+      "DSH_HOME": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-probe-WcBMlz\\dsh-home",
+      "USERPROFILE": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-probe-WcBMlz\\userprofile",
+      "HOME": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-probe-WcBMlz\\userprofile",
+      "APPDATA": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-probe-WcBMlz\\appdata",
+      "LOCALAPPDATA": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-probe-WcBMlz\\localappdata",
+      "TEMP": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-probe-WcBMlz\\tmp"
+    }
+  },
+  "i18n": {
+    "entryLabel": "📖 小说管理工作台",
+    "resetLayoutDone": "已恢复默认布局",
+    "promptFailPrefix": "会话已就绪，但启动指令发送失败：",
+    "promptFailHint": "请打开该会话手动发送启动指令。",
+    "staleHint": "该书绑定的会话已不存在，请重新绑定。",
+    "unbound": "未绑定"
+  },
+  "fixture": {
+    "novels": [
+      "zz-first-probe",
+      "aa-second-probe",
+      "mm-third-probe",
+      "nn-stale-bound",
+      "bb-fourth-probe",
+      "cc-fifth-probe",
+      "dd-sixth-probe",
+      "ee-seventh-probe",
+      "ff-eighth-probe",
+      "gg-ninth-probe"
+    ],
+    "staleBinding": {
+      "nn-stale-bound": "session-does-not-exist-clean004"
+    },
+    "workspace": {
+      "workspaceId": "c986fb89-c663-40c4-bcfa-b954fd02738b",
+      "path": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-probe-WcBMlz\\novels"
+    }
+  },
+  "assertions": [
+    {
+      "id": "A1-drawer-cards",
+      "area": "管理台/抽屉",
+      "label": "侧栏抽屉渲染全部 10 本书目卡（overview → 抽屉数据链）+ 标题行 aria-label/插入符号在位",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "cards": 10,
+        "titles": [
+          "孤星纪元",
+          "青禾纪事",
+          "长风渡",
+          "失效绑定书",
+          "雪落无声",
+          "折戟",
+          "南柯",
+          "北望",
+          "东归",
+          "西行"
+        ],
+        "subs": [
+          "outline_writing · 3章 · 1200字 · 未绑定",
+          "未开始 · 0章 · 0字 · 未绑定",
+          "content_generation · 12章 · 34000字 · 未绑定",
+          "creation_planning · 5章 · 9000字 · 会话失效"
+        ],
+        "dots": [
+          "none",
+          "none",
+          "none",
+          "stale",
+          "none",
+          "none",
+          "none",
+          "none",
+          "none",
+          "none"
+        ],
+        "drawer": {
+          "x": 12,
+          "y": 264,
+          "w": 256,
+          "h": 572,
+          "right": 268
+        },
+        "head": {
+          "x": 12,
+          "y": 273,
+          "w": 256,
+          "h": 29,
+          "right": 268
+        },
+        "card": {
+          "x": 12,
+          "y": 306,
+          "w": 256,
+          "h": 49,
+          "right": 268
+        },
+        "headLabel": "📖 小说管理工作台",
+        "caret": 1
+      },
+      "at": "2026-09-14T05:13:54.979Z"
+    },
+    {
+      "id": "A2-stale-binding-visible",
+      "area": "数据/绑定",
+      "label": "失效绑定书在抽屉卡呈现「会话失效」（stale 数据面：绑定 id 不在会话镜像）",
+      "ok": true,
+      "status": "PASS",
+      "detail": [
+        "outline_writing · 3章 · 1200字 · 未绑定",
+        "未开始 · 0章 · 0字 · 未绑定",
+        "content_generation · 12章 · 34000字 · 未绑定",
+        "creation_planning · 5章 · 9000字 · 会话失效"
+      ],
+      "at": "2026-09-14T05:13:54.979Z"
+    },
+    {
+      "id": "A3-console-opens",
+      "area": "控制台",
+      "label": "点抽屉标题行 → 控制台打开（反选：开）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "consoleOpened": true
+      },
+      "at": "2026-09-14T05:13:55.082Z"
+    },
+    {
+      "id": "B1-console-geometry-root",
+      "area": "控制台",
+      "label": "控制台几何 ≡ 会话内容区 rect（4 边偏差 ≤1.5px）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "geomDelta": {
+          "dx": 0,
+          "dr": 0,
+          "dy": 0,
+          "db": 0
+        },
+        "console": {
+          "x": 280,
+          "y": 0,
+          "w": 1120,
+          "h": 900,
+          "right": 1400,
+          "bottom": 900
+        },
+        "root": {
+          "x": 280,
+          "y": 0,
+          "w": 1120,
+          "h": 900,
+          "right": 1400,
+          "bottom": 900
+        },
+        "phase": "hero"
+      },
+      "at": "2026-09-14T05:13:55.082Z"
+    },
+    {
+      "id": "B2-console-head",
+      "area": "控制台",
+      "label": "头部 = 标题「小说管理工作台」+ 工作区路径 + 「切换 / 新建工作区…」+ ✕",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "console": {
+          "x": 280,
+          "y": 0,
+          "w": 1120,
+          "h": 900,
+          "right": 1400,
+          "bottom": 900
+        },
+        "root": {
+          "x": 280,
+          "y": 0,
+          "w": 1120,
+          "h": 900,
+          "right": 1400,
+          "bottom": 900
+        },
+        "sidebar": {
+          "x": 0,
+          "y": 0,
+          "w": 280,
+          "h": 900,
+          "right": 280,
+          "bottom": 900
+        },
+        "rootPhase": "hero",
+        "title": "小说管理工作台",
+        "ws": "未设置工作区 — 点击选择/新建",
+        "wsSwitch": "切换 / 新建工作区…",
+        "mini": "关闭",
+        "search": 1,
+        "cgrid": 0
+      },
+      "at": "2026-09-14T05:13:55.082Z"
+    },
+    {
+      "id": "B3-console-grid-present",
+      "area": "控制台",
+      "label": "控制台渲染卡片网格容器（overview 轮询数据到达后）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "gridReady": true,
+        "search": 1
+      },
+      "at": "2026-09-14T05:13:55.361Z"
+    },
+    {
+      "id": "B4-search-filter-novels",
+      "area": "控制台/搜索",
+      "label": "关键词滤小说卡（「孤星」→ 仅 zz-first-probe）；＋磁贴过滤时恒显示；≤8 本无折叠行",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "value": "孤星",
+        "cards": [
+          "zz-first-probe"
+        ],
+        "tiles": 1,
+        "fold": 0,
+        "clear": 1
+      },
+      "at": "2026-09-14T05:13:56.203Z"
+    },
+    {
+      "id": "B5-found-sessions-area",
+      "area": "控制台/搜索",
+      "label": "「找到的会话」区 = 宿主侧栏确有会话行时**必渲染**（判据：宿主会话行数 ≥1 ⇒ 本区存在性必须一致；谓词取自共享登记表 `B5-found-sessions-area`，无恒真分支）",
+      "ok": false,
+      "status": "N-A",
+      "detail": {
+        "kw": "新会话",
+        "foundTitle": null,
+        "rows": 0,
+        "hostSidebarRows": {
+          "count": 0,
+          "withText": 0,
+          "titles": [],
+          "selectorPresent": false,
+          "projectRows": 1,
+          "noSessionsText": false
+        },
+        "legacyHostSidebarText": "sessions-present",
+        "b5HostHasRows": false,
+        "b5MirrorRendered": false,
+        "predicateId": "B5-found-sessions-area"
+      },
+      "at": "2026-09-14T05:13:58.655Z"
+    },
+    {
+      "id": "B6-search-no-match",
+      "area": "控制台/搜索",
+      "label": "无匹配 → 空态「没有匹配的小说或会话」且卡片 0",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "cards": 0,
+        "empty": 1,
+        "text": "没有匹配的小说或会话"
+      },
+      "at": "2026-09-14T05:13:59.566Z"
+    },
+    {
+      "id": "B7-search-clear",
+      "area": "控制台/搜索",
+      "label": "清除钮 → 关键词清空 + 折叠态恢复 8 卡",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "value": "",
+        "cards": 8
+      },
+      "at": "2026-09-14T05:14:00.397Z"
+    },
+    {
+      "id": "B8-grid-fold",
+      "area": "控制台/网格",
+      "label": "10 本 → 折叠前 8 卡 + 「展开全部（2）」+ ＋磁贴（UX-008⑤）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "count": 8,
+        "fold": "展开全部（2）",
+        "tile": {
+          "x": 297,
+          "y": 871.2,
+          "w": 346.3,
+          "h": 180,
+          "right": 643.3,
+          "bottom": 1051.2
+        }
+      },
+      "at": "2026-09-14T05:14:00.399Z"
+    },
+    {
+      "id": "B9-grid-3col",
+      "area": "控制台/网格",
+      "label": "控制台宽度下 3 列均分（同行 3 卡，grid-template-columns 三轨等宽 ±0.1px）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "rowBuckets": {
+          "107": 3,
+          "366": 3,
+          "598": 2
+        },
+        "cols": "346.328px 346.328px 346.344px",
+        "gap": "20px"
+      },
+      "at": "2026-09-14T05:14:00.399Z"
+    },
+    {
+      "id": "B10-card-anatomy",
+      "area": "控制台/网格",
+      "label": "卡片结构齐备：monogram + 阶段徽标 + 数据 chips（章/字/发布/变现/信号）+ 数据行 + 更新时间 + 图标钮（8×🔗 + 8×🗑）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "counts": {
+          "head": 8,
+          "mono": 8,
+          "badge": 8,
+          "chips": 24,
+          "statusChips": 16,
+          "cdot": 8,
+          "actions": 8,
+          "ico": 16,
+          "del": 8,
+          "data": 8,
+          "meta": 8
+        },
+        "chipLabels": [
+          "# 章",
+          "#### 字",
+          "信号 #",
+          "# 字",
+          "## 章",
+          "##### 字"
+        ],
+        "chipsPerCard": 3
+      },
+      "at": "2026-09-14T05:14:00.400Z"
+    },
+    {
+      "id": "B11-no-legacy-actions",
+      "area": "控制台/网格",
+      "label": "旧形态负断言：无「▶ 打开」钮（UX-008④）+ 无「➤ 启动工作流」钮（UX-013②.4）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "legacyOpen": 0,
+        "legacyLaunch": 0
+      },
+      "at": "2026-09-14T05:14:00.400Z"
+    },
+    {
+      "id": "B12-icon-btn-22",
+      "area": "控制台/网格",
+      "label": "卡片图标钮 22×22（UX-008④ 尺寸收敛）",
+      "ok": true,
+      "status": "PASS",
+      "detail": [
+        {
+          "x": 574.3,
+          "y": 307.4,
+          "w": 22,
+          "h": 22,
+          "right": 596.3,
+          "bottom": 329.4
+        },
+        {
+          "x": 604.3,
+          "y": 307.4,
+          "w": 22,
+          "h": 22,
+          "right": 626.3,
+          "bottom": 329.4
+        },
+        {
+          "x": 940.7,
+          "y": 307.4,
+          "w": 22,
+          "h": 22,
+          "right": 962.7,
+          "bottom": 329.4
+        },
+        {
+          "x": 970.7,
+          "y": 307.4,
+          "w": 22,
+          "h": 22,
+          "right": 992.7,
+          "bottom": 329.4
+        }
+      ],
+      "at": "2026-09-14T05:14:00.400Z"
+    },
+    {
+      "id": "B12b-tile-min-height",
+      "area": "控制台/网格",
+      "label": "＋磁贴与卡片统一最小高度 180px（卡内含内容时可更高——几何下限判据；空集显式判红：`Math.min()` 空数组 = Infinity；谓词取自共享登记表 `B12b-tile-min-height`）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "tileH": 180,
+        "cardHeights": [
+          239.4,
+          239.4,
+          239.4,
+          211.4,
+          211.4,
+          211.4,
+          211.4,
+          211.4
+        ],
+        "emptySet": false,
+        "predicateId": "B12b-tile-min-height"
+      },
+      "at": "2026-09-14T05:14:00.400Z"
+    },
+    {
+      "id": "B13-stale-card-dot",
+      "area": "数据/绑定",
+      "label": "失效绑定卡的双圆 = stale（data-bound=stale，UX-006 状态光效/双圆语义）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "staleDot": "stale"
+      },
+      "at": "2026-09-14T05:14:00.400Z"
+    },
+    {
+      "id": "B14-sort-two-state",
+      "area": "控制台/排序",
+      "label": "排序两态（默认/手动）+ 手动态卡片可拖（draggable=true，UX-008⑤）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "sortState": {
+          "n": 2,
+          "labels": [
+            "默认",
+            "手动"
+          ],
+          "on": [
+            "true",
+            null
+          ]
+        },
+        "manualState": {
+          "on": [
+            null,
+            "true"
+          ],
+          "draggable": 8
+        }
+      },
+      "at": "2026-09-14T05:14:01.135Z"
+    },
+    {
+      "id": "B15-create-modal",
+      "area": "控制台/弹窗",
+      "label": "＋磁贴 → 居中模态（水平+垂直居中 ≤2px）+ 单输入 autoFocus + 「创建/取消」两钮",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "modalState": {
+          "modal": {
+            "x": 440,
+            "y": 379.5,
+            "w": 520,
+            "h": 141
+          },
+          "backdrop": {
+            "x": 0,
+            "y": 0,
+            "w": 1400,
+            "h": 900
+          },
+          "inputs": 1,
+          "btns": [
+            "",
+            "创建",
+            "取消"
+          ],
+          "focused": {
+            "tag": "INPUT",
+            "cls": "zGbnIq_input"
+          },
+          "title": "＋ 新建小说",
+          "vw": 1400,
+          "vh": 900
+        },
+        "centered": true
+      },
+      "at": "2026-09-14T05:14:01.148Z"
+    },
+    {
+      "id": "B16-create-empty-name",
+      "area": "控制台/弹窗",
+      "label": "空目录名点「创建」→ 表单错误「目录名必填」且弹窗不关（前端守卫，不发请求）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "err": "目录名必填",
+        "open": true
+      },
+      "at": "2026-09-14T05:14:02.054Z"
+    },
+    {
+      "id": "B17-esc-layer-yield",
+      "area": "控制台/Esc",
+      "label": "Esc 在弹窗态只关弹窗（控制台保持打开）——B-1 让位层级",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "modal": false,
+        "console": true
+      },
+      "at": "2026-09-14T05:14:02.769Z"
+    },
+    {
+      "id": "D1-stale-rebind-panel",
+      "area": "数据/绑定",
+      "label": "失效绑定卡 🔗 → 绑定面板（shell.overlay）打开：标题/选择文案/新建会话并绑定 三面齐备，且控制台仍在（浮层之上）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "backdrop": {
+          "x": 0,
+          "y": 0,
+          "w": 1400,
+          "h": 900
+        },
+        "modal": {
+          "x": 460,
+          "y": 363.8,
+          "w": 480,
+          "h": 172.4
+        },
+        "hasTitle": true,
+        "hasPick": true,
+        "hasNew": true,
+        "inputs": 0,
+        "consoleStillOpen": true
+      },
+      "at": "2026-09-14T05:14:02.847Z"
+    },
+    {
+      "id": "D2-esc-bind-yield",
+      "area": "控制台/Esc",
+      "label": "Esc 在绑定面板态只关面板（控制台保持打开）——B-1 让位写实态",
+      "ok": false,
+      "status": "FAIL",
+      "detail": {
+        "modal": true,
+        "console": true
+      },
+      "at": "2026-09-14T05:14:03.694Z"
+    },
+    {
+      "id": "C1-open-from-card",
+      "area": "分栏",
+      "label": "未绑定卡点击 → openCtl 自动链（sessions.create → 预设 → 绑定 → 打开）→ 分栏打开；控制台自动关（互斥）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "splitOpened": true,
+        "consoleOpen": false,
+        "notice": null
+      },
+      "at": "2026-09-14T05:14:05.989Z"
+    },
+    {
+      "id": "C2-split-title",
+      "area": "分栏",
+      "label": "分栏标题 =「📖 小说创作工作台 ·《孤星纪元》」（UX-011 两级工作台命名）",
+      "ok": true,
+      "status": "PASS",
+      "detail": "小说创作工作台 · 《孤星纪元》",
+      "at": "2026-09-14T05:14:05.990Z"
+    },
+    {
+      "id": "C3-squeeze",
+      "area": "分栏/挤法",
+      "label": "挤法生效：对话窗 viewArea 被写入 margin + 显式 width（UX-018 双压）；分栏右缘 = viewArea 左缘",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "viewArea": {
+          "ml": "560px",
+          "mr": "",
+          "w": "560px",
+          "rect": {
+            "x": 840,
+            "y": 0,
+            "w": 560,
+            "h": 900,
+            "right": 1400,
+            "bottom": 900
+          }
+        },
+        "splitRight": 840
+      },
+      "at": "2026-09-14T05:14:05.990Z"
+    },
+    {
+      "id": "C3b-binding-convergence",
+      "area": "数据/绑定",
+      "label": "自动链写入的绑定在会话镜像中收敛（卡片脱离「未绑定/会话失效」）——含「找到的会话」镜像同步探针",
+      "ok": false,
+      "status": "FAIL",
+      "detail": {
+        "converged": false,
+        "first": {
+          "t": 1789362845991,
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false,
+          "split": true,
+          "bar": true,
+          "consoleEl": false
+        },
+        "last": {
+          "t": 1789362858088,
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false,
+          "split": true,
+          "bar": true,
+          "consoleEl": false
+        },
+        "sessionRowsProbe": {
+          "deferred": true,
+          "note": "会话镜像探针移至全部场景之后（§16）执行——中途开关控制台会触发控制台↔分栏互斥，破坏后续分栏前置条件"
+        },
+        "overviewProbe": {
+          "status": 200,
+          "root": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-probe-WcBMlz\\novels",
+          "bindings": {
+            "nn-stale-bound": "session-does-not-exist-clean004",
+            "zz-first-probe": "session-22721558-1eda-4029-bcfc-d2b3c40d7a5e"
+          },
+          "novels": [
+            "zz-first-probe",
+            "aa-second-probe",
+            "mm-third-probe",
+            "nn-stale-bound",
+            "bb-fourth-probe",
+            "cc-fifth-probe",
+            "dd-sixth-probe",
+            "ee-seventh-probe",
+            "ff-eighth-probe",
+            "gg-ninth-probe"
+          ]
+        },
+        "settingsYaml": "novel-writing:\n  workspaceRoot: C:/Users/peter/AppData/Local/Temp/clean004-probe-WcBMlz/novels\n  bindings:\n    nn-stale-bound: session-does-not-exist-clean004\n    zz-first-probe: session-22721558-1eda-4029-bcfc-d2b3c40d7a5e\nui-onboarding:\n  welcomeNoticeVersion: 2026-08-13.1\n",
+        "sessionDirs": [
+          "--C-Users-peter-AppData-Local-Temp-clean004-probe-WcBMlz-novels--"
+        ]
+      },
+      "at": "2026-09-14T05:14:18.102Z"
+    },
+    {
+      "id": "C4-bar-ctls",
+      "area": "分栏",
+      "label": "标题栏含 ⇄ 换边 / ☆ 设为默认 / ⟳ 恢复默认 / ✕ 关闭 四个控件（aria-label 齐备）",
+      "ok": true,
+      "status": "PASS",
+      "detail": [
+        "对话窗换边（左/右）",
+        "恢复默认布局",
+        "将当前布局设为默认",
+        "关闭分栏（Esc）"
+      ],
+      "at": "2026-09-14T05:14:18.110Z"
+    },
+    {
+      "id": "C5-split-panels",
+      "area": "分栏",
+      "label": "分栏三面齐备：左窗（文件树 + 工作流阶段清单）+ 中窗（章节列/正文/数据·发布·请求页签）+ 三条常驻分隔线（.nv-vdiv/.nv-middiv/.nv-chdiv）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "left": {
+          "x": 281,
+          "y": 39,
+          "w": 240,
+          "h": 860,
+          "right": 521
+        },
+        "vdiv": {
+          "x": 519,
+          "y": 39,
+          "w": 4,
+          "h": 860,
+          "right": 523
+        },
+        "middiv": {
+          "x": 521,
+          "y": 637,
+          "w": 318,
+          "h": 4,
+          "right": 839
+        },
+        "chdiv": {
+          "x": 691,
+          "y": 49,
+          "w": 4,
+          "h": 588,
+          "right": 695
+        },
+        "chatdiv": {
+          "x": 838,
+          "y": 38,
+          "w": 4,
+          "h": 862,
+          "right": 842
+        },
+        "wfctl": {
+          "x": 531,
+          "y": 642,
+          "w": 160,
+          "h": 257,
+          "right": 691
+        },
+        "tabs": [
+          "数据",
+          "发布",
+          "请求"
+        ],
+        "wfButtons": [
+          {
+            "t": "继续工作流",
+            "mode": "go",
+            "disabled": false
+          },
+          {
+            "t": "压缩上下文",
+            "mode": null,
+            "disabled": false
+          },
+          {
+            "t": "绑定新会话",
+            "mode": null,
+            "disabled": false
+          }
+        ],
+        "chrows": 1,
+        "ftrows": 2,
+        "wfrows": 19,
+        "wfCur": 1
+      },
+      "at": "2026-09-14T05:14:18.127Z"
+    },
+    {
+      "id": "C6-wfctl-bar",
+      "area": "工作流面板",
+      "label": "下半区工作流控制条：主按钮（go/stop 形态）+「压缩上下文」+「绑定新会话」（UX-059）",
+      "ok": true,
+      "status": "PASS",
+      "detail": [
+        {
+          "t": "继续工作流",
+          "mode": "go",
+          "disabled": false
+        },
+        {
+          "t": "压缩上下文",
+          "mode": null,
+          "disabled": false
+        },
+        {
+          "t": "绑定新会话",
+          "mode": null,
+          "disabled": false
+        }
+      ],
+      "at": "2026-09-14T05:14:18.127Z"
+    },
+    {
+      "id": "C7-divider-drag-persist",
+      "area": "分栏/分隔线",
+      "label": "拖拽竖分隔线 → 左窗宽增大且持久化同步（dsh.novel.split.v1.leftW 与实测差 ≤2px）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "beforeDrag": {
+          "w": 240
+        },
+        "afterDrag": {
+          "w": 301,
+          "parsed": {
+            "leftW": 301,
+            "chatW": 560,
+            "chapterW": 160,
+            "midH": null,
+            "chatSide": "right"
+          }
+        }
+      },
+      "at": "2026-09-14T05:14:19.061Z"
+    },
+    {
+      "id": "C8-close-x",
+      "area": "分栏/关闭",
+      "label": "标题栏 ✕ → 分栏关闭且对话窗挤法还原（marginLeft 恢复空、宽度回满）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "closed": {
+          "split": false,
+          "bar": false
+        },
+        "closedGeom": {
+          "ml": "",
+          "w": "",
+          "rect": {
+            "x": 280,
+            "w": 1120
+          }
+        },
+        "splitOpenBeforeClose": true
+      },
+      "at": "2026-09-14T05:14:20.080Z"
+    },
+    {
+      "id": "C9-width-memory",
+      "area": "分栏/分隔线",
+      "label": "关闭后重开 → 左窗宽按存档恢复（宽度记忆，偏差 ≤2px）",
+      "ok": false,
+      "status": "FAIL",
+      "detail": {
+        "reason": "分栏重开失败",
+        "settleToBound": false,
+        "settleDiag": {
+          "hostSidebarSlice": "新会话\n工作区\nnovels\n新会话\n小说管理工作台\n孤星纪元\noutline_writing · 3章 · 1200字 · 会话失效\n青禾纪事\n未开始 · 0章 · 0字 · 未绑定\n长风渡\ncontent_generation · 12",
+          "hostHasNoSessions": false,
+          "drawerSubs": [
+            "outline_writing · 3章 · 1200字 · 会话失效",
+            "未开始 · 0章 · 0字 · 未绑定",
+            "content_generation · 12章 · 34000字 · 未绑定",
+            "creation_planning · 5章 · 9000字 · 会话失效",
+            "outline_writing · 1章 · 2000字 · 未绑定",
+            "outline_writing · 2章 · 4000字 · 未绑定",
+            "outline_writing · 4章 · 8000字 · 未绑定",
+            "outline_writing · 6章 · 11000字 · 未绑定",
+            "outline_writing · 7章 · 13000字 · 未绑定",
+            "outline_writing · 8章 · 15000字 · 未绑定"
+          ],
+          "staleCount": 2
+        },
+        "bindPanelWasOpen": true,
+        "reopenAttempt": {
+          "clicked": true,
+          "subBefore": "outline_writing · 3章 · 1200字 · 会话失效"
+        },
+        "reopenDiag": {
+          "split": false,
+          "bar": false,
+          "console": false,
+          "bindPanel": true,
+          "drawerNotice": null,
+          "barNotice": null,
+          "drawerSubs": [
+            "outline_writing · 3章 · 1200字 · 会话失效",
+            "未开始 · 0章 · 0字 · 未绑定",
+            "content_generation · 12章 · 34000字 · 未绑定",
+            "creation_planning · 5章 · 9000字 · 会话失效",
+            "outline_writing · 1章 · 2000字 · 未绑定",
+            "outline_writing · 2章 · 4000字 · 未绑定",
+            "outline_writing · 4章 · 8000字 · 未绑定",
+            "outline_writing · 6章 · 11000字 · 未绑定",
+            "outline_writing · 7章 · 13000字 · 未绑定",
+            "outline_writing · 8章 · 15000字 · 未绑定"
+          ]
+        }
+      },
+      "at": "2026-09-14T05:16:12.460Z"
+    },
+    {
+      "id": "C10-flip-side",
+      "area": "分栏/换边",
+      "label": "⇄ 换边 → chatSide right→left 且持久化；挤法边距换侧；分栏未自关（UX-014 sameMargin 容差回归）",
+      "ok": false,
+      "status": "FAIL",
+      "detail": {
+        "sideBefore": {
+          "chatSide": "right",
+          "ml": "",
+          "mr": ""
+        },
+        "sideAfter": {
+          "chatSide": "right",
+          "ml": "",
+          "mr": "",
+          "splitOpen": false
+        }
+      },
+      "at": "2026-09-14T05:16:13.876Z"
+    },
+    {
+      "id": "C11-flip-back",
+      "area": "分栏/换边",
+      "label": "⇄ 再点 → 回到 chatSide=right（两态可逆；须先确认 ⇄ 确实被点击；谓词取自共享登记表 `C11-flip-back`）",
+      "ok": false,
+      "status": "N-A",
+      "detail": {
+        "flipBackClick": false,
+        "sideBack": {
+          "leftW": 301,
+          "chatW": 560,
+          "chapterW": 160,
+          "midH": null,
+          "chatSide": "right"
+        },
+        "sideBackSplitOpen": false,
+        "predicateId": "C11-flip-back"
+      },
+      "at": "2026-09-14T05:16:15.081Z"
+    },
+    {
+      "id": "E1-short-notice-compact",
+      "area": "notice",
+      "label": "短提示（≤24 字符，`NOTICE_INLINE_MAX`）走紧凑单行承载：在场 ∧ data-form=row ∧ 单行 ∧ title 置空 ∧ 无横向/纵向溢出（`title` 置空 = 不靠 tooltip 兜底；像素读数 `h` 仅记录不判定）——UX-060 短提示零变化；触发 = 幂等动作（恢复/设为默认）；谓词取自共享登记表 `E1-short-notice-compact`",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "shortState": {
+          "cls": "nv-notice",
+          "form": "row",
+          "kind": "ok",
+          "text": "已恢复默认布局",
+          "titleAttr": "",
+          "h": 29,
+          "w": 558,
+          "insideBar": false,
+          "barCount": 1,
+          "lines": 1,
+          "overflow": {
+            "sw": 558,
+            "cw": 558,
+            "sh": 28,
+            "ch": 28
+          }
+        },
+        "restoreClicked": {
+          "clicked": true,
+          "label": "恢复默认布局"
+        },
+        "shortIsCompact": true,
+        "shortMeasured": {
+          "present": true,
+          "form": "row",
+          "lines": 1,
+          "titleAttr": "",
+          "overflow": {
+            "sw": 558,
+            "cw": 558,
+            "sh": 28,
+            "ch": 28
+          }
+        },
+        "predicateId": "E1-short-notice-compact",
+        "hThresholdNote": "R2 N-04：h<=32 已降为非判定读数"
+      },
+      "at": "2026-09-14T05:16:26.733Z"
+    },
+    {
+      "id": "E2-long-notice-flow",
+      "area": "notice",
+      "label": "长 err 提示走标题栏下方 in-flow 流式面：data-form=block、不在标题栏内、多行、pre-wrap 无截断、有关闭钮、title 置空、首尾文案逐字（UX-060）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "form": "block",
+        "insideBar": false,
+        "lines": 4,
+        "overflow": {
+          "sw": 558,
+          "cw": 558,
+          "sh": 72,
+          "ch": 72
+        },
+        "titleAttr": "",
+        "whiteSpace": "pre-wrap",
+        "len": 259,
+        "prefixOk": true,
+        "suffixOk": true,
+        "injections": {
+          "count": 1,
+          "enabled": false
+        }
+      },
+      "at": "2026-09-14T05:16:27.922Z"
+    },
+    {
+      "id": "E3-long-notice-geometry",
+      "area": "notice",
+      "label": "长提示与标题/控件交集 = 0；位于标题栏之下；不覆盖下方首屏内容（章节行/当前阶段行）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "interTitle": 0,
+        "interCtlMax": 0,
+        "y": 39,
+        "barBottom": 39,
+        "belowContent": true
+      },
+      "at": "2026-09-14T05:16:27.922Z"
+    },
+    {
+      "id": "E4-notice-close",
+      "area": "notice",
+      "label": "长提示关闭钮 → 提示消失（关闭钮语义可用）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "notice": false,
+        "chip": false
+      },
+      "at": "2026-09-14T05:16:28.711Z"
+    },
+    {
+      "id": "F1-split-claim-event",
+      "area": "共存互斥",
+      "label": "分栏打开路径派发 dsh:split-claim 占用声明（detail.id=novel-writing）——dsh-worktable 互操作协议面（client.js L1045-1056）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "claim": {
+          "claims": [
+            "novel-writing"
+          ],
+          "barBefore": true,
+          "barClosed": true,
+          "reopened": true,
+          "taSplitClose": 0
+        },
+        "interopPrep": {
+          "ok": true,
+          "reason": "already-open"
+        }
+      },
+      "at": "2026-09-14T05:16:32.488Z"
+    },
+    {
+      "id": "D3-mutual-exclusion",
+      "area": "控制台/分栏",
+      "label": "控制台与分栏互斥：分栏**先在场**，点抽屉标题行开控制台 → 分栏被这次动作关掉（DEC-015；前置不成立则记 N-A；谓词取自共享登记表 `D3-mutual-exclusion`）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "barOpenBefore": true,
+        "consoleOpen": true,
+        "barOpenAfter": false,
+        "d3Prep": {
+          "ok": true,
+          "reason": "already-open"
+        },
+        "predicateId": "D3-mutual-exclusion"
+      },
+      "at": "2026-09-14T05:16:34.304Z"
+    },
+    {
+      "id": "D4-auto-create-book-persisted",
+      "area": "数据/绑定",
+      "label": "自动链新建的会话已绑定：新书进入书目（总 11 本，折叠后 8 卡）且抽屉卡状态收敛为非「未绑定/会话失效」",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "afterCreate": {
+          "cards": 8,
+          "id": [
+            "zz-first-probe",
+            "aa-second-probe",
+            "mm-third-probe",
+            "nn-stale-bound",
+            "bb-fourth-probe",
+            "cc-fifth-probe",
+            "dd-sixth-probe",
+            "ee-seventh-probe"
+          ],
+          "fold": "展开全部（2）",
+          "drawerCards": 10,
+          "drawerSubs": [
+            "outline_writing · 3章 · 1200字",
+            "未开始 · 0章 · 0字 · 未绑定",
+            "content_generation · 12章 · 34000字",
+            "creation_planning · 5章 · 9000字 · 会话失效",
+            "outline_writing · 1章 · 2000字 · 未绑定",
+            "outline_writing · 2章 · 4000字 · 未绑定",
+            "outline_writing · 4章 · 8000字 · 未绑定",
+            "outline_writing · 6章 · 11000字 · 未绑定",
+            "outline_writing · 7章 · 13000字 · 未绑定",
+            "outline_writing · 8章 · 15000字 · 未绑定"
+          ]
+        },
+        "autoCreateBound": {
+          "sub": "outline_writing · 3章 · 1200字",
+          "bound": true
+        }
+      },
+      "at": "2026-09-14T05:16:37.313Z"
+    },
+    {
+      "id": "D5-sessions-present",
+      "area": "降级态",
+      "label": "会话服务可用性以产品自身 `degraded` 派生渲染面为准（L3148/L2893/L4034）：服务可用 ⇒ 抽屉双圆与控制台双圆**同时**在场；二者皆无 ⇒ 服务缺席分支（本实例该分支不可达 ⇒ 记 N-A，不冒充可判别 PASS）；谓词取自共享登记表 `D5-sessions-present`",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "consoleDots": 8,
+        "consoleCards": 8,
+        "drawerCards": 10,
+        "drawerDots": 10,
+        "barDegradedChip": false,
+        "drawerNoSessionCue": false,
+        "serviceSignal": true,
+        "serviceAbsent": false,
+        "degradedBranchReachable_analytic": false,
+        "degradedBranchReachable_analytic_source": "分析：隔离平面的宿主必然提供 sessions 服务（useSessions!==null）⇒ 产品 degraded 分支不可达；归口 checklist §9 R-03 / U-12",
+        "degradedBranchReachable_measured": false,
+        "degradedBranchReachable_measured_source": "实测：本运行未观测到任何「服务缺席」信号（degradedProbe 的 dot/chip/innerText 三面皆无缺席线索）",
+        "legacyPredicate": true,
+        "predicateId": "D5-sessions-present"
+      },
+      "at": "2026-09-14T05:16:37.315Z"
+    },
+    {
+      "id": "B21a-search-find-sessions",
+      "area": "控制台/搜索",
+      "label": "关键词（取自宿主已认可会话的 UI 展示串 / 镜像 displayTitle，必然命中 `displayTitle ?? id`）→ 「找到的会话」MUST 渲染 ≥1 行且行标题可核；镜像本体为空或 0 行 ⇒ FAIL（R2 N-01 前提重设计；谓词取自共享登记表 `B21a-search-find-sessions`）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "ackComplete": true,
+        "kwOk": true,
+        "effectiveKeyword": "session-22721558-1eda-4029-bcfc-d2b3c40d7a5e",
+        "keywordSource": "host-approved-ui-id",
+        "ids": null,
+        "displayTitle": null,
+        "rows": 1,
+        "rowTitles": [
+          "novels"
+        ],
+        "titleOk": true,
+        "mirrorBodyReachable": false,
+        "sessionRows": {
+          "kw": "session-22721558-1eda-4029-bcfc-d2b3c40d7a5e",
+          "foundTitle": "找到的会话（1）",
+          "cfoundPresent": true,
+          "rows": [
+            {
+              "t": "novels",
+              "sub": ""
+            }
+          ],
+          "cards": 0
+        },
+        "hostRowsAtB21": {
+          "count": 0,
+          "withText": 0,
+          "titles": [],
+          "selectorPresent": false,
+          "projectRows": 1,
+          "noSessionsText": false
+        },
+        "expectedIds": [
+          "session-22721558-1eda-4029-bcfc-d2b3c40d7a5e",
+          "session-22721558-1eda-4029-bcfc-d2b3c40d7a5e",
+          "session-e8df27a0-7c7c-46ee-b69c-8db255124998",
+          "session-22721558-1eda-4029-bcfc-d2b3c40d7a5e",
+          "session-e8df27a0-7c7c-46ee-b69c-8db255124998"
+        ],
+        "mirrorBody": {
+          "reachable": false,
+          "reason": "no-mirror-node-found",
+          "realms": 1,
+          "scanned": 724
+        },
+        "keywordPlan": [
+          {
+            "source": "host-approved-ui-id",
+            "kw": "session-22721558-1eda-4029-bcfc-d2b3c40d7a5e"
+          },
+          {
+            "source": "mirror-displayTitle",
+            "kw": null
+          },
+          {
+            "source": "host-approved-id-fallback",
+            "kw": "session-22721558-1eda-4029-bcfc-d2b3c40d7a5e"
+          }
+        ],
+        "predicateId": "B21a-search-find-sessions"
+      },
+      "at": "2026-09-14T05:16:39.732Z"
+    },
+    {
+      "id": "B22-session-row-opens",
+      "area": "控制台/搜索",
+      "label": "点「找到的会话」行 → 打开该会话并关闭控制台（launcher.open + 关控制台）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "clicked": true,
+        "consoleOpen": false
+      },
+      "at": "2026-09-14T05:16:41.737Z"
+    },
+    {
+      "id": "D6-session-switch-close",
+      "area": "降级态/会话联动",
+      "label": "宿主侧栏切换会话 → 控制台自动关闭（前置未取得：本机宿主侧栏**无会话行**（`hostRowsBefore=0`，本机只有「新建会话」入口）⇒ 无「切换」动作可构造 ⇒ 如实记 N-A，不据「新建」按钮判 FAIL）",
+      "ok": false,
+      "status": "N-A",
+      "detail": {
+        "navProbe": {
+          "clicked": true,
+          "before": {
+            "consoleOpen": true,
+            "barOpen": false
+          },
+          "hostRowsBefore": 0,
+          "hostRowsAfter": 0,
+          "after": {
+            "consoleOpen": true,
+            "barOpen": false
+          },
+          "cand": 1,
+          "source": "newSession-button"
+        },
+        "d6ConsolePre": {
+          "clicks": 1,
+          "consoleOpen": true
+        },
+        "reason": "hostRowsBefore=0：无宿主会话行，切换动作不可构造（归入 checklist §9 R-04 + U-13）"
+      },
+      "at": "2026-09-14T05:16:46.079Z"
+    },
+    {
+      "id": "B21b-search-find-sessions-retest",
+      "area": "控制台/搜索",
+      "label": "收尾复测（控制台已在场）：以「宿主已认可会话的实际展示串」为关键词检索 ⇒ MUST 渲染 ≥1 行且行标题可核；镜像本体为空或 0 行 ⇒ FAIL（R2 N-01 前提重设计；谓词取自共享登记表 `B21b-search-find-sessions-retest`）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "ackComplete": true,
+        "consoleOpen": true,
+        "kwOk": true,
+        "effectiveKeyword": "session-22721558-1eda-4029-bcfc-d2b3c40d7a5e",
+        "keywordSource": "host-approved-ui-id",
+        "ids": null,
+        "displayTitle": null,
+        "rows": 1,
+        "rowTitles": [
+          "novels"
+        ],
+        "titleOk": true,
+        "mirrorBodyReachable": false,
+        "mirrorProbe": {
+          "consoleOpen": true,
+          "attempts": 0,
+          "kw": "session-22721558-1eda-4029-bcfc-d2b3c40d7a5e",
+          "mirrorBody": {
+            "reachable": false,
+            "reason": "no-mirror-node-found",
+            "realms": 1,
+            "scanned": 513
+          },
+          "found": "找到的会话（1）",
+          "rows": [
+            "novels"
+          ],
+          "cards": 0
+        },
+        "predicateId": "B21b-search-find-sessions-retest"
+      },
+      "at": "2026-09-14T05:16:48.771Z"
+    },
+    {
+      "id": "FALSIFIABILITY-PROOF",
+      "area": "测试资产",
+      "label": "新/改谓词的「构造反例即红」自证：共享登记表（`PREDICATE_REGISTRY`）逐条谓词 MUST 对 ≥1 反例向量求值为 false、对 ≥1 正例向量求值为 true（无恒真分支），且 MUST 在源码面有 ≥1 处 `evalPred` 部署消费点（同源）；运行期被走到的谓词其函数源指纹 MUST 与自证面逐字一致",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "vectorTally": {
+          "red": 19,
+          "ok": 11
+        },
+        "staticSites": {
+          "B5-found-sessions-area": 1,
+          "D3-mutual-exclusion": 1,
+          "C-face-availability": 1,
+          "B21a-search-find-sessions": 1,
+          "B21b-search-find-sessions-retest": 1,
+          "B12b-tile-min-height": 1,
+          "D5-sessions-present": 1,
+          "E1-short-notice-compact": 1,
+          "C11-flip-back": 1
+        },
+        "runtimeSites": {
+          "B5-found-sessions-area": {
+            "count": 1,
+            "sha": "7a340893be7bba5f2aae146da29ae014aa90f63dd5f9ffdeab4013309d6269d5"
+          },
+          "B12b-tile-min-height": {
+            "count": 1,
+            "sha": "5c873eb3819e04af8e604c46548fa2a7a7a51b1f1986a4b56840ca44a373c7e3"
+          },
+          "C11-flip-back": {
+            "count": 1,
+            "sha": "e0c1df1c48dcd2fa7d2e4d218e76e68646e2e237ce58f1f065ae32158ca7ae7c"
+          },
+          "E1-short-notice-compact": {
+            "count": 1,
+            "sha": "aee6c26c8e030496bfd41844855637f7104eb58a34ee9a773ee423f520577439"
+          },
+          "D3-mutual-exclusion": {
+            "count": 1,
+            "sha": "40e18f9eaee8d571df7d75d3f2f1fce53724ddd251ce9ac8c0d43f19d6034852"
+          },
+          "D5-sessions-present": {
+            "count": 1,
+            "sha": "00074b9843ab309637a4a6708f2538ec590ce2ea896a955134255455464067ea"
+          },
+          "B21a-search-find-sessions": {
+            "count": 1,
+            "sha": "d85906dd565dfbd6ea1d7cc68412859106504ee20541ae65ed0815a453ba8961"
+          },
+          "B21b-search-find-sessions-retest": {
+            "count": 1,
+            "sha": "fe552b7b96de7b920eb4f7cc960a2b907f3f31549330846afb36c037b0f7b5f0"
+          }
+        },
+        "summary": [
+          {
+            "id": "B5-found-sessions-area",
+            "finding": "F-01",
+            "fnSha256": "7a340893be7b",
+            "staticBound": true,
+            "staticCallSites": 1,
+            "runtimeCallSites": 1,
+            "redCount": 1,
+            "okCount": 1,
+            "redsAllFalse": true,
+            "oksAllTrue": true,
+            "pass": true
+          },
+          {
+            "id": "D3-mutual-exclusion",
+            "finding": "F-02",
+            "fnSha256": "40e18f9eaee8",
+            "staticBound": true,
+            "staticCallSites": 1,
+            "runtimeCallSites": 1,
+            "redCount": 2,
+            "okCount": 1,
+            "redsAllFalse": true,
+            "oksAllTrue": true,
+            "pass": true
+          },
+          {
+            "id": "C-face-availability",
+            "finding": "F-06",
+            "fnSha256": "62dee9f9327d",
+            "staticBound": true,
+            "staticCallSites": 1,
+            "runtimeCallSites": 0,
+            "redCount": 1,
+            "okCount": 2,
+            "redsAllFalse": true,
+            "oksAllTrue": true,
+            "pass": true
+          },
+          {
+            "id": "B21a-search-find-sessions",
+            "finding": "F-03 → R2 N-01/N-03 重设计",
+            "fnSha256": "d85906dd565d",
+            "staticBound": true,
+            "staticCallSites": 1,
+            "runtimeCallSites": 1,
+            "redCount": 3,
+            "okCount": 1,
+            "redsAllFalse": true,
+            "oksAllTrue": true,
+            "pass": true
+          },
+          {
+            "id": "B21b-search-find-sessions-retest",
+            "finding": "F-03 → R2 N-01/N-03 重设计",
+            "fnSha256": "fe552b7b96de",
+            "staticBound": true,
+            "staticCallSites": 1,
+            "runtimeCallSites": 1,
+            "redCount": 3,
+            "okCount": 1,
+            "redsAllFalse": true,
+            "oksAllTrue": true,
+            "pass": true
+          },
+          {
+            "id": "B12b-tile-min-height",
+            "finding": "F-11",
+            "fnSha256": "5c873eb3819e",
+            "staticBound": true,
+            "staticCallSites": 1,
+            "runtimeCallSites": 1,
+            "redCount": 2,
+            "okCount": 1,
+            "redsAllFalse": true,
+            "oksAllTrue": true,
+            "pass": true
+          },
+          {
+            "id": "D5-sessions-present",
+            "finding": "F-11",
+            "fnSha256": "00074b9843ab",
+            "staticBound": true,
+            "staticCallSites": 1,
+            "runtimeCallSites": 1,
+            "redCount": 2,
+            "okCount": 2,
+            "redsAllFalse": true,
+            "oksAllTrue": true,
+            "pass": true
+          },
+          {
+            "id": "E1-short-notice-compact",
+            "finding": "F-04（UX-060 短形态；原为 N-A ⇒ 本轮首次取得）",
+            "fnSha256": "aee6c26c8e03",
+            "staticBound": true,
+            "staticCallSites": 1,
+            "runtimeCallSites": 1,
+            "redCount": 4,
+            "okCount": 1,
+            "redsAllFalse": true,
+            "oksAllTrue": true,
+            "pass": true
+          },
+          {
+            "id": "C11-flip-back",
+            "finding": "空真追加项（R1 §3.1 单列）",
+            "fnSha256": "e0c1df1c48dc",
+            "staticBound": true,
+            "staticCallSites": 1,
+            "runtimeCallSites": 1,
+            "redCount": 1,
+            "okCount": 1,
+            "redsAllFalse": true,
+            "oksAllTrue": true,
+            "pass": true
+          }
+        ],
+        "detail": [
+          {
+            "id": "B5-found-sessions-area",
+            "finding": "F-01",
+            "fnSha256": "7a340893be7bba5f2aae146da29ae014aa90f63dd5f9ffdeab4013309d6269d5",
+            "redCount": 1,
+            "okCount": 1,
+            "deployment": {
+              "staticCallSites": 1,
+              "staticBound": true,
+              "runtimeCallSites": 1,
+              "fnSha256": "7a340893be7bba5f2aae146da29ae014aa90f63dd5f9ffdeab4013309d6269d5",
+              "consumed": true
+            },
+            "redResults": [
+              {
+                "vector": "red",
+                "note": "宿主侧栏确有会话行 ∧ 本区未渲染（R1 认定的反例）",
+                "result": false
+              }
+            ],
+            "okResults": [
+              {
+                "vector": "ok",
+                "note": "宿主有会话行 ∧ 本区渲染 ≥1 行",
+                "result": true
+              }
+            ],
+            "redsAllFalse": true,
+            "oksAllTrue": true,
+            "pass": true
+          },
+          {
+            "id": "D3-mutual-exclusion",
+            "finding": "F-02",
+            "fnSha256": "40e18f9eaee8d571df7d75d3f2f1fce53724ddd251ce9ac8c0d43f19d6034852",
+            "redCount": 2,
+            "okCount": 1,
+            "deployment": {
+              "staticCallSites": 1,
+              "staticBound": true,
+              "runtimeCallSites": 1,
+              "fnSha256": "40e18f9eaee8d571df7d75d3f2f1fce53724ddd251ce9ac8c0d43f19d6034852",
+              "consumed": true
+            },
+            "redResults": [
+              {
+                "vector": "red",
+                "note": "R1 记录运行实测：前置不成立（分栏未在场）⇒ 后件先于动作成立",
+                "result": false
+              },
+              {
+                "vector": "red2",
+                "note": "产品不再互斥：开控制台后分栏仍在场",
+                "result": false
+              }
+            ],
+            "okResults": [
+              {
+                "vector": "ok",
+                "note": "分栏先在场 → 开控制台 → 分栏被关",
+                "result": true
+              }
+            ],
+            "redsAllFalse": true,
+            "oksAllTrue": true,
+            "pass": true
+          },
+          {
+            "id": "C-face-availability",
+            "finding": "F-06",
+            "fnSha256": "62dee9f9327d78a9f524f0d735c813f859c5864651a4c995d3a309262abb0518",
+            "redCount": 1,
+            "okCount": 2,
+            "deployment": {
+              "staticCallSites": 1,
+              "staticBound": true,
+              "runtimeCallSites": 0,
+              "fnSha256": null,
+              "consumed": false
+            },
+            "redResults": [
+              {
+                "vector": "red",
+                "note": "C1 曾观测分栏打开而 C5 时刻不在场 ⇒ 打开后自发关闭（回归）",
+                "result": false
+              }
+            ],
+            "okResults": [
+              {
+                "vector": "ok",
+                "note": "分栏仍在场（正常）",
+                "result": true
+              },
+              {
+                "vector": "ok2",
+                "note": "从未打开过（N-A，非 FAIL）",
+                "result": true
+              }
+            ],
+            "redsAllFalse": true,
+            "oksAllTrue": true,
+            "pass": true
+          },
+          {
+            "id": "B21a-search-find-sessions",
+            "finding": "F-03 → R2 N-01/N-03 重设计",
+            "fnSha256": "d85906dd565dfbd6ea1d7cc68412859106504ee20541ae65ed0815a453ba8961",
+            "redCount": 3,
+            "okCount": 1,
+            "deployment": {
+              "staticCallSites": 1,
+              "staticBound": true,
+              "runtimeCallSites": 1,
+              "fnSha256": "d85906dd565dfbd6ea1d7cc68412859106504ee20541ae65ed0815a453ba8961",
+              "consumed": true
+            },
+            "redResults": [
+              {
+                "vector": "red",
+                "note": "宿主已认可该会话 ∧ 检索 0 行 ⇒ 镜像/消费面未反映宿主会话（D-3 主张的原形）",
+                "result": false
+              },
+              {
+                "vector": "red2",
+                "note": "有行但行标题缺失（渲染面损坏）",
+                "result": false
+              },
+              {
+                "vector": "red3",
+                "note": "检索前提缺失（关键词不可得）∧ 0 行 ⇒ 不可判为绿",
+                "result": false
+              }
+            ],
+            "okResults": [
+              {
+                "vector": "ok",
+                "note": "关键词命中 ⇒ 渲染 ≥1 行且行标题可核（记录运行实测形态：1 行）",
+                "result": true
+              }
+            ],
+            "redsAllFalse": true,
+            "oksAllTrue": true,
+            "pass": true
+          },
+          {
+            "id": "B21b-search-find-sessions-retest",
+            "finding": "F-03 → R2 N-01/N-03 重设计",
+            "fnSha256": "fe552b7b96de7b920eb4f7cc960a2b907f3f31549330846afb36c037b0f7b5f0",
+            "redCount": 3,
+            "okCount": 1,
+            "deployment": {
+              "staticCallSites": 1,
+              "staticBound": true,
+              "runtimeCallSites": 1,
+              "fnSha256": "fe552b7b96de7b920eb4f7cc960a2b907f3f31549330846afb36c037b0f7b5f0",
+              "consumed": true
+            },
+            "redResults": [
+              {
+                "vector": "red",
+                "note": "控制台在场 ∧ 检索 0 行（复测同果）",
+                "result": false
+              },
+              {
+                "vector": "red2",
+                "note": "检索前提缺失（关键词不可得）∧ 0 行 ⇒ 不可判绿",
+                "result": false
+              },
+              {
+                "vector": "red3",
+                "note": "控制台未取得 ⇒ 该分支由断言显式记 N-A；若控制台缺席却仍按 PASS 口径评估 ⇒ 谓词必须为 false",
+                "result": false
+              }
+            ],
+            "okResults": [
+              {
+                "vector": "ok",
+                "note": "控制台在场 ∧ 关键词命中并渲染",
+                "result": true
+              }
+            ],
+            "redsAllFalse": true,
+            "oksAllTrue": true,
+            "pass": true
+          },
+          {
+            "id": "B12b-tile-min-height",
+            "finding": "F-11",
+            "fnSha256": "5c873eb3819e04af8e604c46548fa2a7a7a51b1f1986a4b56840ca44a373c7e3",
+            "redCount": 2,
+            "okCount": 1,
+            "deployment": {
+              "staticCallSites": 1,
+              "staticBound": true,
+              "runtimeCallSites": 1,
+              "fnSha256": "5c873eb3819e04af8e604c46548fa2a7a7a51b1f1986a4b56840ca44a373c7e3",
+              "consumed": true
+            },
+            "redResults": [
+              {
+                "vector": "red",
+                "note": "空集：原实现 `Math.min()` = Infinity 恒真（潜在空真）",
+                "result": false
+              },
+              {
+                "vector": "red2",
+                "note": "卡片低于 180px 下限",
+                "result": false
+              }
+            ],
+            "okResults": [
+              {
+                "vector": "ok",
+                "note": "全部 ≥180px",
+                "result": true
+              }
+            ],
+            "redsAllFalse": true,
+            "oksAllTrue": true,
+            "pass": true
+          },
+          {
+            "id": "D5-sessions-present",
+            "finding": "F-11",
+            "fnSha256": "00074b9843ab309637a4a6708f2538ec590ce2ea896a955134255455464067ea",
+            "redCount": 2,
+            "okCount": 2,
+            "deployment": {
+              "staticCallSites": 1,
+              "staticBound": true,
+              "runtimeCallSites": 1,
+              "fnSha256": "00074b9843ab309637a4a6708f2538ec590ce2ea896a955134255455464067ea",
+              "consumed": true
+            },
+            "redResults": [
+              {
+                "vector": "red",
+                "note": "服务缺席却仍渲染双圆（原 `cdot>=1` 判据在此为真 ⇒ 掩盖降级）",
+                "result": false
+              },
+              {
+                "vector": "red2",
+                "note": "服务可用信号在场但控制台卡双圆缺失（该面渲染回归）",
+                "result": false
+              }
+            ],
+            "okResults": [
+              {
+                "vector": "ok",
+                "note": "服务可用 ⇒ 抽屉与控制台双圆同时在场",
+                "result": true
+              },
+              {
+                "vector": "ok2",
+                "note": "服务缺席 ⇒ 无任何双圆（缺席分支的合法观测）",
+                "result": true
+              }
+            ],
+            "redsAllFalse": true,
+            "oksAllTrue": true,
+            "pass": true
+          },
+          {
+            "id": "E1-short-notice-compact",
+            "finding": "F-04（UX-060 短形态；原为 N-A ⇒ 本轮首次取得）",
+            "fnSha256": "aee6c26c8e030496bfd41844855637f7104eb58a34ee9a773ee423f520577439",
+            "redCount": 4,
+            "okCount": 1,
+            "deployment": {
+              "staticCallSites": 1,
+              "staticBound": true,
+              "runtimeCallSites": 1,
+              "fnSha256": "aee6c26c8e030496bfd41844855637f7104eb58a34ee9a773ee423f520577439",
+              "consumed": true
+            },
+            "redResults": [
+              {
+                "vector": "red",
+                "note": "短提示被渲染成 block（当长告警处理）",
+                "result": false
+              },
+              {
+                "vector": "red2",
+                "note": "短提示不在场（提示通道未渲染）",
+                "result": false
+              },
+              {
+                "vector": "red3",
+                "note": "短提示单行但横向溢出被截断",
+                "result": false
+              },
+              {
+                "vector": "red4",
+                "note": "短提示单行但载体纵向截断（内容高于载体）",
+                "result": false
+              }
+            ],
+            "okResults": [
+              {
+                "vector": "ok",
+                "note": "本轮实测形态：row / 单行 / 无溢出 / 无容器截断",
+                "result": true
+              }
+            ],
+            "redsAllFalse": true,
+            "oksAllTrue": true,
+            "pass": true
+          },
+          {
+            "id": "C11-flip-back",
+            "finding": "空真追加项（R1 §3.1 单列）",
+            "fnSha256": "e0c1df1c48dcd2fa7d2e4d218e76e68646e2e237ce58f1f065ae32158ca7ae7c",
+            "redCount": 1,
+            "okCount": 1,
+            "deployment": {
+              "staticCallSites": 1,
+              "staticBound": true,
+              "runtimeCallSites": 1,
+              "fnSha256": "e0c1df1c48dcd2fa7d2e4d218e76e68646e2e237ce58f1f065ae32158ca7ae7c",
+              "consumed": true
+            },
+            "redResults": [
+              {
+                "vector": "red",
+                "note": "⇄ 未被点击（分栏不在场）而 chatSide 本就为 right —— 原实现记 PASS",
+                "result": false
+              }
+            ],
+            "okResults": [
+              {
+                "vector": "ok",
+                "note": "⇄ 点击成功且回到 right 且分栏仍在",
+                "result": true
+              }
+            ],
+            "redsAllFalse": true,
+            "oksAllTrue": true,
+            "pass": true
+          }
+        ]
+      },
+      "at": "2026-09-14T05:16:48.776Z"
+    },
+    {
+      "id": "Z1-real-env-untouched",
+      "area": "隔离",
+      "label": "真实 $DSH_HOME 零污染（许可面 sha256 逐项一致 + 无「isolated 根流入 settings.yaml」污染签名；用户并发使用造成的活跃面差异单独列明）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "ok": true,
+        "strictDeltas": {},
+        "inventoryDeltas": {},
+        "inventoryDeltaCount": 0,
+        "leakSignature": {
+          "novelWritingWorkspaceRoot": "D:\\AI\\writing",
+          "pointsIntoIsolation": false,
+          "isolationRoot": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-probe-WcBMlz"
+        }
+      },
+      "at": "2026-09-14T05:16:50.105Z"
+    }
+  ],
+  "facts": {
+    "drawer": {
+      "cards": 10,
+      "titles": [
+        "孤星纪元",
+        "青禾纪事",
+        "长风渡",
+        "失效绑定书",
+        "雪落无声",
+        "折戟",
+        "南柯",
+        "北望",
+        "东归",
+        "西行"
+      ],
+      "subs": [
+        "outline_writing · 3章 · 1200字 · 未绑定",
+        "未开始 · 0章 · 0字 · 未绑定",
+        "content_generation · 12章 · 34000字 · 未绑定",
+        "creation_planning · 5章 · 9000字 · 会话失效"
+      ],
+      "dots": [
+        "none",
+        "none",
+        "none",
+        "stale",
+        "none",
+        "none",
+        "none",
+        "none",
+        "none",
+        "none"
+      ],
+      "drawer": {
+        "x": 12,
+        "y": 264,
+        "w": 256,
+        "h": 572,
+        "right": 268
+      },
+      "head": {
+        "x": 12,
+        "y": 273,
+        "w": 256,
+        "h": 29,
+        "right": 268
+      },
+      "card": {
+        "x": 12,
+        "y": 306,
+        "w": 256,
+        "h": 49,
+        "right": 268
+      },
+      "headLabel": "📖 小说管理工作台",
+      "caret": 1
+    },
+    "consoleGeom": {
+      "console": {
+        "x": 280,
+        "y": 0,
+        "w": 1120,
+        "h": 900,
+        "right": 1400,
+        "bottom": 900
+      },
+      "root": {
+        "x": 280,
+        "y": 0,
+        "w": 1120,
+        "h": 900,
+        "right": 1400,
+        "bottom": 900
+      },
+      "sidebar": {
+        "x": 0,
+        "y": 0,
+        "w": 280,
+        "h": 900,
+        "right": 280,
+        "bottom": 900
+      },
+      "rootPhase": "hero",
+      "title": "小说管理工作台",
+      "ws": "未设置工作区 — 点击选择/新建",
+      "wsSwitch": "切换 / 新建工作区…",
+      "mini": "关闭",
+      "search": 1,
+      "cgrid": 0
+    },
+    "filter": {
+      "value": "孤星",
+      "cards": [
+        "zz-first-probe"
+      ],
+      "tiles": 1,
+      "fold": 0,
+      "clear": 1
+    },
+    "sessionSearchPreliminary": {
+      "kw": "新会话",
+      "foundTitle": null,
+      "rows": [],
+      "cards": 0,
+      "hostSidebar": "sessions-present"
+    },
+    "hostSessionRowsAtB5": {
+      "count": 0,
+      "withText": 0,
+      "titles": [],
+      "selectorPresent": false,
+      "projectRows": 1,
+      "noSessionsText": false
+    },
+    "grid": {
+      "count": 8,
+      "fold": "展开全部（2）",
+      "tile": {
+        "x": 297,
+        "y": 871.2,
+        "w": 346.3,
+        "h": 180,
+        "right": 643.3,
+        "bottom": 1051.2
+      },
+      "card0": {
+        "x": 297,
+        "y": 107,
+        "w": 346.3,
+        "h": 239.4,
+        "right": 643.3,
+        "bottom": 346.4
+      },
+      "card0Id": "zz-first-probe",
+      "rowBuckets": {
+        "107": 3,
+        "366": 3,
+        "598": 2
+      },
+      "maxRow": 3,
+      "counts": {
+        "head": 8,
+        "mono": 8,
+        "badge": 8,
+        "chips": 24,
+        "statusChips": 16,
+        "cdot": 8,
+        "actions": 8,
+        "ico": 16,
+        "del": 8,
+        "data": 8,
+        "meta": 8
+      },
+      "chipLabels": [
+        "# 章",
+        "#### 字",
+        "信号 #",
+        "# 字",
+        "## 章",
+        "##### 字"
+      ],
+      "cardHeights": [
+        239.4,
+        239.4,
+        239.4,
+        211.4,
+        211.4,
+        211.4,
+        211.4,
+        211.4
+      ],
+      "icoSizes": [
+        {
+          "x": 574.3,
+          "y": 307.4,
+          "w": 22,
+          "h": 22,
+          "right": 596.3,
+          "bottom": 329.4
+        },
+        {
+          "x": 604.3,
+          "y": 307.4,
+          "w": 22,
+          "h": 22,
+          "right": 626.3,
+          "bottom": 329.4
+        },
+        {
+          "x": 940.7,
+          "y": 307.4,
+          "w": 22,
+          "h": 22,
+          "right": 962.7,
+          "bottom": 329.4
+        },
+        {
+          "x": 970.7,
+          "y": 307.4,
+          "w": 22,
+          "h": 22,
+          "right": 992.7,
+          "bottom": 329.4
+        }
+      ],
+      "legacyOpen": 0,
+      "legacyLaunch": 0,
+      "gridCols": "346.328px 346.328px 346.344px",
+      "gridGap": "20px",
+      "glowCards": [],
+      "staleDot": "stale"
+    },
+    "modal": {
+      "modal": {
+        "x": 440,
+        "y": 379.5,
+        "w": 520,
+        "h": 141
+      },
+      "backdrop": {
+        "x": 0,
+        "y": 0,
+        "w": 1400,
+        "h": 900
+      },
+      "inputs": 1,
+      "btns": [
+        "",
+        "创建",
+        "取消"
+      ],
+      "focused": {
+        "tag": "INPUT",
+        "cls": "zGbnIq_input"
+      },
+      "title": "＋ 新建小说",
+      "vw": 1400,
+      "vh": 900
+    },
+    "bindPanel": {
+      "backdrop": {
+        "x": 0,
+        "y": 0,
+        "w": 1400,
+        "h": 900
+      },
+      "modal": {
+        "x": 460,
+        "y": 363.8,
+        "w": 480,
+        "h": 172.4
+      },
+      "hasTitle": true,
+      "hasPick": true,
+      "hasNew": true,
+      "inputs": 0,
+      "consoleStillOpen": true
+    },
+    "split": {
+      "split": {
+        "x": 280,
+        "y": 0,
+        "w": 560,
+        "h": 900,
+        "right": 840,
+        "bottom": 900
+      },
+      "bar": {
+        "x": 281,
+        "y": 1,
+        "w": 558,
+        "h": 38,
+        "right": 839,
+        "bottom": 39
+      },
+      "root": {
+        "x": 280,
+        "y": 0,
+        "w": 1120,
+        "h": 900,
+        "right": 1400,
+        "bottom": 900
+      },
+      "phase": "hero",
+      "title": "小说创作工作台 · 《孤星纪元》",
+      "ctls": [
+        "对话窗换边（左/右）",
+        "恢复默认布局",
+        "将当前布局设为默认",
+        "关闭分栏（Esc）"
+      ],
+      "consoleOpen": false,
+      "viewArea": {
+        "ml": "560px",
+        "mr": "",
+        "w": "560px",
+        "rect": {
+          "x": 840,
+          "y": 0,
+          "w": 560,
+          "h": 900,
+          "right": 1400,
+          "bottom": 900
+        }
+      },
+      "badge": null,
+      "notice": null
+    },
+    "autoCreateImmediate": {
+      "drawerNotice": null,
+      "cardSub": "outline_writing · 3章 · 1200字 · 会话失效",
+      "dotSt": "stale"
+    },
+    "convergence": {
+      "samples": [
+        {
+          "t": 1789362845991,
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false,
+          "split": true,
+          "bar": true,
+          "consoleEl": false
+        },
+        {
+          "t": 1789362847003,
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false,
+          "split": true,
+          "bar": true,
+          "consoleEl": false
+        },
+        {
+          "t": 1789362848006,
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false,
+          "split": true,
+          "bar": true,
+          "consoleEl": false
+        },
+        {
+          "t": 1789362849008,
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false,
+          "split": true,
+          "bar": true,
+          "consoleEl": false
+        },
+        {
+          "t": 1789362850008,
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false,
+          "split": true,
+          "bar": true,
+          "consoleEl": false
+        },
+        {
+          "t": 1789362851019,
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false,
+          "split": true,
+          "bar": true,
+          "consoleEl": false
+        },
+        {
+          "t": 1789362852028,
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false,
+          "split": true,
+          "bar": true,
+          "consoleEl": false
+        },
+        {
+          "t": 1789362853030,
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false,
+          "split": true,
+          "bar": true,
+          "consoleEl": false
+        },
+        {
+          "t": 1789362854046,
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false,
+          "split": true,
+          "bar": true,
+          "consoleEl": false
+        },
+        {
+          "t": 1789362855062,
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false,
+          "split": true,
+          "bar": true,
+          "consoleEl": false
+        },
+        {
+          "t": 1789362856063,
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false,
+          "split": true,
+          "bar": true,
+          "consoleEl": false
+        },
+        {
+          "t": 1789362857083,
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false,
+          "split": true,
+          "bar": true,
+          "consoleEl": false
+        },
+        {
+          "t": 1789362858088,
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false,
+          "split": true,
+          "bar": true,
+          "consoleEl": false
+        }
+      ],
+      "converged": false
+    },
+    "splitFate": {
+      "sampleCount": 13,
+      "firstBarGoneIndex": -1,
+      "first": {
+        "t": 1789362845991,
+        "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+        "dotSt": "stale",
+        "hostNoSessions": false,
+        "split": true,
+        "bar": true,
+        "consoleEl": false
+      },
+      "atGone": null,
+      "barGoneAfter": null
+    },
+    "isolatedDisk": {
+      "settingsYaml": "novel-writing:\n  workspaceRoot: C:/Users/peter/AppData/Local/Temp/clean004-probe-WcBMlz/novels\n  bindings:\n    nn-stale-bound: session-does-not-exist-clean004\n    zz-first-probe: session-22721558-1eda-4029-bcfc-d2b3c40d7a5e\nui-onboarding:\n  welcomeNoticeVersion: 2026-08-13.1\n",
+      "sessionDirs": [
+        "--C-Users-peter-AppData-Local-Temp-clean004-probe-WcBMlz-novels--"
+      ],
+      "boundId": "session-22721558-1eda-4029-bcfc-d2b3c40d7a5e",
+      "boundIdOnDisk": true,
+      "sessionStore": {
+        "--C-Users-peter-AppData-Local-Temp-clean004-probe-WcBMlz-novels--": [
+          "session-22721558-1eda-4029-bcfc-d2b3c40d7a5e",
+          "session-e8df27a0-7c7c-46ee-b69c-8db255124998"
+        ]
+      },
+      "hostWorkspaceJson": "{\n  \"unit\": {\n    \"name\": \"workspace\",\n    \"version\": 2\n  },\n  \"global\": {\n    \"initialized\": true,\n    \"workspaceIds\": [\n      \"c986fb89-c663-40c4-bcfa-b954fd02738b\"\n    ],\n    \"archivedSessionIds\": []\n  },\n  \"tables\": {\n    \"workspaces\": {\n      \"c986fb89-c663-40c4-bcfa-b954fd02738b\": {\n        \"path\": \"C:\\\\Users\\\\peter\\\\AppData\\\\Local\\\\Temp\\\\clean004-probe-WcBMlz\\\\novels\",\n        \"title\": \"novels\",\n        \"sessionIds\": [\n          \"session-22721558-1eda-4029-bcfc-d2b3c40d7a5e\",\n          \"session-e8df27a0-7c7c-46ee-b69c-8db255124998\"\n        ],\n        \"createdAt\": \"2026-09-14T05:13:45.146Z\",\n        \"updatedAt\": \"2026-09-14T05:14:04.079Z\"\n      }\n    }\n  }\n}\n"
+    },
+    "overviewProbe": {
+      "status": 200,
+      "root": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-probe-WcBMlz\\novels",
+      "bindings": {
+        "nn-stale-bound": "session-does-not-exist-clean004",
+        "zz-first-probe": "session-22721558-1eda-4029-bcfc-d2b3c40d7a5e"
+      },
+      "novels": [
+        "zz-first-probe",
+        "aa-second-probe",
+        "mm-third-probe",
+        "nn-stale-bound",
+        "bb-fourth-probe",
+        "cc-fifth-probe",
+        "dd-sixth-probe",
+        "ee-seventh-probe",
+        "ff-eighth-probe",
+        "gg-ninth-probe"
+      ]
+    },
+    "sessionAckIds": {
+      "boundId": "session-22721558-1eda-4029-bcfc-d2b3c40d7a5e",
+      "hostWorkspaceSessionIds": [
+        "session-22721558-1eda-4029-bcfc-d2b3c40d7a5e",
+        "session-e8df27a0-7c7c-46ee-b69c-8db255124998"
+      ],
+      "onDiskSessionIds": [
+        "session-22721558-1eda-4029-bcfc-d2b3c40d7a5e",
+        "session-e8df27a0-7c7c-46ee-b69c-8db255124998"
+      ],
+      "source": "overview.bindings + storages/workspace.json + sessions/<ws>/"
+    },
+    "sessionRowsProbe": {
+      "consoleOpen": true,
+      "attempts": 0,
+      "kw": "session-22721558-1eda-4029-bcfc-d2b3c40d7a5e",
+      "mirrorBody": {
+        "reachable": false,
+        "reason": "no-mirror-node-found",
+        "realms": 1,
+        "scanned": 513
+      },
+      "found": "找到的会话（1）",
+      "rows": [
+        "novels"
+      ],
+      "cards": 0
+    },
+    "panels": {
+      "left": {
+        "x": 281,
+        "y": 39,
+        "w": 240,
+        "h": 860,
+        "right": 521
+      },
+      "vdiv": {
+        "x": 519,
+        "y": 39,
+        "w": 4,
+        "h": 860,
+        "right": 523
+      },
+      "middiv": {
+        "x": 521,
+        "y": 637,
+        "w": 318,
+        "h": 4,
+        "right": 839
+      },
+      "chdiv": {
+        "x": 691,
+        "y": 49,
+        "w": 4,
+        "h": 588,
+        "right": 695
+      },
+      "chatdiv": {
+        "x": 838,
+        "y": 38,
+        "w": 4,
+        "h": 862,
+        "right": 842
+      },
+      "wfctl": {
+        "x": 531,
+        "y": 642,
+        "w": 160,
+        "h": 257,
+        "right": 691
+      },
+      "tabs": [
+        "数据",
+        "发布",
+        "请求"
+      ],
+      "wfButtons": [
+        {
+          "t": "继续工作流",
+          "mode": "go",
+          "disabled": false
+        },
+        {
+          "t": "压缩上下文",
+          "mode": null,
+          "disabled": false
+        },
+        {
+          "t": "绑定新会话",
+          "mode": null,
+          "disabled": false
+        }
+      ],
+      "chrows": 1,
+      "ftrows": 2,
+      "wfrows": 19,
+      "wfCur": 1
+    },
+    "drag": {
+      "beforeDrag": {
+        "w": 240
+      },
+      "afterDrag": {
+        "w": 301,
+        "parsed": {
+          "leftW": 301,
+          "chatW": 560,
+          "chapterW": 160,
+          "midH": null,
+          "chatSide": "right"
+        }
+      }
+    },
+    "closeRestore": {
+      "ml": "",
+      "w": "",
+      "rect": {
+        "x": 280,
+        "w": 1120
+      }
+    },
+    "reopenDiag": {
+      "settleToBound": false,
+      "settleDiag": {
+        "hostSidebarSlice": "新会话\n工作区\nnovels\n新会话\n小说管理工作台\n孤星纪元\noutline_writing · 3章 · 1200字 · 会话失效\n青禾纪事\n未开始 · 0章 · 0字 · 未绑定\n长风渡\ncontent_generation · 12",
+        "hostHasNoSessions": false,
+        "drawerSubs": [
+          "outline_writing · 3章 · 1200字 · 会话失效",
+          "未开始 · 0章 · 0字 · 未绑定",
+          "content_generation · 12章 · 34000字 · 未绑定",
+          "creation_planning · 5章 · 9000字 · 会话失效",
+          "outline_writing · 1章 · 2000字 · 未绑定",
+          "outline_writing · 2章 · 4000字 · 未绑定",
+          "outline_writing · 4章 · 8000字 · 未绑定",
+          "outline_writing · 6章 · 11000字 · 未绑定",
+          "outline_writing · 7章 · 13000字 · 未绑定",
+          "outline_writing · 8章 · 15000字 · 未绑定"
+        ],
+        "staleCount": 2
+      },
+      "bindPanelWasOpen": true,
+      "reopenAttempt": {
+        "clicked": true,
+        "subBefore": "outline_writing · 3章 · 1200字 · 会话失效"
+      },
+      "reopenDiag": {
+        "split": false,
+        "bar": false,
+        "console": false,
+        "bindPanel": true,
+        "drawerNotice": null,
+        "barNotice": null,
+        "drawerSubs": [
+          "outline_writing · 3章 · 1200字 · 会话失效",
+          "未开始 · 0章 · 0字 · 未绑定",
+          "content_generation · 12章 · 34000字 · 未绑定",
+          "creation_planning · 5章 · 9000字 · 会话失效",
+          "outline_writing · 1章 · 2000字 · 未绑定",
+          "outline_writing · 2章 · 4000字 · 未绑定",
+          "outline_writing · 4章 · 8000字 · 未绑定",
+          "outline_writing · 6章 · 11000字 · 未绑定",
+          "outline_writing · 7章 · 13000字 · 未绑定",
+          "outline_writing · 8章 · 15000字 · 未绑定"
+        ]
+      }
+    },
+    "reopen": false,
+    "flip": {
+      "sideBefore": {
+        "chatSide": "right",
+        "ml": "",
+        "mr": ""
+      },
+      "sideAfter": {
+        "chatSide": "right",
+        "ml": "",
+        "mr": "",
+        "splitOpen": false
+      }
+    },
+    "prepOverlayClean": [
+      {
+        "initialModal": true,
+        "closedBy": "backdrop-click",
+        "finalModal": false,
+        "ok": true,
+        "note": "R2 N-06：构造 E/F/D3 前置前的遗留遮罩（.nv-modal）收敛记录——finalModal=false 表示观测在干净 DOM 态进行"
+      }
+    ],
+    "splitReadyForNotice": {
+      "ok": true,
+      "attempts": [
+        {
+          "cardId": "mm-third-probe",
+          "clicked": {
+            "clicked": true,
+            "source": "drawer"
+          },
+          "opened": true,
+          "bar": true,
+          "bindPanel": false
+        }
+      ],
+      "reason": "unbound-card-reopen"
+    },
+    "noticeShort": {
+      "cls": "nv-notice",
+      "form": "row",
+      "kind": "ok",
+      "text": "已恢复默认布局",
+      "titleAttr": "",
+      "h": 29,
+      "w": 558,
+      "insideBar": false,
+      "barCount": 1,
+      "lines": 1,
+      "overflow": {
+        "sw": 558,
+        "cw": 558,
+        "sh": 28,
+        "ch": 28
+      }
+    },
+    "noticeShortTrigger": {
+      "clicked": true,
+      "label": "恢复默认布局"
+    },
+    "noticeLong": {
+      "cls": "nv-notice",
+      "form": "block",
+      "kind": "err",
+      "text": "会话已就绪，但启动指令发送失败：llm-deepseek: MISSING_CREDENTIAL: no API key for provider route \"deepseek-official\": store DEEPSEEK_API_KEY through the credentials service (the web Models page writes it), or export DEEPSEEK_API_KEY in the launching environment请打开该会话手动发送启动指令。",
+      "len": 259,
+      "rect": {
+        "x": 281,
+        "y": 39,
+        "w": 558,
+        "h": 73,
+        "bottom": 112
+      },
+      "barBottom": 39,
+      "insideBar": false,
+      "interTitle": 0,
+      "interCtlMax": 0,
+      "lines": 4,
+      "overflow": {
+        "sw": 558,
+        "cw": 558,
+        "sh": 72,
+        "ch": 72
+      },
+      "titleAttr": "",
+      "close": 1,
+      "belowContent": true,
+      "whiteSpace": "pre-wrap"
+    },
+    "injections": {
+      "count": 1,
+      "launchClicked": true
+    },
+    "interopPrep": {
+      "ok": true,
+      "reason": "already-open"
+    },
+    "interop": {
+      "claims": [
+        "novel-writing"
+      ],
+      "barBefore": true,
+      "barClosed": true,
+      "reopened": true,
+      "taSplitClose": 0
+    },
+    "d3Prep": {
+      "ok": true,
+      "reason": "already-open"
+    },
+    "exclusivity": {
+      "barOpenBefore": true,
+      "consoleOpen": true,
+      "barOpenAfter": false
+    },
+    "afterAutoCreate": {
+      "cards": 8,
+      "id": [
+        "zz-first-probe",
+        "aa-second-probe",
+        "mm-third-probe",
+        "nn-stale-bound",
+        "bb-fourth-probe",
+        "cc-fifth-probe",
+        "dd-sixth-probe",
+        "ee-seventh-probe"
+      ],
+      "fold": "展开全部（2）",
+      "drawerCards": 10,
+      "drawerSubs": [
+        "outline_writing · 3章 · 1200字",
+        "未开始 · 0章 · 0字 · 未绑定",
+        "content_generation · 12章 · 34000字",
+        "creation_planning · 5章 · 9000字 · 会话失效",
+        "outline_writing · 1章 · 2000字 · 未绑定",
+        "outline_writing · 2章 · 4000字 · 未绑定",
+        "outline_writing · 4章 · 8000字 · 未绑定",
+        "outline_writing · 6章 · 11000字 · 未绑定",
+        "outline_writing · 7章 · 13000字 · 未绑定",
+        "outline_writing · 8章 · 15000字 · 未绑定"
+      ]
+    },
+    "afterAutoCreateBound": {
+      "sub": "outline_writing · 3章 · 1200字",
+      "bound": true
+    },
+    "degradedProbe": {
+      "consoleDots": 8,
+      "consoleCards": 8,
+      "drawerCards": 10,
+      "drawerDots": 10,
+      "barDegradedChip": false,
+      "drawerNoSessionCue": false
+    },
+    "mirrorBody": {
+      "reachable": false,
+      "reason": "no-mirror-node-found",
+      "realms": 1,
+      "scanned": 724
+    },
+    "mirrorBodyUnreachable": {
+      "reason": "no-mirror-node-found",
+      "realms": 1,
+      "scanned": 724,
+      "note": "镜像体（sessionsAll 快照对象）不在任何 DOM 节点属性上 ⇒ 本体读数不可得；判定改以**渲染面**（搜索命中行）为准，并在 README §10 声明该残余不确定性"
+    },
+    "sessionSearchAuthoritative": {
+      "kw": "session-22721558-1eda-4029-bcfc-d2b3c40d7a5e",
+      "foundTitle": "找到的会话（1）",
+      "cfoundPresent": true,
+      "rows": [
+        {
+          "t": "novels",
+          "sub": ""
+        }
+      ],
+      "cards": 0
+    },
+    "hostSessionRowsAtB21": {
+      "count": 0,
+      "withText": 0,
+      "titles": [],
+      "selectorPresent": false,
+      "projectRows": 1,
+      "noSessionsText": false
+    },
+    "b21Measurement": {
+      "ackComplete": true,
+      "kwOk": true,
+      "effectiveKeyword": "session-22721558-1eda-4029-bcfc-d2b3c40d7a5e",
+      "keywordSource": "host-approved-ui-id",
+      "ids": null,
+      "displayTitle": null,
+      "rows": 1,
+      "rowTitles": [
+        "novels"
+      ],
+      "titleOk": true,
+      "mirrorBodyReachable": false
+    },
+    "sessionRowClick": {
+      "clicked": true,
+      "consoleOpen": false
+    },
+    "d6ConsolePre": {
+      "clicks": 1,
+      "consoleOpen": true
+    },
+    "sessionSwitch": {
+      "clicked": true,
+      "before": {
+        "consoleOpen": true,
+        "barOpen": false
+      },
+      "hostRowsBefore": 0,
+      "hostRowsAfter": 0,
+      "after": {
+        "consoleOpen": true,
+        "barOpen": false
+      },
+      "cand": 1,
+      "source": "newSession-button"
+    },
+    "b21bMeasurement": {
+      "ackComplete": true,
+      "consoleOpen": true,
+      "kwOk": true,
+      "effectiveKeyword": "session-22721558-1eda-4029-bcfc-d2b3c40d7a5e",
+      "keywordSource": "host-approved-ui-id",
+      "ids": null,
+      "displayTitle": null,
+      "rows": 1,
+      "rowTitles": [
+        "novels"
+      ],
+      "titleOk": true,
+      "mirrorBodyReachable": false
+    }
+  },
+  "screenshots": [
+    "docs/evidence/CLEAN-004/01-drawer-idle.png",
+    "docs/evidence/CLEAN-004/04-bindpanel-after-esc.png",
+    "docs/evidence/CLEAN-004/02-long-notice-block.png",
+    "docs/evidence/CLEAN-004/03-console-final.png"
+  ],
+  "screenshotsTmpSource": [
+    "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-final\\01-drawer-idle.png",
+    "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-final\\04-bindpanel-after-esc.png",
+    "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-final\\02-long-notice-block.png",
+    "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-final\\03-console-final.png"
+  ],
+  "pageLog": [
+    "edge DevTools listening on ws://127.0.0.1:51715/devtools/browser/be3b250c-eaea-41a7-82e4-75fa7072624f",
+    "edge [33172:21004:0914/131352.474:ERROR:chrome\\browser\\importer\\edge_china_browsers\\edge_qqbrowser_importer_utils_win.cc:165] QQBrowser user data path not found.",
+    "edge [33172:18812:0914/131353.911:ERROR:chrome\\browser\\task_manager\\providers\\fallback_task_provider.cc:126] Every renderer should have at least one task provided by a primary task provider. If a \"Renderer",
+    "edge [33172:23288:0914/131452.445:ERROR:components\\microsoft\\hijacking_prevention\\edge_hijacking_prevention_utils_win.cc:277] Failed to get user path: 8",
+    "edge [33172:23288:0914/131452.452:ERROR:components\\microsoft\\hijacking_prevention\\edge_hijacking_prevention_utils_win.cc:277] Failed to get user path: 117\r\n[33172:23288:0914/131452.452:ERROR:components\\mic"
+  ],
+  "envErrors": [],
+  "realEnvAfter": {
+    "home": "C:\\Users\\peter\\.dsh",
+    "strict": {
+      "settingsSha": "0b5106e58ebc3b8596d2401037570c6430c97788efab5117f166414d2b6f975a",
+      "profileJsonSha": "23b43ee30c60f08d5f922f4b8b0206661b49769ea446eaba5af81b9d99c48580",
+      "presetsSha": "de05dfc21fc9d239ef71dbab3db952c5243085fea9fcd489bfda5d4d9f456c6c"
+    },
+    "inventory": {
+      ".agent-presets": {
+        "dir": true,
+        "size": 0,
+        "mtimeMs": 1789285375866
+      },
+      ".anonymous-user-id": {
+        "dir": false,
+        "size": 37,
+        "mtimeMs": 1788578792690
+      },
+      ".credentials.yaml": {
+        "dir": false,
+        "size": 2293,
+        "mtimeMs": 1789285838324
+      },
+      "attachments": {
+        "dir": true,
+        "size": 0,
+        "mtimeMs": 1788592170529
+      },
+      "backups": {
+        "dir": true,
+        "size": 0,
+        "mtimeMs": 1789124030606
+      },
+      "dsh-agent-router": {
+        "dir": true,
+        "size": 0,
+        "mtimeMs": 1789285838297
+      },
+      "llm-deepseek": {
+        "dir": true,
+        "size": 0,
+        "mtimeMs": 1789289566839
+      },
+      "profiles": {
+        "dir": true,
+        "size": 0,
+        "mtimeMs": 1789129633470
+      },
+      "sessions": {
+        "dir": true,
+        "size": 0,
+        "mtimeMs": 1789135276544
+      },
+      "settings.yaml": {
+        "dir": false,
+        "size": 16002,
+        "mtimeMs": 1789346786637
+      },
+      "settings.yaml.bak-20260906-stale-high": {
+        "dir": false,
+        "size": 6194,
+        "mtimeMs": 1788660757802
+      },
+      "settings.yaml.bak-20260911-pre-cleanup": {
+        "dir": false,
+        "size": 15764,
+        "mtimeMs": 1789118875314
+      },
+      "storages": {
+        "dir": true,
+        "size": 0,
+        "mtimeMs": 1789346808974
+      }
+    }
+  },
+  "cleanup": {
+    "removed": [
+      "home",
+      "userprofile",
+      "appdata",
+      "localappdata",
+      "edge",
+      "tmp",
+      "novels"
+    ],
+    "root": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-probe-WcBMlz",
+    "rootRemoved": true,
+    "keptEvidence": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-final"
+  },
+  "ok": false,
+  "instanceUrlRedacted": "http://127.0.0.1:51714/?token=***",
+  "falsifiability": {
+    "rows": [
+      {
+        "id": "B5-found-sessions-area",
+        "finding": "F-01",
+        "fnSha256": "7a340893be7bba5f2aae146da29ae014aa90f63dd5f9ffdeab4013309d6269d5",
+        "redCount": 1,
+        "okCount": 1,
+        "deployment": {
+          "staticCallSites": 1,
+          "staticBound": true,
+          "runtimeCallSites": 1,
+          "fnSha256": "7a340893be7bba5f2aae146da29ae014aa90f63dd5f9ffdeab4013309d6269d5",
+          "consumed": true
+        },
+        "redResults": [
+          {
+            "vector": "red",
+            "note": "宿主侧栏确有会话行 ∧ 本区未渲染（R1 认定的反例）",
+            "result": false
+          }
+        ],
+        "okResults": [
+          {
+            "vector": "ok",
+            "note": "宿主有会话行 ∧ 本区渲染 ≥1 行",
+            "result": true
+          }
+        ],
+        "redsAllFalse": true,
+        "oksAllTrue": true,
+        "pass": true
+      },
+      {
+        "id": "D3-mutual-exclusion",
+        "finding": "F-02",
+        "fnSha256": "40e18f9eaee8d571df7d75d3f2f1fce53724ddd251ce9ac8c0d43f19d6034852",
+        "redCount": 2,
+        "okCount": 1,
+        "deployment": {
+          "staticCallSites": 1,
+          "staticBound": true,
+          "runtimeCallSites": 1,
+          "fnSha256": "40e18f9eaee8d571df7d75d3f2f1fce53724ddd251ce9ac8c0d43f19d6034852",
+          "consumed": true
+        },
+        "redResults": [
+          {
+            "vector": "red",
+            "note": "R1 记录运行实测：前置不成立（分栏未在场）⇒ 后件先于动作成立",
+            "result": false
+          },
+          {
+            "vector": "red2",
+            "note": "产品不再互斥：开控制台后分栏仍在场",
+            "result": false
+          }
+        ],
+        "okResults": [
+          {
+            "vector": "ok",
+            "note": "分栏先在场 → 开控制台 → 分栏被关",
+            "result": true
+          }
+        ],
+        "redsAllFalse": true,
+        "oksAllTrue": true,
+        "pass": true
+      },
+      {
+        "id": "C-face-availability",
+        "finding": "F-06",
+        "fnSha256": "62dee9f9327d78a9f524f0d735c813f859c5864651a4c995d3a309262abb0518",
+        "redCount": 1,
+        "okCount": 2,
+        "deployment": {
+          "staticCallSites": 1,
+          "staticBound": true,
+          "runtimeCallSites": 0,
+          "fnSha256": null,
+          "consumed": false
+        },
+        "redResults": [
+          {
+            "vector": "red",
+            "note": "C1 曾观测分栏打开而 C5 时刻不在场 ⇒ 打开后自发关闭（回归）",
+            "result": false
+          }
+        ],
+        "okResults": [
+          {
+            "vector": "ok",
+            "note": "分栏仍在场（正常）",
+            "result": true
+          },
+          {
+            "vector": "ok2",
+            "note": "从未打开过（N-A，非 FAIL）",
+            "result": true
+          }
+        ],
+        "redsAllFalse": true,
+        "oksAllTrue": true,
+        "pass": true
+      },
+      {
+        "id": "B21a-search-find-sessions",
+        "finding": "F-03 → R2 N-01/N-03 重设计",
+        "fnSha256": "d85906dd565dfbd6ea1d7cc68412859106504ee20541ae65ed0815a453ba8961",
+        "redCount": 3,
+        "okCount": 1,
+        "deployment": {
+          "staticCallSites": 1,
+          "staticBound": true,
+          "runtimeCallSites": 1,
+          "fnSha256": "d85906dd565dfbd6ea1d7cc68412859106504ee20541ae65ed0815a453ba8961",
+          "consumed": true
+        },
+        "redResults": [
+          {
+            "vector": "red",
+            "note": "宿主已认可该会话 ∧ 检索 0 行 ⇒ 镜像/消费面未反映宿主会话（D-3 主张的原形）",
+            "result": false
+          },
+          {
+            "vector": "red2",
+            "note": "有行但行标题缺失（渲染面损坏）",
+            "result": false
+          },
+          {
+            "vector": "red3",
+            "note": "检索前提缺失（关键词不可得）∧ 0 行 ⇒ 不可判为绿",
+            "result": false
+          }
+        ],
+        "okResults": [
+          {
+            "vector": "ok",
+            "note": "关键词命中 ⇒ 渲染 ≥1 行且行标题可核（记录运行实测形态：1 行）",
+            "result": true
+          }
+        ],
+        "redsAllFalse": true,
+        "oksAllTrue": true,
+        "pass": true
+      },
+      {
+        "id": "B21b-search-find-sessions-retest",
+        "finding": "F-03 → R2 N-01/N-03 重设计",
+        "fnSha256": "fe552b7b96de7b920eb4f7cc960a2b907f3f31549330846afb36c037b0f7b5f0",
+        "redCount": 3,
+        "okCount": 1,
+        "deployment": {
+          "staticCallSites": 1,
+          "staticBound": true,
+          "runtimeCallSites": 1,
+          "fnSha256": "fe552b7b96de7b920eb4f7cc960a2b907f3f31549330846afb36c037b0f7b5f0",
+          "consumed": true
+        },
+        "redResults": [
+          {
+            "vector": "red",
+            "note": "控制台在场 ∧ 检索 0 行（复测同果）",
+            "result": false
+          },
+          {
+            "vector": "red2",
+            "note": "检索前提缺失（关键词不可得）∧ 0 行 ⇒ 不可判绿",
+            "result": false
+          },
+          {
+            "vector": "red3",
+            "note": "控制台未取得 ⇒ 该分支由断言显式记 N-A；若控制台缺席却仍按 PASS 口径评估 ⇒ 谓词必须为 false",
+            "result": false
+          }
+        ],
+        "okResults": [
+          {
+            "vector": "ok",
+            "note": "控制台在场 ∧ 关键词命中并渲染",
+            "result": true
+          }
+        ],
+        "redsAllFalse": true,
+        "oksAllTrue": true,
+        "pass": true
+      },
+      {
+        "id": "B12b-tile-min-height",
+        "finding": "F-11",
+        "fnSha256": "5c873eb3819e04af8e604c46548fa2a7a7a51b1f1986a4b56840ca44a373c7e3",
+        "redCount": 2,
+        "okCount": 1,
+        "deployment": {
+          "staticCallSites": 1,
+          "staticBound": true,
+          "runtimeCallSites": 1,
+          "fnSha256": "5c873eb3819e04af8e604c46548fa2a7a7a51b1f1986a4b56840ca44a373c7e3",
+          "consumed": true
+        },
+        "redResults": [
+          {
+            "vector": "red",
+            "note": "空集：原实现 `Math.min()` = Infinity 恒真（潜在空真）",
+            "result": false
+          },
+          {
+            "vector": "red2",
+            "note": "卡片低于 180px 下限",
+            "result": false
+          }
+        ],
+        "okResults": [
+          {
+            "vector": "ok",
+            "note": "全部 ≥180px",
+            "result": true
+          }
+        ],
+        "redsAllFalse": true,
+        "oksAllTrue": true,
+        "pass": true
+      },
+      {
+        "id": "D5-sessions-present",
+        "finding": "F-11",
+        "fnSha256": "00074b9843ab309637a4a6708f2538ec590ce2ea896a955134255455464067ea",
+        "redCount": 2,
+        "okCount": 2,
+        "deployment": {
+          "staticCallSites": 1,
+          "staticBound": true,
+          "runtimeCallSites": 1,
+          "fnSha256": "00074b9843ab309637a4a6708f2538ec590ce2ea896a955134255455464067ea",
+          "consumed": true
+        },
+        "redResults": [
+          {
+            "vector": "red",
+            "note": "服务缺席却仍渲染双圆（原 `cdot>=1` 判据在此为真 ⇒ 掩盖降级）",
+            "result": false
+          },
+          {
+            "vector": "red2",
+            "note": "服务可用信号在场但控制台卡双圆缺失（该面渲染回归）",
+            "result": false
+          }
+        ],
+        "okResults": [
+          {
+            "vector": "ok",
+            "note": "服务可用 ⇒ 抽屉与控制台双圆同时在场",
+            "result": true
+          },
+          {
+            "vector": "ok2",
+            "note": "服务缺席 ⇒ 无任何双圆（缺席分支的合法观测）",
+            "result": true
+          }
+        ],
+        "redsAllFalse": true,
+        "oksAllTrue": true,
+        "pass": true
+      },
+      {
+        "id": "E1-short-notice-compact",
+        "finding": "F-04（UX-060 短形态；原为 N-A ⇒ 本轮首次取得）",
+        "fnSha256": "aee6c26c8e030496bfd41844855637f7104eb58a34ee9a773ee423f520577439",
+        "redCount": 4,
+        "okCount": 1,
+        "deployment": {
+          "staticCallSites": 1,
+          "staticBound": true,
+          "runtimeCallSites": 1,
+          "fnSha256": "aee6c26c8e030496bfd41844855637f7104eb58a34ee9a773ee423f520577439",
+          "consumed": true
+        },
+        "redResults": [
+          {
+            "vector": "red",
+            "note": "短提示被渲染成 block（当长告警处理）",
+            "result": false
+          },
+          {
+            "vector": "red2",
+            "note": "短提示不在场（提示通道未渲染）",
+            "result": false
+          },
+          {
+            "vector": "red3",
+            "note": "短提示单行但横向溢出被截断",
+            "result": false
+          },
+          {
+            "vector": "red4",
+            "note": "短提示单行但载体纵向截断（内容高于载体）",
+            "result": false
+          }
+        ],
+        "okResults": [
+          {
+            "vector": "ok",
+            "note": "本轮实测形态：row / 单行 / 无溢出 / 无容器截断",
+            "result": true
+          }
+        ],
+        "redsAllFalse": true,
+        "oksAllTrue": true,
+        "pass": true
+      },
+      {
+        "id": "C11-flip-back",
+        "finding": "空真追加项（R1 §3.1 单列）",
+        "fnSha256": "e0c1df1c48dcd2fa7d2e4d218e76e68646e2e237ce58f1f065ae32158ca7ae7c",
+        "redCount": 1,
+        "okCount": 1,
+        "deployment": {
+          "staticCallSites": 1,
+          "staticBound": true,
+          "runtimeCallSites": 1,
+          "fnSha256": "e0c1df1c48dcd2fa7d2e4d218e76e68646e2e237ce58f1f065ae32158ca7ae7c",
+          "consumed": true
+        },
+        "redResults": [
+          {
+            "vector": "red",
+            "note": "⇄ 未被点击（分栏不在场）而 chatSide 本就为 right —— 原实现记 PASS",
+            "result": false
+          }
+        ],
+        "okResults": [
+          {
+            "vector": "ok",
+            "note": "⇄ 点击成功且回到 right 且分栏仍在",
+            "result": true
+          }
+        ],
+        "redsAllFalse": true,
+        "oksAllTrue": true,
+        "pass": true
+      }
+    ],
+    "allPass": true,
+    "vectorTally": {
+      "red": 19,
+      "ok": 11
+    }
+  },
+  "predicateDeployments": {
+    "B5-found-sessions-area": {
+      "count": 1,
+      "sha": "7a340893be7bba5f2aae146da29ae014aa90f63dd5f9ffdeab4013309d6269d5"
+    },
+    "B12b-tile-min-height": {
+      "count": 1,
+      "sha": "5c873eb3819e04af8e604c46548fa2a7a7a51b1f1986a4b56840ca44a373c7e3"
+    },
+    "C11-flip-back": {
+      "count": 1,
+      "sha": "e0c1df1c48dcd2fa7d2e4d218e76e68646e2e237ce58f1f065ae32158ca7ae7c"
+    },
+    "E1-short-notice-compact": {
+      "count": 1,
+      "sha": "aee6c26c8e030496bfd41844855637f7104eb58a34ee9a773ee423f520577439"
+    },
+    "D3-mutual-exclusion": {
+      "count": 1,
+      "sha": "40e18f9eaee8d571df7d75d3f2f1fce53724ddd251ce9ac8c0d43f19d6034852"
+    },
+    "D5-sessions-present": {
+      "count": 1,
+      "sha": "00074b9843ab309637a4a6708f2538ec590ce2ea896a955134255455464067ea"
+    },
+    "B21a-search-find-sessions": {
+      "count": 1,
+      "sha": "d85906dd565dfbd6ea1d7cc68412859106504ee20541ae65ed0815a453ba8961"
+    },
+    "B21b-search-find-sessions-retest": {
+      "count": 1,
+      "sha": "fe552b7b96de7b920eb4f7cc960a2b907f3f31549330846afb36c037b0f7b5f0"
+    }
+  },
+  "predicateStaticSites": {
+    "B5-found-sessions-area": 1,
+    "D3-mutual-exclusion": 1,
+    "C-face-availability": 1,
+    "B21a-search-find-sessions": 1,
+    "B21b-search-find-sessions-retest": 1,
+    "B12b-tile-min-height": 1,
+    "D5-sessions-present": 1,
+    "E1-short-notice-compact": 1,
+    "C11-flip-back": 1
+  },
+  "bootTail": [
+    "dsh web: http://127.0.0.1:51714/?token=***",
+    "BOOT-READY pid=19928"
+  ],
+  "realEnvVerdict": {
+    "ok": true,
+    "strictDeltas": {},
+    "inventoryDeltas": {},
+    "inventoryDeltaCount": 0,
+    "leakSignature": {
+      "novelWritingWorkspaceRoot": "D:\\AI\\writing",
+      "pointsIntoIsolation": false,
+      "isolationRoot": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-probe-WcBMlz"
+    }
+  },
+  "tally": {
+    "total": 49,
+    "pass": 42,
+    "fail": 4,
+    "na": 3
+  },
+  "finishedAt": "2026-09-14T05:16:55.181Z"
+}

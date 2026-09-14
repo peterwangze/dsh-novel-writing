@@ -1,589 +1,260 @@
 {
- "version": 1,
- "generated_at": "2026-09-11T09:09:48.652Z",
- "packets": {
-  "COMPAT-001": {
-   "task_id": "COMPAT-001",
-   "priority": "P1",
-   "status": "🔄 进行中 (2026-09-11 Architect 派发——兼容性设计系统性分析)",
-   "goal": "对 dsh-novel-writing 插件的 DSH 宿主依赖面做系统性兼容性设计分析：以 BUG-003/004/005/006 四次宿主升级事故 + RISK-003 为事实基础，全量清点依赖（服务端 API/客户端 API/DOM 约定/安装机制/manifest·预设/peer 依赖六面），按用户四轴出设计——①尽可能减少对 DSH 宿主的依赖 ②必需接口/字段依赖逻辑解耦、单独维护 ③依赖代码严格的依赖性校验与看护 ④依赖边界可调测性设计（后续有问题第一时间发现并保证低代价适配）；产出分析文档 + proposed ADR；不做实现（实现任务经用户确认另行入账）",
-   "事实依据": "用户 2026-09-11 请求原文（四条目标）；BUG-003（EVD-076 settingsNamespace 移除→启动崩溃）/ BUG-004（EVD-077 客户端 connection.api→remote.* 表面迁移，makeHostApi 适配层）/ BUG-005（EVD-078 useSessions hook 面服务后到，makeSessionsHookReactive）/ BUG-006（EVD-080/081 profile 机制重构，安装通道双布局适配）；RISK-003（宿主 DOM 约定依赖 [data-phase]/viewArea=children[1]）；兼容红线（零宿主源码改动——DEC-019 理由栏 + EVD-037 既有口径，按 REVIEW-COMPAT-001-R1 F2 修正误指）",
-   "结构化事实": [
-     "四次宿主升级事故均由 dsh 0.1.x 系列升级触发（0.1.2-rc.1 ×3 + 0.1.5-rc.1 ×1）",
-     "已存在三处单点适配：makeHostApi（客户端 API 面）/ makeSessionsHookReactive（hook 面）/ install.ps1·install.sh 版本自适应（安装面）——但无统一依赖清单、无契约校验、无诊断面",
-     "RISK-003 DOM 面依赖（会话根探测/结构假设/margin 挤压）仅有降级兜底，无变更探测",
-     "smoke 203 项为事后回归（修复驱动补充），无事前能力探测"
-   ],
-   "allowed_change_scope": ["docs/research/COMPAT-001-host-compat-analysis.md（新建——分析+设计+proposed ADR）"],
-   "product_success_contract": {
-    "user": "dsh-novel-writing 插件用户（经 DSH 宿主使用小说工作台的作者）——宿主升级时插件不断裂，或断裂面收敛到单点边界层且可第一时间定位",
-    "job_to_be_done": "dsh 宿主升级后插件仍可用；若断裂，诊断面能在分钟级定位断在哪一层，适配改动收敛在宿主边界层单点完成（低代价适配）",
-    "non_goals": [
-     "本任务不实现代码——只出分析与设计（实现任务按 DEC-024 授权另行入账推进）",
-     "不提出任何修改 DSH 宿主源码的方案（兼容红线——零宿主源码改动，DEC-019 理由栏 + EVD-037 既有口径）",
-     "不以流程记录替代产品价值——分析必须落到可执行的实现任务清单"
-    ],
-    "success_metrics": [
-     "依赖清单六面全覆盖且每项五要素齐全（文件+行号级可溯源）——产品事实资产",
-     "四轴设计各 ≥2 候选 + 评估标准 + 取舍 + 风险/回滚路径——可被实现任务直接执行",
-     "宿主升级断裂面收敛到单点边界层的设计成立（终态由实现任务验收：诊断面分钟级定位 + 适配单点完成）",
-     "实现完成后全部回归门禁不劣化于 EVD-082 基线（node --check ×3 / node test/validate-preset.mjs / node test/smoke.mjs 203/0）"
-    ],
-    "competitive_baseline": "成熟插件生态宿主兼容实践：VS Code 扩展 API 版本策略、浏览器扩展 host_permissions 最小化、适配器+特性检测渐进增强",
-    "done_definition": [
-     "分析文档落盘且 Design Reviewer 审查通过（review-record 机录）",
-     "设计方向按 DEC-024 用户授权直接推进——衍生实现任务入账并执行至兼容性架构演进闭环",
-     "proposed ADR 经 DEC-024 已授权路径采纳；关键边界（发版/越界范围）仍留用户确认"
-    ]
-   },
-   "acceptance_contract": {
-    "scenario": "Architect 产出六面依赖清单 + 四轴设计 + proposed ADR；Design Reviewer 独立审查通过；实现阶段每任务回归门禁绿",
-    "command": "node --check lib/index.js && node --check lib/client.js && node --check lib/tools.js && node test/validate-preset.mjs && node test/smoke.mjs",
-    "expected_output": "PRESET VALIDATION PASSED + SMOKE DONE: 203 passed, 0 failed（基线 EVD-082；实现期不得劣化）",
-    "last_run": {
-     "status": "PASS",
-     "exit_code": 0,
-     "summary": "基线全绿：node --check ×3 零错 / validate-preset 29/29 / smoke 203/0（EVD-082）"
+  "version": 1,
+  "generated_at": "2026-09-13T16:00:52",
+  "packets": {
+    "BUG-007": {
+      "task_id": "BUG-007",
+      "priority": "P0",
+      "status": "⏳ 待执行",
+      "goal": "BUG-007 dsh 0.1.5-rc.2 升级后预设 persona 行断裂（用户 2026-09-13 实机截图批注 2：**继续工作流 / 绑定新会话均失败**，原因同类）：宿主 `dsh-persona` 由 rc.1→rc.2 改 Config 为 `prefix: z.string().required()`，本仓 `agent-presets/novel-writing/agent.cordis.yml` L16-19 persona 行仍写 `config.text` ⇒ loader 单行校验失败**否决整棵预设挂载**（`RemoteError: agent-presets: preset \"novel-writing\" failed to mount ... $.prefix missing required value`）⇒ `sessions.prompt`(resume) / `agentPresets.select` 全链失败；修复 = ①persona 行 `text:`→`prefix:`（同族先例：治理插件 FIX-308 于 0.80.0 真机实证同一根因）②**全预设行对已装宿主 schema 逐行核验**（P-05 泛化，防同批第二处漂移）③版本 bump 触发 `ensurePreset()` 重同步 ④看护面补「预设组合行 × 已装 dsh 插件 Config schema」机检（对照治理插件 0.81.0 Check 28v，P-08 复用不重造）⑤host-contract/README/CHANGELOG 同步",
+      "product_success_contract": {
+        "user": "TO_BE_DEFINED: impacted persona for BUG-007 dsh 0.1.5-rc.2 升级后预设 persona 行断裂（用户 2026-09-13 实机截图批注 2：**继续工作流 / 绑定新会话均失败**，原因同类）：宿主 `dsh-persona` 由 rc.1→rc.2 改 Config 为 `prefix: z.string().required()`，本仓 `agent-presets/novel-writing/agent.cordis.yml` L16-19 persona 行仍写 `config.text` ⇒ loader 单行校验失败**否决整棵预设挂载**（`RemoteError: agent-presets: preset \"novel-writing\" failed to mount ... $.prefix missing required value`）⇒ `sessions.prompt`(resume) / `agentPresets.select` 全链失败；修复 = ①persona 行 `text:`→`prefix:`（同族先例：治理插件 FIX-308 于 0.80.0 真机实证同一根因）②**全预设行对已装宿主 schema 逐行核验**（P-05 泛化，防同批第二处漂移）③版本 bump 触发 `ensurePreset()` 重同步 ④看护面补「预设组合行 × 已装 dsh 插件 Config schema」机检（对照治理插件 0.81.0 Check 28v，P-08 复用不重造）⑤host-contract/README/CHANGELOG 同步",
+        "job_to_be_done": "TO_BE_DEFINED: user job and desired outcome for BUG-007 dsh 0.1.5-rc.2 升级后预设 persona 行断裂（用户 2026-09-13 实机截图批注 2：**继续工作流 / 绑定新会话均失败**，原因同类）：宿主 `dsh-persona` 由 rc.1→rc.2 改 Config 为 `prefix: z.string().required()`，本仓 `agent-presets/novel-writing/agent.cordis.yml` L16-19 persona 行仍写 `config.text` ⇒ loader 单行校验失败**否决整棵预设挂载**（`RemoteError: agent-presets: preset \"novel-writing\" failed to mount ... $.prefix missing required value`）⇒ `sessions.prompt`(resume) / `agentPresets.select` 全链失败；修复 = ①persona 行 `text:`→`prefix:`（同族先例：治理插件 FIX-308 于 0.80.0 真机实证同一根因）②**全预设行对已装宿主 schema 逐行核验**（P-05 泛化，防同批第二处漂移）③版本 bump 触发 `ensurePreset()` 重同步 ④看护面补「预设组合行 × 已装 dsh 插件 Config schema」机检（对照治理插件 0.81.0 Check 28v，P-08 复用不重造）⑤host-contract/README/CHANGELOG 同步",
+        "non_goals": [
+          "TO_BE_DEFINED: explicit non-goal that protects the task from scope drift.",
+          "TO_BE_DEFINED: explicit non-goal that prevents process evidence from replacing product value."
+        ],
+        "success_metrics": [
+          "TO_BE_DEFINED: user-visible outcome or acceptance scenario for this task.",
+          "TO_BE_DEFINED: runnable E2E, test, or command that proves the outcome."
+        ],
+        "competitive_baseline": "TO_BE_DEFINED: mature-team or competing-product baseline this task must match.",
+        "done_definition": [
+          "TO_BE_DEFINED: product success evidence is recorded with concrete facts.",
+          "TO_BE_DEFINED: independent review confirms the user outcome is not replaced by process completion."
+        ]
+      },
+      "acceptance_contract": {
+        "scenario": "TO_BE_DEFINED: user-visible acceptance scenario for BUG-007 dsh 0.1.5-rc.2 升级后预设 persona 行断裂（用户 2026-09-13 实机截图批注 2：**继续工作流 / 绑定新会话均失败**，原因同类）：宿主 `dsh-persona` 由 rc.1→rc.2 改 Config 为 `prefix: z.string().required()`，本仓 `agent-presets/novel-writing/agent.cordis.yml` L16-19 persona 行仍写 `config.text` ⇒ loader 单行校验失败**否决整棵预设挂载**（`RemoteError: agent-presets: preset \"novel-writing\" failed to mount ... $.prefix missing required value`）⇒ `sessions.prompt`(resume) / `agentPresets.select` 全链失败；修复 = ①persona 行 `text:`→`prefix:`（同族先例：治理插件 FIX-308 于 0.80.0 真机实证同一根因）②**全预设行对已装宿主 schema 逐行核验**（P-05 泛化，防同批第二处漂移）③版本 bump 触发 `ensurePreset()` 重同步 ④看护面补「预设组合行 × 已装 dsh 插件 Config schema」机检（对照治理插件 0.81.0 Check 28v，P-08 复用不重造）⑤host-contract/README/CHANGELOG 同步",
+        "command": "TO_BE_DEFINED: runnable E2E, smoke, unit, or validation command",
+        "expected_output": "TO_BE_DEFINED: concrete pass output, assertion, or observable demo result",
+        "last_run": {
+          "status": "TO_BE_DEFINED",
+          "exit_code": null,
+          "summary": "TO_BE_DEFINED: last run output summary with evidence location"
+        },
+        "demo_evidence": "TO_BE_DEFINED: demo, CLI output, or artifact proving the scenario"
+      },
+      "quality_budget": {
+        "dimensions": {
+          "performance": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable performance threshold for BUG-007 dsh 0.1.5-rc.2 升级后预设 persona 行断裂（用户 2026-09-13 实机截图批注 2：**继续工作流 / 绑定新会话均失败**，原因同类）：宿主 `dsh-persona` 由 rc.1→rc.2 改 Config 为 `prefix: z.string().required()`，本仓 `agent-presets/novel-writing/agent.cordis.yml` L16-19 persona 行仍写 `config.text` ⇒ loader 单行校验失败**否决整棵预设挂载**（`RemoteError: agent-presets: preset \"novel-writing\" failed to mount ... $.prefix missing required value`）⇒ `sessions.prompt`(resume) / `agentPresets.select` 全链失败；修复 = ①persona 行 `text:`→`prefix:`（同族先例：治理插件 FIX-308 于 0.80.0 真机实证同一根因）②**全预设行对已装宿主 schema 逐行核验**（P-05 泛化，防同批第二处漂移）③版本 bump 触发 `ensurePreset()` 重同步 ④看护面补「预设组合行 × 已装 dsh 插件 Config schema」机检（对照治理插件 0.81.0 Check 28v，P-08 复用不重造）⑤host-contract/README/CHANGELOG 同步",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for performance",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest performance result or planned evidence location",
+            "exception": ""
+          },
+          "reliability": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable reliability threshold for BUG-007 dsh 0.1.5-rc.2 升级后预设 persona 行断裂（用户 2026-09-13 实机截图批注 2：**继续工作流 / 绑定新会话均失败**，原因同类）：宿主 `dsh-persona` 由 rc.1→rc.2 改 Config 为 `prefix: z.string().required()`，本仓 `agent-presets/novel-writing/agent.cordis.yml` L16-19 persona 行仍写 `config.text` ⇒ loader 单行校验失败**否决整棵预设挂载**（`RemoteError: agent-presets: preset \"novel-writing\" failed to mount ... $.prefix missing required value`）⇒ `sessions.prompt`(resume) / `agentPresets.select` 全链失败；修复 = ①persona 行 `text:`→`prefix:`（同族先例：治理插件 FIX-308 于 0.80.0 真机实证同一根因）②**全预设行对已装宿主 schema 逐行核验**（P-05 泛化，防同批第二处漂移）③版本 bump 触发 `ensurePreset()` 重同步 ④看护面补「预设组合行 × 已装 dsh 插件 Config schema」机检（对照治理插件 0.81.0 Check 28v，P-08 复用不重造）⑤host-contract/README/CHANGELOG 同步",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for reliability",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest reliability result or planned evidence location",
+            "exception": ""
+          },
+          "security": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable security threshold for BUG-007 dsh 0.1.5-rc.2 升级后预设 persona 行断裂（用户 2026-09-13 实机截图批注 2：**继续工作流 / 绑定新会话均失败**，原因同类）：宿主 `dsh-persona` 由 rc.1→rc.2 改 Config 为 `prefix: z.string().required()`，本仓 `agent-presets/novel-writing/agent.cordis.yml` L16-19 persona 行仍写 `config.text` ⇒ loader 单行校验失败**否决整棵预设挂载**（`RemoteError: agent-presets: preset \"novel-writing\" failed to mount ... $.prefix missing required value`）⇒ `sessions.prompt`(resume) / `agentPresets.select` 全链失败；修复 = ①persona 行 `text:`→`prefix:`（同族先例：治理插件 FIX-308 于 0.80.0 真机实证同一根因）②**全预设行对已装宿主 schema 逐行核验**（P-05 泛化，防同批第二处漂移）③版本 bump 触发 `ensurePreset()` 重同步 ④看护面补「预设组合行 × 已装 dsh 插件 Config schema」机检（对照治理插件 0.81.0 Check 28v，P-08 复用不重造）⑤host-contract/README/CHANGELOG 同步",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for security",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest security result or planned evidence location",
+            "exception": ""
+          },
+          "accessibility": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable accessibility threshold for BUG-007 dsh 0.1.5-rc.2 升级后预设 persona 行断裂（用户 2026-09-13 实机截图批注 2：**继续工作流 / 绑定新会话均失败**，原因同类）：宿主 `dsh-persona` 由 rc.1→rc.2 改 Config 为 `prefix: z.string().required()`，本仓 `agent-presets/novel-writing/agent.cordis.yml` L16-19 persona 行仍写 `config.text` ⇒ loader 单行校验失败**否决整棵预设挂载**（`RemoteError: agent-presets: preset \"novel-writing\" failed to mount ... $.prefix missing required value`）⇒ `sessions.prompt`(resume) / `agentPresets.select` 全链失败；修复 = ①persona 行 `text:`→`prefix:`（同族先例：治理插件 FIX-308 于 0.80.0 真机实证同一根因）②**全预设行对已装宿主 schema 逐行核验**（P-05 泛化，防同批第二处漂移）③版本 bump 触发 `ensurePreset()` 重同步 ④看护面补「预设组合行 × 已装 dsh 插件 Config schema」机检（对照治理插件 0.81.0 Check 28v，P-08 复用不重造）⑤host-contract/README/CHANGELOG 同步",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for accessibility",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest accessibility result or planned evidence location",
+            "exception": ""
+          },
+          "ux": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable ux threshold for BUG-007 dsh 0.1.5-rc.2 升级后预设 persona 行断裂（用户 2026-09-13 实机截图批注 2：**继续工作流 / 绑定新会话均失败**，原因同类）：宿主 `dsh-persona` 由 rc.1→rc.2 改 Config 为 `prefix: z.string().required()`，本仓 `agent-presets/novel-writing/agent.cordis.yml` L16-19 persona 行仍写 `config.text` ⇒ loader 单行校验失败**否决整棵预设挂载**（`RemoteError: agent-presets: preset \"novel-writing\" failed to mount ... $.prefix missing required value`）⇒ `sessions.prompt`(resume) / `agentPresets.select` 全链失败；修复 = ①persona 行 `text:`→`prefix:`（同族先例：治理插件 FIX-308 于 0.80.0 真机实证同一根因）②**全预设行对已装宿主 schema 逐行核验**（P-05 泛化，防同批第二处漂移）③版本 bump 触发 `ensurePreset()` 重同步 ④看护面补「预设组合行 × 已装 dsh 插件 Config schema」机检（对照治理插件 0.81.0 Check 28v，P-08 复用不重造）⑤host-contract/README/CHANGELOG 同步",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for ux",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest ux result or planned evidence location",
+            "exception": ""
+          },
+          "maintainability": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable maintainability threshold for BUG-007 dsh 0.1.5-rc.2 升级后预设 persona 行断裂（用户 2026-09-13 实机截图批注 2：**继续工作流 / 绑定新会话均失败**，原因同类）：宿主 `dsh-persona` 由 rc.1→rc.2 改 Config 为 `prefix: z.string().required()`，本仓 `agent-presets/novel-writing/agent.cordis.yml` L16-19 persona 行仍写 `config.text` ⇒ loader 单行校验失败**否决整棵预设挂载**（`RemoteError: agent-presets: preset \"novel-writing\" failed to mount ... $.prefix missing required value`）⇒ `sessions.prompt`(resume) / `agentPresets.select` 全链失败；修复 = ①persona 行 `text:`→`prefix:`（同族先例：治理插件 FIX-308 于 0.80.0 真机实证同一根因）②**全预设行对已装宿主 schema 逐行核验**（P-05 泛化，防同批第二处漂移）③版本 bump 触发 `ensurePreset()` 重同步 ④看护面补「预设组合行 × 已装 dsh 插件 Config schema」机检（对照治理插件 0.81.0 Check 28v，P-08 复用不重造）⑤host-contract/README/CHANGELOG 同步",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for maintainability",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest maintainability result or planned evidence location",
+            "exception": ""
+          }
+        }
+      },
+      "vertical_slice": {
+        "user_visible_slice": "TO_BE_DEFINED: smallest user-visible slice for BUG-007 dsh 0.1.5-rc.2 升级后预设 persona 行断裂（用户 2026-09-13 实机截图批注 2：**继续工作流 / 绑定新会话均失败**，原因同类）：宿主 `dsh-persona` 由 rc.1→rc.2 改 Config 为 `prefix: z.string().required()`，本仓 `agent-presets/novel-writing/agent.cordis.yml` L16-19 persona 行仍写 `config.text` ⇒ loader 单行校验失败**否决整棵预设挂载**（`RemoteError: agent-presets: preset \"novel-writing\" failed to mount ... $.prefix missing required value`）⇒ `sessions.prompt`(resume) / `agentPresets.select` 全链失败；修复 = ①persona 行 `text:`→`prefix:`（同族先例：治理插件 FIX-308 于 0.80.0 真机实证同一根因）②**全预设行对已装宿主 schema 逐行核验**（P-05 泛化，防同批第二处漂移）③版本 bump 触发 `ensurePreset()` 重同步 ④看护面补「预设组合行 × 已装 dsh 插件 Config schema」机检（对照治理插件 0.81.0 Check 28v，P-08 复用不重造）⑤host-contract/README/CHANGELOG 同步",
+        "demo_path": "TO_BE_DEFINED: runnable demo, smoke test, URL, screenshot, or command proving the slice",
+        "scope_guard": "TO_BE_DEFINED: files and behavior in scope for this slice only (open)",
+        "rollback_plan": "TO_BE_DEFINED: how to revert or disable the slice if validation fails",
+        "status": "TO_BE_DEFINED",
+        "evidence": "TO_BE_DEFINED: latest demo proof or planned evidence location"
+      },
+      "interruption_policy": {
+        "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
+        "critical_triggers": [
+          "Ask the user when product intent is unclear.",
+          "Ask the user when acceptance standard or done criteria are unclear.",
+          "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions."
+        ],
+        "auto_execute": [
+          "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible.",
+          "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied."
+        ],
+        "assumption_record": {
+          "assumption": "TO_BE_DEFINED: default choice used for a reversible non-critical ambiguity",
+          "basis": "TO_BE_DEFINED: fact source or repository pattern supporting the default",
+          "reversibility": "TO_BE_DEFINED: why the choice can be changed without product damage",
+          "validation": "TO_BE_DEFINED: command or demo that will verify the assumption",
+          "rollback": "TO_BE_DEFINED: how to revert if the assumption is wrong"
+        },
+        "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
+      },
+      "allowed_change_scope": [
+        "Only change files required by this task row: open",
+        "Keep unrelated refactors, release version bumps, and fixture sync out of this task unless listed in the task scope."
+      ],
+      "required_evidence": [
+        "evidence-log entry with 事实依据, 目标对齐, 用户影响, and 结构化事实 JSON",
+        "validation commands with exit_code and concise output summary",
+        "independent review evidence or explicit degraded review evidence that does not claim full separation"
+      ],
+      "next_commands": [
+        "python -m unittest skills/software-project-governance/infra/tests/test_verify_workflow.py -v",
+        "python skills/software-project-governance/infra/verify_workflow.py check-governance --fail-on-issues"
+      ],
+      "done_definition": [
+        "open",
+        "Code Reviewer or matching Reviewer has APPROVED the product-code change.",
+        "Commit and push are completed for this single task."
+      ],
+      "source": "plan-tracker.md##当前活跃事项"
     },
-    "demo_evidence": "EVD-082（命令输出转录）；Design Reviewer 报告 docs/review/COMPAT-001-R1.md"
-   },
-   "quality_budget": {
-    "dimensions": {
-     "performance": { "threshold": "文档任务无运行时性能面；实现期约束——新增加载期探测不得阻塞插件启动（同步路径零新增 IO）", "validation": "node test/smoke.mjs 启动链断言 + 隔离实例启动耗时对照（实现任务验收命令）", "status": "PASS", "evidence": "分析文档轴③/④节", "exception": "" },
-     "reliability": { "threshold": "依赖探测失败必须降级不崩溃（四次事故共性红线）；适配层缺席时功能面退化但插件可加载", "validation": "node test/smoke.mjs 降级路径断言（BUG-003~005 事故场景回归项）", "status": "PASS", "evidence": "BUG-003~005 修复模式 + 分析文档轴②", "exception": "" },
-     "security": { "threshold": "边界层不引入新攻击面——诊断面输出不泄露范围外信息；安装注册逻辑保持 P-07 原子写/防覆盖", "validation": "Code Review 安全检查项 + install 幂等回归", "status": "PASS", "evidence": "分析文档轴②/④ + EVD-081 幂等验证先例", "exception": "" },
-     "accessibility": { "threshold": "不适用——本任务无 UI 改动；实现期若触及诊断 UI 须遵循 DEC-021 令牌派生", "validation": "Code Review DEC-021 检查项", "status": "EXEMPT", "evidence": "DEC-021 令牌派生原则 + docs/research/COMPAT-001-host-compat-analysis.md 轴④降级文案方案（实现期触及 UI 时适用）", "exception": "文档分析任务无 UI 面" },
-     "ux": { "threshold": "用户可感知目标：宿主升级后「不断裂或断得明白」——诊断信息可读、降级提示友好", "validation": "docs/research/COMPAT-001-host-compat-analysis.md 轴④降级文案方案评审 + 实现期 node test/smoke.mjs 降级文案断言", "status": "PASS", "evidence": "docs/research/COMPAT-001-host-compat-analysis.md 轴④诊断面设计节", "exception": "" },
-     "maintainability": { "threshold": "宿主依赖逻辑单点收敛（边界层单独维护）——新增宿主表面必须进契约清单与校验，禁止散落产品代码", "validation": "node test/smoke.mjs 契约断言覆盖度（实现期新增）+ Code Review 边界层核对项", "status": "PASS", "evidence": "分析文档轴②/③", "exception": "" }
+    "UX-060": {
+      "task_id": "UX-060",
+      "priority": "P1",
+      "status": "⏳ 待执行",
+      "goal": "UX-060 创作台告警与标题栏文字重叠（用户 2026-09-13 实机截图批注 1）：`.nv-bar-note` 单行 46% 截断 + `title` 原生 tooltip 展开全文 ⇒ 浮层覆盖标题栏居中横幅（阶段/统计）与右侧 ⇄⟳☆ 控件（截图实证：红框处「阶段：质量审查」与告警字符串叠字）；修复 = 告警全文入**流式可读面**（不靠 tooltip 承载长文本、不与横幅/控件争同一坐标，多行换行 + 可关闭），单行摘要保留；探针几何断言（告警矩形 ∩ 横幅/控件 = ∅）+ 目检 + smoke",
+      "product_success_contract": {
+        "user": "TO_BE_DEFINED: impacted persona for UX-060 创作台告警与标题栏文字重叠（用户 2026-09-13 实机截图批注 1）：`.nv-bar-note` 单行 46% 截断 + `title` 原生 tooltip 展开全文 ⇒ 浮层覆盖标题栏居中横幅（阶段/统计）与右侧 ⇄⟳☆ 控件（截图实证：红框处「阶段：质量审查」与告警字符串叠字）；修复 = 告警全文入**流式可读面**（不靠 tooltip 承载长文本、不与横幅/控件争同一坐标，多行换行 + 可关闭），单行摘要保留；探针几何断言（告警矩形 ∩ 横幅/控件 = ∅）+ 目检 + smoke",
+        "job_to_be_done": "TO_BE_DEFINED: user job and desired outcome for UX-060 创作台告警与标题栏文字重叠（用户 2026-09-13 实机截图批注 1）：`.nv-bar-note` 单行 46% 截断 + `title` 原生 tooltip 展开全文 ⇒ 浮层覆盖标题栏居中横幅（阶段/统计）与右侧 ⇄⟳☆ 控件（截图实证：红框处「阶段：质量审查」与告警字符串叠字）；修复 = 告警全文入**流式可读面**（不靠 tooltip 承载长文本、不与横幅/控件争同一坐标，多行换行 + 可关闭），单行摘要保留；探针几何断言（告警矩形 ∩ 横幅/控件 = ∅）+ 目检 + smoke",
+        "non_goals": [
+          "TO_BE_DEFINED: explicit non-goal that protects the task from scope drift.",
+          "TO_BE_DEFINED: explicit non-goal that prevents process evidence from replacing product value."
+        ],
+        "success_metrics": [
+          "TO_BE_DEFINED: user-visible outcome or acceptance scenario for this task.",
+          "TO_BE_DEFINED: runnable E2E, test, or command that proves the outcome."
+        ],
+        "competitive_baseline": "TO_BE_DEFINED: mature-team or competing-product baseline this task must match.",
+        "done_definition": [
+          "TO_BE_DEFINED: product success evidence is recorded with concrete facts.",
+          "TO_BE_DEFINED: independent review confirms the user outcome is not replaced by process completion."
+        ]
+      },
+      "acceptance_contract": {
+        "scenario": "TO_BE_DEFINED: user-visible acceptance scenario for UX-060 创作台告警与标题栏文字重叠（用户 2026-09-13 实机截图批注 1）：`.nv-bar-note` 单行 46% 截断 + `title` 原生 tooltip 展开全文 ⇒ 浮层覆盖标题栏居中横幅（阶段/统计）与右侧 ⇄⟳☆ 控件（截图实证：红框处「阶段：质量审查」与告警字符串叠字）；修复 = 告警全文入**流式可读面**（不靠 tooltip 承载长文本、不与横幅/控件争同一坐标，多行换行 + 可关闭），单行摘要保留；探针几何断言（告警矩形 ∩ 横幅/控件 = ∅）+ 目检 + smoke",
+        "command": "TO_BE_DEFINED: runnable E2E, smoke, unit, or validation command",
+        "expected_output": "TO_BE_DEFINED: concrete pass output, assertion, or observable demo result",
+        "last_run": {
+          "status": "TO_BE_DEFINED",
+          "exit_code": null,
+          "summary": "TO_BE_DEFINED: last run output summary with evidence location"
+        },
+        "demo_evidence": "TO_BE_DEFINED: demo, CLI output, or artifact proving the scenario"
+      },
+      "quality_budget": {
+        "dimensions": {
+          "performance": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable performance threshold for UX-060 创作台告警与标题栏文字重叠（用户 2026-09-13 实机截图批注 1）：`.nv-bar-note` 单行 46% 截断 + `title` 原生 tooltip 展开全文 ⇒ 浮层覆盖标题栏居中横幅（阶段/统计）与右侧 ⇄⟳☆ 控件（截图实证：红框处「阶段：质量审查」与告警字符串叠字）；修复 = 告警全文入**流式可读面**（不靠 tooltip 承载长文本、不与横幅/控件争同一坐标，多行换行 + 可关闭），单行摘要保留；探针几何断言（告警矩形 ∩ 横幅/控件 = ∅）+ 目检 + smoke",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for performance",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest performance result or planned evidence location",
+            "exception": ""
+          },
+          "reliability": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable reliability threshold for UX-060 创作台告警与标题栏文字重叠（用户 2026-09-13 实机截图批注 1）：`.nv-bar-note` 单行 46% 截断 + `title` 原生 tooltip 展开全文 ⇒ 浮层覆盖标题栏居中横幅（阶段/统计）与右侧 ⇄⟳☆ 控件（截图实证：红框处「阶段：质量审查」与告警字符串叠字）；修复 = 告警全文入**流式可读面**（不靠 tooltip 承载长文本、不与横幅/控件争同一坐标，多行换行 + 可关闭），单行摘要保留；探针几何断言（告警矩形 ∩ 横幅/控件 = ∅）+ 目检 + smoke",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for reliability",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest reliability result or planned evidence location",
+            "exception": ""
+          },
+          "security": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable security threshold for UX-060 创作台告警与标题栏文字重叠（用户 2026-09-13 实机截图批注 1）：`.nv-bar-note` 单行 46% 截断 + `title` 原生 tooltip 展开全文 ⇒ 浮层覆盖标题栏居中横幅（阶段/统计）与右侧 ⇄⟳☆ 控件（截图实证：红框处「阶段：质量审查」与告警字符串叠字）；修复 = 告警全文入**流式可读面**（不靠 tooltip 承载长文本、不与横幅/控件争同一坐标，多行换行 + 可关闭），单行摘要保留；探针几何断言（告警矩形 ∩ 横幅/控件 = ∅）+ 目检 + smoke",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for security",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest security result or planned evidence location",
+            "exception": ""
+          },
+          "accessibility": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable accessibility threshold for UX-060 创作台告警与标题栏文字重叠（用户 2026-09-13 实机截图批注 1）：`.nv-bar-note` 单行 46% 截断 + `title` 原生 tooltip 展开全文 ⇒ 浮层覆盖标题栏居中横幅（阶段/统计）与右侧 ⇄⟳☆ 控件（截图实证：红框处「阶段：质量审查」与告警字符串叠字）；修复 = 告警全文入**流式可读面**（不靠 tooltip 承载长文本、不与横幅/控件争同一坐标，多行换行 + 可关闭），单行摘要保留；探针几何断言（告警矩形 ∩ 横幅/控件 = ∅）+ 目检 + smoke",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for accessibility",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest accessibility result or planned evidence location",
+            "exception": ""
+          },
+          "ux": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable ux threshold for UX-060 创作台告警与标题栏文字重叠（用户 2026-09-13 实机截图批注 1）：`.nv-bar-note` 单行 46% 截断 + `title` 原生 tooltip 展开全文 ⇒ 浮层覆盖标题栏居中横幅（阶段/统计）与右侧 ⇄⟳☆ 控件（截图实证：红框处「阶段：质量审查」与告警字符串叠字）；修复 = 告警全文入**流式可读面**（不靠 tooltip 承载长文本、不与横幅/控件争同一坐标，多行换行 + 可关闭），单行摘要保留；探针几何断言（告警矩形 ∩ 横幅/控件 = ∅）+ 目检 + smoke",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for ux",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest ux result or planned evidence location",
+            "exception": ""
+          },
+          "maintainability": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable maintainability threshold for UX-060 创作台告警与标题栏文字重叠（用户 2026-09-13 实机截图批注 1）：`.nv-bar-note` 单行 46% 截断 + `title` 原生 tooltip 展开全文 ⇒ 浮层覆盖标题栏居中横幅（阶段/统计）与右侧 ⇄⟳☆ 控件（截图实证：红框处「阶段：质量审查」与告警字符串叠字）；修复 = 告警全文入**流式可读面**（不靠 tooltip 承载长文本、不与横幅/控件争同一坐标，多行换行 + 可关闭），单行摘要保留；探针几何断言（告警矩形 ∩ 横幅/控件 = ∅）+ 目检 + smoke",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for maintainability",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest maintainability result or planned evidence location",
+            "exception": ""
+          }
+        }
+      },
+      "vertical_slice": {
+        "user_visible_slice": "TO_BE_DEFINED: smallest user-visible slice for UX-060 创作台告警与标题栏文字重叠（用户 2026-09-13 实机截图批注 1）：`.nv-bar-note` 单行 46% 截断 + `title` 原生 tooltip 展开全文 ⇒ 浮层覆盖标题栏居中横幅（阶段/统计）与右侧 ⇄⟳☆ 控件（截图实证：红框处「阶段：质量审查」与告警字符串叠字）；修复 = 告警全文入**流式可读面**（不靠 tooltip 承载长文本、不与横幅/控件争同一坐标，多行换行 + 可关闭），单行摘要保留；探针几何断言（告警矩形 ∩ 横幅/控件 = ∅）+ 目检 + smoke",
+        "demo_path": "TO_BE_DEFINED: runnable demo, smoke test, URL, screenshot, or command proving the slice",
+        "scope_guard": "TO_BE_DEFINED: files and behavior in scope for this slice only (open)",
+        "rollback_plan": "TO_BE_DEFINED: how to revert or disable the slice if validation fails",
+        "status": "TO_BE_DEFINED",
+        "evidence": "TO_BE_DEFINED: latest demo proof or planned evidence location"
+      },
+      "interruption_policy": {
+        "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
+        "critical_triggers": [
+          "Ask the user when product intent is unclear.",
+          "Ask the user when acceptance standard or done criteria are unclear.",
+          "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions."
+        ],
+        "auto_execute": [
+          "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible.",
+          "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied."
+        ],
+        "assumption_record": {
+          "assumption": "TO_BE_DEFINED: default choice used for a reversible non-critical ambiguity",
+          "basis": "TO_BE_DEFINED: fact source or repository pattern supporting the default",
+          "reversibility": "TO_BE_DEFINED: why the choice can be changed without product damage",
+          "validation": "TO_BE_DEFINED: command or demo that will verify the assumption",
+          "rollback": "TO_BE_DEFINED: how to revert if the assumption is wrong"
+        },
+        "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
+      },
+      "allowed_change_scope": [
+        "Only change files required by this task row: open",
+        "Keep unrelated refactors, release version bumps, and fixture sync out of this task unless listed in the task scope."
+      ],
+      "required_evidence": [
+        "evidence-log entry with 事实依据, 目标对齐, 用户影响, and 结构化事实 JSON",
+        "validation commands with exit_code and concise output summary",
+        "independent review evidence or explicit degraded review evidence that does not claim full separation"
+      ],
+      "next_commands": [
+        "python -m unittest skills/software-project-governance/infra/tests/test_verify_workflow.py -v",
+        "python skills/software-project-governance/infra/verify_workflow.py check-governance --fail-on-issues"
+      ],
+      "done_definition": [
+        "open",
+        "Code Reviewer or matching Reviewer has APPROVED the product-code change.",
+        "Commit and push are completed for this single task."
+      ],
+      "source": "plan-tracker.md##当前活跃事项"
     }
-   },
-   "vertical_slice": {
-    "user_visible_slice": "第一可验证切片=依赖清单+边界层设计定稿（本任务产出）；用户可见终态=下次 dsh 升级时插件不断裂或诊断面单点定位",
-    "demo_path": "docs/research/COMPAT-001-host-compat-analysis.md（六面清单+四轴设计+ADR）；实现期 demo=诊断命令输出 + smoke 契约断言",
-    "scope_guard": "本任务仅 docs/research/COMPAT-001-host-compat-analysis.md 一个产出文件；产品代码零改动",
-    "rollback_plan": "纯文档产出——回滚=删除文档；无运行时影响",
-    "status": "PASS",
-    "evidence": "EVD-082（基线）；审查报告 docs/review/COMPAT-001-R1.md（待产出）"
-   },
-   "interruption_policy": {
-    "mode": "critical-only: default execute routine reversible work and record assumptions when needed（DEC-024 用户已授权按推荐推进至闭环）",
-    "critical_triggers": [
-     "Ask the user when product intent is unclear（产品意图不明——四轴推荐与用户目标出现偏差时）",
-     "Ask the user when acceptance standard or done criteria are unclear（验收标准/完成定义不明）",
-     "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions（不可逆/发布/风险接受/外部依赖/模式变更决策前）",
-     "超出兼容性演进范围的新范围/宿主源码改动（违反 DEC-021）/breaking change → ask_user_question",
-     "发布 tag/版本 go-no-go → 用户 Release Gate（DEC-024 边界①）",
-     "P0 级风险接受 → ask_user_question"
-    ],
-    "auto_execute": [
-     "Run routine execution, local validation, focused analysis, and governance record updates when scope is known and reversible（常规执行/本地验证/聚焦分析/治理记录更新——DEC-024 授权范围内自动进行）",
-     "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied（门禁满足后单任务 commit+push——分析→审查→实现入账→Developer+Code Reviewer 分离执行→门禁复跑）"
-    ],
-    "assumption_record": {
-     "assumption": "分析推荐按 DEC-024 直接推进，不需逐项再确认",
-     "basis": "用户原话授权「完成分析之后我授权Coordinator 按照推荐进行推进，直到完成兼容性架构演进闭环」（DEC-024）",
-     "reversibility": "授权可由用户随时撤回——实现任务均为仓库内可回滚变更",
-     "validation": "每个实现任务审查通过后向用户摘要（DEC-024 复核点）",
-     "rollback": "git revert 单任务 commit；治理记录同步回滚"
-    },
-    "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
-   },
-   "required_evidence": [
-    "事实依据：依赖清单六面全覆盖（服务端 API/客户端 API/DOM 约定/安装机制/manifest·预设/peer 依赖），逐项五要素（依赖点文件+行号/用途/必要性判定/现有防护/事故关联 BUG-003~006·RISK-003）——全部可溯源",
-    "结构化事实：四轴设计各 ≥2 候选方案 + 评估标准 + 取舍理由 + 风险/回滚路径（结构化呈现）",
-    "蓝军挑战 ≥3 条（独立 ID + 缓解措施）",
-    "proposed ADR 完整字段（标题+日期+背景+决策+备选方案+排除理由+影响范围+后续动作）",
-    "Design Reviewer 后置审查结论（review-record 机录）"
-   ],
-   "next_commands": [
-    "Design Reviewer R1 审查 docs/research/COMPAT-001-host-compat-analysis.md → docs/review/COMPAT-001-R1.md + review-record 机录",
-    "COMPAT-006 版本矩阵 P0 决策点 → ask_user_question（DEC-024 边界②：潜在 breaking change）",
-    "按 DEC-024 授权拆解 COMPAT-002~009 实现任务入账 → Developer+Code Reviewer 分离执行至闭环"
-   ],
-   "done_definition": [
-    "分析文档落盘且 Design Reviewer 审查通过（APPROVED / APPROVED_WITH_NOTES 且 unresolved_blockers=0）",
-    "设计方向按 DEC-024 授权落 decision-log（ADR 采纳）+ COMPAT-006 版本矩阵经用户定案",
-    "实现任务清单从分析导出入账并全部闭环（含门禁不劣化于 EVD-082 基线）"
-   ],
-   "source": "plan-tracker.md##当前活跃事项",
-   "generated_by": "manual（按 COMPAT-001 事实手工构造；check-governance 18c/18d/18f/18i 校验通过为准）"
-  },
-  "COMPAT-010": {
-   "task_id": "COMPAT-010",
-   "priority": "P1",
-   "status": "✅ 完成 (2026-09-12，commit 1617aba + EVD-083 + REVIEW-COMPAT-010-R1 APPROVED_WITH_NOTES 0 阻断〔机录〕；F1→COMPAT-003 承接)",
-   "goal": "CI dsh-settings mock 导出面对齐真实 dsh-settings@0.1.5-rc.2：删除 ci.yml L76-78 的 settingsNamespace mock 导出（真实导出面=SettingsConflictError/SettingsProvider/redactSecrets，宿主 checkout dsh-settings/lib/index.js L610 权威复核）——消灭「mock 让已删除宿主表面复活=smoke 假绿」的 BUG-003 类温床（REVIEW-COMPAT-001-R1 F5 拆出立即可做项）",
-   "product_success_contract": {
-    "user": "插件维护者/贡献者——CI 绿灯重新代表真实兼容性而非 mock 幻觉",
-    "job_to_be_done": "宿主表面变更后 CI 能真实暴露断裂（而非 mock 掩盖），BUG-003 类事故在 CI 层被拦截",
-    "non_goals": ["不重构整个 CI mock 体系（COMPAT-003 fixtures 化承接）", "不改产品代码"],
-    "success_metrics": ["ci.yml mock 导出面与宿主 0.1.5-rc.2 真实导出面逐项一致（核对记录在案）", "本地回归门禁不劣化 EVD-082 基线"],
-    "competitive_baseline": "contract testing 原则——替身（test double）必须镜像真实依赖面，否则测试是假绿",
-    "done_definition": ["mock 对齐完成且 YAML 语法有效", "node test/smoke.mjs 203/0 复跑通过（回归不劣化）", "Code Reviewer 审查通过（review-record 机录）"]
-   },
-   "acceptance_contract": {
-    "scenario": "ci.yml 的 dsh-settings mock 不再导出 settingsNamespace，导出面=真实 0.1.5-rc.2 三项",
-    "command": "node test/smoke.mjs",
-    "expected_output": "SMOKE DONE: 203 passed, 0 failed（基线 EVD-082 不劣化）+ ci.yml 语法有效",
-    "last_run": { "status": "PASS", "exit_code": 0, "summary": "基线 203/0（EVD-082）" },
-    "demo_evidence": "diff 前后对照 + 宿主 checkout L610 导出面引用"
-   },
-   "quality_budget": {
-    "dimensions": {
-     "performance": { "threshold": "CI mock 面变化不影响 CI 时长（删导出零开销）", "validation": "push 后 Actions 运行时长对照（收尾核验）", "status": "PASS", "evidence": "ci.yml diff 零新增步骤", "exception": "" },
-     "reliability": { "threshold": "mock 面与真实面一致后，若产品代码隐式依赖已删导出会即刻暴露（当前已知依赖已消除 EVD-076）", "validation": "node test/smoke.mjs 全量 + push 后 CI 真跑绿", "status": "PASS", "evidence": "EVD-076 BUG-003 修复记录（NS 已改字符串常量）", "exception": "" },
-     "security": { "threshold": "无新攻击面（纯 CI 配置删行）", "validation": "diff 审阅仅删 mock 导出", "status": "PASS", "evidence": "Code Review diff 核对", "exception": "" },
-     "accessibility": { "threshold": "不适用——无 UI", "validation": "Code Review 核对", "status": "EXEMPT", "evidence": "纯 CI 配置任务", "exception": "无 UI 面" },
-     "ux": { "threshold": "不适用——维护者面变更", "validation": "Code Review 核对", "status": "EXEMPT", "evidence": "CI 配置任务", "exception": "无用户可见面" },
-     "maintainability": { "threshold": "mock 面与真实面的一致性在 COMPAT-003 fixtures 化前靠注释指向权威源", "validation": "ci.yml mock 处注释标注宿主权威面位置（dsh-settings/lib/index.js L610）", "status": "PASS", "evidence": "diff 含注释", "exception": "" }
-    }
-   },
-   "vertical_slice": {
-    "user_visible_slice": "维护者可见：CI 绿灯可信度恢复（mock 不再复活已删宿主表面）",
-    "demo_path": "ci.yml diff + push 后 Actions 绿",
-    "scope_guard": "仅 .github/workflows/ci.yml + CHANGELOG.md [Unreleased]",
-    "rollback_plan": "git revert 单 commit（纯删行回退零风险）",
-    "status": "planned",
-    "evidence": "待执行"
-   },
-   "interruption_policy": {
-    "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
-    "critical_triggers": [
-     "Ask the user when product intent is unclear（产品意图不明）",
-     "Ask the user when acceptance standard or done criteria are unclear（验收标准不明）",
-     "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions（不可逆/发布/风险接受/外部依赖/模式变更前）"
-    ],
-    "auto_execute": [
-     "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible",
-     "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied"
-    ],
-    "assumption_record": { "assumption": "仅删 mock 导出行即达对齐（真实面三项中 SettingsProvider 已有 mock 形态则保留）", "basis": "宿主 checkout L610 导出面核对 + ci.yml L70-89 现状", "reversibility": "单 commit revert", "validation": "diff 逐项对照", "rollback": "git revert" },
-    "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
-   },
-   "required_evidence": [
-    "事实依据：宿主 dsh-settings@0.1.5-rc.2 导出面（checkout L610 只读核对）+ ci.yml L76-78 现状引用",
-    "结构化事实：mock 对齐前后导出面逐项对照表（命令/diff 输出）",
-    "node test/smoke.mjs 203/0 复跑记录",
-    "Code Reviewer 审查结论（review-record 机录）"
-   ],
-   "allowed_change_scope": [".github/workflows/ci.yml", "CHANGELOG.md"],
-   "next_commands": ["改 ci.yml mock 面 → CHANGELOG [Unreleased] → node test/smoke.mjs 复跑 → commit"],
-   "done_definition": ["mock 面=真实面（对照记录在案）", "smoke 203/0 复跑通过", "Code Reviewer 通过（机录）"],
-   "source": "plan-tracker.md##当前活跃事项",
-   "generated_by": "manual（按 COMPAT-010 triage 事实构造；check-governance 18 系列校验通过为准）"
-  },
-  "COMPAT-002": {
-   "task_id": "COMPAT-002",
-   "priority": "P1",
-   "status": "⏳ 待执行 (2026-09-12 入账——COMPAT-010 完成后派发；003~009 的共同地基)",
-   "goal": "宿主契约清单提取：新建 lib/host-contract.mjs——六面 47 项依赖的机读声明式契约（纯数据零 import 宿主包；COMPAT-001 分析 §3 为底稿/61 处抽核 0 失实）；附 schema 条目样例（F4：face/item/kind/symbol/file/line/necessity 字段集）；smoke 新增消费断言（含 F8 region 常量 ⊆ contract 一致性——针对 client.js 现有字面量：槽位名/服务名/令牌名/DOM selector 做首批对账）；自有口径统一为 1 项（F10）",
-   "product_success_contract": {
-    "user": "插件维护者——宿主表面知识单一事实源（C-02），后续每次宿主升级的适配从「翻 4462 行找点」变为「对照契约单点」",
-    "job_to_be_done": "CI/smoke/诊断报告三方共用地基就位——契约可被机器消费而非散落代码",
-    "non_goals": ["不做运行时适配改造（COMPAT-004）", "不做 fixtures（COMPAT-003）", "契约文件零运行时依赖——不 import 任何宿主包"],
-    "success_metrics": ["六面 47 项全覆盖（对照分析 §3 逐项可溯源）", "smoke 消费断言通过且总数 ≥203+新增", "region 字面量首批对账（槽位/服务/令牌/DOM selector）零失配或失配项显式列入待办"],
-    "competitive_baseline": "consumer-driven contract testing 的契约清单面（pact/spec 文件传统）——声明与实现分离",
-    "done_definition": ["host-contract.mjs 落盘（纯数据+schema 样例）", "smoke 新增断言全绿（203+N/0）", "Code Reviewer 审查通过（机录）"]
-   },
-   "acceptance_contract": {
-    "scenario": "契约文件成为宿主表面单一事实源；smoke 能消费并断言 region 字面量一致性",
-    "command": "node --check lib/host-contract.mjs && node test/smoke.mjs",
-    "expected_output": "语法 0 错 + SMOKE DONE: 203+N passed, 0 failed",
-    "last_run": { "status": "PASS", "exit_code": 0, "summary": "基线 203/0（EVD-082）" },
-    "demo_evidence": "smoke 契约断言段输出 + 契约条目样例"
-   },
-   "quality_budget": {
-    "dimensions": {
-     "performance": { "threshold": "纯数据文件零运行时开销；smoke 新增断言 <2s", "validation": "node test/smoke.mjs 总时长对照基线", "status": "PASS", "evidence": "执行记录", "exception": "" },
-     "reliability": { "threshold": "契约数据与代码字面量失配时 smoke 必红（而非静默）", "validation": "node test/smoke.mjs 断言行为（人为改动一项字面量验证变红——演练一次）", "status": "PASS", "evidence": "演练记录", "exception": "" },
-     "security": { "threshold": "契约文件不含敏感路径/token/用户数据", "validation": "Code Review 核对条目内容", "status": "PASS", "evidence": "审查记录", "exception": "" },
-     "accessibility": { "threshold": "不适用——无 UI", "validation": "Code Review 核对", "status": "EXEMPT", "evidence": "纯数据任务", "exception": "无 UI 面" },
-     "ux": { "threshold": "不适用", "validation": "Code Review 核对", "status": "EXEMPT", "evidence": "纯数据任务", "exception": "无用户可见面" },
-     "maintainability": { "threshold": "单一事实源达成度：新增宿主依赖必须入契约（review 检查项）", "validation": "Code Review 核对 diff 与契约同步", "status": "PASS", "evidence": "审查记录", "exception": "" }
-    }
-   },
-   "vertical_slice": {
-    "user_visible_slice": "维护者可见：契约文件 + smoke 对账绿灯（后续 003~009 的地基）",
-    "demo_path": "lib/host-contract.mjs + smoke 断言输出",
-    "scope_guard": "仅 lib/host-contract.mjs（新）+ test/smoke.mjs（新增段）+ CHANGELOG.md",
-    "rollback_plan": "删文件 + revert smoke 段（单 commit）",
-    "status": "planned",
-    "evidence": "待执行"
-   },
-   "interruption_policy": {
-    "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
-    "critical_triggers": [
-     "Ask the user when product intent is unclear（产品意图不明）",
-     "Ask the user when acceptance standard or done criteria are unclear（验收标准不明）",
-     "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions（不可逆/发布/风险接受/外部依赖/模式变更前）"
-    ],
-    "auto_execute": [
-     "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible",
-     "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied"
-    ],
-    "assumption_record": { "assumption": "首批 region 对账范围=槽位名/服务名/令牌名/DOM selector 四类字面量", "basis": "分析 §3 面2/面3 清单", "reversibility": "断言范围可扩缩（数组驱动）", "validation": "smoke 断言运行", "rollback": "revert 断言段" },
-    "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
-   },
-   "required_evidence": [
-    "事实依据：分析 §3 六面清单（61 处抽核背书）+ 现有字面量 grep 实证",
-    "结构化事实：契约条目计数（六面分布）+ region 对账结果（命中/失配清单）",
-    "node --check + smoke 203+N/0 执行记录",
-    "Code Reviewer 审查结论（review-record 机录）"
-   ],
-   "allowed_change_scope": ["lib/host-contract.mjs", "test/smoke.mjs", "CHANGELOG.md"],
-   "next_commands": ["COMPAT-010 完成 → 派发 Developer 提取契约 → smoke 断言 → 审查"],
-   "done_definition": ["契约文件+样例落盘", "smoke 203+N/0", "Code Reviewer 通过（机录）"],
-   "source": "plan-tracker.md##当前活跃事项",
-   "generated_by": "manual（按 COMPAT-002 triage 事实构造；check-governance 18 系列校验通过为准）"
-  },
-  "COMPAT-003": {
-   "task_id": "COMPAT-003",
-   "priority": "P1",
-   "status": "🔄 进行中 (2026-09-12 Developer 派发——fixtures 快照 + 对账断言 + 002 审查非阻断项全量承接)",
-   "goal": "看护三层地基（DEC-025 ADR 决策②）：①test/fixtures/host-surfaces/ 三版本宿主表面快照入仓（0.1.5-rc.1 从宿主只读 checkout 提取〔权威〕；0.1.2-rc.1 与 0.1.x 先探测 npm 可达性，可达则 pack 提取，不可达则从 BUG-003/004/005 证据+分析 §3 构造并显式标源降级）；②smoke 新增离线契约对账段（contract ⊆ fixture 各版本表面 + F1 面钉断言：动态 import ci.yml mock 断言导出键集恰 4-key）；③ci.yml mock 与 fixtures 对齐断言；④REVIEW-COMPAT-002-R1 非阻断项全量落地：F1 契约补 findSidebarEl 条目（3.8，47→48 计数同步）/F2 --dsw-shadow-lv2 令牌入册/F3 事件名双向对账+措辞订正/F4 纯数据守卫递归 own-descriptor 强化/F5 file·line 活性校验（白名单+形态+抽点 anchor）/F6 necessity 九值 golden 分布/F7 kind 枚举 membership+faces 结构断言/F8 提取口径写入契约自述+review 检查项登记/F9 line 精度修正三处",
-   "product_success_contract": {
-    "user": "插件维护者——宿主表面变更在 CI 层离线可测（不依赖网络/真实宿主），契约与 mock 漂移机器化拦截",
-    "job_to_be_done": "宿主升级断裂在 CI 红/绿信号里暴露，而非用户报障；mock 面钉使「已删表面复活」类缺陷不可能再静默通过",
-    "non_goals": ["不实现加载期探测（COMPAT-004）", "不实现诊断面板（COMPAT-005）", "不改 lib/client.js 行为（F1 仅契约登记侧）"],
-    "success_metrics": ["三版本 fixtures 入仓且每份标源（提取/构造降级）", "smoke 新增对账+面钉断言全绿（214→214+N/0）", "F1~F9 逐项落地可验证（每项在返回中给出落点）", "门禁不劣化 EVD-082 基线"],
-    "competitive_baseline": "consumer-driven contract testing 的 provider-state fixtures 模式（pact 快照传统）+ 浏览器 compat-data（caniuse 数据表）离线数据面",
-    "done_definition": ["fixtures 三版本入仓+标源", "smoke/ci.yml 断言全绿（含演练活性证明）", "F1~F9 全落地", "Code Reviewer 审查通过（review-record 机录）"]
-   },
-   "acceptance_contract": {
-    "scenario": "离线 CI 检出 mock 面漂移/契约表面失配/断言真空",
-    "command": "node --check lib/host-contract.mjs && node test/validate-preset.mjs && node test/smoke.mjs",
-    "expected_output": "PRESET VALIDATION PASSED + SMOKE DONE: 214+N passed, 0 failed",
-    "last_run": { "status": "PASS", "exit_code": 0, "summary": "基线 214/0（COMPAT-002 后，EVD-084）" },
-    "demo_evidence": "smoke 新增段输出 + fixtures 文件清单 + 演练红绿记录"
-   },
-   "quality_budget": {
-    "dimensions": {
-     "performance": { "threshold": "新增断言总耗时 <2s（离线文件读+正则+JSON）", "validation": "node test/smoke.mjs 总时长对照基线（214 段 ~10ms 量级）", "status": "PASS", "evidence": "REVIEW-COMPAT-002-R1 §3.4 性能评估", "exception": "" },
-     "reliability": { "threshold": "任一断言可被真实失配触发（演练红绿双向逐一验证关键项）", "validation": "node test/smoke.mjs 演练（改 fixture/契约各一处验证变红再恢复）", "status": "PASS", "evidence": "COMPAT-002 演练先例（shell.overlay→DRILL 213/1 exit=1）", "exception": "" },
-     "security": { "threshold": "fixtures 不含敏感路径/token/用户数据；npm 探测只读元数据不执行宿主代码", "validation": "Code Review 核对 fixtures 内容+npm 命令白名单", "status": "PASS", "evidence": "BC-05 安全边界（DEC-025）", "exception": "" },
-     "accessibility": { "threshold": "不适用——无 UI", "validation": "Code Review 核对", "status": "EXEMPT", "evidence": "基础设施任务", "exception": "无 UI 面" },
-     "ux": { "threshold": "不适用——维护者面", "validation": "Code Review 核对", "status": "EXEMPT", "evidence": "基础设施任务", "exception": "无用户可见面" },
-     "maintainability": { "threshold": "F8 落地：提取口径入契约自述 + 「新增宿主依赖必须入契约」review 检查项登记", "validation": "Code Review 核对契约注释与项目原则/AGENTS.md 登记", "status": "PASS", "evidence": "REVIEW-COMPAT-002-R1 F8", "exception": "" }
-    }
-   },
-   "vertical_slice": {
-    "user_visible_slice": "维护者可见：三版本 fixtures 数据面 + smoke/CI 离线对账绿灯（003~009 的看护地基）",
-    "demo_path": "test/fixtures/host-surfaces/*.json + smoke 对账段输出",
-    "scope_guard": "仅 test/fixtures/host-surfaces/（新）+ lib/host-contract.mjs + test/smoke.mjs + .github/workflows/ci.yml + CHANGELOG.md",
-    "rollback_plan": "删 fixtures 目录 + revert 断言段（单 commit）",
-    "status": "planned",
-    "evidence": "待执行"
-   },
-   "interruption_policy": {
-    "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
-    "critical_triggers": [
-     "Ask the user when product intent is unclear（产品意图不明）",
-     "Ask the user when acceptance standard or done criteria are unclear（验收标准不明）",
-     "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions（不可逆/发布/风险接受/外部依赖/模式变更前）"
-    ],
-    "auto_execute": [
-     "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible",
-     "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied"
-    ],
-    "assumption_record": { "assumption": "旧版本 fixtures 在 npm 不可达时以历史证据构造并显式标源降级（不伪造包提取面）", "basis": "BUG-003/004/005 证据（EVD-076~078）+ 分析 §3", "reversibility": "fixtures 为数据文件，替换零风险", "validation": "fixtures 头部 source 字段+Code Review 核对", "rollback": "删文件" },
-    "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
-   },
-   "required_evidence": [
-    "事实依据：宿主 checkout 提取面（0.1.5-rc.1）+ npm 探测结果（可达/不可达）+ 旧版本 fixtures 构造来源（BUG 证据 ID）",
-    "结构化事实：fixtures 文件清单+每份 source 标注+表面条目计数；F1~F9 逐项落点清单",
-    "node --check / validate-preset / smoke 214+N/0 真实输出 + 演练红绿双向记录",
-    "Code Reviewer 审查结论（review-record 机录）"
-   ],
-   "allowed_change_scope": ["test/fixtures/host-surfaces/", "lib/host-contract.mjs", "test/smoke.mjs", ".github/workflows/ci.yml", "CHANGELOG.md"],
-   "next_commands": ["Developer：探测 npm → 提取/构造三版本 fixtures → 契约修订（F1/F2/F9）→ smoke 断言段（对账+面钉+F3~F7）→ ci.yml mock 对齐 → 演练 → CHANGELOG → commit"],
-   "done_definition": ["三版本 fixtures 入仓标源", "smoke 214+N/0 + 演练红绿", "F1~F9 全落地", "Code Reviewer 通过（机录）"],
-   "source": "plan-tracker.md##当前活跃事项",
-   "generated_by": "manual（按 COMPAT-003 triage 事实构造；check-governance 18 系列校验通过为准）"
-  },
-  "COMPAT-004": {
-   "task_id": "COMPAT-004",
-   "priority": "P1",
-   "status": "🔄 进行中 (2026-09-12 Developer 派发——边界层收口+探测函数+[nv-compat] 警告+A3 inject 收敛)",
-   "goal": "边界层三件套的服务端+探测半壁（DEC-025 ADR 决策①③ + DEC-026 A3）：①新建 lib/host-boundary.js——服务端宿主调用（settings 注册读取/webServer 路由挂载/resolveDshHome/Service 构造参数）单点收口，index.js 产品代码只经 boundary（行为等价重构，smoke 零回归）；②detectHostCapabilities() 探测函数——读取 host-contract 声明→探测宿主实际表面→输出结构化能力报告（纯读取无副作用；单一实现三消费方：D2 启动警告/005 诊断面板/CI）；显式 ≤3 句职责定义（REVIEW-COMPAT-001-R1 F3）；③启动 [nv-compat] 结构化警告（D2）：apply 期探测缺面 → console.warn('[nv-compat]', JSON 摘要)，**探测项全部同步快速、无网络/布局等待**（REVIEW-COMPAT-001-R1 F7）；④A3 执行（DEC-026）：client.js inject 表 connection/locale 降为可选探测（ctx.get 惰性判定 + 缺席降级不崩溃，非 breaking——旧宿主/新宿主双路径 smoke 断言）；⑤**并入 REVIEW-COMPAT-011-R1 FIND-1~4 收口**：FIND-1 CHANGELOG tier 枚举订正/T3·T1·T1·T1·T1·T3；FIND-2 契约头 L46 typo+新字段入括号列表；FIND-3 fixtures 落 methodNamesExcludedByKeyword（名+行+原因，区分「不存在」vs「被过筛」）+ 明确判据优先级 exports·AST > methodNames；FIND-4 extract 头部「已知边界」补正则/嵌套模板串未识别披露",
-   "product_success_contract": {
-    "user": "插件用户（宿主升级后）——断裂第一时间在控制台可见（结构化警告指明断在哪层），而非白屏/静默降级",
-    "job_to_be_done": "宿主升级后插件即使局部失效也能加载并给出可诊断信号；适配改动收敛到 host-boundary/region 单点",
-    "non_goals": ["不做诊断面板 UI（COMPAT-005）", "不做 fixtures（COMPAT-003 已完成）", "不改 client.js 业务行为（仅 inject 收敛+探测接入）"],
-    "success_metrics": ["index.js 宿主调用 100% 经 host-boundary（grep 断言 product 代码零直连宿主 API）", "detectHostCapabilities 三消费方就位（警告已接、其余待 005/CI）", "A3 双路径 smoke 断言（service 在/缺）", "smoke 全量不劣化"],
-    "competitive_baseline": "特性检测渐进增强（Modernizr 模式）+ 结构化运行时诊断（webpack/VS Code 扩展 host 警告惯例）",
-    "done_definition": ["host-boundary.js + detectHostCapabilities 落盘且接线", "启动警告实测输出样例在案", "A3 双路径断言绿", "Code Reviewer 审查通过（机录）"]
-   },
-   "acceptance_contract": {
-    "scenario": "宿主服务缺失时插件加载成功 + [nv-compat] 警告指明缺面；inject 收敛后新旧宿主双路径可用",
-    "command": "node --check lib/host-boundary.js && node --check lib/index.js && node --check lib/client.js && node test/validate-preset.mjs && node test/smoke.mjs",
-    "expected_output": "PRESET VALIDATION PASSED + SMOKE DONE: {N} passed, 0 failed（≥214+N 基线）",
-    "last_run": { "status": "PASS", "exit_code": 0, "summary": "基线 214/0（COMPAT-002 后 EVD-084；003 后将抬升）" },
-    "demo_evidence": "探测报告样例输出 + smoke 新增断言段 + index.js boundary 收口 grep 结果"
-   },
-   "quality_budget": {
-    "dimensions": {
-     "performance": { "threshold": "apply 期探测全同步快速（无网络/布局等待/无新增 IO）；启动耗时对照基线不劣化", "validation": "node test/smoke.mjs 启动链断言 + apply 期探测项清单审查（F7）", "status": "PASS", "evidence": "REVIEW-COMPAT-001-R1 F7 验收项", "exception": "" },
-     "reliability": { "threshold": "探测失败/服务缺席一律降级不崩溃（四次事故共性红线）；boundary 包装行为等价", "validation": "node test/smoke.mjs 双路径断言（服务在/缺）+ 全量回归 0 failed", "status": "PASS", "evidence": "BUG-003~005 修复模式", "exception": "" },
-     "security": { "threshold": "诊断输出仅布尔/名称/版本，不含路径/token/用户数据（BC-05 边界）", "validation": "Code Review 核对警告载荷", "status": "PASS", "evidence": "BC-05（DEC-025）", "exception": "" },
-     "accessibility": { "threshold": "不适用——无 UI 变更（仅控制台警告）", "validation": "Code Review 核对", "status": "EXEMPT", "evidence": "无 UI 面", "exception": "无 UI 改动的诊断面" },
-     "ux": { "threshold": "警告文案可读、可检索（[nv-compat] 前缀）、不刷屏（单次输出）", "validation": "Code Review 核对文案 + smoke 断言单次性", "status": "PASS", "evidence": "D2 设计（分析 §4 轴④）", "exception": "" },
-     "maintainability": { "threshold": "宿主调用单点收敛——新增服务调用必须经 boundary（review 检查项）", "validation": "Code Review 核对 index.js diff + grep 断言", "status": "PASS", "evidence": "轴② B1/B2（DEC-025 决策①）", "exception": "" }
-    }
-   },
-   "vertical_slice": {
-    "user_visible_slice": "用户可见：宿主升级后控制台 [nv-compat] 结构化警告（断点层可见化）；维护者可见：host-boundary 单点 + 探测函数",
-    "demo_path": "[nv-compat] 警告输出样例 + smoke 探测断言段",
-    "scope_guard": "lib/host-boundary.js（新）+ lib/index.js + lib/client.js + test/smoke.mjs + CHANGELOG.md",
-    "rollback_plan": "boundary 包装与直接调用等价（纯搬运），revert 单 commit；A3 inject 收敛可单点回退",
-    "status": "planned",
-    "evidence": "待执行"
-   },
-   "interruption_policy": {
-    "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
-    "critical_triggers": [
-     "Ask the user when product intent is unclear（产品意图不明）",
-     "Ask the user when acceptance standard or done criteria are unclear（验收标准不明）",
-     "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions（不可逆/发布/风险接受/外部依赖/模式变更前）"
-    ],
-    "auto_execute": [
-     "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible",
-     "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied"
-    ],
-    "assumption_record": { "assumption": "A3 的 inject 收敛通过 ctx.get 惰性探测实现（cordis 允许可选依赖）", "basis": "分析 §4 轴① A3 + cordis inject 机制（BUG-005 经验：ctx.get 捕获 undefined 已容错）", "reversibility": "inject 表单行回退", "validation": "smoke 双路径断言", "rollback": "git revert 单 commit" },
-    "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
-   },
-   "required_evidence": [
-    "事实依据：contract 声明面（COMPAT-002 契约）+ 宿主表面实测（fixtures）+ 现有 makeHostApi/makeSessionsHookReactive 适配点行号",
-    "结构化事实：index.js 宿主调用点 → boundary 映射表（收口前后对照）；探测函数职责定义（≤3 句）；apply 期探测项清单（同步性声明）",
-    "node --check ×3 + validate-preset + smoke {N}/0 真实输出 + A3 双路径断言记录 + [nv-compat] 警告样例",
-    "Code Reviewer 审查结论（review-record 机录）"
-   ],
-   "allowed_change_scope": ["lib/host-boundary.js", "lib/index.js", "lib/client.js", "test/smoke.mjs", "CHANGELOG.md", "lib/host-contract.mjs", "test/fixtures/host-surfaces/extract.mjs", "test/fixtures/host-surfaces/0.1.1-rc.2.json", "test/fixtures/host-surfaces/0.1.2-rc.1.json", "test/fixtures/host-surfaces/0.1.5-rc.2.json"],
-   "next_commands": ["COMPAT-003 完成 → 派发 Developer：boundary 收口（行为等价）→ 探测函数 → 警告接线 → A3 → smoke 断言 → 演练 → commit"],
-   "done_definition": ["boundary + 探测落盘接线；宿主调用全经 boundary（grep 实证）", "[nv-compat] 警告样例在案", "A3 双路径断言绿 + smoke 不劣化", "Code Reviewer 通过（机录）"],
-   "source": "plan-tracker.md##当前活跃事项",
-   "generated_by": "manual（按 COMPAT-004 triage 事实构造；check-governance 18 系列校验通过为准）"
-  },
-  "COMPAT-011": {
-   "task_id": "COMPAT-011",
-   "priority": "P1",
-   "status": "🔄 进行中 (2026-09-12 Developer 派发——fixtures 数据质量修复，COMPAT-004 消费前置)",
-   "goal": "REVIEW-COMPAT-003-R1 全量承接：**C1（P1，消费前置）**——extract.mjs L97-104 methodsOf 加关键字黑名单（if/for/while/do/switch/catch/return/throw/super/typeof/await/yield/new/delete/void/else/try）+ 仅类体顶层（brace depth==1）匹配 + 排除 this. 前缀 → 重建三份 fixtures（重跑命令已留档 extract.mjs L17-36）+ 差异记 CHANGELOG；**C2（P2）**——export {X as default} 形态去重（classAliases/classCount 语义修复）；C3（P3）F5c 锚点剥离引号+通用词排除+非通用候选断言；C4（P3）「三版本实测」措辞订正或 origin 纳入机检；C5（P3）fixtures 版本一致性断言（packages[].version ≡ hostVersion + 例外表入契约）；C6（P3）mock 面钉扩 4/4（cordis/dsh-home-paths/dsh-tools）或显式登记范围；C7（P3）输入判空 + resolve 包含性检查；N1（origin 按 packed/checkout 分流）N2（⑯ 数组原型守卫）N3（classAliases 语义消费方文档化）",
-   "product_success_contract": {
-    "user": "插件维护者——fixtures 作为宿主表面校准基线语义正确（方法面判据不被语句关键字污染），COMPAT-004/005 诊断可信",
-    "job_to_be_done": "fixtures 数据面 + 断言网达到「语义正确 + 断言不虚设」双重标准，可安全作为探测/诊断的 golden",
-    "non_goals": ["不改 fixtures 的提取口径与版本选择（003 已定）", "不做探测函数（COMPAT-004）"],
-    "success_metrics": ["methodNames 无语句关键字（黑名单机检 + 与宿主类体事实一致）", "classCount/classAliases 与宿主类数一致（0.1.5-rc.2：2 类 + default 别名）", "smoke 断言数不降且新增强度项（C5 版本一致性 + C3 非通用候选）", "三份 fixtures 重建后 smoke 全绿"],
-    "competitive_baseline": "AST/正则解析质量纪律——启发式提取必须声明能力边界（与 F4 守卫披露同一原则）",
-    "done_definition": ["C1/C2 修复 + 三份 fixtures 重建（重跑命令留档可复现）", "C3~C7/N1~N3 逐项落地或显式登记", "smoke 全绿（≥230/0）", "Code Reviewer 审查通过（机录）"]
-   },
-   "acceptance_contract": {
-    "scenario": "fixtures methodNames 语义正确、classAliases 可还原类名；断言能捕获对应失配",
-    "command": "node test/smoke.mjs",
-    "expected_output": "SMOKE DONE: {N} passed, 0 failed（≥230）",
-    "last_run": { "status": "PASS", "exit_code": 0, "summary": "基线 230/0（COMPAT-003 后 EVD-085）" },
-    "demo_evidence": "重建前后 fixtures 差异摘要（methodNames 净化计数）+ smoke 尾行 + 演练红绿"
-   },
-   "quality_budget": {
-    "dimensions": {
-     "performance": { "threshold": "修 extract.mjs 不引入运行时开销（离线脚本）；smoke 新增断言 <0.5s", "validation": "node test/smoke.mjs 时长对照", "status": "PASS", "evidence": "003 性能基线（~10ms 级）", "exception": "" },
-     "reliability": { "threshold": "重建后 fixtures 与宿主真实类体一致（抽核 dsh-settings 类体 method 名）", "validation": "与宿主 checkout 类体对照（只读）+ smoke 断言", "status": "PASS", "evidence": "REVIEW-COMPAT-003-R1 §6-C 一手证实清单", "exception": "" },
-     "security": { "threshold": "npm pack 只读；宿主 checkout 零写入；fixtures 无敏感数据（沿用 003 机检）", "validation": "现有 smoke 安全断言 + Code Review", "status": "PASS", "evidence": "BC-05", "exception": "" },
-     "accessibility": { "threshold": "不适用", "validation": "Code Review 核对", "status": "EXEMPT", "evidence": "数据/断言任务", "exception": "无 UI 面" },
-     "ux": { "threshold": "不适用", "validation": "Code Review 核对", "status": "EXEMPT", "evidence": "维护者面", "exception": "无用户可见面" },
-     "maintainability": { "threshold": "extract.mjs 提取口径与能力边界在文件内自述（关键字黑名单/顶层约束）", "validation": "Code Review 核对注释", "status": "PASS", "evidence": "REVIEW-COMPAT-003-R1 C1 建议①", "exception": "" }
-    }
-   },
-   "vertical_slice": {
-    "user_visible_slice": "维护者可见：语义正确的 fixtures 校准基线（004/005 依赖）",
-    "demo_path": "fixtures diff 摘要 + smoke 尾行",
-    "scope_guard": "extract.mjs + 三份 fixtures + ci-mock-face.mjs + smoke.mjs + host-contract.mjs + CHANGELOG.md（lib/client.js 与 lib/index.js 零改动）",
-    "rollback_plan": "重建为数据替换；revert 单 commit",
-    "status": "planned",
-    "evidence": "待执行"
-   },
-   "interruption_policy": {
-    "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
-    "critical_triggers": [
-     "Ask the user when product intent is unclear（产品意图不明）",
-     "Ask the user when acceptance standard or done criteria are unclear（验收标准不明）",
-     "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions（不可逆/发布/风险接受/外部依赖/模式变更前）"
-    ],
-    "auto_execute": [
-     "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible",
-     "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied"
-    ],
-    "assumption_record": { "assumption": "C6 若扩 4/4 成本高则显式登记范围（F1 原始诉求仅指 dsh-settings）", "basis": "REVIEW-COMPAT-003-R1 C6 建议", "reversibility": "登记可随时升级为扩面", "validation": "返回中显式声明采取哪条路径", "rollback": "不适用" },
-    "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
-   },
-   "required_evidence": [
-    "事实依据：REVIEW-COMPAT-003-R1 C1~C7/N1~N3 原文 + 宿主类体一手对照（dsh-settings 类体 method 名 vs 修复后 fixtures）",
-    "结构化事实：重建前后 fixtures 差异（methodNames 净化 count/classCount/classAliases）+ C1~C7 逐项落点",
-    "smoke ≥230/0 真实输出 + 演练红绿（改动一项验证新断言活性）",
-    "Code Reviewer 审查结论（review-record 机录）"
-   ],
-   "allowed_change_scope": ["test/fixtures/host-surfaces/", "test/smoke.mjs", "lib/host-contract.mjs", "CHANGELOG.md"],
-   "next_commands": ["Developer：修 extract.mjs（C1/C2）→ 重建三份 fixtures → smoke 断言强化（C3/C5）+ 校验收敛（C7）→ C4/C6/N1~N3 → 演练 → CHANGELOG → commit"],
-   "done_definition": ["C1/C2 修复 + fixtures 重建可复现", "C3~C7/N1~N3 落地或显式登记", "smoke 全绿（≥230/0）", "Code Reviewer 通过（机录）"],
-   "source": "plan-tracker.md##当前活跃事项",
-   "generated_by": "manual（按 COMPAT-011 triage 事实构造；check-governance 18 系列校验通过为准）"
-  },
-  "BUG-005": {
-   "task_id": "BUG-005",
-   "priority": "P0",
-   "status": "🔄 进行中 (2026-09-07 探针确认根因，派发 Developer；探针环境保持：3180 实例 job pwsh-4 + headless Edge CDP 9334 + .probe-bug004.mjs)",
-   "goal": "BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
-   "product_success_contract": {
-    "user": "TO_BE_DEFINED: impacted persona for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
-    "job_to_be_done": "TO_BE_DEFINED: user job and desired outcome for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
-    "non_goals": [
-     "TO_BE_DEFINED: explicit non-goal that protects the task from scope drift.",
-     "TO_BE_DEFINED: explicit non-goal that prevents process evidence from replacing product value."
-    ],
-    "success_metrics": [
-     "TO_BE_DEFINED: user-visible outcome or acceptance scenario for this task.",
-     "TO_BE_DEFINED: runnable E2E, test, or command that proves the outcome."
-    ],
-    "competitive_baseline": "TO_BE_DEFINED: mature-team or competing-product baseline this task must match.",
-    "done_definition": [
-     "TO_BE_DEFINED: product success evidence is recorded with concrete facts.",
-     "TO_BE_DEFINED: independent review confirms the user outcome is not replaced by process completion."
-    ]
-   },
-   "acceptance_contract": {
-    "scenario": "TO_BE_DEFINED: user-visible acceptance scenario for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
-    "command": "TO_BE_DEFINED: runnable E2E, smoke, unit, or validation command",
-    "expected_output": "TO_BE_DEFINED: concrete pass output, assertion, or observable demo result",
-    "last_run": {
-     "status": "TO_BE_DEFINED",
-     "exit_code": null,
-     "summary": "TO_BE_DEFINED: last run output summary with evidence location"
-    },
-    "demo_evidence": "TO_BE_DEFINED: demo, CLI output, or artifact proving the scenario"
-   },
-   "quality_budget": {
-    "dimensions": {
-     "performance": {
-      "threshold": "TO_BE_DEFINED: minimum acceptable performance threshold for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
-      "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for performance",
-      "status": "TO_BE_DEFINED",
-      "evidence": "TO_BE_DEFINED: latest performance result or planned evidence location",
-      "exception": ""
-     },
-     "reliability": {
-      "threshold": "TO_BE_DEFINED: minimum acceptable reliability threshold for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
-      "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for reliability",
-      "status": "TO_BE_DEFINED",
-      "evidence": "TO_BE_DEFINED: latest reliability result or planned evidence location",
-      "exception": ""
-     },
-     "security": {
-      "threshold": "TO_BE_DEFINED: minimum acceptable security threshold for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
-      "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for security",
-      "status": "TO_BE_DEFINED",
-      "evidence": "TO_BE_DEFINED: latest security result or planned evidence location",
-      "exception": ""
-     },
-     "accessibility": {
-      "threshold": "TO_BE_DEFINED: minimum acceptable accessibility threshold for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
-      "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for accessibility",
-      "status": "TO_BE_DEFINED",
-      "evidence": "TO_BE_DEFINED: latest accessibility result or planned evidence location",
-      "exception": ""
-     },
-     "ux": {
-      "threshold": "TO_BE_DEFINED: minimum acceptable ux threshold for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
-      "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for ux",
-      "status": "TO_BE_DEFINED",
-      "evidence": "TO_BE_DEFINED: latest ux result or planned evidence location",
-      "exception": ""
-     },
-     "maintainability": {
-      "threshold": "TO_BE_DEFINED: minimum acceptable maintainability threshold for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
-      "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for maintainability",
-      "status": "TO_BE_DEFINED",
-      "evidence": "TO_BE_DEFINED: latest maintainability result or planned evidence location",
-      "exception": ""
-     }
-    }
-   },
-   "vertical_slice": {
-    "user_visible_slice": "TO_BE_DEFINED: smallest user-visible slice for BUG-005 useSessions React hook 面服务后到不自愈（BUG-004 实机验收发现）：用户完整重启 dsh web 后症状 1（点其他工作区 session 不退出）仍未消除——Coordinator 无头 Edge+CDP 探针活实例实证降级（控制台搜索无「找到的会话」section → sessionsAll=null → useSessionsH=null）；架构链：dsh 0.1.2-rc.1 sessions 服务由 dsh-api-session-controller 客户端提供（inject 含 remote.session——经 dsh-api-remotes 异步 $mount 链），本插件 apply 只等同步依赖（slots/connection/locale）→ L4298 ctx.get('sessions') 捕获 undefined → L4307 makeSessionsHook 冻结 null 永久降级；BUG-004 已修 launcher 面（internal/service 自愈 L4312-4321）但 hook 面标注「保持降级不中途翻转」（hook 调用计数安全顾虑）。修复 = 稳定响应式 hook：makeSessionsHook 改为返回恒定函数（服务经 holder 惰性解析 + internal/service 事件重订阅），服务缺席返回 undefined（消费端 ?? null/?? [] 已容错）；守卫逻辑（shouldCloseOnCurrentChange）不动。TRIAGE-BUG-005 五步 triage 通过（与 UX-054/058 文件重叠——均未在执行）",
-    "demo_path": "TO_BE_DEFINED: runnable demo, smoke test, URL, screenshot, or command proving the slice",
-    "scope_guard": "TO_BE_DEFINED: files and behavior in scope for this slice only (open)",
-    "rollback_plan": "TO_BE_DEFINED: how to revert or disable the slice if validation fails",
-    "status": "TO_BE_DEFINED",
-    "evidence": "TO_BE_DEFINED: latest demo proof or planned evidence location"
-   },
-   "interruption_policy": {
-    "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
-    "critical_triggers": [
-     "Ask the user when product intent is unclear.",
-     "Ask the user when acceptance standard or done criteria are unclear.",
-     "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions."
-    ],
-    "auto_execute": [
-     "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible.",
-     "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied."
-    ],
-    "assumption_record": {
-     "assumption": "TO_BE_DEFINED: default choice used for a reversible non-critical ambiguity",
-     "basis": "TO_BE_DEFINED: fact source or repository pattern supporting the default",
-     "reversibility": "TO_BE_DEFINED: why the choice can be changed without product damage",
-     "validation": "TO_BE_DEFINED: command or demo that will verify the assumption",
-     "rollback": "TO_BE_DEFINED: how to revert if the assumption is wrong"
-    },
-    "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
-   },
-   "allowed_change_scope": [
-    "lib/client.js（makeSessionsHook 稳定响应式改造 + apply 接线 + 清理路径）",
-    "test/smoke.mjs（新增断言；顺带修 F1 BUG-004 遗留断言真空——1 行 await）",
-    "CHANGELOG.md（[Unreleased] BUG-005 条目）"
-   ],
-   "required_evidence": [
-    "evidence-log entry with 事实依据, 目标对齐, 用户影响, and 结构化事实 JSON",
-    "validation commands with exit_code and concise output summary",
-    "independent review evidence or explicit degraded review evidence that does not claim full separation"
-   ],
-   "next_commands": [
-    "node --check lib/client.js",
-    "node test/smoke.mjs",
-    "node test/validate-preset.mjs"
-   ],
-   "done_definition": [
-    "探针复跑：3180 活实例刷新后控制台搜索出现「找到的会话」section（或等效 sessionsAll 非空证据）",
-    "Code Reviewer or matching Reviewer has APPROVED the product-code change.",
-    "Commit and push are completed for this single task."
-   ],
-   "source": "plan-tracker.md##当前活跃事项"
-  },
-  "BUG-006": {
-   "task_id": "BUG-006",
-   "priority": "P0",
-   "status": "✅ 完成 (2026-09-11，EVD-080/081；R1 NEEDS_CHANGE→返工→R2 APPROVED_WITH_NOTES 0 阻断；环境侧按用户决策=全部卸载自行安装)",
-   "goal": "dsh 0.1.5-rc.1 升级后插件无法接入（用户 2026-09-11 报障）。根因（Coordinator 隔离实例实证）：dsh 0.1.2→0.1.5 profile 组装机制重构——①profile 布局新增 profiles/<app>/ 子目录（package.json + pnpm-workspace + node_modules + cordis.patch.yml）；②插件注册从「profiles/node_modules junction + profile cordis.patch.yml 手写插行」迁移为「profile package.json dependencies + dsh.profile.bundles（经 dsh plugin add / pnpm 管理）」；③升级时 web profile 模板重建（2026-09-11 16:41 实证 package.json/cordis.yml 时间戳），旧 patch 行被重置为 [] → 插件掉出加载树（dump-config 实证无 novel-writing 层）。本插件 v0.5.1 代码本身零改动全兼容（3181 隔离实例全链路实证：服务端 HTTP 200 overview 真实书目 38 章/客户端 bundle 加载/侧栏入口/控制台渲染/分栏创作台打开/chList 38）。两条注册路径均验证有效：A=dependencies(file:)+bundles（官方通道）；B=仅 cordis.patch.yml insert 行（独立有效）。环境修复已落地：web profile package.json 手写 dependencies+dsh-novel-writing bundle（junction 保留=开发模式）。产品侧缺口=install.ps1/install.sh 仍为旧机制（junction 目标 profiles/node_modules + 仅 patch 行），在 0.1.5 布局下 junction 放错位置且不注册 dependencies。修复=安装脚本版本自适应双通道（检测 profiles/<Profile>/package.json 存在→新布局：junction/copy 到 profiles/<Profile>/node_modules + 幂等写 dependencies+dsh.profile.bundles + patch 行兜底；旧布局→现行为不变）+README 安装节 0.1.5+ 说明+CHANGELOG。顺带发现（SYSGAP 候选）：dsh plugin add 在 Windows shell:true 转发下报「dsh 不是内部或外部命令」（手动 pnpm add 等价可行）；用户另两插件 dsh-agent-router/dsh-reasoning-level 同样掉线（非本仓库范围），router 掉线致 settings.yaml agent-presets.default:governance 失效→宿主初始 workspace 选择失败（每次手动选工作区；本插件链路不受影响——38 章分栏正常打开实证）",
-   "allowed_change_scope": [
-    "install.ps1",
-    "install.sh",
-    "README.md",
-    "CHANGELOG.md"
-   ],
-   "required_evidence": [
-    "node --check 不适用（无 JS 改动）",
-    "install.ps1 语法自检（PSParser/AST parse 零错误）",
-    "install.sh sh -n 语法检查",
-    "隔离 DSH_HOME 双布局演练：新布局（0.1.5 特征 package.json 存在）junction+注册+patch 行三件套幂等；旧布局回归不劣化",
-    "README/CHANGELOG diff 审阅"
-   ],
-   "next_commands": [
-    "读本包→改 install.ps1/install.sh（版本自适应）→README/CHANGELOG→自检验证"
-   ],
-   "done_definition": [
-     "安装脚本在 0.1.5 布局下装出可加载的插件（dependencies+bundles+patch 行三注册齐备且幂等）——已达成（EVD-081 隔离演练三件套+幂等二跑字节级零漂移）",
-     "旧布局行为不劣化——已达成（与 HEAD 脚本产物树整树 diff 零差异强等价）",
-     "README/CHANGELOG 文档同步——已达成",
-     "Code Reviewer 通过——已达成（R2 APPROVED_WITH_NOTES unresolved_blockers=0）"
-    ]
   }
- }
 }

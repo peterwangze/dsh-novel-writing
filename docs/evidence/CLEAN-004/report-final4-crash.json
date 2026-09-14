@@ -1,0 +1,1313 @@
+{
+  "tool": "probe-clean-004",
+  "task": "CLEAN-004",
+  "head": "21b100ce9ac32e534c6215e507f9835f87e0ff4c",
+  "headDirty": false,
+  "startedAt": "2026-09-14T00:59:59.575Z",
+  "isolation": {
+    "root": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-probe-ur0CYa",
+    "dshHome": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-probe-ur0CYa\\dsh-home",
+    "plane": "C:\\Users\\peter\\AppData\\Local\\npm-cache\\_npx\\1e7f6d9597241db0\\node_modules\\@deepseek-ai",
+    "browser": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+    "containment": {
+      "home": true,
+      "userprofile": true,
+      "appdata": true,
+      "localappdata": true,
+      "edge": true,
+      "tmp": true,
+      "novels": true
+    },
+    "realEnvBefore": {
+      "home": "C:\\Users\\peter\\.dsh",
+      "strict": {
+        "settingsSha": "0b5106e58ebc3b8596d2401037570c6430c97788efab5117f166414d2b6f975a",
+        "profileJsonSha": "23b43ee30c60f08d5f922f4b8b0206661b49769ea446eaba5af81b9d99c48580",
+        "presetsSha": "de05dfc21fc9d239ef71dbab3db952c5243085fea9fcd489bfda5d4d9f456c6c"
+      },
+      "inventory": {
+        ".agent-presets": {
+          "dir": true,
+          "size": 0,
+          "mtimeMs": 1789285375866
+        },
+        ".anonymous-user-id": {
+          "dir": false,
+          "size": 37,
+          "mtimeMs": 1788578792690
+        },
+        ".credentials.yaml": {
+          "dir": false,
+          "size": 2293,
+          "mtimeMs": 1789285838324
+        },
+        "attachments": {
+          "dir": true,
+          "size": 0,
+          "mtimeMs": 1788592170529
+        },
+        "backups": {
+          "dir": true,
+          "size": 0,
+          "mtimeMs": 1789124030606
+        },
+        "dsh-agent-router": {
+          "dir": true,
+          "size": 0,
+          "mtimeMs": 1789285838297
+        },
+        "llm-deepseek": {
+          "dir": true,
+          "size": 0,
+          "mtimeMs": 1789289566839
+        },
+        "profiles": {
+          "dir": true,
+          "size": 0,
+          "mtimeMs": 1789129633470
+        },
+        "sessions": {
+          "dir": true,
+          "size": 0,
+          "mtimeMs": 1789135276544
+        },
+        "settings.yaml": {
+          "dir": false,
+          "size": 16002,
+          "mtimeMs": 1789346786637
+        },
+        "settings.yaml.bak-20260906-stale-high": {
+          "dir": false,
+          "size": 6194,
+          "mtimeMs": 1788660757802
+        },
+        "settings.yaml.bak-20260911-pre-cleanup": {
+          "dir": false,
+          "size": 15764,
+          "mtimeMs": 1789118875314
+        },
+        "storages": {
+          "dir": true,
+          "size": 0,
+          "mtimeMs": 1789346808974
+        }
+      }
+    },
+    "env": {
+      "DSH_HOME": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-probe-ur0CYa\\dsh-home",
+      "USERPROFILE": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-probe-ur0CYa\\userprofile",
+      "HOME": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-probe-ur0CYa\\userprofile",
+      "APPDATA": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-probe-ur0CYa\\appdata",
+      "LOCALAPPDATA": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-probe-ur0CYa\\localappdata",
+      "TEMP": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-probe-ur0CYa\\tmp"
+    }
+  },
+  "i18n": {
+    "entryLabel": "📖 小说管理工作台",
+    "resetLayoutDone": "已恢复默认布局",
+    "promptFailPrefix": "会话已就绪，但启动指令发送失败：",
+    "promptFailHint": "请打开该会话手动发送启动指令。",
+    "staleHint": "该书绑定的会话已不存在，请重新绑定。",
+    "unbound": "未绑定"
+  },
+  "fixture": {
+    "novels": [
+      "zz-first-probe",
+      "aa-second-probe",
+      "mm-third-probe",
+      "nn-stale-bound",
+      "bb-fourth-probe",
+      "cc-fifth-probe",
+      "dd-sixth-probe",
+      "ee-seventh-probe",
+      "ff-eighth-probe",
+      "gg-ninth-probe"
+    ],
+    "staleBinding": {
+      "nn-stale-bound": "session-does-not-exist-clean004"
+    },
+    "workspace": {
+      "workspaceId": "0fa878d6-c602-4ec0-b21b-99d94d78759c",
+      "path": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-probe-ur0CYa\\novels"
+    }
+  },
+  "assertions": [
+    {
+      "id": "A1-drawer-cards",
+      "area": "管理台/抽屉",
+      "label": "侧栏抽屉渲染全部 10 本书目卡（overview → 抽屉数据链）+ 标题行 aria-label/插入符号在位",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "cards": 10,
+        "titles": [
+          "孤星纪元",
+          "青禾纪事",
+          "长风渡",
+          "失效绑定书",
+          "雪落无声",
+          "折戟",
+          "南柯",
+          "北望",
+          "东归",
+          "西行"
+        ],
+        "subs": [
+          "outline_writing · 3章 · 1200字 · 未绑定",
+          "未开始 · 0章 · 0字 · 未绑定",
+          "content_generation · 12章 · 34000字 · 未绑定",
+          "creation_planning · 5章 · 9000字 · 会话失效"
+        ],
+        "dots": [
+          "none",
+          "none",
+          "none",
+          "stale",
+          "none",
+          "none",
+          "none",
+          "none",
+          "none",
+          "none"
+        ],
+        "drawer": {
+          "x": 12,
+          "y": 264,
+          "w": 256,
+          "h": 572,
+          "right": 268
+        },
+        "head": {
+          "x": 12,
+          "y": 273,
+          "w": 256,
+          "h": 29,
+          "right": 268
+        },
+        "card": {
+          "x": 12,
+          "y": 306,
+          "w": 256,
+          "h": 49,
+          "right": 268
+        },
+        "headLabel": "📖 小说管理工作台",
+        "caret": 1
+      },
+      "at": "2026-09-14T01:00:12.518Z"
+    },
+    {
+      "id": "A2-stale-binding-visible",
+      "area": "数据/绑定",
+      "label": "失效绑定书在抽屉卡呈现「会话失效」（stale 数据面：绑定 id 不在会话镜像）",
+      "ok": true,
+      "status": "PASS",
+      "detail": [
+        "outline_writing · 3章 · 1200字 · 未绑定",
+        "未开始 · 0章 · 0字 · 未绑定",
+        "content_generation · 12章 · 34000字 · 未绑定",
+        "creation_planning · 5章 · 9000字 · 会话失效"
+      ],
+      "at": "2026-09-14T01:00:12.520Z"
+    },
+    {
+      "id": "A3-console-opens",
+      "area": "控制台",
+      "label": "点抽屉标题行 → 控制台打开（反选：开）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "consoleOpened": true
+      },
+      "at": "2026-09-14T01:00:12.618Z"
+    },
+    {
+      "id": "B1-console-geometry-root",
+      "area": "控制台",
+      "label": "控制台几何 ≡ 会话内容区 rect（4 边偏差 ≤1.5px）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "geomDelta": {
+          "dx": 0,
+          "dr": 0,
+          "dy": 0,
+          "db": 0
+        },
+        "console": {
+          "x": 280,
+          "y": 0,
+          "w": 1120,
+          "h": 900,
+          "right": 1400,
+          "bottom": 900
+        },
+        "root": {
+          "x": 280,
+          "y": 0,
+          "w": 1120,
+          "h": 900,
+          "right": 1400,
+          "bottom": 900
+        },
+        "phase": "hero"
+      },
+      "at": "2026-09-14T01:00:12.620Z"
+    },
+    {
+      "id": "B2-console-head",
+      "area": "控制台",
+      "label": "头部 = 标题「小说管理工作台」+ 工作区路径 + 「切换 / 新建工作区…」+ ✕",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "console": {
+          "x": 280,
+          "y": 0,
+          "w": 1120,
+          "h": 900,
+          "right": 1400,
+          "bottom": 900
+        },
+        "root": {
+          "x": 280,
+          "y": 0,
+          "w": 1120,
+          "h": 900,
+          "right": 1400,
+          "bottom": 900
+        },
+        "sidebar": {
+          "x": 0,
+          "y": 0,
+          "w": 280,
+          "h": 900,
+          "right": 280,
+          "bottom": 900
+        },
+        "rootPhase": "hero",
+        "title": "小说管理工作台",
+        "ws": "未设置工作区 — 点击选择/新建",
+        "wsSwitch": "切换 / 新建工作区…",
+        "mini": "关闭",
+        "search": 1,
+        "cgrid": 0
+      },
+      "at": "2026-09-14T01:00:12.620Z"
+    },
+    {
+      "id": "B3-console-grid-present",
+      "area": "控制台",
+      "label": "控制台渲染卡片网格容器（overview 轮询数据到达后）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "gridReady": true,
+        "search": 1
+      },
+      "at": "2026-09-14T01:00:12.878Z"
+    },
+    {
+      "id": "B4-search-filter-novels",
+      "area": "控制台/搜索",
+      "label": "关键词滤小说卡（「孤星」→ 仅 zz-first-probe）；＋磁贴过滤时恒显示；≤8 本无折叠行",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "value": "孤星",
+        "cards": [
+          "zz-first-probe"
+        ],
+        "tiles": 1,
+        "fold": 0,
+        "clear": 1
+      },
+      "at": "2026-09-14T01:00:13.699Z"
+    },
+    {
+      "id": "B5-found-sessions-area",
+      "area": "控制台/搜索",
+      "label": "「找到的会话」区 = 有命中才渲染（判据：宿主侧栏有无会话 ∧ 本区存在性一致；本键「新会话」不命中会话 id）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "kw": "新会话",
+        "foundTitle": null,
+        "rows": [],
+        "cards": 0,
+        "hostSidebar": "sessions-present"
+      },
+      "at": "2026-09-14T01:00:16.124Z"
+    },
+    {
+      "id": "B6-search-no-match",
+      "area": "控制台/搜索",
+      "label": "无匹配 → 空态「没有匹配的小说或会话」且卡片 0",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "cards": 0,
+        "empty": 1,
+        "text": "没有匹配的小说或会话"
+      },
+      "at": "2026-09-14T01:00:17.030Z"
+    },
+    {
+      "id": "B7-search-clear",
+      "area": "控制台/搜索",
+      "label": "清除钮 → 关键词清空 + 折叠态恢复 8 卡",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "value": "",
+        "cards": 8
+      },
+      "at": "2026-09-14T01:00:17.858Z"
+    },
+    {
+      "id": "B8-grid-fold",
+      "area": "控制台/网格",
+      "label": "10 本 → 折叠前 8 卡 + 「展开全部（2）」+ ＋磁贴（UX-008⑤）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "count": 8,
+        "fold": "展开全部（2）",
+        "tile": {
+          "x": 297,
+          "y": 871.2,
+          "w": 346.3,
+          "h": 180,
+          "right": 643.3,
+          "bottom": 1051.2
+        }
+      },
+      "at": "2026-09-14T01:00:17.868Z"
+    },
+    {
+      "id": "B9-grid-3col",
+      "area": "控制台/网格",
+      "label": "控制台宽度下 3 列均分（同行 3 卡，grid-template-columns 三轨等宽 ±0.1px）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "rowBuckets": {
+          "107": 3,
+          "366": 3,
+          "598": 2
+        },
+        "cols": "346.328px 346.328px 346.344px",
+        "gap": "20px"
+      },
+      "at": "2026-09-14T01:00:17.869Z"
+    },
+    {
+      "id": "B10-card-anatomy",
+      "area": "控制台/网格",
+      "label": "卡片结构齐备：monogram + 阶段徽标 + 数据 chips（章/字/发布/变现/信号）+ 数据行 + 更新时间 + 图标钮（8×🔗 + 8×🗑）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "counts": {
+          "head": 8,
+          "mono": 8,
+          "badge": 8,
+          "chips": 24,
+          "statusChips": 16,
+          "cdot": 8,
+          "actions": 8,
+          "ico": 16,
+          "del": 8,
+          "data": 8,
+          "meta": 8
+        },
+        "chipLabels": [
+          "# 章",
+          "#### 字",
+          "信号 #",
+          "# 字",
+          "## 章",
+          "##### 字"
+        ],
+        "chipsPerCard": 3
+      },
+      "at": "2026-09-14T01:00:17.869Z"
+    },
+    {
+      "id": "B11-no-legacy-actions",
+      "area": "控制台/网格",
+      "label": "旧形态负断言：无「▶ 打开」钮（UX-008④）+ 无「➤ 启动工作流」钮（UX-013②.4）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "legacyOpen": 0,
+        "legacyLaunch": 0
+      },
+      "at": "2026-09-14T01:00:17.870Z"
+    },
+    {
+      "id": "B12-icon-btn-22",
+      "area": "控制台/网格",
+      "label": "卡片图标钮 22×22（UX-008④ 尺寸收敛）",
+      "ok": true,
+      "status": "PASS",
+      "detail": [
+        {
+          "x": 574.3,
+          "y": 307.4,
+          "w": 22,
+          "h": 22,
+          "right": 596.3,
+          "bottom": 329.4
+        },
+        {
+          "x": 604.3,
+          "y": 307.4,
+          "w": 22,
+          "h": 22,
+          "right": 626.3,
+          "bottom": 329.4
+        },
+        {
+          "x": 940.7,
+          "y": 307.4,
+          "w": 22,
+          "h": 22,
+          "right": 962.7,
+          "bottom": 329.4
+        },
+        {
+          "x": 970.7,
+          "y": 307.4,
+          "w": 22,
+          "h": 22,
+          "right": 992.7,
+          "bottom": 329.4
+        }
+      ],
+      "at": "2026-09-14T01:00:17.870Z"
+    },
+    {
+      "id": "B12b-tile-min-height",
+      "area": "控制台/网格",
+      "label": "＋磁贴与卡片统一最小高度 180px（卡内含内容时可更高——几何下限判据）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "tileH": 180,
+        "cardHeights": [
+          239.4,
+          239.4,
+          239.4,
+          211.4,
+          211.4,
+          211.4,
+          211.4,
+          211.4
+        ]
+      },
+      "at": "2026-09-14T01:00:17.871Z"
+    },
+    {
+      "id": "B13-stale-card-dot",
+      "area": "数据/绑定",
+      "label": "失效绑定卡的双圆 = stale（data-bound=stale，UX-006 状态光效/双圆语义）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "staleDot": "stale"
+      },
+      "at": "2026-09-14T01:00:17.871Z"
+    },
+    {
+      "id": "B14-sort-two-state",
+      "area": "控制台/排序",
+      "label": "排序两态（默认/手动）+ 手动态卡片可拖（draggable=true，UX-008⑤）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "sortState": {
+          "n": 2,
+          "labels": [
+            "默认",
+            "手动"
+          ],
+          "on": [
+            "true",
+            null
+          ]
+        },
+        "manualState": {
+          "on": [
+            null,
+            "true"
+          ],
+          "draggable": 8
+        }
+      },
+      "at": "2026-09-14T01:00:18.580Z"
+    },
+    {
+      "id": "B15-create-modal",
+      "area": "控制台/弹窗",
+      "label": "＋磁贴 → 居中模态（水平+垂直居中 ≤2px）+ 单输入 autoFocus + 「创建/取消」两钮",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "modalState": {
+          "modal": {
+            "x": 440,
+            "y": 379.5,
+            "w": 520,
+            "h": 141
+          },
+          "backdrop": {
+            "x": 0,
+            "y": 0,
+            "w": 1400,
+            "h": 900
+          },
+          "inputs": 1,
+          "btns": [
+            "",
+            "创建",
+            "取消"
+          ],
+          "focused": {
+            "tag": "INPUT",
+            "cls": "zGbnIq_input"
+          },
+          "title": "＋ 新建小说",
+          "vw": 1400,
+          "vh": 900
+        },
+        "centered": true
+      },
+      "at": "2026-09-14T01:00:18.590Z"
+    },
+    {
+      "id": "B16-create-empty-name",
+      "area": "控制台/弹窗",
+      "label": "空目录名点「创建」→ 表单错误「目录名必填」且弹窗不关（前端守卫，不发请求）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "err": "目录名必填",
+        "open": true
+      },
+      "at": "2026-09-14T01:00:19.496Z"
+    },
+    {
+      "id": "B17-esc-layer-yield",
+      "area": "控制台/Esc",
+      "label": "Esc 在弹窗态只关弹窗（控制台保持打开）——B-1 让位层级",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "modal": false,
+        "console": true
+      },
+      "at": "2026-09-14T01:00:20.211Z"
+    },
+    {
+      "id": "D1-stale-rebind-panel",
+      "area": "数据/绑定",
+      "label": "失效绑定卡 🔗 → 绑定面板（shell.overlay）打开：标题/选择文案/新建会话并绑定 三面齐备，且控制台仍在（浮层之上）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "backdrop": {
+          "x": 0,
+          "y": 0,
+          "w": 1400,
+          "h": 900
+        },
+        "modal": {
+          "x": 460,
+          "y": 363.8,
+          "w": 480,
+          "h": 172.4
+        },
+        "hasTitle": true,
+        "hasPick": true,
+        "hasNew": true,
+        "inputs": 0,
+        "consoleStillOpen": true
+      },
+      "at": "2026-09-14T01:00:20.247Z"
+    },
+    {
+      "id": "D2-esc-bind-yield",
+      "area": "控制台/Esc",
+      "label": "Esc 在绑定面板态只关面板（控制台保持打开）——B-1 让位写实态",
+      "ok": false,
+      "status": "FAIL",
+      "detail": {
+        "modal": true,
+        "console": true
+      },
+      "at": "2026-09-14T01:00:21.062Z"
+    },
+    {
+      "id": "C1-open-from-card",
+      "area": "分栏",
+      "label": "未绑定卡点击 → openCtl 自动链（sessions.create → 预设 → 绑定 → 打开）→ 分栏打开；控制台自动关（互斥）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "splitOpened": true,
+        "consoleOpen": false,
+        "notice": null
+      },
+      "at": "2026-09-14T01:00:22.875Z"
+    },
+    {
+      "id": "C2-split-title",
+      "area": "分栏",
+      "label": "分栏标题 =「📖 小说创作工作台 ·《孤星纪元》」（UX-011 两级工作台命名）",
+      "ok": true,
+      "status": "PASS",
+      "detail": "小说创作工作台 · 《孤星纪元》",
+      "at": "2026-09-14T01:00:22.909Z"
+    },
+    {
+      "id": "C3-squeeze",
+      "area": "分栏/挤法",
+      "label": "挤法生效：对话窗 viewArea 被写入 margin + 显式 width（UX-018 双压）；分栏右缘 = viewArea 左缘",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "viewArea": {
+          "ml": "560px",
+          "mr": "",
+          "w": "560px",
+          "rect": {
+            "x": 840,
+            "y": 0,
+            "w": 560,
+            "h": 900,
+            "right": 1400,
+            "bottom": 900
+          }
+        },
+        "splitRight": 840
+      },
+      "at": "2026-09-14T01:00:22.911Z"
+    },
+    {
+      "id": "C3b-binding-convergence",
+      "area": "数据/绑定",
+      "label": "自动链写入的绑定在会话镜像中收敛（卡片脱离「未绑定/会话失效」）——含「找到的会话」镜像同步探针",
+      "ok": false,
+      "status": "FAIL",
+      "detail": {
+        "converged": false,
+        "first": {
+          "sub": "outline_writing · 3章 · 1200字 · 未绑定",
+          "dotSt": "none",
+          "hostNoSessions": false
+        },
+        "last": {
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false
+        },
+        "sessionRowsProbe": {
+          "consoleOpen": true,
+          "found": null,
+          "rows": [],
+          "cards": 1,
+          "emptyText": null
+        },
+        "overviewProbe": {
+          "status": 200,
+          "root": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-probe-ur0CYa\\novels",
+          "bindings": {
+            "nn-stale-bound": "session-does-not-exist-clean004",
+            "zz-first-probe": "session-c6622f41-e1ae-41de-aeb9-c11149e726b6"
+          },
+          "novels": [
+            "zz-first-probe",
+            "aa-second-probe",
+            "mm-third-probe",
+            "nn-stale-bound",
+            "bb-fourth-probe",
+            "cc-fifth-probe",
+            "dd-sixth-probe",
+            "ee-seventh-probe",
+            "ff-eighth-probe",
+            "gg-ninth-probe"
+          ]
+        },
+        "settingsYaml": "novel-writing:\n  workspaceRoot: C:/Users/peter/AppData/Local/Temp/clean004-probe-ur0CYa/novels\n  bindings:\n    nn-stale-bound: session-does-not-exist-clean004\n    zz-first-probe: session-c6622f41-e1ae-41de-aeb9-c11149e726b6\nui-onboarding:\n  welcomeNoticeVersion: 2026-08-13.1\n",
+        "sessionDirs": [
+          "--C-Users-peter-AppData-Local-Temp-clean004-probe-ur0CYa-novels--"
+        ]
+      },
+      "at": "2026-09-14T01:00:39.059Z"
+    },
+    {
+      "id": "C4-bar-ctls",
+      "area": "分栏",
+      "label": "标题栏含 ⇄ 换边 / ☆ 设为默认 / ⟳ 恢复默认 / ✕ 关闭 四个控件（aria-label 齐备）",
+      "ok": true,
+      "status": "PASS",
+      "detail": [
+        "对话窗换边（左/右）",
+        "恢复默认布局",
+        "将当前布局设为默认",
+        "关闭分栏（Esc）"
+      ],
+      "at": "2026-09-14T01:00:39.069Z"
+    },
+    {
+      "id": "C5-split-panels",
+      "area": "分栏",
+      "label": "分栏三面齐备：左窗（文件树 + 工作流阶段清单）+ 中窗（章节列/正文/数据·发布·请求页签）+ 三条常驻分隔线（.nv-vdiv/.nv-middiv/.nv-chdiv）",
+      "ok": false,
+      "status": "FAIL",
+      "detail": {
+        "splitClosed": true
+      },
+      "at": "2026-09-14T01:00:39.072Z"
+    },
+    {
+      "id": "Z1-real-env-untouched",
+      "area": "隔离",
+      "label": "真实 $DSH_HOME 零污染（许可面 sha256 逐项一致 + 无「isolated 根流入 settings.yaml」污染签名；用户并发使用造成的活跃面差异单独列明）",
+      "ok": true,
+      "status": "PASS",
+      "detail": {
+        "ok": true,
+        "strictDeltas": {},
+        "inventoryDeltas": {},
+        "inventoryDeltaCount": 0,
+        "leakSignature": {
+          "novelWritingWorkspaceRoot": "D:\\AI\\writing",
+          "pointsIntoIsolation": false,
+          "isolationRoot": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-probe-ur0CYa"
+        }
+      },
+      "at": "2026-09-14T01:00:40.396Z"
+    }
+  ],
+  "facts": {
+    "drawer": {
+      "cards": 10,
+      "titles": [
+        "孤星纪元",
+        "青禾纪事",
+        "长风渡",
+        "失效绑定书",
+        "雪落无声",
+        "折戟",
+        "南柯",
+        "北望",
+        "东归",
+        "西行"
+      ],
+      "subs": [
+        "outline_writing · 3章 · 1200字 · 未绑定",
+        "未开始 · 0章 · 0字 · 未绑定",
+        "content_generation · 12章 · 34000字 · 未绑定",
+        "creation_planning · 5章 · 9000字 · 会话失效"
+      ],
+      "dots": [
+        "none",
+        "none",
+        "none",
+        "stale",
+        "none",
+        "none",
+        "none",
+        "none",
+        "none",
+        "none"
+      ],
+      "drawer": {
+        "x": 12,
+        "y": 264,
+        "w": 256,
+        "h": 572,
+        "right": 268
+      },
+      "head": {
+        "x": 12,
+        "y": 273,
+        "w": 256,
+        "h": 29,
+        "right": 268
+      },
+      "card": {
+        "x": 12,
+        "y": 306,
+        "w": 256,
+        "h": 49,
+        "right": 268
+      },
+      "headLabel": "📖 小说管理工作台",
+      "caret": 1
+    },
+    "consoleGeom": {
+      "console": {
+        "x": 280,
+        "y": 0,
+        "w": 1120,
+        "h": 900,
+        "right": 1400,
+        "bottom": 900
+      },
+      "root": {
+        "x": 280,
+        "y": 0,
+        "w": 1120,
+        "h": 900,
+        "right": 1400,
+        "bottom": 900
+      },
+      "sidebar": {
+        "x": 0,
+        "y": 0,
+        "w": 280,
+        "h": 900,
+        "right": 280,
+        "bottom": 900
+      },
+      "rootPhase": "hero",
+      "title": "小说管理工作台",
+      "ws": "未设置工作区 — 点击选择/新建",
+      "wsSwitch": "切换 / 新建工作区…",
+      "mini": "关闭",
+      "search": 1,
+      "cgrid": 0
+    },
+    "filter": {
+      "value": "孤星",
+      "cards": [
+        "zz-first-probe"
+      ],
+      "tiles": 1,
+      "fold": 0,
+      "clear": 1
+    },
+    "sessionSearchPreliminary": {
+      "kw": "新会话",
+      "foundTitle": null,
+      "rows": [],
+      "cards": 0,
+      "hostSidebar": "sessions-present"
+    },
+    "grid": {
+      "count": 8,
+      "fold": "展开全部（2）",
+      "tile": {
+        "x": 297,
+        "y": 871.2,
+        "w": 346.3,
+        "h": 180,
+        "right": 643.3,
+        "bottom": 1051.2
+      },
+      "card0": {
+        "x": 297,
+        "y": 107,
+        "w": 346.3,
+        "h": 239.4,
+        "right": 643.3,
+        "bottom": 346.4
+      },
+      "card0Id": "zz-first-probe",
+      "rowBuckets": {
+        "107": 3,
+        "366": 3,
+        "598": 2
+      },
+      "maxRow": 3,
+      "counts": {
+        "head": 8,
+        "mono": 8,
+        "badge": 8,
+        "chips": 24,
+        "statusChips": 16,
+        "cdot": 8,
+        "actions": 8,
+        "ico": 16,
+        "del": 8,
+        "data": 8,
+        "meta": 8
+      },
+      "chipLabels": [
+        "# 章",
+        "#### 字",
+        "信号 #",
+        "# 字",
+        "## 章",
+        "##### 字"
+      ],
+      "cardHeights": [
+        239.4,
+        239.4,
+        239.4,
+        211.4,
+        211.4,
+        211.4,
+        211.4,
+        211.4
+      ],
+      "icoSizes": [
+        {
+          "x": 574.3,
+          "y": 307.4,
+          "w": 22,
+          "h": 22,
+          "right": 596.3,
+          "bottom": 329.4
+        },
+        {
+          "x": 604.3,
+          "y": 307.4,
+          "w": 22,
+          "h": 22,
+          "right": 626.3,
+          "bottom": 329.4
+        },
+        {
+          "x": 940.7,
+          "y": 307.4,
+          "w": 22,
+          "h": 22,
+          "right": 962.7,
+          "bottom": 329.4
+        },
+        {
+          "x": 970.7,
+          "y": 307.4,
+          "w": 22,
+          "h": 22,
+          "right": 992.7,
+          "bottom": 329.4
+        }
+      ],
+      "legacyOpen": 0,
+      "legacyLaunch": 0,
+      "gridCols": "346.328px 346.328px 346.344px",
+      "gridGap": "20px",
+      "glowCards": [],
+      "staleDot": "stale"
+    },
+    "modal": {
+      "modal": {
+        "x": 440,
+        "y": 379.5,
+        "w": 520,
+        "h": 141
+      },
+      "backdrop": {
+        "x": 0,
+        "y": 0,
+        "w": 1400,
+        "h": 900
+      },
+      "inputs": 1,
+      "btns": [
+        "",
+        "创建",
+        "取消"
+      ],
+      "focused": {
+        "tag": "INPUT",
+        "cls": "zGbnIq_input"
+      },
+      "title": "＋ 新建小说",
+      "vw": 1400,
+      "vh": 900
+    },
+    "bindPanel": {
+      "backdrop": {
+        "x": 0,
+        "y": 0,
+        "w": 1400,
+        "h": 900
+      },
+      "modal": {
+        "x": 460,
+        "y": 363.8,
+        "w": 480,
+        "h": 172.4
+      },
+      "hasTitle": true,
+      "hasPick": true,
+      "hasNew": true,
+      "inputs": 0,
+      "consoleStillOpen": true
+    },
+    "split": {
+      "split": {
+        "x": 280,
+        "y": 0,
+        "w": 560,
+        "h": 900,
+        "right": 840,
+        "bottom": 900
+      },
+      "bar": {
+        "x": 281,
+        "y": 1,
+        "w": 558,
+        "h": 38,
+        "right": 839,
+        "bottom": 39
+      },
+      "root": {
+        "x": 280,
+        "y": 0,
+        "w": 1120,
+        "h": 900,
+        "right": 1400,
+        "bottom": 900
+      },
+      "phase": "hero",
+      "title": "小说创作工作台 · 《孤星纪元》",
+      "ctls": [
+        "对话窗换边（左/右）",
+        "恢复默认布局",
+        "将当前布局设为默认",
+        "关闭分栏（Esc）"
+      ],
+      "consoleOpen": false,
+      "viewArea": {
+        "ml": "560px",
+        "mr": "",
+        "w": "560px",
+        "rect": {
+          "x": 840,
+          "y": 0,
+          "w": 560,
+          "h": 900,
+          "right": 1400,
+          "bottom": 900
+        }
+      },
+      "badge": null,
+      "notice": null
+    },
+    "autoCreateImmediate": {
+      "drawerNotice": null,
+      "cardSub": "outline_writing · 3章 · 1200字 · 未绑定",
+      "dotSt": "none"
+    },
+    "convergence": {
+      "samples": [
+        {
+          "sub": "outline_writing · 3章 · 1200字 · 未绑定",
+          "dotSt": "none",
+          "hostNoSessions": false
+        },
+        {
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false
+        },
+        {
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false
+        },
+        {
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false
+        },
+        {
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false
+        },
+        {
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false
+        },
+        {
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false
+        },
+        {
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false
+        },
+        {
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false
+        },
+        {
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false
+        },
+        {
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false
+        },
+        {
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false
+        },
+        {
+          "sub": "outline_writing · 3章 · 1200字 · 会话失效",
+          "dotSt": "stale",
+          "hostNoSessions": false
+        }
+      ],
+      "converged": false
+    },
+    "isolatedDisk": {
+      "settingsYaml": "novel-writing:\n  workspaceRoot: C:/Users/peter/AppData/Local/Temp/clean004-probe-ur0CYa/novels\n  bindings:\n    nn-stale-bound: session-does-not-exist-clean004\n    zz-first-probe: session-c6622f41-e1ae-41de-aeb9-c11149e726b6\nui-onboarding:\n  welcomeNoticeVersion: 2026-08-13.1\n",
+      "sessionDirs": [
+        "--C-Users-peter-AppData-Local-Temp-clean004-probe-ur0CYa-novels--"
+      ]
+    },
+    "overviewProbe": {
+      "status": 200,
+      "root": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-probe-ur0CYa\\novels",
+      "bindings": {
+        "nn-stale-bound": "session-does-not-exist-clean004",
+        "zz-first-probe": "session-c6622f41-e1ae-41de-aeb9-c11149e726b6"
+      },
+      "novels": [
+        "zz-first-probe",
+        "aa-second-probe",
+        "mm-third-probe",
+        "nn-stale-bound",
+        "bb-fourth-probe",
+        "cc-fifth-probe",
+        "dd-sixth-probe",
+        "ee-seventh-probe",
+        "ff-eighth-probe",
+        "gg-ninth-probe"
+      ]
+    },
+    "sessionRowsProbe": {
+      "deferred": true,
+      "note": "会话镜像探针移至全部场景之后执行（避免中途开关控制台破坏分栏面前置条件）"
+    },
+    "panels": {
+      "splitClosed": true
+    }
+  },
+  "screenshots": [
+    "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-final4\\01-drawer-idle.png"
+  ],
+  "pageLog": [
+    "edge DevTools listening on ws://127.0.0.1:61985/devtools/browser/20636f33-3df7-4089-826f-559bfe846535",
+    "edge [37196:37592:0914/090009.939:ERROR:chrome\\browser\\importer\\edge_china_browsers\\edge_qqbrowser_importer_utils_win.cc:165] QQBrowser user data path not found.",
+    "edge [37196:15472:0914/090012.600:ERROR:chrome\\browser\\task_manager\\providers\\fallback_task_provider.cc:126] Every renderer should have at least one task provided by a primary task provider. If a \"Renderer"
+  ],
+  "envErrors": [],
+  "realEnvAfter": {
+    "home": "C:\\Users\\peter\\.dsh",
+    "strict": {
+      "settingsSha": "0b5106e58ebc3b8596d2401037570c6430c97788efab5117f166414d2b6f975a",
+      "profileJsonSha": "23b43ee30c60f08d5f922f4b8b0206661b49769ea446eaba5af81b9d99c48580",
+      "presetsSha": "de05dfc21fc9d239ef71dbab3db952c5243085fea9fcd489bfda5d4d9f456c6c"
+    },
+    "inventory": {
+      ".agent-presets": {
+        "dir": true,
+        "size": 0,
+        "mtimeMs": 1789285375866
+      },
+      ".anonymous-user-id": {
+        "dir": false,
+        "size": 37,
+        "mtimeMs": 1788578792690
+      },
+      ".credentials.yaml": {
+        "dir": false,
+        "size": 2293,
+        "mtimeMs": 1789285838324
+      },
+      "attachments": {
+        "dir": true,
+        "size": 0,
+        "mtimeMs": 1788592170529
+      },
+      "backups": {
+        "dir": true,
+        "size": 0,
+        "mtimeMs": 1789124030606
+      },
+      "dsh-agent-router": {
+        "dir": true,
+        "size": 0,
+        "mtimeMs": 1789285838297
+      },
+      "llm-deepseek": {
+        "dir": true,
+        "size": 0,
+        "mtimeMs": 1789289566839
+      },
+      "profiles": {
+        "dir": true,
+        "size": 0,
+        "mtimeMs": 1789129633470
+      },
+      "sessions": {
+        "dir": true,
+        "size": 0,
+        "mtimeMs": 1789135276544
+      },
+      "settings.yaml": {
+        "dir": false,
+        "size": 16002,
+        "mtimeMs": 1789346786637
+      },
+      "settings.yaml.bak-20260906-stale-high": {
+        "dir": false,
+        "size": 6194,
+        "mtimeMs": 1788660757802
+      },
+      "settings.yaml.bak-20260911-pre-cleanup": {
+        "dir": false,
+        "size": 15764,
+        "mtimeMs": 1789118875314
+      },
+      "storages": {
+        "dir": true,
+        "size": 0,
+        "mtimeMs": 1789346808974
+      }
+    }
+  },
+  "cleanup": null,
+  "ok": false,
+  "instanceUrlRedacted": "http://127.0.0.1:61984/?token=***",
+  "crash": "TypeError: Cannot read properties of undefined (reading 'length')\n    at main (file:///D:/AI/agent/deepseek/harness/writing-workflow/docs/evidence/CLEAN-004/probe-clean-004.mjs:851:24)\n    at async file:///D:/AI/agent/deepseek/harness/writing-workflow/docs/evidence/CLEAN-004/probe-clean-004.mjs:1239:17",
+  "bootTail": [
+    "dsh web: http://127.0.0.1:61984/?token=***",
+    "BOOT-READY pid=18812"
+  ],
+  "realEnvVerdict": {
+    "ok": true,
+    "strictDeltas": {},
+    "inventoryDeltas": {},
+    "inventoryDeltaCount": 0,
+    "leakSignature": {
+      "novelWritingWorkspaceRoot": "D:\\AI\\writing",
+      "pointsIntoIsolation": false,
+      "isolationRoot": "C:\\Users\\peter\\AppData\\Local\\Temp\\clean004-probe-ur0CYa"
+    }
+  },
+  "tally": {
+    "total": 30,
+    "pass": 27,
+    "fail": 3,
+    "na": 0
+  },
+  "finishedAt": "2026-09-14T01:00:40.404Z"
+}
