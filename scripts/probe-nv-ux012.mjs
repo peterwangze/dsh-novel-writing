@@ -8,15 +8,17 @@
  * smoke 仍会全绿。本探针补上该行为面。
  *
  * 断言面**以真驱动为主**（真点击 / 真键盘事件 / 真 HTTP 拦截 / 真宿主 RPC），不构造 DOM、不 mock 产品
- * 代码。**口径如实披露（R1 复审 C-5）**：24 条断言 = **17 条真驱动行为级** + 3 条 DOM 属性读数
- * （模态语义 role/aria-modal/label、autoFocus 落点、F6 三面汇总）+ **1 条结构面**（`UX012-C3-single-source`：
- * 对 `lib/client.js` 作 3 个正则计数，判「创建链单点收口」结构事实）+ 1 条自证面（`FALSIFIABILITY`：
- * 谓词向量求值）+ 2 条隔离面（Z1/Z2：真实 `$DSH_HOME` 指纹与隔离根清理）。
+ * 代码。**口径如实披露（R1 复审 C-5；计数与分桶按 R2 复审 N-1 订正）**：26 条断言 = **18 条真驱动行为级**
+ * + 4 条 DOM 属性读数（A2 新建弹窗模态语义 / B2 绑定面板模态语义 / A1b autoFocus 落点 / A2b F6 三面汇总）
+ * + **1 条结构面**（`UX012-C3-single-source`：对 `lib/client.js` 作 3 个正则计数，判「创建链单点收口」结构
+ * 事实）+ 1 条自证面（`FALSIFIABILITY`：谓词向量求值）+ 2 条隔离面（Z1/Z2：真实 `$DSH_HOME` 指纹与隔离根清理）。
  * **唯一两处源码读取面**已在标签内显式标注：C3（结构计数）与 `readI18n()`（期望文案与产品同源，
  * 避免复制字面量）——**不做**「源码字符串直查替代行为验证」（同族教训 = CLEAN-006 F-2 / UX-060 R1 F-2）：
  *   A 新建弹窗（几何/模态语义/卡片内点击不自关/遮罩关/Esc 关且控制台保留/焦点归还/焦点陷阱/
  *     重开复位/请求体仅 {name}/busy 禁关/创建成功链）
  *   B 绑定面板（**D-1**：Esc 只关面板、控制台保持打开 + F6 模态语义 + R1 C-7：busy 中不关——真挂起绑定请求）
+ *   BUG-010 **工作区对话框自挂 Esc**（CLEAN-007 R1 **C-2** / BUG-010）：一次 Esc 只关对话框本层、
+ *     控制台保持、分栏层状态不变（入口 = 控制台 `.nv-cbtn-ws`；修复前让位后无人接手 ⇒ Esc 静默无反应）
  *   C 创建链**两个消费点**（F2 收口后等价性）：openCtl.autoCreate（卡片→自动建会话→分栏）与
  *     控制条「绑定新会话」（bindNewSessionCtl → 仅绑定不打开）；**R1 C-1**：分栏态 Esc 分层
  *     （面板开在分栏之上时，一次 Esc 只关面板、不连关创作台）
@@ -125,6 +127,20 @@ const PREDICATE_REGISTRY = [
     red2: { note: 'Esc 未生效：面板未关', v: { panelWasOpen: true, panelClosed: false, splitStillOpen: true } },
     red3: { note: '前置未取得：面板未打开（不可判绿——防空真）', v: { panelWasOpen: false, panelClosed: true, splitStillOpen: true } },
     ok: { note: '面板态 Esc 只关面板、分栏保持', v: { panelWasOpen: true, panelClosed: true, splitStillOpen: true } },
+  },
+  {
+    id: 'D1-esc-workspace-dialog-yield',
+    finding: 'CLEAN-007 R1 C-2 / BUG-010（WorkspaceDialog 自挂 Esc）',
+    // 控制台语境：工作区对话框开在其上 ⇒ NvConsole 与 SplitWorkspace 的让位条件 `s.entryOpen === true`
+    // 命中 ⇒ 一次 Esc MUST **只关对话框本层**，控制台与分栏层**状态不变**。修复前 `WorkspaceDialog`
+    // 全文件无 Esc 监听（`'Escape'` 字面量仅 3 处，无其一）⇒ 让位后**无人接手** ⇒ 对话框仍在场。
+    // 前置合取 `opened === true` 防空真；`consoleKept`/`splitKept` 为「前后同值」不变式（连关两层即红）。
+    fn: (v) => v.opened === true && v.dialog === false && v.consoleKept === true && v.splitKept === true,
+    red: { note: '修复前实况（BUG-010）：让位后无人接手 ⇒ 一次 Esc 后工作区对话框仍在场、控制台也在场', v: { opened: true, dialog: true, consoleKept: true, splitKept: true } },
+    red2: { note: '反向回归：Esc 连关两层（对话框关了、控制台被连带关掉）', v: { opened: true, dialog: false, consoleKept: false, splitKept: true } },
+    red3: { note: '前置未取得：工作区对话框未打开（不可判绿——防空真）', v: { opened: false, dialog: false, consoleKept: true, splitKept: true } },
+    red4: { note: '分层越界：对话框层的 Esc 连创作台/分栏一起关掉（对话框不得触碰分栏层状态）', v: { opened: true, dialog: false, consoleKept: true, splitKept: false } },
+    ok: { note: '对话框态 Esc 只关对话框本层、控制台与分栏状态不变（分层语义）', v: { opened: true, dialog: false, consoleKept: true, splitKept: true } },
   },
   {
     id: 'F6-modal-semantics',
@@ -397,6 +413,7 @@ function readI18n() {
     cancel: pick('cancel'),
     createBtn: pick('createBtn'),
     bindNewSession: pick('bindNewSession'),
+    dialogTitle: pick('dialogTitle'), // BUG-010：工作区对话框的可访问名（与同族绑定面板 `.nv-modal` 区分）
     bindNewDonePrefix: pickFn('bindNewDone').split('${')[0], // 「已为本书绑定新会话 」前缀（id 由探针拼接核对）
   }
 }
@@ -967,6 +984,40 @@ async function main() {
     report.facts.escBind = escBind
     assertion('UX012-B1-esc-bind-panel（D-1）', '绑定面板/Esc', '**D-1**：绑定面板打开时按 Esc → 只关面板、控制台保持打开（NvConsole 让位后由面板自挂监听接手；修复前 `{modal:true,console:true}`；前置 = 面板确在场——防空真断言）',
       evalPred('D1-esc-bind-panel-yield', { opened: bindPanelOpened === true, modal: escBind.modal, console: escBind.console }), { bindPanelOpened, ...escBind })
+
+    // ══ D1-workspace-dialog-esc（BUG-010 / CLEAN-007 R1 C-2）：**工作区对话框自挂 Esc** ══════════
+    // 入口 = 控制台动作行「切换 / 新建工作区…」（`.nv-cbtn-ws`——全文件**唯一** `store.set({ entryOpen: true })`
+    // 落点）。判据：一次真实 Esc ⇒ **只关对话框本层**（对话框关闭 ∧ 控制台保持 ∧ 分栏层状态不变）。
+    // 修复前 `WorkspaceDialog` **无自挂 Esc**，而 NvConsole（`s.entryOpen === true`）与 SplitWorkspace
+    // （同款让位守卫）都在对话框开在其上时让位 ⇒ **让位后无人接手**、Esc 静默无反应（与本批 D-1 同根因）。
+    // 前置防空真：断言前 MUST 确认对话框**确在场**——按 `aria-label ≡ 产品 i18n dialogTitle` 辨认
+    // （与同族 `.nv-modal` 形态的绑定面板区分；B1 已确保面板已关）。
+    // 如实披露（P-01）：控制台与分栏在本实例中互斥（`launcher.open` 开控制台前先 `closeWorkbench`），
+    // 故「分栏层」以**前后同值不变式**（`splitKept`）参与判定——它拦「对话框层越界去关分栏」，
+    // 不是「分栏在场时仍不关」的独立状态检查；分栏**在场**时的 Esc 分层由 C4 与冻结探针 B17 覆盖。
+    const wsEntryConsoleBefore = await cdp.evaluate("document.querySelector('.nv-console') !== null")
+    const wsEntrySplitBefore = await cdp.evaluate("document.querySelector('.nv-bar') !== null")
+    const wsEntryClicked = await clickSel('.nv-cbtn-ws')
+    const wsDialogOpened = await waitFor("document.querySelector('.nv-modal') !== null", 15000, '工作区对话框 .nv-modal')
+    const wsDialogLabel = await cdp.evaluate("(() => { const n = document.querySelector('.nv-modal'); return n === null ? null : n.getAttribute('aria-label') })()")
+    const wsDialogWasOpen = wsDialogOpened === true && wsDialogLabel === i18n.dialogTitle
+    await pressEsc()
+    await sleep(700)
+    const wsDialogAfter = await cdp.evaluate("({ dialog: document.querySelector('.nv-modal') !== null, console: document.querySelector('.nv-console') !== null, split: document.querySelector('.nv-bar') !== null })")
+    report.facts.workspaceDialogEsc = {
+      consoleBefore: wsEntryConsoleBefore, splitBefore: wsEntrySplitBefore, entryClicked: wsEntryClicked,
+      dialogOpened: wsDialogOpened, dialogLabel: wsDialogLabel, expectLabel: i18n.dialogTitle,
+      dialogWasOpen: wsDialogWasOpen, after: wsDialogAfter,
+    }
+    assertion('UX012-D1-workspace-dialog-esc（BUG-010 / R1 C-2）', '工作区对话框/Esc', '**BUG-010**：工作区对话框（`.nv-cbtn-ws` 入口）打开时按一次真实 Esc → **只关本层**（对话框关闭 ∧ 控制台保持打开 ∧ 分栏层状态不变）；修复前 `WorkspaceDialog` 无自挂 Esc ⇒ NvConsole/分栏让位后**无人接手**、Esc 静默无反应 ⇒ 对话框仍在场（谓词取自登记表 `D1-esc-workspace-dialog-yield`，red 向量 = 无监听实况；前置 = 对话框确在场 ∧ 身份按 `aria-label ≡ i18n dialogTitle` 核对——防空真与「误断言同族面板」）',
+      wsEntryClicked === true && wsDialogWasOpen === true
+      && evalPred('D1-esc-workspace-dialog-yield', {
+        opened: true,
+        dialog: wsDialogAfter.dialog === true,
+        consoleKept: wsDialogAfter.console === (wsEntryConsoleBefore === true),
+        splitKept: wsDialogAfter.split === (wsEntrySplitBefore === true),
+      }),
+      report.facts.workspaceDialogEsc)
 
     // ══ C) 创建链两消费点（F2 收口后等价性）══════════════════════════════
     const boundIdOf = (id) => cdp.evaluate("fetch('/novel-writing/api/overview').then((r) => r.json()).then((o) => (o.bindings || {})[" + JSON.stringify(id) + "] ?? null)")
