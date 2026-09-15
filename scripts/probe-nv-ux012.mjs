@@ -296,7 +296,7 @@ const ASSERTION_BUCKET_DEFS = [
 ]
 const ASSERTION_LEDGER = {
   /** 唯一断言 id 数（≠ 物理接线处数：4 条闸门断言各有 if/else 两处接线，恰只触发一处）。 */
-  declaredTotal: 28,
+  declaredTotal: 27,
   /** 物理接线处数（源控制锚的覆盖面——新增/删除接线处即变）。 */
   declaredSiteCount: 32,
   minSelfTestCases: 7,
@@ -324,12 +324,18 @@ const ASSERTION_LEDGER = {
     { id: 'UX012-C1-bindnew-consumer', bucket: 'bucket-drive' },
     { id: 'UX012-B3-bind-busy-guard（R1 C-7）', bucket: 'bucket-drive' },
     { id: 'UX012-C3-single-source', bucket: 'bucket-structural' },
-    { id: 'UX012-CRASH', bucket: 'bucket-verify' },
     { id: 'UX012-FALSIFIABILITY', bucket: 'bucket-verify' },
     { id: 'UX012-CLASSIFICATION-LEDGER', bucket: 'bucket-verify' },
     { id: 'UX012-Z1-real-env-untouched', bucket: 'bucket-isolation' },
     { id: 'UX012-Z2-isolation-cleanup', bucket: 'bucket-isolation' },
   ],
+  /**
+   * **不登记但可记录**的断言 id（R1 F-07 口径）：`UX012-CRASH` 仅由 catch 分支产生记录行 ⇒
+   * 若列入 `slots`，「记录条数 ≡ 声明条数」在**任何健康运行**里都恒不成立（把必然偏差写进判据）；
+   * 列在此处后：① 它不计入台账条数/桶和；② 运行期对账把它计为「可存在的额外记录」（期望数 +1）；
+   * ③ 其存在性仍由「异常 ⇒ 记录且必红」保证，不因出册而失去看护。
+   */
+  notRegisteredIds: ['UX012-CRASH'],
   // 受**前置闸门**约束、判定输入不成立即记 N-A 的断言（**不单列桶**；`tally.total` 计入其 N-A 记录）
   excludedFromNa: [
     { id: 'UX012-A7b-focus-wrap', gate: 'focusMovable（宿主 inert ⇒ 焦点不可移）' },
@@ -340,7 +346,7 @@ const ASSERTION_LEDGER = {
   /** 台账**源控制锚**（自指）：本块声明之后每一行含自指锚的源码文本顺序拼接的 sha256。 */
   '@ledger-source-control': {
     marker: 'A\\(/\\*@assert\\*/',
-    declaredSha256: '080c5da217308ffcbdb398d70e29aae1c5f7a99d5af0d45fc06e1434313d51d3',
+    declaredSha256: '9266378abcad2218a922175e96fe60b5c37e1ca6a7df9c209232e3f5a2faf641',
     declaredSiteCount: 32,
   },
 }
@@ -358,8 +364,8 @@ const ASSERTION_DOC = (() => {
     naGated: ASSERTION_LEDGER.excludedFromNa.map((e) => e.id.replace('UX012-', '')).join(' / '),
     nonNa: ASSERTION_LEDGER.slots.length - ASSERTION_LEDGER.excludedFromNa.length,
     totalLine: '断言条数（唯一 id）= ' + ASSERTION_LEDGER.slots.length + '，其中 N-A ' + ASSERTION_LEDGER.excludedFromNa.length + ' 条、其余 ' + (ASSERTION_LEDGER.slots.length - ASSERTION_LEDGER.excludedFromNa.length) + ' 条计 PASS/FAIL',
-    /** R1 **F-07(c)** 如实说明：「声明条数」与「单次运行记录条数」的差额来源（非口径矛盾）。 */
-    runtimeNote: '**声明 ' + ASSERTION_LEDGER.slots.length + ' 条 vs 单次运行记录条数**：差额为 `UX012-CRASH`——该断言**仅在 catch 分支**（未捕获异常）记录，健康运行不产生其记录行 ⇒ 正常运行的 `tally.total` = 声明条数 − 1（不以伪行凑数；其存在性由「异常 ⇒ 记录且必红」保证）。',
+    /** R1 **F-07(c)** 如实说明：「声明条数」与「单次运行记录条数」的关系（非口径矛盾）。 */
+    runtimeNote: '**声明 ' + ASSERTION_LEDGER.slots.length + ' 条 vs 单次运行记录条数**：另有**不登记但可记录**的异常路径断言 `' + ASSERTION_LEDGER.notRegisteredIds.join('` / `') + '`——它**只在 catch 分支**（未捕获异常）产生记录行 ⇒ 健康运行的 `tally.total` ≡ 声明条数，异常运行 ≡ 声明条数 + 1 且该行必红（不把它列入 `slots` 是**刻意**的：否则「记录条数 ≡ 声明条数」在任何健康运行里都恒不成立）。运行期对账值见 `report.classificationLedger.runtime`。',
   }
 })()
 /** 台账唯一访问器：分类桶定义 + 桶和（含**内容哈希**——改分类定义即哈希变，可用于失败归因）。 */
@@ -375,6 +381,7 @@ function assertionLedger() {
     declaredSiteCount: ASSERTION_LEDGER['@ledger-source-control'].declaredSiteCount,
     declaredBucketSum: defs.reduce((n, b) => n + b.count, 0),
     excludedFromNa: ASSERTION_LEDGER.excludedFromNa,
+    notRegisteredIds: ASSERTION_LEDGER.notRegisteredIds,
     ledgerSha256: sha256(JSON.stringify({ defs: ASSERTION_BUCKET_DEFS, slots: ASSERTION_LEDGER.slots, declaredTotal: ASSERTION_LEDGER.declaredTotal, excludedFromNa: ASSERTION_LEDGER.excludedFromNa })),
     sourceControl: ASSERTION_LEDGER['@ledger-source-control'],
   }
@@ -397,7 +404,8 @@ function assertionLedgerReport() {
   }
   const ledgerIds = L.defs.flatMap((b) => b.ids)
   const known = new Set(ledgerIds)
-  const unassigned = actualIds.filter((id) => !known.has(id))            // 源码实有、台账未归桶
+  // 「源码实有、台账未归桶」——**不登记名单**（`notRegisteredIds`，异常路径断言）豁免
+  const unassigned = actualIds.filter((id) => !known.has(id) && !L.notRegisteredIds.includes(id))
   const unknownInBucket = ledgerIds.filter((id) => !actualIds.includes(id)) // 台账在册、源码无此调用
   const bucketSumOk = L.declaredBucketSum === L.declaredTotal            // 桶和 ≡ 声明总数
   const slotLenOk = L.slotCount === L.declaredTotal                      // 台账条数 ≡ 声明总数
@@ -409,7 +417,7 @@ function assertionLedgerReport() {
   })                                                                     // N-A 归属必须落在真驱动桶内
   const sourceControlOk = actualSourceSha256 === L.sourceControl.declaredSha256
     && directiveLines.length === L.sourceControl.declaredSiteCount           // 物理接线处数（含闸门分支对偶）
-    && actualIds.length === L.declaredTotal                                // 唯一断言 id 数 ≡ 台账条数
+    && actualIds.length === L.declaredTotal + L.notRegisteredIds.length     // 唯一断言 id 数 ≡ 台账条数 + 不登记名单（异常路径）
   const baseOk = bucketSumOk && slotLenOk && idsUniqueOk && excludedOk && unassigned.length === 0 && unknownInBucket.length === 0 && sourceControlOk
   return {
     ok: baseOk, defs: L.defs, declaredTotal: L.declaredTotal, declaredBucketSum: L.declaredBucketSum,
@@ -431,10 +439,13 @@ function assertionLedgerRuntimeCheck(records) {
   const L = assertionLedger()
   const known = new Set(L.defs.flatMap((b) => b.ids))
   const naIds = records.filter((r) => r.status === 'N-A').map((r) => r.id)
-  const offLedger = records.map((r) => r.id).filter((id) => !known.has(id))
+  const offLedger = records.map((r) => r.id).filter((id) => !known.has(id) && !L.notRegisteredIds.includes(id))
   const naNotDeclared = naIds.filter((id) => !L.excludedFromNa.some((e) => e.id === id))
+  // 台账**不登记** `UX012-CRASH`（异常路径专用：健康运行不产生该记录行）⇒ 期望记录数 = 声明总数 −1；
+  // 发生未捕获异常时该行会额外入册 ⇒ 期望数 +1（两态都可判，不再让健康运行恒不成立）。
+  const extraRecorded = records.filter((r) => L.notRegisteredIds.includes(r.id)).length
+  const expectedRecords = L.declaredTotal + extraRecorded
   const crashRecorded = records.some((r) => r.id === 'UX012-CRASH')
-  const expectedRecords = L.declaredTotal - (crashRecorded ? 0 : 1)
   const countOk = records.length === expectedRecords
   return {
     ok: offLedger.length === 0 && naNotDeclared.length === 0 && countOk,
@@ -1322,7 +1333,10 @@ async function main() {
       const body = clientSrcNow()
       const entryRe = /store\.set\(\{\s*entryOpen:\s*true\s*\}\)/g
       const entryCount = (body.match(entryRe) ?? []).length
-      const ocIdx = body.indexOf('openConsole()')
+      // `openConsole` 是**函数声明**（`function openConsole(t, focusId)`）⇒ 按其定义锚取函数体前段，
+      // 在其中找 `closeWorkbench(`（同源互斥：开控制台前先关分栏）。**不用** `openConsole()` 字面量——
+      // 该写法在源码中不存在 ⇒ 会静默取到空切片、判据恒红（R1 返工实测踩到）。
+      const ocIdx = body.indexOf('function openConsole(')
       const ocSlice = ocIdx < 0 ? '' : body.slice(ocIdx, ocIdx + 900)
       const ocHasClose = ocSlice.includes('closeWorkbench(')
       // 正向对照（防空转）：把入口补一处 ⇒ 计数 2 ⇒ 判据必红
@@ -1350,6 +1364,9 @@ async function main() {
       const backdropGeo = geo(backdrop)
       if (drawer === null) return { drawerFound: false, labels, dialogPresent: dialog !== null, backdrop: backdropGeo, samples: [], blockedPoints: 0, interactionBlocked: null }
       const r = drawer.getBoundingClientRect()
+      // F-05(b)：抽屉**零尺寸**时五点采样会退化为同一点 ⇒ 显式读数 + 判据不成立（不冒充取证）
+      const drawerRect = { x: +r.x.toFixed(1), y: +r.y.toFixed(1), w: +r.width.toFixed(1), h: +r.height.toFixed(1) }
+      const drawerHasArea = r.width > 0 && r.height > 0
       // 多点采样（R1 F-05）：抽屉四角内缩 + 中心 —— 任一采样点被非抽屉元素占据即视为不可点
       const ins = 4
       const pts = [
@@ -1366,7 +1383,7 @@ async function main() {
         return { ...p, topAtPoint: cls(top), blocked: top !== null && top !== drawer && !drawer.contains(top) }
       })
       return {
-        drawerFound: true, dialogPresent: dialog !== null, labels, backdrop: backdropGeo,
+        drawerFound: true, dialogPresent: dialog !== null, labels, backdrop: backdropGeo, drawerRect, drawerHasArea, effectivePoints: drawerHasArea ? 'four-corners-plus-center' : 'degenerate（抽屉零尺寸 ⇒ 五点为同一点，不作为不可达依据）',
         // 宿主/运行时可能对类名做哈希化 ⇒ topIsBackdrop 只认**插件遮罩**的作者类名子串；
         // 命中即「插件遮罩在最上层」。未命中但仍在抽屉之上（blocked=true）**同样构成不可达**
         // （另有宿主遮罩层挡在入口上）——两者都如实入 facts，断言**不**依赖本字段（只作取证）。
@@ -1525,8 +1542,19 @@ async function main() {
     const ledRep = assertionLedgerReport()
     const ledSelf = assertionLedgerSelfTest()
     // R1 **F-07(c)**：运行期对账——**判 N-A 的 id 集 MUST ⊆ `excludedFromNa`** ∧ 每条记录 id 在册 ∧
-    // 记录条数 ≡ 声明条数 −（`UX012-CRASH` 未记录时 1：该断言仅在 catch 分支记录）。
-    const ledRun = assertionLedgerRuntimeCheck(report.assertions)
+    // 记录条数 ≡ 声明条数 −（`UX012-CRASH` 未记录时 1）。
+    // ⚠️ **自指时序**：本条 `UX012-CLASSIFICATION-LEDGER` **自身**也会被记录，而 `A(…)` 的实参在**调用前**
+    // 求值 ⇒ 若在此处先跑 `assertionLedgerRuntimeCheck(report.assertions)`，看到的记录数会**少 1**
+    // （本条尚未入报告）。故：先记录本条（判据以 `ledPredicate()` **惰性求值**），再以**完整**记录集重跑
+    // 运行期对账并回填 `report.classificationLedger.runtime` / `runtime.ok`（真实值，非自指偏差值）。
+    // **自指处理（如实标注口径）**：本条记录也会入册，故谓词**只取不受自指影响的三条判据**——
+    // ① 每条已记录 id 在册（`offLedger` 空）∧ ② **判 N-A 的 id 集 ⊆ `excludedFromNa`** ∧
+    // ③ 台账本体四项与注入式自证全通过。**「记录条数 ≡ 声明条数 −1」这条判据在记录后**由
+    // `selfRef.ok` 交叉核对（见下），不放进本谓词（否则自指恒差 1 ⇒ 恒红）。
+    const ledgerPredicate = () => ledRep.ok === true && ledSelf.pass === true
+      && assertionLedgerRuntimeCheck(report.assertions).offLedger.length === 0
+      && assertionLedgerRuntimeCheck(report.assertions).naNotDeclared.length === 0
+    const ledRunBefore = assertionLedgerRuntimeCheck(report.assertions)
     report.classificationLedger = {
       ok: ledRep.ok, declaredTotal: ledRep.declaredTotal, declaredBucketSum: ledRep.declaredBucketSum,
       buckets: ledRep.defs.map((b) => ({ id: b.id, label: b.label, count: b.count })),
@@ -1537,10 +1565,18 @@ async function main() {
       actualSourceSha256: ledRep.actualSourceSha256, declaredSourceSha256: ledRep.declaredSourceSha256,
       actualDirectiveCount: ledRep.actualDirectiveCount, declaredDirectiveCount: ledRep.declaredDirectiveCount,
       actualAssertionIdCount: ledRep.actualAssertionIdCount, selfTest: ledSelf,
-      runtime: ledRun, doc: { breakdown: ASSERTION_DOC.breakdown, naGated: ASSERTION_DOC.naGated, totalLine: ASSERTION_DOC.totalLine },
+      runtime: null, doc: { breakdown: ASSERTION_DOC.breakdown, naGated: ASSERTION_DOC.naGated, totalLine: ASSERTION_DOC.totalLine },
     }
-    A(/*@assert*/  'UX012-CLASSIFICATION-LEDGER', '分类台账', '分类桶↔断言 id **机检自证（CLEAN-006 N-1/N-5）**：桶和 ≡ 断言条数 ≡ 桶↔id 映射（id 未归桶 / 桶内未知 id / 重复归桶 / 闸门 N-A 归属越桶 / 台账源控制不符 逐项必红），且台账机检自身经**注入式反例**证明具判别力（桶和错 ⇒ 必红）；**运行期对账（R1 F-07c）**：每条记录 id 在册 ∧ **判 N-A 的 id 集 ⊆ `excludedFromNa`** ∧ 记录条数 ≡ 声明条数 −（CRASH 未记录时 1）',
-      ledRep.ok === true && ledSelf.pass === true && ledRun.ok === true, { ...report.classificationLedger })
+    A(/*@assert*/  'UX012-CLASSIFICATION-LEDGER', '分类台账', '分类桶↔断言 id **机检自证（CLEAN-006 N-1/N-5）**：桶和 ≡ 断言条数 ≡ 桶↔id 映射（id 未归桶 / 桶内未知 id / 重复归桶 / 闸门 N-A 归属越桶 / 台账源控制不符 逐项必红），且台账机检自身经**注入式反例**证明具判别力（桶和错 ⇒ 必红）；**运行期对账（R1 F-07c）**：每条记录 id 在册 ∧ **判 N-A 的 id 集 ⊆ `excludedFromNa`** ∧ 记录条数 ≡ 声明条数 −（CRASH 未记录时 1）——含本条自身记录（自指时序已按惰性求值消除）',
+      ledgerPredicate(), { ...report.classificationLedger, predicate: { repOk: ledRep.ok, selfPass: ledSelf.pass, offLedger: ledRunBefore.offLedger.length, naNotDeclared: ledRunBefore.naNotDeclared.length, beforeCount: ledRunBefore.recordedCount, expectedAfterRecord: ledRunBefore.expectedRecords + 1 } })
+    // 回填运行期对账（此时记录集**完整**：含本条）
+    report.classificationLedger.runtime = assertionLedgerRuntimeCheck(report.assertions)
+    const ledRunAfter = assertionLedgerRuntimeCheck(report.assertions)
+    report.classificationLedger.selfRef = {
+      beforeCount: ledRunBefore.recordedCount, afterCount: ledRunAfter.recordedCount,
+      expectedAfterRecord: ledRunBefore.expectedRecords + 1,
+      ok: ledRunAfter.ok === true && ledRunAfter.recordedCount === ledRunBefore.expectedRecords + 1,
+    }
     const failed = report.assertions.filter((a) => a.status === 'FAIL')
     code = failed.length === 0 ? 0 : 1
 
