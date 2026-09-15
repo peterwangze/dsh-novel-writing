@@ -262,7 +262,7 @@ R2 的 5 条 BLOCKING（N-01~N-05）逐条落地，并随附 3 条 P3（N-06~N-0
    `readHostSessionRows` 用 `button[class*="sessionRow"]`，而宿主该类名的**唯一**使用点是 **`div` + `role:"treeitem"`**（`@deepseek-ai/dsh-client-ui-workspace/lib/client.js:966-969`）
    ⇒ 该选择器在本宿主构建下**恒不命中**（不对称对照：同 run 内无限定标签的 `[class*="projectRow"]` 命中 1，宿主 `projectRow` 同为 `div`）。
    **正确选择器形态** = `div[role="treeitem"][class*="sessionRow"], [class*="sessionRow"]`（或按 `role="treeitem"` + 文本提取）；
-   且宿主 `sessionVisible`（`!blank || id === current`，宿主 `L338-340`）⇒ **自动链建出的 blank 会话在非 current 时不渲染**，修完选择器仍可能 0 行 ⇒ 须显式构造**非 blank 或 current** 的会话行。
+   且宿主 `sessionVisible` 的**全合取**（`!session.blank || session.id === current` ∧ `session.origin !== "subagent"` ∧ `!archived.has(session.id)`，宿主 `L338-340`；**R2 N-8 与 `CHANGELOG` 对齐**）⇒ **自动链建出的 blank 会话在非 current 时不渲染**，修完选择器仍可能 0 行 ⇒ 须显式构造**非 blank 或 current** 的会话行。
    原「不足以区分『宿主未渲染』与『选择器/形态差异』」的表述**已被上述取证取代**（后者即实况）。
    **界定（本 run 读数不受影响）**：`C3b`/`C9`/`C10`/`C11` 读的是**插件卡面文本/DOM**（`.nv-*`），与宿主会话行选择器无关；`B5`/`D6` 仍为「前置未取得」的如实记录，只是归因改为选择器失配。
 4. **`report-run1.json` / `report-rework-run.json` 的退出码为推定值 1**（依据：探针尾部 `process.exitCode = report.ok ? 0 : 1`，且两份报告 `ok=false`）。

@@ -233,7 +233,7 @@ R1 返工曾把 `B21a`/`B21b` 的形态判定为 **P2 产品缺陷 D-3**：「�
 >    而是**探针选择器失配**——`readHostSessionRows` 用 `button[class*="sessionRow"]`（`probe-clean-004.mjs:345,356`），而宿主该类名的**唯一**使用点是
 >    **`div` + `role:"treeitem"`**（`@deepseek-ai/dsh-client-ui-workspace/lib/client.js:966-969`）⇒ **恒不命中**（不对称对照：同 run 内无限定标签的
 >    `[class*="projectRow"]` 命中 1）。**正确选择器形态** = `div[role="treeitem"][class*="sessionRow"], [class*="sessionRow"]`（或按 `role="treeitem"` + 文本提取）；
->    且宿主 `sessionVisible`（`!blank || id === current`，宿主 `L338-340`）⇒ 自动链建出的 blank 会话非 current 时不渲染 ⇒ 修选择器后仍可能 0 行，
+>    且宿主 `sessionVisible` 的**全合取**（`!session.blank || session.id === current` ∧ `session.origin !== "subagent"` ∧ `!archived.has(session.id)`，宿主 `L338-340`；**R2 N-8 与 `CHANGELOG` 对齐**）⇒ 自动链建出的 blank 会话非 current 时不渲染 ⇒ 修选择器后仍可能 0 行，
 >    须显式构造**非 blank 或 current** 的会话行。**界定**：本 run 的 `C3b`/`C9`/`C10`/`C11` 读插件卡面 `.nv-*`，与本选择器**无关** ⇒ 读数不受影响；
 >    归口 = **CLEAN-006 F6（只订正归因，不动冻结探针；`probe-clean-004.mjs` sha256 保持 `de2de511…`）**。
 >    该面归入 `CLEAN-004-checklist.md` §9 R-04 未覆盖风险 + 用户项 U-13。

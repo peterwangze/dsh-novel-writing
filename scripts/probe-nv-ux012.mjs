@@ -346,7 +346,7 @@ const ASSERTION_LEDGER = {
   /** 台账**源控制锚**（自指）：本块声明之后每一行含自指锚的源码文本顺序拼接的 sha256。 */
   '@ledger-source-control': {
     marker: 'A\\(/\\*@assert\\*/',
-    declaredSha256: '9266378abcad2218a922175e96fe60b5c37e1ca6a7df9c209232e3f5a2faf641',
+    declaredSha256: '6f606e6e28a4f3863af64e319204ed451c565db972743b8b4b29003c5b6a4d0a',
     declaredSiteCount: 32,
   },
 }
@@ -441,8 +441,9 @@ function assertionLedgerRuntimeCheck(records) {
   const naIds = records.filter((r) => r.status === 'N-A').map((r) => r.id)
   const offLedger = records.map((r) => r.id).filter((id) => !known.has(id) && !L.notRegisteredIds.includes(id))
   const naNotDeclared = naIds.filter((id) => !L.excludedFromNa.some((e) => e.id === id))
-  // 台账**不登记** `UX012-CRASH`（异常路径专用：健康运行不产生该记录行）⇒ 期望记录数 = 声明总数 −1；
-  // 发生未捕获异常时该行会额外入册 ⇒ 期望数 +1（两态都可判，不再让健康运行恒不成立）。
+  // 判据③ 记录条数（R2 **N-1** 按事实改写注释）：台账**不登记** `UX012-CRASH`（异常路径专用：
+  // 健康运行不产生该记录行）⇒ **健康运行期望记录数 = 声明总数**；发生未捕获异常时该行额外入册
+  // ⇒ 期望数 +1（两态都可判）。旧注释写「声明总数 −1」是错的（`UX012-CRASH` 不在 `slots` 里）。
   const extraRecorded = records.filter((r) => L.notRegisteredIds.includes(r.id)).length
   const expectedRecords = L.declaredTotal + extraRecorded
   const crashRecorded = records.some((r) => r.id === 'UX012-CRASH')
@@ -453,6 +454,40 @@ function assertionLedgerRuntimeCheck(records) {
     recordedCount: records.length, expectedRecords, crashRecorded, countOk,
     declaredTotal: L.declaredTotal, excludedFromNaCount: L.excludedFromNa.length,
   }
+}
+/**
+ * **判据③ 的可失败性自证（R2 N-1 要求「给红向量：构造记录数不匹配 ⇒ 必红」）**：
+ * 以**构造的记录集**跑 `assertionLedgerRuntimeCheck` 同一函数，证明「记录数不匹配 / 越册 id /
+ * 未登记 N-A」三类缺陷**都可能被检出**，同时健康形态**必绿**——避免该判据是恒真或恒假（旧实现
+ * 即因调用时序而**结构性恒假且静默**）。
+ */
+function assertionLedgerRuntimeSelfTest() {
+  const L = assertionLedger()
+  const idsAll = L.defs.flatMap((b) => b.ids)
+  const healthy = idsAll.map((id) => ({ id, status: L.excludedFromNa.some((e) => e.id === id) ? 'N-A' : 'PASS' }))
+  const cases = []
+  const push = (name, records, expect) => {
+    const got = assertionLedgerRuntimeCheck(records)
+    const hit = {
+      okTrue: got.ok === true, countMismatch: got.countOk === false,
+      offLedger: got.offLedger.length > 0, naNotDeclared: got.naNotDeclared.length > 0,
+    }
+    const pass = expect.every((k) => hit[k] === true)
+    cases.push({ name, expect, seen: Object.keys(hit).filter((k) => hit[k] === true), recordedCount: got.recordedCount, expectedRecords: got.expectedRecords, ok: pass })
+  }
+  // 基线：健康形态（全部在册、闸门 N-A 已登记、条数 ≡ 声明数）⇒ **必绿**
+  push('基线（健康记录集）', healthy, ['okTrue'])
+  // 红向量①：**记录数不匹配**（少 1 条）⇒ `countOk=false`（N-1 的核心：旧实现此态静默）
+  push('记录数不匹配（少 1 条 ⇒ 判据③必红）', healthy.slice(0, -1), ['countMismatch'])
+  // 红向量②：**记录数不匹配**（多 1 条越册 id，同时触发 offLedger 与 countOk）
+  push('记录数不匹配（多 1 条越册 id）', healthy.concat([{ id: 'UX012-NOT-IN-LEDGER', status: 'PASS' }]), ['countMismatch', 'offLedger'])
+  // 红向量③：越册 id（条数相同 ⇒ 仅 offLedger 命中，证明两类判据互相独立）
+  push('越册 id（条数相同）', healthy.slice(0, -1).concat([{ id: 'UX012-NOT-IN-LEDGER', status: 'PASS' }]), ['offLedger'])
+  // 红向量④：未登记的 N-A（按已登记成员构造 ⇒ offLedger 空、仅 naNotDeclared 命中）
+  const drive = L.defs.find((b) => b.id === 'bucket-drive').ids.filter((id) => !L.excludedFromNa.some((e) => e.id === id))
+  const naButNotDeclared = L.excludedFromNa.map((e) => ({ id: e.id, status: 'PASS' })).concat([{ id: drive[0], status: 'N-A' }])
+  push('未登记的 N-A（闸门外判 N-A ⇒ naNotDeclared 必红）', healthy.filter((r) => !L.excludedFromNa.some((e) => e.id === r.id)).concat(naButNotDeclared), ['naNotDeclared'])
+  return { cases, pass: cases.every((c) => c.ok === true) }
 }
 /**
  * **注入式自证**（台账机检的可失败性）：对**构造的**台账/审计结果跑同一批判据——按惯例（同族
@@ -772,10 +807,15 @@ async function main() {
       + '；源码对账（' + led.actualAssertionIdCount + ' id / 源控制 ' + led.actualDirectiveCount + ' 行 '
       + String(led.actualSourceSha256).slice(0, 12) + '）与台账一致=' + led.sourceControlOk)
     for (const c of self.cases) console.log('  ' + (c.ok === true ? 'OK  ' : 'FAIL') + ' 注入 [' + c.name + '] 命中类别=' + JSON.stringify(c.seenTypes) + ' 期望=' + JSON.stringify(c.expectTypes))
+    // R2 N-1：**运行期判据③（记录条数）的可失败性自证**——健康必绿 / 不匹配必红
+    const rtSelf = assertionLedgerRuntimeSelfTest()
+    for (const c of rtSelf.cases) console.log('  ' + (c.ok === true ? 'OK  ' : 'FAIL') + ' 运行期注入 [' + c.name + '] 命中=' + JSON.stringify(c.seen) + ' 期望=' + JSON.stringify(c.expect) + ' 记录数=' + c.recordedCount + '/期望=' + c.expectedRecords)
+    console.log('RUNTIME-LEDGER-CHECK ' + (rtSelf.pass === true ? 'PASS' : 'FAIL') + '：' + rtSelf.cases.filter((c) => c.ok === true).length + '/' + rtSelf.cases.length
+      + '（基线必绿 ∧ 记录数不匹配 / 越册 id / 未登记 N-A 三类必红）')
     console.log('CLASSIFICATION-LEDGER ' + ((led.ok === true && self.pass === true) ? 'PASS' : 'FAIL')
       + '：桶和 ≡ 断言条数 ≡ 桶↔id 映射 ∧ id 未归桶 0 ∧ 桶内未知 id 0；注入式反例 ' + self.cases.filter((c) => c.ok === true).length + '/' + self.cases.length
       + '（含桶和错 / id 未归桶 / 桶内未知 id / 闸门归属越桶 / 源控制不符）')
-    return rep.allPass === true && led.ok === true && self.pass === true ? 0 : 1
+    return rep.allPass === true && led.ok === true && self.pass === true && rtSelf.pass === true ? 0 : 1
   }
 
   const plane = resolvePlane()
@@ -1541,20 +1581,18 @@ async function main() {
     // 闸门归属越桶 / 源控制不符五类缺陷各有一条构造向量 MUST 被拦）。本条亦被 `report.classificationLedger` 留痕。
     const ledRep = assertionLedgerReport()
     const ledSelf = assertionLedgerSelfTest()
-    // R1 **F-07(c)**：运行期对账——**判 N-A 的 id 集 MUST ⊆ `excludedFromNa`** ∧ 每条记录 id 在册 ∧
-    // 记录条数 ≡ 声明条数 −（`UX012-CRASH` 未记录时 1）。
-    // ⚠️ **自指时序**：本条 `UX012-CLASSIFICATION-LEDGER` **自身**也会被记录，而 `A(…)` 的实参在**调用前**
-    // 求值 ⇒ 若在此处先跑 `assertionLedgerRuntimeCheck(report.assertions)`，看到的记录数会**少 1**
-    // （本条尚未入报告）。故：先记录本条（判据以 `ledPredicate()` **惰性求值**），再以**完整**记录集重跑
-    // 运行期对账并回填 `report.classificationLedger.runtime` / `runtime.ok`（真实值，非自指偏差值）。
-    // **自指处理（如实标注口径）**：本条记录也会入册，故谓词**只取不受自指影响的三条判据**——
-    // ① 每条已记录 id 在册（`offLedger` 空）∧ ② **判 N-A 的 id 集 ⊆ `excludedFromNa`** ∧
-    // ③ 台账本体四项与注入式自证全通过。**「记录条数 ≡ 声明条数 −1」这条判据在记录后**由
-    // `selfRef.ok` 交叉核对（见下），不放进本谓词（否则自指恒差 1 ⇒ 恒红）。
-    const ledgerPredicate = () => ledRep.ok === true && ledSelf.pass === true
-      && assertionLedgerRuntimeCheck(report.assertions).offLedger.length === 0
-      && assertionLedgerRuntimeCheck(report.assertions).naNotDeclared.length === 0
-    const ledRunBefore = assertionLedgerRuntimeCheck(report.assertions)
+    // ── R1 F-07(c) 运行期对账（R2 **N-1** 重构）───────────────────────────────────────────────
+    // 判据三条：① 每条记录 id 在册（`notRegisteredIds` 豁免）∧ ② **判 N-A 的 id 集 ⊆ `excludedFromNa`**
+    // ∧ ③ **记录条数 ≡ 声明条数 ＋（异常路径断言已记录时 1）**（= `assertionLedgerRuntimeCheck.countOk`）。
+    // **R2 N-1 修正的两个结构性缺陷**：
+    //   · **注释与事实不符**：旧注释写「声明条数 −1」，代码实为 `declaredTotal + extraRecorded`
+    //     ⇒ 按事实改写（「−1」是错的：`UX012-CRASH` 根本不在 `slots` 里，健康运行期望数 = 声明数）；
+    //   · **判据③既未被执行也结构性恒假（静默）**：旧实现把运行期核对放在**本条记录之前**，此时
+    //     本条 / `Z1` / `Z2` 均未入册 ⇒ `recordedCount ≠ expectedRecords` 恒成立，而旧谓词**不含
+    //     `countOk`** ⇒ 无人变红。现改为：运行期核对**移到 `Z2` 记录之后**执行（记录集完整），并把
+    //     该结论**合取进 `report.ok` 与最终判定** ⇒ 记录数不匹配**必红**（不再静默）。
+    const ledgerPredicate = () => ledRep.ok === true && ledSelf.pass === true && assertionLedgerRuntimeSelfTest().pass === true
+    const ledRunBefore = assertionLedgerRuntimeCheck(report.assertions)   // 前置快照（仅供归因留痕）
     report.classificationLedger = {
       ok: ledRep.ok, declaredTotal: ledRep.declaredTotal, declaredBucketSum: ledRep.declaredBucketSum,
       buckets: ledRep.defs.map((b) => ({ id: b.id, label: b.label, count: b.count })),
@@ -1565,18 +1603,13 @@ async function main() {
       actualSourceSha256: ledRep.actualSourceSha256, declaredSourceSha256: ledRep.declaredSourceSha256,
       actualDirectiveCount: ledRep.actualDirectiveCount, declaredDirectiveCount: ledRep.declaredDirectiveCount,
       actualAssertionIdCount: ledRep.actualAssertionIdCount, selfTest: ledSelf,
-      runtime: null, doc: { breakdown: ASSERTION_DOC.breakdown, naGated: ASSERTION_DOC.naGated, totalLine: ASSERTION_DOC.totalLine },
+      notRegisteredIds: ledRep.notRegisteredIds,
+      runtime: null, runtimeOk: null, ledgerAssertion: null,
+      doc: { breakdown: ASSERTION_DOC.breakdown, naGated: ASSERTION_DOC.naGated, totalLine: ASSERTION_DOC.totalLine, runtimeNote: ASSERTION_DOC.runtimeNote },
     }
-    A(/*@assert*/  'UX012-CLASSIFICATION-LEDGER', '分类台账', '分类桶↔断言 id **机检自证（CLEAN-006 N-1/N-5）**：桶和 ≡ 断言条数 ≡ 桶↔id 映射（id 未归桶 / 桶内未知 id / 重复归桶 / 闸门 N-A 归属越桶 / 台账源控制不符 逐项必红），且台账机检自身经**注入式反例**证明具判别力（桶和错 ⇒ 必红）；**运行期对账（R1 F-07c）**：每条记录 id 在册 ∧ **判 N-A 的 id 集 ⊆ `excludedFromNa`** ∧ 记录条数 ≡ 声明条数 −（CRASH 未记录时 1）——含本条自身记录（自指时序已按惰性求值消除）',
-      ledgerPredicate(), { ...report.classificationLedger, predicate: { repOk: ledRep.ok, selfPass: ledSelf.pass, offLedger: ledRunBefore.offLedger.length, naNotDeclared: ledRunBefore.naNotDeclared.length, beforeCount: ledRunBefore.recordedCount, expectedAfterRecord: ledRunBefore.expectedRecords + 1 } })
-    // 回填运行期对账（此时记录集**完整**：含本条）
-    report.classificationLedger.runtime = assertionLedgerRuntimeCheck(report.assertions)
-    const ledRunAfter = assertionLedgerRuntimeCheck(report.assertions)
-    report.classificationLedger.selfRef = {
-      beforeCount: ledRunBefore.recordedCount, afterCount: ledRunAfter.recordedCount,
-      expectedAfterRecord: ledRunBefore.expectedRecords + 1,
-      ok: ledRunAfter.ok === true && ledRunAfter.recordedCount === ledRunBefore.expectedRecords + 1,
-    }
+    A(/*@assert*/ 'UX012-CLASSIFICATION-LEDGER', '分类台账', '分类桶↔断言 id **机检自证（CLEAN-006 N-1/N-5）**：桶和 ≡ 断言条数 ≡ 桶↔id 映射（id 未归桶 / 桶内未知 id / 重复归桶 / 闸门 N-A 归属越桶 / 台账源控制不符 逐项必红），且台账机检自身经**注入式反例**证明具判别力（桶和错 ⇒ 必红）；**运行期对账（R1 F-07c / R2 N-1）**：每条记录 id 在册（`notRegisteredIds` 豁免）∧ **判 N-A 的 id 集 ⊆ `excludedFromNa`** ∧ **记录条数 ≡ 声明条数 ＋（异常路径断言已记录时 1）**；台账本体四项与注入式自证全通过。运行期结论在 `Z2` 记录后（记录集完整）算出并与最终判定**合取** ⇒ 记录数不匹配**必红**（不再静默）',
+      ledgerPredicate(), { ...report.classificationLedger, predicate: { repOk: ledRep.ok, selfPass: ledSelf.pass, preRun: { offLedger: ledRunBefore.offLedger.length, naNotDeclared: ledRunBefore.naNotDeclared.length, recordedCount: ledRunBefore.recordedCount, runtimeOkDeferredToPostZ2: true } } })
+    report.classificationLedger.ledgerAssertion = { id: 'UX012-CLASSIFICATION-LEDGER', statusAtRecord: 'PASS（运行期结论在 Z2 后回填，可能改判，见 verdict）' }
     const failed = report.assertions.filter((a) => a.status === 'FAIL')
     code = failed.length === 0 ? 0 : 1
 
@@ -1598,10 +1631,34 @@ async function main() {
       report.cleanup = { root, kept: false, rootRemoved: removed }
       A(/*@assert*/  'UX012-Z2-isolation-cleanup', '隔离', '隔离根在收尾清理（process.exit 之前执行——同族 BUG-007 R1 F-7 / UX-060 R1 F-1 的 %TEMP% 残留教训）', removed === true, report.cleanup)
     }
+    // ── R2 **N-1**：运行期对账（记录集**已完整**：行为面 24 + 本条 + Z1 + Z2 = 27 = 声明数）────────
+    // 该结论与台账本体一并决定最终判定（`report.ok` / 退出码）⇒ 记录数不匹配 ⇒ 必红（原实现静默）。
+    const ledRunFinal = assertionLedgerRuntimeCheck(report.assertions)
+    report.classificationLedger.runtime = ledRunFinal
+    report.classificationLedger.runtimeOk = ledRunFinal.ok === true
+    report.classificationLedger.selfRef = {
+      preRunCount: ledRunBefore.recordedCount, finalCount: ledRunFinal.recordedCount,
+      expectedFinal: ledRunFinal.expectedRecords,
+      ok: ledRunFinal.countOk === true && ledRunFinal.recordedCount === ledRunFinal.expectedRecords,
+    }
+    // 把运行期结论回填进本条断言的实际判定（并检出「回填后与记录时不一致」这一改判情形）
+    report.classificationLedger.verdict = (() => {
+      const runtimeSelf = assertionLedgerRuntimeSelfTest()
+      const ledgerOk = ledRep.ok === true && ledSelf.pass === true && runtimeSelf.pass === true && ledRunFinal.ok === true
+      const reclassified = (report.classificationLedger.ledgerAssertion.status === 'PASS') !== ledgerOk
+      if (reclassified) {
+        const rec = report.assertions.find((a) => a.id === 'UX012-CLASSIFICATION-LEDGER')
+        if (rec !== undefined) { rec.status = ledgerOk ? 'PASS' : 'FAIL'; rec.reclassifiedByRuntimeCheck = true }
+        console.error('[probe] 台账运行期对账改判：' + (ledgerOk ? 'FAIL→PASS' : 'PASS→FAIL') + '（记录集完整后重算）')
+      }
+      return { ledgerOk, reclassified, runtimeSelfPass: runtimeSelf.pass === true }
+    })()
 
     const tally = { total: report.assertions.length, pass: report.assertions.filter((a) => a.status === 'PASS').length, fail: report.assertions.filter((a) => a.status === 'FAIL').length, na: report.assertions.filter((a) => a.status === 'N-A').length }
     report.tally = tally
-    report.ok = tally.fail === 0 && code === 0
+    // R2 N-1：运行期台账结论**参与最终判定**（`tally.fail` / `code` 已含改判结果；此处再与 `runtime.ok` 合取，
+    // 使「判据③不匹配」不可能被静默吞掉）
+    report.ok = tally.fail === 0 && code === 0 && report.classificationLedger.runtimeOk === true
     report.finishedAt = new Date().toISOString()
     const outPath = join(opts.out, 'report-ux012.json')
     writeFileSync(outPath, JSON.stringify(report, null, 2))

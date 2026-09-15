@@ -2108,13 +2108,16 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
     mini2.dispose()
     cleanupOk = sB.subscriberCount() === 0 && sA.subscriberCount() === 0
     mini2.unmount()
-    // F-03(d) 汇总：本次 store.notify 时「F1 通道的订阅回调」是否被调用（= React 回调确已转发）
-    // F-03(d) 诊断量（**不作断言**，如实标注覆盖边界）：本 harness **仅**在 subscribe 引用变化时换订，
-    // 而真实 React 还按「订阅对象 vs 当前 store」判断换订 ⇒「渲染期 live 订阅收到 notify」这一面在 mock
-    // 下**不可复现**；回调转发的判据由 ①b 的**直取探针**承担（不依赖 harness 的换订语义）。
-    // F-03(d) 诊断量（**不作断言**，如实标注覆盖边界）：本 harness **仅**在 subscribe 引用变化时换订，
-    // 而真实 React 还按「订阅对象 vs 当前 store」判断换订 ⇒「渲染期 live 订阅收到 notify」这一面在 mock
-    // 下**不可复现**；回调转发的判据由 ①b 的**直取探针**承担（不依赖 harness 的换订语义）。
+    // F-03(d) 诊断量（**不作断言**，如实标注覆盖边界，R2 N-5 去重 + N-4 措辞订正）：
+    // · 本 harness 的换订判据 = **`subscribe` 引用变化**（`prev.sub !== subscribe`），与真实 React 一致
+    //   （React 的订阅 effect 依赖 `[subscribe]`）；两者**都不含**「订阅对象 vs 当前 store」这一判据
+    //   ——原注释的反向陈述有误，已按事实改写。
+    // · 因 `subscribeForCurrent` 引用恒定 ⇒ **挂载后不换订** ⇒「渲染期 live 订阅收到 notify」这一面在
+    //   本 mock 场景下**未被走到**（`reactCallbackForwarded=0` 即其表现）；回调转发的判据改由 ①b 的
+    //   **直取探针**承担（不依赖换订语义）。
+    // · **失败集未细分口径（R2 N-6c）**：受 `mockReact` 的 `useState`-on-instance 影响，构造性反例下
+    //   会有连带项（如末条 `A-F9` 断言计数同步）；「恰 ①b 红」只对**该断言本身**成立，其余连带项成因
+    //   已在 CHANGELOG 返工条目列明。
     reactCallbackForwarded = notifyLog.filter((x) => x === 'react').length
     if (process.env.NV_SMOKE_F1_DEBUG === '1') console.log('F1 facts', JSON.stringify({ sA0, subsAfterAbsentMount, subsAfterRefresh, rendersBounded, snapStable, productSnapshotStable, reactCallbackForwarded, cleanupOk, swapOk, m0, m1, m2, m3, m4, seenSnaps }))
   } catch (e) { f1Err = e instanceof Error ? e.message : String(e) }
@@ -2479,7 +2482,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   //      **残余缝（同次实测，未闭合）**：若 2.13 只删**终点闭合行**（**历史锚点**：COMPAT-013 时期值 `L4429-4460`——6 处注册仍全在范围内）
   //      则 ①②③④⑤ **全绿**（实测 262/0：⑤a 计数仍 6 ≡ 6、④ callPrefix = null、⑤b 无 `键: {` 形态构造）
   //      ⇒ 该形态目前无持续机检力。根治需「构造闭合行」口径，而 JS 范围本就可能是**合法语义片段**
-  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L5135-5137` +1 / 3.8 `L3023-3033` +1 实测均非配平）——
+  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L5137-L5139` +1 / 3.8 `L3025-L3035` +1 实测均非配平）——
   //      无差别要求配平会误报上述 3 项，故如实留档待另案（非本任务可安全落地）。
   //      **本行 3 个契约行号副本的同步方（CLEAN-006 **N-6** 归属订正，避免审计归因错位）**：本块随
   //      契约 `line` 重基**必须同步**，其**机检执行者 = `COMPAT-015 F3 行号引用对账`**（把本行 2.3
@@ -2613,7 +2616,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // 首行起构造者恰 3 项 = 4.6 `"dsh": {` / 6.1 `"peerDependencies": {` / 6.2 `"engines": {`（面 6 三项
   // JSON 根级子对象；其余 18 项首行为 JS 调用/声明/注释 ⇒ 不适用），项数入 golden（防空转）。
   // **只取首行、不取范围内全部 opener 的理由**：JS 范围可为**合法语义片段**（2.1 `L92-94` 净差 +2 / 2.3
-  // `L4804-L4806` +1 / 3.8 `L3023-3033` +1 实测均非配平，⑤ 注释已留档）——无差别要求范围内每个 opener 配平
+  // `L4804-L4806` +1 / 3.8 `L3025-L3035` +1 实测均非配平，⑤ 注释已留档）——无差别要求范围内每个 opener 配平
   // 会误报这些条目；而「范围未包住自身构造闭合行」的形态恰以构造键行起段（首行 opener 即充分判据）。
   // 口径边界同 ⑤b（裸字符配平，不剥注释/字符串中的 `{`/`}`）。
   const KEY_OPEN6 = /^\s*(?:"([^"]{1,60})"|'([^']{1,60})'|([A-Za-z_$][\w$.-]{0,60}))\s*:\s*\{\s*$/
@@ -2647,7 +2650,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // 入 golden）范围条目中「起于注释/空行」者 MUST 恰 2 项
   //（3.1 起于 `/**` JSDoc L1075、3.5 起于**空行** L1125——互操作说明在本段内、非起点）。动因 = 该计数原为**人工转写**且写错
   //（CHANGELOG 曾披露「三处」）——与 COMPAT-004 FIND-1 的 tier 串转写漂移同类，故沿用同款处置：实测值
-  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.8 `L3023` 函数行 / 4.6 `L17`
+  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.8 `L3025` 函数行 / 4.6 `L17`
   // `"dsh": {` / 5.1 `L1` `name:` / 5.2 `L16` `- id:` / 5.4 `L77` `- id:` / 6.1 `L39`（修正后真值；修正前
   // `L38` 亦非注释）/ 6.2 `L8` `"engines": {` / 6.4 `L105`（ci.yml `#` 注释起段——JS 口径不计为注释，见下句口径边界）。严格面（面 2 = 11 项）已由 ③ 逐项约束，
   // 本项只覆盖未纳入严格面的面（动态生成：实测 3/4/5/6）；注释口径同 ③（JS 风格），YAML `#` 不在识别面内（与 F-5① 同源前提）。
