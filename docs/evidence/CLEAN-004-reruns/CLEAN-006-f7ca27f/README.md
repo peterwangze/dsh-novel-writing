@@ -10,7 +10,7 @@
 | 断言汇总 | **49 条 → PASS 47 / FAIL 0 / N-A 2**（N-A = `B5-found-sessions-area`、`D6-session-switch-close`） |
 | 运行窗口 | `2026-09-15T04:24:31Z` → `2026-09-15T04:25:34Z`（本地 UTC+8 `12:24:31` → `12:25:34`，约 63 s） |
 | 隔离 | `containment` 全真；`realEnvVerdict.ok=true` + `strictDeltas={}`；`envErrors=[]`；未终止/接管任何用户进程 |
-| 本文件 sha256 | `5dc9d4389c33cb359e753e68e9cc042e7bc5b7c0059bd8ee285e631143ccd540`（97362 B） |
+| 本 `report.json` sha256 | `5dc9d4389c33cb359e753e68e9cc042e7bc5b7c0059bd8ee285e631143ccd540`（97362 B）——**R1 F-02 订正**：原表头写「本文件 sha256」，实为该报告文件的哈希 |
 | 冻结资产（**只运行不改**） | `probe-clean-004.mjs` sha256 = `de2de511e89a8ccc6d08b29d529e51336079bc3ceab4b937795dad88d9065b65`（= 锚值） |
 
 ## 归档口径（CLEAN-006 **N-4**）

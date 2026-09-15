@@ -12,15 +12,14 @@
  * 固化）**：
  *   · **分类按「判定闸门」口径**（不以驱动手段命名）——驱动+状态比较 = 判定输入含驱动动作**及其后**
  *     的状态观测；单次快照读数 = 动作缺口之后的一次 DOM 快照（属性/子节点计数），**不含**前后态比较。
- *   · 分类桶（**声明式常量 = 单一事实源**，见本文件 `assertionLedger()`）：28 条 = 20 条驱动+状态比较 + 2 条单次快照读数 + 1 条结构面（读产品源码计数） + 3 条探针自证面（谓词向量 / 未捕获异常 / 台账机检） + 2 条隔离面（真实环境零写入 + 隔离根清理）。
- *   · **「禁止判绿」是与分类桶正交的第二个维度**：受 `focusMovable` 前置闸门约束、判定输入不成立时
- *     记 N-A 的 4 条 = A7b-focus-wrap / A1b-input-autofocus / A6-focus-restore / A2b-modal-semantics-full（**全部落在驱动桶**，非单次快照读数桶）；其余 24 条按
- *     各自桶计入 PASS/FAIL。**`tally.total` 计入 N-A 记录** ⇒ 断言条数（唯一 id）= 28，其中 N-A 4 条、其余 24 条计 PASS/FAIL（R1 复审 N-5 的归属
- *     偏差与「26 是否含 N-A」歧义在此显式闭合；口径机检 = `UX012-CLASSIFICATION-LEDGER`）。
- *   · **1 条结构面**（`UX012-C3-single-source`：对 `lib/client.js` 作 3 个正则计数，判「创建链单点收口」
- *     结构事实）+ 3 条探针自证面（`FALSIFIABILITY` 谓词向量自证 / `CRASH` 未捕获异常 / 台账机检）
- *     + 2 条隔离面（Z1/Z2：真实 `$DSH_HOME` 指纹与隔离根清理）；上列分类桶与「禁止判绿」均由
- *     `UX012-CLASSIFICATION-LEDGER` 机检（桶和 ≡ 断言条数 ≡ 桶↔id 映射）。
+ *   · **分类桶与「禁止判绿」口径不在此处人工复述**（CLEAN-006 R1 **F-10** 订正）：唯一事实源 =
+ *     本文件 `ASSERTION_LEDGER`（桶定义 + `slots[]` 断言 id↔桶映射 + `excludedFromNa[]` 闸门登记）；
+ *     其可读分解由 `ASSERTION_DOC` **渲染**，并在 `--falsifiability` 中以
+ *     `桶分解：<ASSERTION_DOC.breakdown>` 输出。**文件头不再内嵌任何桶计数/枚举** ⇒ 不存在
+ *     「文档副本 ↔ 台账」两处维护面；实际取值请以 `--falsifiability` 输出或
+ *     `report.classificationLedger.buckets` 为准。
+ *   · **口径机检** = `UX012-CLASSIFICATION-LEDGER`（桶和 ≡ 断言条数 ≡ 桶↔id 映射 ∧ 源码对账 ∧
+ *     闸门 N-A 归属 ∧ 运行期 N-A 集 ⊆ `excludedFromNa`）。
  * **唯一两处源码读取面**已在标签内显式标注：C3（结构计数）与 `readI18n()`（期望文案与产品同源，
  * 避免复制字面量）——**不做**「源码字符串直查替代行为验证」（同族教训 = CLEAN-006 F-2 / UX-060 R1 F-2）：
  *   A 新建弹窗（几何/模态语义/卡片内点击不自关/遮罩关/Esc 关且控制台保留/焦点归还/焦点陷阱/
@@ -52,7 +51,7 @@
  * 退出码：0 = 全部断言成立（绿态）；1 = 有断言不成立（红态/回归）；2 = 环境不可用或隔离校验失败。
  */
 import { createHash, randomUUID } from 'node:crypto'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { spawn, spawnSync } from 'node:child_process'
 import { createRequire } from 'node:module'
 import { createServer } from 'node:net'
@@ -67,6 +66,8 @@ const PROFILE_NAME = 'ux012probe'
 const VIEWPORT = { width: 1400, height: 900 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const sha256 = (t) => createHash('sha256').update(t).digest('hex')
+/** F-05：产品源码现读（结构面判据用；避免复制字面量）。 */
+const clientSrcNow = () => readFileSync(CLIENT_SRC, 'utf8')
 
 function parseArgs(argv) {
   const opts = { out: join(tmpdir(), 'ux012-probe'), keep: false, help: false, falsifiability: false }
@@ -339,13 +340,15 @@ const ASSERTION_LEDGER = {
   /** 台账**源控制锚**（自指）：本块声明之后每一行含自指锚的源码文本顺序拼接的 sha256。 */
   '@ledger-source-control': {
     marker: 'A\\(/\\*@assert\\*/',
-    declaredSha256: '45802774295bb0f62bea3697ce87ff3a6601f899080676992ef98ca338443272',
+    declaredSha256: '080c5da217308ffcbdb398d70e29aae1c5f7a99d5af0d45fc06e1434313d51d3',
     declaredSiteCount: 32,
   },
 }
 /**
- * 文件头「口径如实披露」段由**本台账派生**（单一事实源）：桶分解串、受闸门口径、计数口径三句均由
- * `ASSERTION_LEDGER` 现算 ⇒ 改分类必同步改文件头，不存在「文档与实现两处维护」的漂移面。
+ * 分类口径的**渲染面**（CLEAN-006 R1 **F-10(a)**）：桶分解串、受闸门口径、计数口径三句均由
+ * `ASSERTION_LEDGER` 现算 ⇒ **文件头不再内嵌桶计数/枚举**（R1 前是人工副本、且本常量无消费点 =
+ * 死代码），口径文本的唯一出口 = 本常量，由 `--falsifiability` 输出（`桶分解：…`）与
+ * `report.classificationLedger` 消费 ⇒ 不存在「文档副本 ↔ 台账」两处维护的漂移面。
  */
 const ASSERTION_DOC = (() => {
   const defs = ASSERTION_BUCKET_DEFS.map((b) => ({ ...b, ids: ASSERTION_LEDGER.slots.filter((s) => s.bucket === b.id).map((s) => s.id) }))
@@ -355,6 +358,8 @@ const ASSERTION_DOC = (() => {
     naGated: ASSERTION_LEDGER.excludedFromNa.map((e) => e.id.replace('UX012-', '')).join(' / '),
     nonNa: ASSERTION_LEDGER.slots.length - ASSERTION_LEDGER.excludedFromNa.length,
     totalLine: '断言条数（唯一 id）= ' + ASSERTION_LEDGER.slots.length + '，其中 N-A ' + ASSERTION_LEDGER.excludedFromNa.length + ' 条、其余 ' + (ASSERTION_LEDGER.slots.length - ASSERTION_LEDGER.excludedFromNa.length) + ' 条计 PASS/FAIL',
+    /** R1 **F-07(c)** 如实说明：「声明条数」与「单次运行记录条数」的差额来源（非口径矛盾）。 */
+    runtimeNote: '**声明 ' + ASSERTION_LEDGER.slots.length + ' 条 vs 单次运行记录条数**：差额为 `UX012-CRASH`——该断言**仅在 catch 分支**（未捕获异常）记录，健康运行不产生其记录行 ⇒ 正常运行的 `tally.total` = 声明条数 − 1（不以伪行凑数；其存在性由「异常 ⇒ 记录且必红」保证）。',
   }
 })()
 /** 台账唯一访问器：分类桶定义 + 桶和（含**内容哈希**——改分类定义即哈希变，可用于失败归因）。 */
@@ -367,6 +372,7 @@ function assertionLedger() {
     defs,
     slotCount: ASSERTION_LEDGER.slots.length,
     declaredTotal: ASSERTION_LEDGER.declaredTotal,
+    declaredSiteCount: ASSERTION_LEDGER['@ledger-source-control'].declaredSiteCount,
     declaredBucketSum: defs.reduce((n, b) => n + b.count, 0),
     excludedFromNa: ASSERTION_LEDGER.excludedFromNa,
     ledgerSha256: sha256(JSON.stringify({ defs: ASSERTION_BUCKET_DEFS, slots: ASSERTION_LEDGER.slots, declaredTotal: ASSERTION_LEDGER.declaredTotal, excludedFromNa: ASSERTION_LEDGER.excludedFromNa })),
@@ -412,7 +418,29 @@ function assertionLedgerReport() {
     unassigned, unknownInBucket, ledgerSha256: L.ledgerSha256,
     sourceControlOk, actualSourceSha256, declaredSourceSha256: L.sourceControl.declaredSha256,
     actualDirectiveCount: directiveLines.length, declaredDirectiveCount: L.sourceControl.declaredSiteCount,
-    actualAssertionIdCount: actualIds.length,
+    actualAssertionIdCount: actualIds.length, ledgerIds,
+  }
+}
+/**
+ * **运行期台账核对**（CLEAN-006 R1 **F-07(c)**）：把「实际记录到报告里的断言集」与台账对账——
+ * ① 每条记录的 id MUST 在册；② **判 N-A 的 id 集 MUST ⊆ `excludedFromNa`**（未登记的 N-A 不得存在，
+ * 否则「闸门外判 N-A」会绕过台账）；③ 记录条数 MUST ≡ 声明条数 − （`UX012-CRASH` 未记录时 1，即
+ * 健康运行不产生该行；其记录 ⇔ 该运行发生了未捕获异常）。
+ */
+function assertionLedgerRuntimeCheck(records) {
+  const L = assertionLedger()
+  const known = new Set(L.defs.flatMap((b) => b.ids))
+  const naIds = records.filter((r) => r.status === 'N-A').map((r) => r.id)
+  const offLedger = records.map((r) => r.id).filter((id) => !known.has(id))
+  const naNotDeclared = naIds.filter((id) => !L.excludedFromNa.some((e) => e.id === id))
+  const crashRecorded = records.some((r) => r.id === 'UX012-CRASH')
+  const expectedRecords = L.declaredTotal - (crashRecorded ? 0 : 1)
+  const countOk = records.length === expectedRecords
+  return {
+    ok: offLedger.length === 0 && naNotDeclared.length === 0 && countOk,
+    offLedger, naNotDeclared, naIds,
+    recordedCount: records.length, expectedRecords, crashRecorded, countOk,
+    declaredTotal: L.declaredTotal, excludedFromNaCount: L.excludedFromNa.length,
   }
 }
 /**
@@ -440,7 +468,7 @@ function assertionLedgerSelfTest() {
     const countMismatch = a.slots.length !== a.declaredTotal
     const dupSlot = known.size !== a.slots.length
     const hashMismatch = a.audit.hashOk !== true
-    const siteCountMismatch = a.audit.siteCount !== a.slots.length
+    const siteCountMismatch = a.audit.siteCount !== a.audit.declaredSiteCount   // R1 F-07(b)：与部署面同式（按声明的接线处数，非 slots 数）
     return {
       issues: (bucketSumMismatch ? 1 : 0) + (countMismatch ? 1 : 0) + (dupSlot ? 1 : 0) + (excludedOk ? 0 : 1)
         + unassigned.length + unknownInBucket.length + (hashMismatch ? 1 : 0) + (siteCountMismatch ? 1 : 0),
@@ -451,17 +479,22 @@ function assertionLedgerSelfTest() {
   const idsAll = slotsAll.map((s) => s.id)
   const build = (p) => ({
     slots: p.slots, declaredTotal: p.declaredTotal ?? L.declaredTotal, excludedFromNa: p.excludedFromNa ?? L.excludedFromNa,
-    audit: { ids: p.auditIds ?? p.slots.map((s) => s.id), hashOk: p.hashOk ?? true, siteCount: p.siteCount ?? p.slots.length },
+    // 基线须**与部署面同态**：`audit.siteCount` 默认取**声明的接线处数**（32 ≠ slots 数 28——二者本非同一量，
+    // R1 F-07(b) 的正是此处）。`auditIds` 默认 = 槽位 id 全集（源码实有 = 台账在册）。
+    audit: { ids: p.auditIds ?? p.slots.map((s) => s.id), hashOk: p.hashOk ?? true, siteCount: p.siteCount ?? L.declaredSiteCount, declaredSiteCount: L.declaredSiteCount },
   })
   const cases = []
-  const push = (name, expectTypes, got) => {
+  const push = (name, expectTypes, got, expectZeroIssues) => {
     // 逐类断言（**不**用命中总数——同一缺陷可同时触发多个相等判据，计数脆弱而类型判据精确）；
     // 布尔类**在期望清单内即为命中**（`excludedOk: false` 就是「归属越桶」的命中形态）。
     const seen = expectTypes.filter((k) => Object.prototype.hasOwnProperty.call(got.types, k))
-    cases.push({ name, expectTypes, seenTypes: seen, issues: got.issues, ok: seen.length === expectTypes.length, types: got.types })
+    // R1 **F-07(a)**：基线用例（expectZeroIssues=true）MUST 同时机检 `issues === 0`——
+    // 原实现 `expectTypes=[]` ⇒ `ok ≡ (0===0) ≡ true` 恒真、`issues` 只记录不判。
+    const zeroOk = expectZeroIssues !== true || got.issues === 0
+    cases.push({ name, expectTypes, seenTypes: seen, issues: got.issues, expectZeroIssues: expectZeroIssues === true, zeroOk, ok: zeroOk && seen.length === expectTypes.length, types: got.types })
   }
-  // 基线：当前台账 MUST 0 命中（否则台账本身即失配）
-  push('基线（当前台账）', [], evaluate(build({ slots: slotsAll })))
+  // 基线：当前台账 MUST **0 命中**（否则台账本身即失配——含 `issues === 0` 判据）
+  push('基线（当前台账）', [], evaluate(build({ slots: slotsAll })), true)
   // ① 映射被改点（真驱动 → DOM 读数，总数不变）⇒ **桶和 ≠ 声明总数**（N-1 的原始病根：桶和错）
   const s1 = slotsAll.map((s, i) => (i === 0 ? { ...s, bucket: 'bucket-dom-read' } : s))
   push('桶和错（真驱动被改点成 DOM 读数，总数不变）', ['bucketSumMismatch'], evaluate(build({ slots: s1 })))
@@ -476,8 +509,8 @@ function assertionLedgerSelfTest() {
   push('N-A 闸门成员被点进 DOM 读数桶（N-5 同类）', ['excludedOk'], evaluate(build({ slots: s4 })))
   // ⑤ 源控制哈希不符（源码断言集已变而台账未同步）
   push('台账源控制哈希不符（源码断言集已变）', ['hashMismatch'], evaluate(build({ slots: slotsAll, hashOk: false })))
-  // ⑥ 源控制接线处数不符（新增断言但同步计数未更新）
-  push('台账源控制接线处数不符（新增断言未同步计数）', ['siteCountMismatch'], evaluate(build({ slots: slotsAll, siteCount: L.declaredTotal + 1 })))
+  // ⑥ 源控制接线处数不符（新增断言但同步计数未更新）——按**声明的接线处数**（`declaredSiteCount`）比对（R1 F-07(b)）
+  push('台账源控制接线处数不符（新增断言未同步计数）', ['siteCountMismatch'], evaluate(build({ slots: slotsAll, siteCount: L.declaredSiteCount + 1 })))
   const pass = cases.length >= ASSERTION_LEDGER.minSelfTestCases && cases.every((c) => c.ok === true)
   return { cases, pass, expectedFalseCases: cases.filter((c) => c.expectTypes.length > 0).length }
 }
@@ -718,6 +751,10 @@ async function main() {
     // CLEAN-006 N-1/N-5：**分类台账机检**（桶和 ≡ 断言条数 ≡ 桶↔id 映射；与部署面同源声明式常量）
     const led = assertionLedgerReport()
     const self = assertionLedgerSelfTest()
+    // CLEAN-006 R1 **F-10(a)**：口径文本由台账**渲染**后输出（本行为唯一事实源的消费点；
+    // 文件头不再内嵌桶计数 ⇒ 「文档副本 ↔ 台账」两处维护面不存在）
+    console.log('  桶分解：' + ASSERTION_DOC.breakdown)
+    console.log('  闸门 N-A：' + ASSERTION_DOC.naGated + ' ⇒ ' + ASSERTION_DOC.totalLine + '；' + ASSERTION_DOC.runtimeNote)
     for (const b of led.defs) console.log('  ' + (b.count >= 1 ? 'OK  ' : 'FAIL') + ' 桶 ' + b.id + ' = ' + b.count + '（' + b.label + '）')
     console.log('  ' + (led.ok === true ? 'OK  ' : 'FAIL') + ' 桶和 ' + led.declaredBucketSum + ' ≡ 台账条数 ' + led.slotCount + ' ≡ 声明总数 ' + led.declaredTotal
       + '；id 未归桶=' + led.unassigned.length + ' 桶内未知 id=' + led.unknownInBucket.length + ' 闸门 N-A 归属合法=' + led.excludedOk
@@ -1276,26 +1313,67 @@ async function main() {
     const wsDialogOpened = await waitFor("document.querySelector('.nv-modal') !== null", 15000, '工作区对话框 .nv-modal')
     const wsDialogLabel = await cdp.evaluate("(() => { const n = document.querySelector('.nv-modal'); return n === null ? null : n.getAttribute('aria-label') })()")
     const wsDialogWasOpen = wsDialogOpened === true && wsDialogLabel === i18n.dialogTitle
+    // ── R1 **F-05**：把「该场景不可达」从**单点 DOM 采样**升级为「源码面机检 + 多点 DOM 取证」 ─────
+    // 源码面（确定性最强、注入反例易构造）：
+    //   ① `store.set({ entryOpen: true })` —— 工作区对话框的**唯一**入口，全文件 MUST 恰 1 处；
+    //   ② `openConsole()` 体内 MUST 含 `closeWorkbench(` —— 控制台与分栏**互斥**不变式（开控制台前先关分栏）；
+    // 二者合起来给出「对话框在场 ⇒ 无分栏在场 / 无第二入口」的**代码级**依据，DOM 采样只作旁证。
+    const wsEntrySources = (() => {
+      const body = clientSrcNow()
+      const entryRe = /store\.set\(\{\s*entryOpen:\s*true\s*\}\)/g
+      const entryCount = (body.match(entryRe) ?? []).length
+      const ocIdx = body.indexOf('openConsole()')
+      const ocSlice = ocIdx < 0 ? '' : body.slice(ocIdx, ocIdx + 900)
+      const ocHasClose = ocSlice.includes('closeWorkbench(')
+      // 正向对照（防空转）：把入口补一处 ⇒ 计数 2 ⇒ 判据必红
+      const counterCount = (body + '\n' + 'store.set({ entryOpen: true })').match(entryRe).length
+      return { entryCount, entryUniqueOk: entryCount === 1, openConsoleFound: ocIdx >= 0, openConsoleClosesWorkbench: ocHasClose, counterCount, counterOk: counterCount === 2 }
+    })()
     const wsDialogReachability = await cdp.evaluate(String.raw`(() => {
       const drawer = document.querySelector('.nv-drawer')
       const dialog = document.querySelector('.nv-modal')
+      const backdrop = document.querySelector('.nv-modal-backdrop')
       const labels = [...document.querySelectorAll('.nv-modal')].map((n) => n.getAttribute('aria-label'))
-      if (drawer === null) return { drawerFound: false, labels, dialogPresent: dialog !== null, topAtDrawer: null, interactionBlocked: null }
+      const vw = window.innerWidth
+      const vh = window.innerHeight
+      const geo = (n) => {
+        if (n === null) return null
+        const r = n.getBoundingClientRect()
+        return {
+          x: +r.x.toFixed(1), y: +r.y.toFixed(1), w: +r.width.toFixed(1), h: +r.height.toFixed(1),
+          coversViewport: Math.abs(r.x) <= 1 && Math.abs(r.y) <= 1 && Math.abs(r.width - vw) <= 1 && Math.abs(r.height - vh) <= 1,
+          pointerEvents: (typeof window.getComputedStyle === 'function' ? window.getComputedStyle(n).pointerEvents : null),
+          position: (typeof window.getComputedStyle === 'function' ? window.getComputedStyle(n).position : null),
+          zIndex: (typeof window.getComputedStyle === 'function' ? window.getComputedStyle(n).zIndex : null),
+        }
+      }
+      const backdropGeo = geo(backdrop)
+      if (drawer === null) return { drawerFound: false, labels, dialogPresent: dialog !== null, backdrop: backdropGeo, samples: [], blockedPoints: 0, interactionBlocked: null }
       const r = drawer.getBoundingClientRect()
-      const x = Math.round(r.left + r.width / 2)
-      const y = Math.round(r.top + Math.min(24, r.height / 2))
-      const stack = typeof document.elementsFromPoint === 'function' ? document.elementsFromPoint(x, y) : []
-      const top = stack[0] ?? null
+      // 多点采样（R1 F-05）：抽屉四角内缩 + 中心 —— 任一采样点被非抽屉元素占据即视为不可点
+      const ins = 4
+      const pts = [
+        { x: Math.round(r.left + ins), y: Math.round(r.top + ins) },
+        { x: Math.round(r.right - ins), y: Math.round(r.top + ins) },
+        { x: Math.round(r.left + ins), y: Math.round(r.bottom - ins) },
+        { x: Math.round(r.right - ins), y: Math.round(r.bottom - ins) },
+        { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) },
+      ]
       const cls = (n) => (n === null ? null : String(n.className || n.tagName || '').slice(0, 60))
+      const samples = pts.map((p) => {
+        const stack = typeof document.elementsFromPoint === 'function' ? document.elementsFromPoint(p.x, p.y) : []
+        const top = stack[0] ?? null
+        return { ...p, topAtPoint: cls(top), blocked: top !== null && top !== drawer && !drawer.contains(top) }
+      })
       return {
-        drawerFound: true, dialogPresent: dialog !== null, labels, point: { x, y }, topAtDrawer: cls(top),
+        drawerFound: true, dialogPresent: dialog !== null, labels, backdrop: backdropGeo,
         // 宿主/运行时可能对类名做哈希化 ⇒ topIsBackdrop 只认**插件遮罩**的作者类名子串；
-        // 命中即「插件遮罩在最上层」。未命中但仍在抽屉之上（interactionBlocked=true）**同样构成
-        // 不可达**（另有宿主遮罩层挡在入口上）——两者都如实入 facts，断言**不**依赖本字段（只作取证）。
+        // 命中即「插件遮罩在最上层」。未命中但仍在抽屉之上（blocked=true）**同样构成不可达**
+        // （另有宿主遮罩层挡在入口上）——两者都如实入 facts，断言**不**依赖本字段（只作取证）。
         // ⚠️ 本块是 template literal：注释内**禁用反引号**（会提前闭合模板——同文件 modalStateOf 处已有同款教训）
-        topIsBackdrop: top !== null && String(top.className || '').indexOf('nv-modal-backdrop') >= 0,
-        // 用户可否点到抽屉（侧栏抽屉是「分栏在场 + 对话框开」的构造入口）：遮罩在最上层即不可达
-        interactionBlocked: top !== null && top !== drawer && !drawer.contains(top),
+        samples, blockedPoints: samples.filter((s) => s.blocked === true).length,
+        topIsBackdrop: samples.length > 0 && String(samples[0].topAtPoint || '').indexOf('nv-modal-backdrop') >= 0,
+        interactionBlocked: samples.every((s) => s.blocked === true),
       }
     })()`)
     await pressEsc()
@@ -1305,17 +1383,19 @@ async function main() {
       consoleBefore: wsEntryConsoleBefore, splitBefore: wsEntrySplitBefore, entryClicked: wsEntryClicked,
       dialogOpened: wsDialogOpened, dialogLabel: wsDialogLabel, expectLabel: i18n.dialogTitle,
       dialogWasOpen: wsDialogWasOpen, after: wsDialogAfter,
-      // CLEAN-006 N-2：分栏在场 + 本对话框在上的**不可达性取证**（遮罩挡在侧栏抽屉之上）
-      reachability: wsDialogReachability,
+      // CLEAN-006 N-2 + R1 **F-05**：分栏在场 + 本对话框在上的**不可达性取证**
+      // （源码面：入口唯一 + openConsole⇒closeWorkbench 互斥；DOM 面：多点采样 + 遮罩几何/pointer-events）
+      reachability: { source: wsEntrySources, dom: wsDialogReachability },
     }
-    A(/*@assert*/  'UX012-D1-workspace-dialog-esc（BUG-010 / R1 C-2）', '工作区对话框/Esc', '**BUG-010**：工作区对话框（`.nv-cbtn-ws` 入口）打开时按一次真实 Esc → **只关本层**（对话框关闭 ∧ 控制台保持打开 ∧ 分栏层状态不变）；修复前 `WorkspaceDialog` 无自挂 Esc ⇒ NvConsole/分栏让位后**无人接手**、Esc 静默无反应 ⇒ 对话框仍在场（谓词取自登记表 `D1-esc-workspace-dialog-yield`，red 向量 = 无监听实况；前置 = 对话框确在场 ∧ 身份按 `aria-label ≡ i18n dialogTitle` 核对——防空真与「误断言同族面板」）。**判别边界（CLEAN-006 N-2）**：`splitKept` 为**前后同值不变式**（真跑 `splitBefore=false`）⇒ 只拦「越界关分栏」方向；「**分栏在场** + 本对话框开其上」的 Esc 分层**无任何探针覆盖**（原引 C4/B17 失实——C4 = 绑定面板开在分栏上、B17 = 新建弹窗开在控制台上），如实登记为覆盖缺口且该场景**不可达**（`facts.workspaceDialogEsc.reachability`：全屏遮罩挡在侧栏抽屉之上 ⇒ 无入口可点）',
+    A(/*@assert*/  'UX012-D1-workspace-dialog-esc（BUG-010 / R1 C-2）', '工作区对话框/Esc', '**BUG-010**：工作区对话框（`.nv-cbtn-ws` 入口）打开时按一次真实 Esc → **只关本层**（对话框关闭 ∧ 控制台保持打开 ∧ 分栏层状态不变）；修复前 `WorkspaceDialog` 无自挂 Esc ⇒ NvConsole/分栏让位后**无人接手**、Esc 静默无反应 ⇒ 对话框仍在场（谓词取自登记表 `D1-esc-workspace-dialog-yield`，red 向量 = 无监听实况；前置 = 对话框确在场 ∧ 身份按 `aria-label ≡ i18n dialogTitle` 核对——防空真与「误断言同族面板」）。**判别边界（CLEAN-006 N-2）**：`splitKept` 为**前后同值不变式**（真跑 `splitBefore=false`）⇒ 只拦「越界关分栏」方向；「**分栏在场** + 本对话框开其上」的 Esc 分层**无任何探针覆盖**（原引 C4/B17 失实——C4 = 绑定面板开在分栏上、B17 = 新建弹窗开在控制台上），如实登记为覆盖缺口且该场景**不可达**（R1 F-05 取证升级：**源码面机检** `facts.workspaceDialogEsc.reachability.source` = 入口 `entryOpen:true` 全文件恰 1 处 ∧ `openConsole()` 内含 `closeWorkbench(`（互斥）∧ 其**正向对照**（补一处入口 ⇒ 计数 2 ⇒ 必红）；**DOM 面** = 抽屉**五点采样** + 遮罩 `getBoundingClientRect` 覆盖视口 ∧ `pointer-events ≠ none`）',
       wsEntryClicked === true && wsDialogWasOpen === true
       && evalPred('D1-esc-workspace-dialog-yield', {
         opened: true,
         dialog: wsDialogAfter.dialog === true,
         consoleKept: wsDialogAfter.console === (wsEntryConsoleBefore === true),
         splitKept: wsDialogAfter.split === (wsEntrySplitBefore === true),
-      }),
+      })
+      && wsEntrySources.entryUniqueOk === true && wsEntrySources.openConsoleClosesWorkbench === true && wsEntrySources.counterOk === true,
       report.facts.workspaceDialogEsc)
 
     // ══ C) 创建链两消费点（F2 收口后等价性）══════════════════════════════
@@ -1444,6 +1524,9 @@ async function main() {
     // 闸门归属越桶 / 源控制不符五类缺陷各有一条构造向量 MUST 被拦）。本条亦被 `report.classificationLedger` 留痕。
     const ledRep = assertionLedgerReport()
     const ledSelf = assertionLedgerSelfTest()
+    // R1 **F-07(c)**：运行期对账——**判 N-A 的 id 集 MUST ⊆ `excludedFromNa`** ∧ 每条记录 id 在册 ∧
+    // 记录条数 ≡ 声明条数 −（`UX012-CRASH` 未记录时 1：该断言仅在 catch 分支记录）。
+    const ledRun = assertionLedgerRuntimeCheck(report.assertions)
     report.classificationLedger = {
       ok: ledRep.ok, declaredTotal: ledRep.declaredTotal, declaredBucketSum: ledRep.declaredBucketSum,
       buckets: ledRep.defs.map((b) => ({ id: b.id, label: b.label, count: b.count })),
@@ -1454,9 +1537,10 @@ async function main() {
       actualSourceSha256: ledRep.actualSourceSha256, declaredSourceSha256: ledRep.declaredSourceSha256,
       actualDirectiveCount: ledRep.actualDirectiveCount, declaredDirectiveCount: ledRep.declaredDirectiveCount,
       actualAssertionIdCount: ledRep.actualAssertionIdCount, selfTest: ledSelf,
+      runtime: ledRun, doc: { breakdown: ASSERTION_DOC.breakdown, naGated: ASSERTION_DOC.naGated, totalLine: ASSERTION_DOC.totalLine },
     }
-    A(/*@assert*/  'UX012-CLASSIFICATION-LEDGER', '分类台账', '分类桶↔断言 id **机检自证（CLEAN-006 N-1/N-5）**：桶和 ≡ 断言条数 ≡ 桶↔id 映射（id 未归桶 / 桶内未知 id / 重复归桶 / 闸门 N-A 归属越桶 / 台账源控制不符 逐项必红），且台账机检自身经**注入式反例**证明具判别力（桶和错 ⇒ 必红）',
-      ledRep.ok === true && ledSelf.pass === true, { ...report.classificationLedger })
+    A(/*@assert*/  'UX012-CLASSIFICATION-LEDGER', '分类台账', '分类桶↔断言 id **机检自证（CLEAN-006 N-1/N-5）**：桶和 ≡ 断言条数 ≡ 桶↔id 映射（id 未归桶 / 桶内未知 id / 重复归桶 / 闸门 N-A 归属越桶 / 台账源控制不符 逐项必红），且台账机检自身经**注入式反例**证明具判别力（桶和错 ⇒ 必红）；**运行期对账（R1 F-07c）**：每条记录 id 在册 ∧ **判 N-A 的 id 集 ⊆ `excludedFromNa`** ∧ 记录条数 ≡ 声明条数 −（CRASH 未记录时 1）',
+      ledRep.ok === true && ledSelf.pass === true && ledRun.ok === true, { ...report.classificationLedger })
     const failed = report.assertions.filter((a) => a.status === 'FAIL')
     code = failed.length === 0 ? 0 : 1
 
@@ -1494,5 +1578,18 @@ async function main() {
   return code
 }
 
-const code = await main()
-process.exit(code)
+// ── 入口守卫（CLEAN-006 R1 **F-12** / P-05）────────────────────────────────────────────────
+// 本文件在**被直接执行**时自举隔离实例 + 无头浏览器；若被 `import()`（如静态分析/复用其台账机检），
+// 顶层 `await main()` 会**误触发**完整探针（含子进程与临时目录）。故 MUST 加入口判定：仅当
+// `process.argv[1]` 解析后与本文件真实路径相同才执行 `main()`。
+// 注：**不用** `import.meta.main`（本运行时无该 API）；判据基于既有 `node:url`/`node:fs` 导入。
+const isDirectEntry = (() => {
+  try {
+    if (process.argv[1] === undefined || process.argv[1] === null) return false
+    const self = realpathSync(fileURLToPath(import.meta.url))
+    const arg = pathToFileURL(process.argv[1])
+    return arg.protocol === 'file:' && realpathSync(fileURLToPath(arg)) === self
+  } catch { return false }
+})()
+const code = isDirectEntry ? await main() : 0
+if (isDirectEntry) process.exit(code)

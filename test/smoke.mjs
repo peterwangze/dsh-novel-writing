@@ -700,8 +700,9 @@ check('客户端源码面：CLEAN-007 F6 模态可访问性（三处模态 role=
   const cmodOk = ordered(compSrc('NvConsole'), 'useModalFocus(creating, cmodalRef)')
   const wsOk = ordered(compSrc('WorkspaceDialog'), 'useModalFocus(open, wsdlgRef)')
   // BUG-010（CLEAN-006 N-3 扩面）：**WorkspaceDialog 自挂 Esc effect** 的早退顺序亦入机检
-  // （原检查只覆盖 `useModalFocus`；真实误置会因 `close()` 的前向引用触发 TDZ 而被探针捕获，
-  //  但**断言作用域与注释口径**未覆盖新 effect ⇒ 本条补上判据面）。
+  // （原检查只覆盖 `useModalFocus` ⇒ 本 effect 误置此前只在运行期因 `close()` 前向引用的 TDZ
+  //  **间接**暴露——那是**运行期崩溃**而非静态判据；本条补上源码面静态判据，使误置在门禁即红。
+  //  R1 **F-09** 措辞订正：本判据自身**有判别力**（下附正向对照），并非「只因 TDZ 才被发现」）。
   // 锚定方式：该 effect 的 payload 是 `store.set({ entryOpen: false })`（全仓**恰一处**）⇒ 以
   // **整个 effect 文本**为锚（全仓唯一），判「该处早于组件早退 `if (open !== true) return null`」。
   // 不用 `ordered()` 的字面串：三条同类 effect 的起手两行逐字相同，且 `compSrc('WorkspaceDialog')`
@@ -1894,7 +1895,11 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   let snapStable = false
   let swapOk = false
   let cleanupOk = false
+  let f1Direct = null
+  let reactCallbackForwarded = 0
   try {
+    const RENDER_CAP = 50   // F-03(b)：渲染步数上限（超限抛错 ⇒ 断言红，而非挂死）
+    const notifyLog = []     // F-03(d)：store.notify 时各订阅者的分类记录（effect 通道 / React 回调）
     const createMiniReact2 = () => {
       let inst = null
       let cursor = 0
@@ -1927,6 +1932,9 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
             dirty = false
             cursor = 0
             renders += 1
+            // R1 F-03(b)：**渲染步数上限**——把「无限重渲染」从**挂死**转为**红灯**（防 getSnapshot
+            // 每渲染新建对象这一核心风险的故障形态不可观测）。超限即抛，由外层 catch 记为失败。
+            if (renders > RENDER_CAP) throw new Error('render cap exceeded: ' + renders + ' (>' + RENDER_CAP + ')')
             pending = []
             out = inst.comp(inst.props)
             while (pending.length > 0) { const tasks = pending; pending = []; runTasks(tasks) }
@@ -1957,12 +1965,17 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
           const prev = inst.hooks[i]
           const snap = getSnapshot()
           if (prev === undefined) {
+            // F-03(d)：把 React 生成的「变更通知回调」标上标识（store 侧据此区分 F1 通道与 effect 通道）
+            const handler = () => { dirty = true }
+            handler.__f1handler = true
             inst.hooks[i] = { sub: subscribe, cleanup: null, snap, deps: [] }
-            if (pending !== null) pending.push({ run: () => subscribe(), setCleanup: (c) => { inst.hooks[i].cleanup = c } })
+            if (pending !== null) pending.push({ run: () => subscribe(handler), setCleanup: (c) => { inst.hooks[i].cleanup = c } })
           } else if (prev.sub !== subscribe) {
             if (typeof prev.cleanup === 'function') { try { prev.cleanup() } catch { /* ignore */ } }
+            const handler = () => { dirty = true }
+            handler.__f1handler = true
             inst.hooks[i] = { sub: subscribe, cleanup: null, snap, deps: [] }
-            if (pending !== null) pending.push({ run: () => subscribe(), setCleanup: (c) => { inst.hooks[i].cleanup = c } })
+            if (pending !== null) pending.push({ run: () => subscribe(handler), setCleanup: (c) => { inst.hooks[i].cleanup = c } })
           } else if (!Object.is(prev.snap, snap)) {
             inst.hooks[i] = { sub: subscribe, cleanup: prev.cleanup, snap, deps: [] }
             dirty = true
@@ -2012,7 +2025,13 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
         svc: {
           list: {
             getSnapshot: () => snap,
-            subscribe: (fn) => { subs.push(fn); f1ev.push('sub:' + tag + ':' + subs.length); return () => { subs = subs.filter((f) => f !== fn); f1ev.push('off:' + tag + ':' + subs.length) } },
+            subscribe: (fn) => {
+              // F-03(d)：分类记录——React 传给 subscribe 的回调落地时会带上标识
+              const kind = fn !== null && fn !== undefined && fn.__f1handler === true ? 'react' : 'effect'
+              const wrapped = () => { notifyLog.push(kind); return fn() }
+              subs.push(wrapped); f1ev.push('sub:' + tag + ':' + kind + ':' + subs.length)
+              return () => { subs = subs.filter((f) => f !== wrapped); f1ev.push('off:' + tag + ':' + subs.length) }
+            },
           },
         },
         push(next) { snap = next; for (const fn of subs.slice()) { try { fn() } catch { /* ignore */ } } },
@@ -2033,32 +2052,55 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
       return { v }
     }
     const sA = mkStore2({ ids: ['a-1'], byId: {} })
+    const sA0 = sA.subscriberCount()            // 挂载前 = 0
+    const m0 = mini2.mount(Probe, { useSessions: hook3 })
+    const subsAfterAbsentMount = sA.subscriberCount()   // 服务缺席 ⇒ 0
     svcNow = sA.svc
-    // 挂载：订阅建立（useSyncExternalStore 通道）
-    const m1 = mini2.mount(Probe, { useSessions: hook3 })
-    const subsAfterMount = sA.subscriberCount()
+    hook3.refresh()
+    const m1 = mini2.render()
+    const subsAfterRefresh = sA.subscriberCount()
     usesyncOn = clientSrc.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '').includes('useSyncExternalStore(subscribeForCurrent, getSnapshotForRender)') ? 'wired' : 'unwired'
+    // ── F-03(a)：F1 通道「订阅**在位**」的**直取**判据（不依赖两通道订阅计数的差分）──────────────
+    // 量法：把由 `useSyncExternalStore` 收到的 `subscribe` **实参**（= 工厂级稳定件 `subscribeForCurrent`）
+    // 在**当前活 store** 上直接订阅一次，以「本轮新增订阅数 + 退订有效 + 订阅者种类 = `react`」证明：
+    // ① 它**确实订阅当前 store**（退化为「不订阅 / 返回 noop」⇒ 计数恒 0 ⇒ 必红）；
+    // ② 它把 React 传入的回调**原样转交**（F-04：store 侧分类记录为 `react`）。
+    f1Direct = (() => {
+      const before = sA.subscriberCount()
+      const sub = subArgs.length >= 1 ? subArgs[0] : null
+      let off = null
+      let handlerCalls = 0
+      try { if (typeof sub === 'function') off = sub(() => { handlerCalls += 1 }) } catch { off = null }
+      const during = sA.subscriberCount()
+      // F-04 直接判据：**该订阅在 notify 时 MUST 调到我们传入的回调**（首版实现另订阅 `noop` ⇒ 恒 0 ⇒ 必红）
+      sA.push({ ids: ['probe-forward'], byId: {} })
+      if (typeof off === 'function') { try { off() } catch { /* ignore */ } }
+      const after = sA.subscriberCount()
+      return { before, during, after, offIsFn: typeof off === 'function', subIsFn: typeof sub === 'function', handlerCalls }
+    })()
     const rendersBeforePush = mini2.renders
     sA.push({ ids: ['a-1', 'a-2'], byId: {} })
     const m2 = mini2.render()
     // 有界重渲染（防「getSnapshot 每渲染新建对象 ⇒ React 判持续变化 ⇒ 无限重渲染」这一**核心风险**）
     const rendersBounded = mini2.renders <= rendersBeforePush + 3
     // ①②：`subscribe` / `getSnapshot` 的**实参身份**跨渲染稳定（React 的「稳定包装」契约，可机核）；
-    // 以及 getSnapshot 返回的**快照本体**引用稳定（store 侧快照身份两次取值相同 ⇒ 非每渲染新建）
+    // 以及**产品 `getSnapshot` 实参自身**的返回值引用稳定（R1 F-03(c)：不再以 mock store 自身为观测对象）
     subscribeForCurrentInUse = subArgs.length >= 1 ? subArgs[0] : null
     const subArgsStable = subArgs.length >= 2 && subArgs.every((x) => Object.is(x, subArgs[0]))
     const snapFnStable = snapshotArgs.length >= 2 && snapshotArgs.every((x) => Object.is(x, snapshotArgs[0]))
-    snapStable = subArgsStable === true && snapFnStable === true
-    const snapX = sA.svc.list.getSnapshot()
-    const snapY = sA.svc.list.getSnapshot()
-    const snapshotIdentityStable = Object.is(snapX, snapY)
-    snapStable = snapStable === true && snapshotIdentityStable === true && rendersBounded === true
+    const productSnapA = snapshotArgs.length >= 1 ? snapshotArgs[0]() : null
+    const productSnapB = snapshotArgs.length >= 1 ? snapshotArgs[0]() : null
+    const productSnapshotStable = snapshotArgs.length >= 1 && Object.is(productSnapA, productSnapB)
+    // F-03(d)：**只对 F1 通道敏感**的通知判据 —— store 通知时 `notifyLog` 是否记录到 `react`。
+    // F-04 订正后 `subscribeForCurrent` 把 React 回调**原样转交** store；但 store 只记「回调被调用」，
+    // 不记来源 ⇒ 由 `useSyncExternalStore` 侧把 handler 标 `__f1handler`（下）供 store 分类。
+    snapStable = subArgsStable === true && snapFnStable === true && productSnapshotStable === true && rendersBounded === true
+    if (process.env.NV_SMOKE_F1_DEBUG2 === '1') console.log('F1 pre-swap', JSON.stringify({ sA0, subsAfterAbsentMount, subsAfterRefresh, subCalls: sA.subCalls, offCalls: sA.offCalls, notifyLog, f1ev }))
     // ②服务切换：换新 store ⇒ **订阅确已换到新 store**（功能判据：新 store 的通知能驱动重渲染并取到新数据）
     const sB = mkStore2({ ids: ['b-1'], byId: {} })
     svcNow = sB.svc
     hook3.refresh()
     const m3 = mini2.render()
-    if (process.env.NV_SMOKE_F1_DEBUG2 === '1') console.log('F1 ev1', JSON.stringify(f1ev))
     sB.push({ ids: ['b-2', 'b-3'], byId: {} })
     const m4 = mini2.render()
     swapOk = m4 !== null && m4.v === 'b-2,b-3'
@@ -2066,12 +2108,25 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
     mini2.dispose()
     cleanupOk = sB.subscriberCount() === 0 && sA.subscriberCount() === 0
     mini2.unmount()
-    if (process.env.NV_SMOKE_F1_DEBUG === '1') console.log('F1 facts', JSON.stringify({ subsAfterMount, rendersBeforePush, rendersAfter: mini2.renders, rendersBounded, snapStable, snapshotIdentityStable, m1, m2, m3, m4, seenSnaps }))
+    // F-03(d) 汇总：本次 store.notify 时「F1 通道的订阅回调」是否被调用（= React 回调确已转发）
+    // F-03(d) 诊断量（**不作断言**，如实标注覆盖边界）：本 harness **仅**在 subscribe 引用变化时换订，
+    // 而真实 React 还按「订阅对象 vs 当前 store」判断换订 ⇒「渲染期 live 订阅收到 notify」这一面在 mock
+    // 下**不可复现**；回调转发的判据由 ①b 的**直取探针**承担（不依赖 harness 的换订语义）。
+    // F-03(d) 诊断量（**不作断言**，如实标注覆盖边界）：本 harness **仅**在 subscribe 引用变化时换订，
+    // 而真实 React 还按「订阅对象 vs 当前 store」判断换订 ⇒「渲染期 live 订阅收到 notify」这一面在 mock
+    // 下**不可复现**；回调转发的判据由 ①b 的**直取探针**承担（不依赖 harness 的换订语义）。
+    reactCallbackForwarded = notifyLog.filter((x) => x === 'react').length
+    if (process.env.NV_SMOKE_F1_DEBUG === '1') console.log('F1 facts', JSON.stringify({ sA0, subsAfterAbsentMount, subsAfterRefresh, rendersBounded, snapStable, productSnapshotStable, reactCallbackForwarded, cleanupOk, swapOk, m0, m1, m2, m3, m4, seenSnaps }))
   } catch (e) { f1Err = e instanceof Error ? e.message : String(e) }
   check('F1 读面接线：hook 渲染期读取走 useSyncExternalStore（工厂级稳定 subscribe + 稳定 getSnapshot）',
     f1Err === '' && usesyncOn === 'wired', f1Err + ' ' + usesyncOn)
-  check('F1 约束①：getSnapshot 参数引用跨渲染恒定 ∧ 返回「快照本体」引用稳定（非每渲染新建对象——防 React 判持续变化而无限重渲染）∧ 重渲染有界',
+  check('F1 约束①：getSnapshot 参数引用跨渲染恒定 ∧ **该实参自身**返回值引用稳定（非每渲染新建对象——防 React 判持续变化而无限重渲染）∧ 重渲染有界（超限抛错而非挂死）',
     f1Err === '' && snapStable === true, f1Err + ' stable=' + snapStable)
+  check('F1 约束①b（F-03a）：F1 通道**真实订阅在位** —— `useSyncExternalStore` 收到的 `subscribe` 实参直取调用 ⇒ store 订阅 +1 ∧ 返回可用退订函数 ∧ 退订后归零 ∧ notify 时**调用到我们传入的回调**（F-04 回调转发的直接判据）',
+    f1Err === '' && f1Direct !== null && f1Direct.subIsFn === true && f1Direct.offIsFn === true
+    && f1Direct.during === f1Direct.before + 1 && f1Direct.after === f1Direct.before
+    && f1Direct.handlerCalls >= 1,
+    f1Err + ' direct=' + JSON.stringify(f1Direct))
   check('F1 约束②：服务切换后订阅换到新 store（新 store 的通知驱动重渲染并取到新数据；卸载后订阅全部退订）',
     f1Err === '' && swapOk === true, f1Err + ' swap=' + swapOk)
   check('F1 约束③：卸载退订（useSyncExternalStore 通道不留悬挂订阅）',
@@ -2424,7 +2479,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   //      **残余缝（同次实测，未闭合）**：若 2.13 只删**终点闭合行**（**历史锚点**：COMPAT-013 时期值 `L4429-4460`——6 处注册仍全在范围内）
   //      则 ①②③④⑤ **全绿**（实测 262/0：⑤a 计数仍 6 ≡ 6、④ callPrefix = null、⑤b 无 `键: {` 形态构造）
   //      ⇒ 该形态目前无持续机检力。根治需「构造闭合行」口径，而 JS 范围本就可能是**合法语义片段**
-  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L5130-L5132` +1 / 3.8 `L3018-L3028` +1 实测均非配平）——
+  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L5135-5137` +1 / 3.8 `L3023-3033` +1 实测均非配平）——
   //      无差别要求配平会误报上述 3 项，故如实留档待另案（非本任务可安全落地）。
   //      **本行 3 个契约行号副本的同步方（CLEAN-006 **N-6** 归属订正，避免审计归因错位）**：本块随
   //      契约 `line` 重基**必须同步**，其**机检执行者 = `COMPAT-015 F3 行号引用对账`**（把本行 2.3
@@ -2558,7 +2613,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // 首行起构造者恰 3 项 = 4.6 `"dsh": {` / 6.1 `"peerDependencies": {` / 6.2 `"engines": {`（面 6 三项
   // JSON 根级子对象；其余 18 项首行为 JS 调用/声明/注释 ⇒ 不适用），项数入 golden（防空转）。
   // **只取首行、不取范围内全部 opener 的理由**：JS 范围可为**合法语义片段**（2.1 `L92-94` 净差 +2 / 2.3
-  // `L4804-L4806` +1 / 3.8 `L3018-L3028` +1 实测均非配平，⑤ 注释已留档）——无差别要求范围内每个 opener 配平
+  // `L4804-L4806` +1 / 3.8 `L3023-3033` +1 实测均非配平，⑤ 注释已留档）——无差别要求范围内每个 opener 配平
   // 会误报这些条目；而「范围未包住自身构造闭合行」的形态恰以构造键行起段（首行 opener 即充分判据）。
   // 口径边界同 ⑤b（裸字符配平，不剥注释/字符串中的 `{`/`}`）。
   const KEY_OPEN6 = /^\s*(?:"([^"]{1,60})"|'([^']{1,60})'|([A-Za-z_$][\w$.-]{0,60}))\s*:\s*\{\s*$/
@@ -2592,7 +2647,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // 入 golden）范围条目中「起于注释/空行」者 MUST 恰 2 项
   //（3.1 起于 `/**` JSDoc L1075、3.5 起于**空行** L1125——互操作说明在本段内、非起点）。动因 = 该计数原为**人工转写**且写错
   //（CHANGELOG 曾披露「三处」）——与 COMPAT-004 FIND-1 的 tier 串转写漂移同类，故沿用同款处置：实测值
-  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.8 `L3018` 函数行 / 4.6 `L17`
+  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.8 `L3023` 函数行 / 4.6 `L17`
   // `"dsh": {` / 5.1 `L1` `name:` / 5.2 `L16` `- id:` / 5.4 `L77` `- id:` / 6.1 `L39`（修正后真值；修正前
   // `L38` 亦非注释）/ 6.2 `L8` `"engines": {` / 6.4 `L105`（ci.yml `#` 注释起段——JS 口径不计为注释，见下句口径边界）。严格面（面 2 = 11 项）已由 ③ 逐项约束，
   // 本项只覆盖未纳入严格面的面（动态生成：实测 3/4/5/6）；注释口径同 ③（JS 风格），YAML `#` 不在识别面内（与 F-5① 同源前提）。

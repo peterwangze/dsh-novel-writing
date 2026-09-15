@@ -31,7 +31,7 @@
  * 退出码：0 = 全部验收判据成立（绿态）；1 = 有判据不成立（红态/回归）；2 = 环境不可用（无浏览器/无宿主平面等）。
  */
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync, realpathSync } from 'node:fs'
 import { spawn, spawnSync } from 'node:child_process'
 import { createRequire } from 'node:module'
 import { createServer } from 'node:net'
@@ -617,4 +617,17 @@ function main() {
   })()
 }
 
-await main()
+
+// ── 入口守卫（CLEAN-006 R1 F-12 / P-05）────────────────────────────────────────────────────
+// 本脚本在被**直接执行**时才自举隔离实例（含子进程 / 临时目录 / 无头浏览器）；被 import() 时
+// MUST NOT 产生任何副作用。判据 = process.argv[1] 解析后与本文件真实路径相同（**不用**
+// import.meta.main——本运行时无该 API）。
+const isDirectEntry = (() => {
+  try {
+    if (process.argv[1] === undefined || process.argv[1] === null) return false
+    const self = realpathSync(fileURLToPath(import.meta.url))
+    const arg = pathToFileURL(process.argv[1])
+    return arg.protocol === 'file:' && realpathSync(fileURLToPath(arg)) === self
+  } catch { return false }
+})()
+if (isDirectEntry) await main()
