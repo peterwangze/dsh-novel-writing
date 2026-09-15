@@ -166,7 +166,7 @@ curl -fsSL https://raw.githubusercontent.com/peterwangze/dsh-novel-writing/main/
 ```sh
 node --check lib/index.js && node --check lib/tools.js && node --check lib/client.js
 node test/validate-preset.mjs   # 预设挂载级校验（loader 同源解析 + 逐行模块解析 + **第 4 段：预设行 × 已装宿主 Config schema**〔preset-schema-face，三态；`--require-schema-plane` 把 NOT_RUN 变失败〕）
-node test/smoke.mjs             # 宿主逻辑 + 挂载契约 297 项断言（状态/门禁/审计/发布/信号/注册面/BUG-004 适配层与联动守卫/BUG-009 会话镜像 hook 响应性/CLEAN-007 D-1·F2·F3·F4·F6·F9；CLEAN-006 N-3 扩面：WorkspaceDialog 自挂 Esc effect 的早退顺序入 F6 同一判据（判据面扩宽、条数不变）；计数由 smoke 末条断言机检 ≡ 本行 ⇒ 改断言数须同 commit 改本行）
+node test/smoke.mjs             # 宿主逻辑 + 挂载契约 301 项断言（状态/门禁/审计/发布/信号/注册面/BUG-004 适配层与联动守卫/BUG-009 会话镜像 hook 响应性/CLEAN-007 D-1·F2·F3·F4·F6·F9；CLEAN-006 N-3 扩面：WorkspaceDialog 自挂 Esc effect 的早退顺序入 F6 同一判据；CLEAN-006 F1：useSyncExternalStore 读面 + 三条 React 契约断言；计数由 smoke 末条断言机检 ≡ 本行 ⇒ 改断言数须同 commit 改本行）
 # 宿主发版探测轨（CI scheduled 每日一次；只读 npm view，无 install / 无宿主代码执行）：
 npm view @deepseek-ai/dsh versions --json   # 与 fixtures 覆盖版本对账 ⇒ 新版本即红（见下「探测轨与窗口期」）
 node test/fixtures/host-surfaces/probe-face.mjs   # 探测轨判据的**离线机检** + install 头部布局契约对账（PR 门禁：提取 ci.yml heredoc → node --check → 构造 JSON 驱动判据真跑；不触网、不 install）

@@ -480,6 +480,9 @@ const mockReact = (() => {
     useEffect: (fn) => { if (effectSink.list !== null) effectSink.list.push(fn) },
     useRef: (v) => ({ current: v }),
     useMemo: (fn) => fn(),
+    // F1（BUG-009 R1）：本 harness 只做**单次渲染**的结构断言，无更新调度 ⇒ `useSyncExternalStore`
+    // 按 React 的「读快照」语义求值即可（订阅生命周期由 BUG-005 段的 mini-react harness 真驱动）
+    useSyncExternalStore: (subscribe, getSnapshot) => getSnapshot(),
   }
   react.__effectSink = {
     setList(list) { effectSink.list = list },
@@ -1628,23 +1631,6 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
       if (!(i in inst.hooks)) inst.hooks[i] = typeof init === 'function' ? init() : init
       return i
     }
-    const drain = () => {
-      let out
-      rendering = true
-      try {
-        do {
-          dirty = false
-          cursor = 0
-          renders += 1
-          pending = []
-          out = inst.comp(inst.props)
-          const tasks = pending
-          pending = null
-          for (const s of tasks) { try { s.cleanup = s.run() } catch { /* ignore */ }; s.run = null }
-        } while (dirty)
-      } finally { rendering = false }
-      return out
-    }
     const react = {
       createElement: (type, props, ...children) => (typeof type === 'function'
         ? type({ ...(props ?? {}), children })
@@ -1664,6 +1650,29 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
       },
       useRef: (init) => { const i = slot({ current: init }); return inst.hooks[i] },
       useMemo: (fn) => fn(),
+      /**
+       * F1（BUG-009 R1，RISK-008）：`useSyncExternalStore` 的最小忠实实现——React 语义要求
+       * ① 渲染期调用 `getSnapshot()`；② `subscribe` 引用变化即重订阅（旧订阅先退订）；
+       * ③ 快照引用变化 ⇒ 该次用到它的渲染**不一致** ⇒ 重渲染一次（bail-out 的对偶）。
+       * 本 harness 忠实于此：`force()` 走 `dirty`（与 setState 同路径），不制造额外渲染。
+       */
+      useSyncExternalStore: (subscribe, getSnapshot) => {
+        const i = cursor++
+        const prev = inst.hooks[i]
+        const snap = getSnapshot()
+        if (prev === undefined) {
+          inst.hooks[i] = { sub: subscribe, cleanup: null, snap }
+          if (pending !== null) pending.push({ run: () => subscribe(), setCleanup: (c) => { inst.hooks[i].cleanup = c }, wantsValue: false, onValue: null })
+        } else if (prev.sub !== subscribe) {
+          if (typeof prev.cleanup === 'function') { try { prev.cleanup() } catch { /* ignore */ } }
+          inst.hooks[i] = { sub: subscribe, cleanup: null, snap }
+          if (pending !== null) pending.push({ run: () => subscribe(), setCleanup: (c) => { inst.hooks[i].cleanup = c }, wantsValue: false, onValue: null })
+        } else if (!Object.is(prev.snap, snap)) {
+          inst.hooks[i] = { sub: subscribe, cleanup: prev.cleanup, snap }
+          dirty = true
+        }
+        return snap
+      },
       useEffect: (fn, deps) => {
         const i = cursor++
         const prev = inst.hooks[i]
@@ -1672,6 +1681,31 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
         inst.hooks[i] = { deps, run: fn, cleanup: null }
         if (pending !== null) pending.push(inst.hooks[i])
       },
+    }
+    const runTasks = (tasks) => {
+      for (const s of tasks) {
+        try {
+          const r = s.run()
+          if (typeof s.setCleanup === 'function') s.setCleanup(r)
+          else s.cleanup = r
+        } catch { /* ignore */ }
+        s.run = null
+      }
+    }
+    const drain = () => {
+      let out
+      rendering = true
+      try {
+        do {
+          dirty = false
+          cursor = 0
+          renders += 1
+          pending = []
+          out = inst.comp(inst.props)
+          while (pending.length > 0) { const tasks = pending; pending = []; runTasks(tasks) }
+        } while (dirty)
+      } finally { rendering = false }
+      return out
     }
     return {
       react,
@@ -1847,6 +1881,201 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
     b009Second !== null && b009Second.hit === true, 'hit=' + (b009Second === null ? 'null' : b009Second.hit))
   mini.unmount()
   sessionsProvided = undefined
+}
+
+// ── F1（BUG-009 R1，RISK-008）：hook 渲染期读取改走 useSyncExternalStore 的**契约面**行为断言 ──
+// 读面：`useSyncExternalStore(subscribeForCurrent, getSnapshotForRender)`。三条 React 契约 MUST 同时成立
+// ① `getSnapshot` 引用**跨渲染稳定**且**返回值引用稳定**（返回每渲染新建对象 ⇒ React 判「持续变化」⇒
+//    无限重渲染）；② 服务切换时订阅**换到新 store**（旧订阅退订）；③ 卸载退订（无泄漏订阅）。
+// 本段用**带通知面**的 mini-react（`push=true`）真驱动：store 通知 → 订阅回调 → 重渲染。
+{
+  let f1Err = ''
+  let usesyncOn = ''
+  let snapStable = false
+  let swapOk = false
+  let cleanupOk = false
+  try {
+    const createMiniReact2 = () => {
+      let inst = null
+      let cursor = 0
+      let pending = null
+      let dirty = false
+      let rendering = false
+      let renders = 0
+      const sameDeps = (a, b) => (a === undefined && b === undefined)
+        || (Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((x, i) => Object.is(x, b[i])))
+      const slot = (init) => {
+        const i = cursor++
+        if (!(i in inst.hooks)) inst.hooks[i] = typeof init === 'function' ? init() : init
+        return i
+      }
+      const runTasks = (tasks) => {
+        for (const s of tasks) {
+          try {
+            const r = s.run()
+            if (typeof s.setCleanup === 'function') s.setCleanup(r)
+            else s.cleanup = r
+          } catch { /* ignore */ }
+          s.run = null
+        }
+      }
+      const drain = () => {
+        let out
+        rendering = true
+        try {
+          do {
+            dirty = false
+            cursor = 0
+            renders += 1
+            pending = []
+            out = inst.comp(inst.props)
+            while (pending.length > 0) { const tasks = pending; pending = []; runTasks(tasks) }
+          } while (dirty)
+        } finally { rendering = false }
+        return out
+      }
+      const react = {
+        useState: (init) => {
+          const i = slot(init)
+          const owner = inst
+          return [owner.hooks[i], (next) => {
+            if (inst !== owner) return
+            const prev = owner.hooks[i]
+            const v = typeof next === 'function' ? next(prev) : next
+            if (Object.is(prev, v)) return
+            owner.hooks[i] = v
+            dirty = true
+            if (!rendering) drain()
+          }]
+        },
+        useRef: (init) => { const i = slot({ current: init }); return inst.hooks[i] },
+        useMemo: (fn) => fn(),
+        useSyncExternalStore: (subscribe, getSnapshot) => {
+          const i = cursor++
+          subArgs.push(subscribe)
+          snapshotArgs.push(getSnapshot)
+          const prev = inst.hooks[i]
+          const snap = getSnapshot()
+          if (prev === undefined) {
+            inst.hooks[i] = { sub: subscribe, cleanup: null, snap, deps: [] }
+            if (pending !== null) pending.push({ run: () => subscribe(), setCleanup: (c) => { inst.hooks[i].cleanup = c } })
+          } else if (prev.sub !== subscribe) {
+            if (typeof prev.cleanup === 'function') { try { prev.cleanup() } catch { /* ignore */ } }
+            inst.hooks[i] = { sub: subscribe, cleanup: null, snap, deps: [] }
+            if (pending !== null) pending.push({ run: () => subscribe(), setCleanup: (c) => { inst.hooks[i].cleanup = c } })
+          } else if (!Object.is(prev.snap, snap)) {
+            inst.hooks[i] = { sub: subscribe, cleanup: prev.cleanup, snap, deps: [] }
+            dirty = true
+          } else {
+            inst.hooks[i].deps = []   // 标记本帧仍被使用（供 unmount 的 effect 语义清理）
+          }
+          return snap
+        },
+        useEffect: (fn, deps) => {
+          const i = cursor++
+          const prev = inst.hooks[i]
+          if (prev !== undefined && sameDeps(prev.deps, deps)) return
+          if (prev !== undefined && typeof prev.cleanup === 'function') { try { prev.cleanup() } catch { /* ignore */ } }
+          inst.hooks[i] = { deps, run: fn, cleanup: null }
+          if (pending !== null) pending.push(inst.hooks[i])
+        },
+      }
+      return {
+        react,
+        mount(Component, props) { inst = { hooks: [], comp: Component, props }; renders = 0; return drain() },
+        render(props) { if (props !== undefined) inst.props = props; return drain() },
+        unmount() {
+          for (const h of inst.hooks) { if (h !== null && h !== undefined && typeof h.cleanup === 'function') { try { h.cleanup() } catch { /* ignore */ } } }
+          inst = null
+        },
+        /** 只跑 React 的 effect 清理（不置 inst=null）——供「卸载后订阅应为零」的契约断言观测。 */
+        dispose() {
+          for (const h of inst.hooks) {
+            if (h === null || h === undefined) continue
+            const live = h.deps !== undefined && h.deps !== null
+            if (live && typeof h.cleanup === 'function') { try { h.cleanup() } catch { /* ignore */ } }
+          }
+        },
+        get renders() { return renders },
+      }
+    }
+    const mini2 = createMiniReact2()
+    // 带通知面的 store 替身：`push` 逐订阅者发通知（模拟宿主 createSnapshotStore 的 notify）
+    const f1ev = []
+    let tagSeq = 0
+    const mkStore2 = (snap0) => {
+      const tag = String.fromCharCode(65 + (tagSeq++))
+      let snap = snap0
+      let subs = []
+      return {
+        get subs() { return subs },
+        svc: {
+          list: {
+            getSnapshot: () => snap,
+            subscribe: (fn) => { subs.push(fn); f1ev.push('sub:' + tag + ':' + subs.length); return () => { subs = subs.filter((f) => f !== fn); f1ev.push('off:' + tag + ':' + subs.length) } },
+          },
+        },
+        push(next) { snap = next; for (const fn of subs.slice()) { try { fn() } catch { /* ignore */ } } },
+        subscriberCount: () => subs.length,
+      }
+    }
+    let svcNow = undefined
+    const subArgs = []
+    const snapshotArgs = []
+    let subscribeForCurrentInUse = null
+    const ctx2 = { get: (n) => (n === 'sessions' ? svcNow : undefined) }
+    const ex3 = capturedDef.factory((id) => { if (id === 'react') return mini2.react; throw new Error('unexpected require: ' + id) })
+    const hook3 = ex3.makeSessionsHookReactive(ctx2)
+    const seenSnaps = []
+    const Probe = (props) => {
+      const v = props.useSessions((s) => (Array.isArray(s.ids) ? s.ids.join(',') : 'none'))
+      seenSnaps.push(v)
+      return { v }
+    }
+    const sA = mkStore2({ ids: ['a-1'], byId: {} })
+    svcNow = sA.svc
+    // 挂载：订阅建立（useSyncExternalStore 通道）
+    const m1 = mini2.mount(Probe, { useSessions: hook3 })
+    const subsAfterMount = sA.subscriberCount()
+    usesyncOn = clientSrc.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '').includes('useSyncExternalStore(subscribeForCurrent, getSnapshotForRender)') ? 'wired' : 'unwired'
+    const rendersBeforePush = mini2.renders
+    sA.push({ ids: ['a-1', 'a-2'], byId: {} })
+    const m2 = mini2.render()
+    // 有界重渲染（防「getSnapshot 每渲染新建对象 ⇒ React 判持续变化 ⇒ 无限重渲染」这一**核心风险**）
+    const rendersBounded = mini2.renders <= rendersBeforePush + 3
+    // ①②：`subscribe` / `getSnapshot` 的**实参身份**跨渲染稳定（React 的「稳定包装」契约，可机核）；
+    // 以及 getSnapshot 返回的**快照本体**引用稳定（store 侧快照身份两次取值相同 ⇒ 非每渲染新建）
+    subscribeForCurrentInUse = subArgs.length >= 1 ? subArgs[0] : null
+    const subArgsStable = subArgs.length >= 2 && subArgs.every((x) => Object.is(x, subArgs[0]))
+    const snapFnStable = snapshotArgs.length >= 2 && snapshotArgs.every((x) => Object.is(x, snapshotArgs[0]))
+    snapStable = subArgsStable === true && snapFnStable === true
+    const snapX = sA.svc.list.getSnapshot()
+    const snapY = sA.svc.list.getSnapshot()
+    const snapshotIdentityStable = Object.is(snapX, snapY)
+    snapStable = snapStable === true && snapshotIdentityStable === true && rendersBounded === true
+    // ②服务切换：换新 store ⇒ **订阅确已换到新 store**（功能判据：新 store 的通知能驱动重渲染并取到新数据）
+    const sB = mkStore2({ ids: ['b-1'], byId: {} })
+    svcNow = sB.svc
+    hook3.refresh()
+    const m3 = mini2.render()
+    if (process.env.NV_SMOKE_F1_DEBUG2 === '1') console.log('F1 ev1', JSON.stringify(f1ev))
+    sB.push({ ids: ['b-2', 'b-3'], byId: {} })
+    const m4 = mini2.render()
+    swapOk = m4 !== null && m4.v === 'b-2,b-3'
+    // ③卸载：effect 清理跑完后订阅归零（两通道均不得留悬挂订阅）
+    mini2.dispose()
+    cleanupOk = sB.subscriberCount() === 0 && sA.subscriberCount() === 0
+    mini2.unmount()
+    if (process.env.NV_SMOKE_F1_DEBUG === '1') console.log('F1 facts', JSON.stringify({ subsAfterMount, rendersBeforePush, rendersAfter: mini2.renders, rendersBounded, snapStable, snapshotIdentityStable, m1, m2, m3, m4, seenSnaps }))
+  } catch (e) { f1Err = e instanceof Error ? e.message : String(e) }
+  check('F1 读面接线：hook 渲染期读取走 useSyncExternalStore（工厂级稳定 subscribe + 稳定 getSnapshot）',
+    f1Err === '' && usesyncOn === 'wired', f1Err + ' ' + usesyncOn)
+  check('F1 约束①：getSnapshot 参数引用跨渲染恒定 ∧ 返回「快照本体」引用稳定（非每渲染新建对象——防 React 判持续变化而无限重渲染）∧ 重渲染有界',
+    f1Err === '' && snapStable === true, f1Err + ' stable=' + snapStable)
+  check('F1 约束②：服务切换后订阅换到新 store（新 store 的通知驱动重渲染并取到新数据；卸载后订阅全部退订）',
+    f1Err === '' && swapOk === true, f1Err + ' swap=' + swapOk)
+  check('F1 约束③：卸载退订（useSyncExternalStore 通道不留悬挂订阅）',
+    f1Err === '' && cleanupOk === true, f1Err + ' cleanup=' + cleanupOk)
 }
 
 // ── COMPAT-002：宿主契约清单（lib/host-contract.mjs）× lib/client.js region 字面量对账（F8 首批）──
@@ -2195,7 +2424,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   //      **残余缝（同次实测，未闭合）**：若 2.13 只删**终点闭合行**（**历史锚点**：COMPAT-013 时期值 `L4429-4460`——6 处注册仍全在范围内）
   //      则 ①②③④⑤ **全绿**（实测 262/0：⑤a 计数仍 6 ≡ 6、④ callPrefix = null、⑤b 无 `键: {` 形态构造）
   //      ⇒ 该形态目前无持续机检力。根治需「构造闭合行」口径，而 JS 范围本就可能是**合法语义片段**
-  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L5095-L5097` +1 / 3.8 `L2983-L2993` +1 实测均非配平）——
+  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L5130-L5132` +1 / 3.8 `L3018-L3028` +1 实测均非配平）——
   //      无差别要求配平会误报上述 3 项，故如实留档待另案（非本任务可安全落地）。
   //      **本行 3 个契约行号副本的同步方（CLEAN-006 **N-6** 归属订正，避免审计归因错位）**：本块随
   //      契约 `line` 重基**必须同步**，其**机检执行者 = `COMPAT-015 F3 行号引用对账`**（把本行 2.3
@@ -2329,7 +2558,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // 首行起构造者恰 3 项 = 4.6 `"dsh": {` / 6.1 `"peerDependencies": {` / 6.2 `"engines": {`（面 6 三项
   // JSON 根级子对象；其余 18 项首行为 JS 调用/声明/注释 ⇒ 不适用），项数入 golden（防空转）。
   // **只取首行、不取范围内全部 opener 的理由**：JS 范围可为**合法语义片段**（2.1 `L92-94` 净差 +2 / 2.3
-  // `L4804-L4806` +1 / 3.8 `L2983-L2993` +1 实测均非配平，⑤ 注释已留档）——无差别要求范围内每个 opener 配平
+  // `L4804-L4806` +1 / 3.8 `L3018-L3028` +1 实测均非配平，⑤ 注释已留档）——无差别要求范围内每个 opener 配平
   // 会误报这些条目；而「范围未包住自身构造闭合行」的形态恰以构造键行起段（首行 opener 即充分判据）。
   // 口径边界同 ⑤b（裸字符配平，不剥注释/字符串中的 `{`/`}`）。
   const KEY_OPEN6 = /^\s*(?:"([^"]{1,60})"|'([^']{1,60})'|([A-Za-z_$][\w$.-]{0,60}))\s*:\s*\{\s*$/
@@ -2363,7 +2592,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // 入 golden）范围条目中「起于注释/空行」者 MUST 恰 2 项
   //（3.1 起于 `/**` JSDoc L1075、3.5 起于**空行** L1125——互操作说明在本段内、非起点）。动因 = 该计数原为**人工转写**且写错
   //（CHANGELOG 曾披露「三处」）——与 COMPAT-004 FIND-1 的 tier 串转写漂移同类，故沿用同款处置：实测值
-  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.8 `L2983` 函数行 / 4.6 `L17`
+  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.8 `L3018` 函数行 / 4.6 `L17`
   // `"dsh": {` / 5.1 `L1` `name:` / 5.2 `L16` `- id:` / 5.4 `L77` `- id:` / 6.1 `L39`（修正后真值；修正前
   // `L38` 亦非注释）/ 6.2 `L8` `"engines": {` / 6.4 `L105`（ci.yml `#` 注释起段——JS 口径不计为注释，见下句口径边界）。严格面（面 2 = 11 项）已由 ③ 逐项约束，
   // 本项只覆盖未纳入严格面的面（动态生成：实测 3/4/5/6）；注释口径同 ③（JS 风格），YAML `#` 不在识别面内（与 F-5① 同源前提）。
