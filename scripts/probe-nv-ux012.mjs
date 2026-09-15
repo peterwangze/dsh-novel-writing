@@ -7,13 +7,19 @@
  * **源码面字符串存在性**断言 —— 于是「卡片点击冒泡 → 遮罩自关」这类交付时实测过的**真缺陷**若复发，
  * smoke 仍会全绿。本探针补上该行为面。
  *
- * 断言面全部走**真实 UI 代码路径**（真点击 / 真键盘事件 / 真 HTTP 拦截 / 真宿主 RPC），
- * 不构造 DOM、不 mock 产品代码、**不做源码字符串直查**（同族教训 = CLEAN-006 F-2 / UX-060 R1 F-2）：
+ * 断言面**以真驱动为主**（真点击 / 真键盘事件 / 真 HTTP 拦截 / 真宿主 RPC），不构造 DOM、不 mock 产品
+ * 代码。**口径如实披露（R1 复审 C-5）**：24 条断言 = **17 条真驱动行为级** + 3 条 DOM 属性读数
+ * （模态语义 role/aria-modal/label、autoFocus 落点、F6 三面汇总）+ **1 条结构面**（`UX012-C3-single-source`：
+ * 对 `lib/client.js` 作 3 个正则计数，判「创建链单点收口」结构事实）+ 1 条自证面（`FALSIFIABILITY`：
+ * 谓词向量求值）+ 2 条隔离面（Z1/Z2：真实 `$DSH_HOME` 指纹与隔离根清理）。
+ * **唯一两处源码读取面**已在标签内显式标注：C3（结构计数）与 `readI18n()`（期望文案与产品同源，
+ * 避免复制字面量）——**不做**「源码字符串直查替代行为验证」（同族教训 = CLEAN-006 F-2 / UX-060 R1 F-2）：
  *   A 新建弹窗（几何/模态语义/卡片内点击不自关/遮罩关/Esc 关且控制台保留/焦点归还/焦点陷阱/
  *     重开复位/请求体仅 {name}/busy 禁关/创建成功链）
- *   B 绑定面板（**D-1**：Esc 只关面板、控制台保持打开 + F6 模态语义）
+ *   B 绑定面板（**D-1**：Esc 只关面板、控制台保持打开 + F6 模态语义 + R1 C-7：busy 中不关——真挂起绑定请求）
  *   C 创建链**两个消费点**（F2 收口后等价性）：openCtl.autoCreate（卡片→自动建会话→分栏）与
- *     控制条「绑定新会话」（bindNewSessionCtl → 仅绑定不打开）
+ *     控制条「绑定新会话」（bindNewSessionCtl → 仅绑定不打开）；**R1 C-1**：分栏态 Esc 分层
+ *     （面板开在分栏之上时，一次 Esc 只关面板、不连关创作台）
  *   Z 隔离与真实环境零写入 + 隔离根清理
  *   FALSIFIABILITY 谓词登记表 red/ok 向量自证（「构造反例 ⇒ 必红」）
  *
@@ -30,7 +36,7 @@
  *   · 浏览器 profile（`--user-data-dir`）落在临时根内。
  *
  * 用法：
- *   node scripts/probe-nv-ux012.mjs [--out <dir>] [--keep] [--no-browser-head]
+ *   node scripts/probe-nv-ux012.mjs [--out <dir>] [--keep]
  *   node scripts/probe-nv-ux012.mjs --falsifiability     # 仅跑谓词登记表的 red/ok 向量自证（零浏览器/零实例）
  * 退出码：0 = 全部断言成立（绿态）；1 = 有断言不成立（红态/回归）；2 = 环境不可用或隔离校验失败。
  */
@@ -52,12 +58,11 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const sha256 = (t) => createHash('sha256').update(t).digest('hex')
 
 function parseArgs(argv) {
-  const opts = { out: join(tmpdir(), 'ux012-probe'), keep: false, help: false, skipBrowser: false, falsifiability: false }
+  const opts = { out: join(tmpdir(), 'ux012-probe'), keep: false, help: false, falsifiability: false }
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i]
     if (a === '--out') opts.out = argv[++i]
     else if (a === '--keep') opts.keep = true
-    else if (a === '--no-browser-head') opts.skipBrowser = true
     else if (a === '--falsifiability') opts.falsifiability = true
     else if (a === '--help' || a === '-h') opts.help = true
     else { console.error('用法错误：未知参数 ' + a); process.exit(2) }
@@ -83,11 +88,43 @@ const PREDICATE_REGISTRY = [
     ok: { note: 'D-1 目标行为：Esc 只关面板、控制台保持打开', v: { opened: true, modal: false, console: true } },
   },
   {
-    id: 'D1-busy-keeps-panel',
-    finding: 'CLEAN-007 D-1（busy 守卫）',
+    // R1 复审 C-7 订正：原 id `D1-busy-keeps-panel` 部署在**新建弹窗** busy 场景（A10）⇒ 谓词 id/finding 与
+    // 部署面错配。此处按其真实部署面拆分为：`A10-busy-create-modal`（新建弹窗）与 `D1-busy-bind-panel`
+    // （绑定面板——R1 C-7 补的行为面，见 B3 场景真挂起绑定请求）。
+    id: 'A10-busy-create-modal',
+    finding: 'CLEAN-007 A10（新建弹窗 busy 禁关）',
     fn: (v) => v.busy === true && v.modal === true,
-    red: { note: '绑定请求在飞时 Esc 仍关窗（busy 守卫失效）', v: { busy: true, modal: false } },
+    red: { note: '新建请求在飞时 Esc 仍关窗（busy 守卫失效）', v: { busy: true, modal: false } },
     ok: { note: 'busy 中 Esc 不关（守卫在位）', v: { busy: true, modal: true } },
+  },
+  {
+    id: 'D1-busy-bind-panel',
+    finding: 'CLEAN-007 D-1（busy 守卫）+ R1 C-7',
+    fn: (v) => v.busy === true && v.modal === true,
+    red: { note: '绑定请求在飞时 Esc 关掉面板（与 close() 同守卫失效）', v: { busy: true, modal: false } },
+    ok: { note: '绑定请求在飞时 Esc 不关面板（守卫在位）', v: { busy: true, modal: true } },
+  },
+  {
+    id: 'A6-focus-restore',
+    finding: 'UX-012-R1 F6（焦点归还）+ R1 C-3',
+    // R1 C-3：原 A6 为**真空 PASS**——宿主 inert 下焦点从未进入模态 ⇒ 删除归还逻辑亦 PASS。
+    // 现：① 受 `focusMovable` 闸门约束（不可移 ⇒ red3 向量 + 部署侧记 N-A，不判绿）；
+    //     ② `preFocusIsBody` 用**元素身份**判定（原 `!== 'body'` 与 tagName 'BODY' 大小写失配而恒真）。
+    fn: (v) => v.focusMovable === true && v.preFocusIsBody !== true && v.postFocus === v.preFocus,
+    red: { note: '删除归还逻辑（原实现）：关闭后焦点未回到打开前元素（落 body）', v: { focusMovable: true, preFocus: 'zGbnIq_input', preFocusIsBody: false, postFocus: 'BODY' } },
+    red2: { note: '归还目标错误（焦点漂移到宿主输入框而非打开前元素）', v: { focusMovable: true, preFocus: 'nv-cplus', preFocusIsBody: false, postFocus: 'zGbnIq_input' } },
+    red3: { note: '前置未取得：宿主 inert ⇒ 焦点不可移（不可判绿——防空真）', v: { focusMovable: false, preFocus: 'nv-cplus', preFocusIsBody: false, postFocus: 'nv-cplus' } },
+    ok: { note: '焦点可移时：关闭后焦点回到打开前元素', v: { focusMovable: true, preFocus: 'nv-cplus', preFocusIsBody: false, postFocus: 'nv-cplus' } },
+  },
+  {
+    id: 'C4-split-state-esc-layering',
+    finding: 'CLEAN-007 R1 C-1（分栏态 Esc 分层）',
+    // 分栏激活 ∧ 面板开在其上：**一次 Esc 只关面板**，不连关创作台（SplitWorkspace 让位守卫）。
+    fn: (v) => v.panelWasOpen === true && v.panelClosed === true && v.splitStillOpen === true,
+    red: { note: '修复前实况：一次 Esc **连关两层**（面板关 ∧ 分栏/创作台一并被关）', v: { panelWasOpen: true, panelClosed: true, splitStillOpen: false } },
+    red2: { note: 'Esc 未生效：面板未关', v: { panelWasOpen: true, panelClosed: false, splitStillOpen: true } },
+    red3: { note: '前置未取得：面板未打开（不可判绿——防空真）', v: { panelWasOpen: false, panelClosed: true, splitStillOpen: true } },
+    ok: { note: '面板态 Esc 只关面板、分栏保持', v: { panelWasOpen: true, panelClosed: true, splitStillOpen: true } },
   },
   {
     id: 'F6-modal-semantics',
@@ -359,12 +396,7 @@ function readI18n() {
     newNovelBtn: pick('newNovelBtn'),
     cancel: pick('cancel'),
     createBtn: pick('createBtn'),
-    dirPlaceholder: pick('dirPlaceholder'),
-    nameRequired: pick('nameRequired'),
-    closed: pick('closed'),
     bindNewSession: pick('bindNewSession'),
-    unbound: pick('unbound'),
-    stale: pick('stale'),
     bindNewDonePrefix: pickFn('bindNewDone').split('${')[0], // 「已为本书绑定新会话 」前缀（id 由探针拼接核对）
   }
 }
@@ -413,7 +445,7 @@ function registerFixtureWorkspace(home, novelsRoot) {
 // ══════════════════════════════════════════════════════════════════════════════
 async function main() {
   const opts = parseArgs(process.argv.slice(2))
-  if (opts.help) { console.log('用法：node scripts/probe-nv-ux012.mjs [--out <dir>] [--keep] [--no-browser-head] | --falsifiability'); return 0 }
+  if (opts.help) { console.log('用法：node scripts/probe-nv-ux012.mjs [--out <dir>] [--keep] | --falsifiability'); return 0 }
 
   // ── 0) 可失败性自证模式（零浏览器 / 零实例 / 零网络）──
   if (opts.falsifiability === true) {
@@ -430,8 +462,8 @@ async function main() {
 
   const plane = resolvePlane()
   if (plane === null) { console.error('[probe] 环境错误：宿主平面不可达（未找到可解析 @deepseek-ai/dsh 的 profile 平面）'); return 2 }
-  const browser = opts.skipBrowser ? null : findBrowser()
-  if (!opts.skipBrowser && browser === null) { console.error('[probe] 环境错误：未找到 Chromium 内核浏览器（Edge/Chrome）'); return 2 }
+  const browser = findBrowser()
+  if (browser === null) { console.error('[probe] 环境错误：未找到 Chromium 内核浏览器（Edge/Chrome）'); return 2 }
 
   const i18n = readI18n()
   const realHome = (process.env.DSH_HOME ?? '').trim() !== '' ? process.env.DSH_HOME : join(process.env.USERPROFILE ?? process.env.HOME ?? '', '.dsh')
@@ -539,7 +571,6 @@ async function main() {
     }
     if (serving !== true) { report.envErrors.push('隔离实例 HTTP 未就绪（' + String(lastErr) + '）'); console.error('[probe] 环境错误：HTTP 未就绪'); return 2 }
     console.log('  隔离实例就绪（' + String(lastErr) + '）')
-    if (browser === null) { console.error('[probe] 环境错误：--no-browser-head 模式无可断言场景'); return 2 }
 
     // ── 2) 无头浏览器 + CDP ────────────────────────────────────────────────
     edge = spawn(browser, [
@@ -625,7 +656,10 @@ async function main() {
     /** 模态几何 + 语义 + 焦点读数（一次 evaluate 取全）。 */
     const modalStateOf = (sel) => cdp.evaluate(`(() => {
       const n = document.querySelector(${JSON.stringify(sel)})
-      if (n === null) return { present: false }
+      // 模态缺席时返回**同形空值**（而非部分字段）——否则消费端的 length 访问会抛错并中断整轮
+      //（实测教训：一次 flake 令 A1 抛 TypeError ⇒ 后续全部断言丢失，只剩 4 条）
+      // ⚠️ 本块是 **template literal**：注释内**禁用反引号**（会提前闭合模板 —— 实测两次「只剩 5 条断言」的真因）
+      if (n === null) return { present: false, x: null, y: null, w: null, h: null, vw: window.innerWidth, vh: window.innerHeight, role: null, ariaModal: null, label: null, inputs: 0, btns: [], formBtns: [], disabledBtns: 0, inputDisabled: null, focusedTag: null, focusedIn: false }
       const b = n.getBoundingClientRect()
       const act = document.activeElement
       return {
@@ -634,6 +668,9 @@ async function main() {
         role: n.getAttribute('role'), ariaModal: n.getAttribute('aria-modal'), label: n.getAttribute('aria-label'),
         inputs: n.querySelectorAll('input').length,
         btns: [...n.querySelectorAll('button')].map((x) => (x.textContent || '').trim()),
+        // R1 C-6：**动作行**按钮（.nv-cbtns 行）——模态另有头部 ✕ 图标钮（textContent 为空串），
+        // 故「恰两钮」契约按**动作行**计数（三钮复活 ⇒ 本计数 ≠ 2 ⇒ 必红）。注释内禁用反引号（见上）
+        formBtns: [...n.querySelectorAll('.nv-cbtns button')].map((x) => (x.textContent || '').trim()),
         disabledBtns: [...n.querySelectorAll('button')].filter((x) => x.disabled).length,
         inputDisabled: n.querySelector('input') === null ? null : n.querySelector('input').disabled,
         focusedTag: act === null ? null : act.tagName,
@@ -663,18 +700,45 @@ async function main() {
 
     // ══ A) 新建弹窗（UX-012 原交付面 + CLEAN-007 F6/F3 + busy 回归面）══════
     // A1/A2：聚焦+激活 ＋ 磁贴（真焦点 → 供 A6 焦点归还核对）→ 模态几何 + 模态语义
+    // R1 加固：模态缺席时**不抛错**（同形空值），且对「打开」前置**只重试一次并记录尝试次数**
+    // （如实留痕，非「重试到绿」：断言本身仍严格要求模态在场与其全部属性）。
     const tileDiag = await focusThenClick('.nv-cplus')
     const clickedTile = tileDiag.found === true && tileDiag.clicked === true
     report.facts.triggerFocus = tileDiag
-    const modalOpened = await waitFor("document.querySelector('.nv-cmodal') !== null", 10000, '.nv-cmodal')
+    let modalOpened = await waitFor("document.querySelector('.nv-cmodal') !== null", 10000, '.nv-cmodal')
+    const openAttempts = modalOpened === true ? 1 : 2
+    if (modalOpened !== true) {
+      await focusThenClick('.nv-cplus')
+      modalOpened = await waitFor("document.querySelector('.nv-cmodal') !== null", 8000, '.nv-cmodal（重试 1 次）')
+    }
+    report.facts.modalOpenAttempts = openAttempts
     const modal = await modalStateOf('.nv-cmodal')
     report.facts.createModal = modal
+    // ── R1 C-3：**焦点可移性闸门（单一事实源）** ───────────────────────────────────
+    // 宿主环境把插件子树置于 `inert` 容器下（DOM 规范：inert 子树内 `focus()` 为空操作）⇒ 一切
+    // 「焦点移动类」断言在该环境下**无判别力**（删除实现同样通过 = 真空 PASS）。故先取**前置条件**
+    // （祖先链 inert + 文档聚焦）作为闸门：不可移 ⇒ 相关断言（A1b autoFocus / A6 归还 / A7b 回绕 /
+    // A2b F6 三面汇总）一律记 **N-A**，绝不判绿。本判定**只读属性、不触碰焦点** ⇒ 不干扰后续
+    // A5/A6 的「打开前焦点」读数（若在此调用 focus()，会把 activeElement 移到模态输入框从而污染读值）。
+    const focusGate = await cdp.evaluate(`(() => {
+      const n = document.querySelector('.nv-cmodal')
+      if (n === null) return { modalFound: false }
+      let inert = false
+      for (let p = n; p !== null && p !== undefined; p = p.parentElement) {
+        if (typeof p.hasAttribute === 'function' && p.hasAttribute('inert')) { inert = true; break }
+      }
+      return { modalFound: true, inertAncestor: inert, docHasFocus: document.hasFocus() }
+    })()`)
+    const focusMovable = focusGate.modalFound === true && focusGate.inertAncestor !== true
+    report.facts.focusGate = focusGate
+    report.facts.focusMovable = focusMovable
     const centered = modal.present === true
       && Math.abs((modal.x + modal.w / 2) - modal.vw / 2) <= 2 && Math.abs((modal.y + modal.h / 2) - modal.vh / 2) <= 2
-    assertion('UX012-A1-create-modal', '新建弹窗', '＋磁贴 → 居中模态（水平+垂直居中 ≤2px）+ 单输入 + 恰「创建/取消」两钮（autoFocus 焦点面见 A1b——宿主 inert 环境下不可移，单独判定）',
+    assertion('UX012-A1-create-modal', '新建弹窗', '＋磁贴 → 居中模态（水平+垂直居中 ≤2px）+ 单输入 + **动作行恰两钮**（R1 C-6 补计数：`.nv-cbtns` 行 `length === 2` + 文案「创建」「取消」——三钮复活必红；头部 ✕ 图标钮不计入动作行）（autoFocus 焦点面见 A1b——宿主 inert 环境下不可移，单独判定）',
       clickedTile === true && modalOpened === true && centered === true && modal.inputs === 1
-      && modal.btns.indexOf(i18n.cancel) >= 0 && modal.btns.indexOf(i18n.createBtn) >= 0,
-      { clickedTile, modalOpened, centered, inputs: modal.inputs, btns: modal.btns, focusedTag: modal.focusedTag, focusedIn: modal.focusedIn })
+      && modal.formBtns.length === 2
+      && modal.formBtns.indexOf(i18n.cancel) >= 0 && modal.formBtns.indexOf(i18n.createBtn) >= 0,
+      { clickedTile, modalOpened, centered, inputs: modal.inputs, formBtns: modal.formBtns, formBtnCount: modal.formBtns.length, allBtns: modal.btns, focusedTag: modal.focusedTag, focusedIn: modal.focusedIn })
     report.facts.focusTrap = report.facts.focusTrap ?? {}
     const semantics = { role: modal.role, ariaModal: modal.ariaModal, label: modal.label, trap: null, restored: null }
     assertion('UX012-A2-modal-semantics-role', '新建弹窗/F6', '模态容器声明 role="dialog" + aria-modal="true" + 非空 aria-label（读屏可辨「已在弹窗内」）',
@@ -754,9 +818,14 @@ async function main() {
     })()`)
     report.facts.focusTrap = { trapProbe, tabObserved, shiftObserved, afterTab, afterShiftTab, envFocus }
     const trapWired = tabObserved !== null && tabObserved.prevented === true
-    assertion('UX012-A7-focus-trap-wiring', '新建弹窗/F6', '焦点陷阱**接线**：末位元素上真实 Tab → 模态处理器吞掉该键（默认行为被 preventDefault；冒泡相位实测）⇒ Tab 不会逸出到背后控制台；无陷阱（未接线）即红',
+    assertion('UX012-A7-focus-trap-wiring', '新建弹窗/F6', '焦点陷阱**接线**：真实 Tab 被模态处理器吞掉（默认行为被 preventDefault；冒泡相位实测）⇒ Tab 不会逸出到背后控制台。**R1 C-8 口径订正**：本环境实测 `trapProbe.focusMovedToLast=false`（inert）⇒ 实际触发的是「焦点**不在模态内**」分支（仍属防逸出语义）；「末位回绕」分支归 A7b（受闸门约束）。无陷阱（未接线）即红',
       trapProbe.items >= 3 && trapWired === true, { trapProbe, tabObserved, afterTab })
-    const focusMovable = envFocus.modalInputFocus !== null && envFocus.modalInputFocus.moved === true
+    // 闸门一致性佐证（行为面读数，不改变闸门来源——闸门取 A1 处的**前置条件**，避免先 focus() 再判定）
+    report.facts.focusGateBehavior = {
+      gate: focusMovable,
+      measuredMoved: envFocus.modalInputFocus === null ? null : envFocus.modalInputFocus.moved,
+      agree: envFocus.modalInputFocus === null ? null : (envFocus.modalInputFocus.moved === true) === (focusMovable === true),
+    }
     if (focusMovable !== true) {
       assertion('UX012-A7b-focus-wrap', '新建弹窗/F6', '焦点陷阱**回绕效果**（末位 Tab → 首位）：宿主环境使插件子树焦点不可移（祖先链 inert / focus() 空操作）⇒ **N-A**，如实标注不渲染成 PASS',
         false, { envFocus, trapProbe, afterTab, afterShiftTab }, 'N-A')
@@ -803,27 +872,38 @@ async function main() {
     // 焦点归还的契约 = 「归还到打开前聚焦的元素」：触发器若能聚焦（focusin 生效）即为触发器本身；
     // 若宿主环境使触发器不可聚焦（诊断 facts.triggerFocus 如实记录 visibility/inert/rects），则归还目标
     // = 打开前更早的前置焦点元素 ⇒ 判据退化为「焦点未被丢弃（不在 body、不在模态内、与前置焦点一致）」。
-    const preActive = await cdp.evaluate("document.activeElement === null ? null : String(document.activeElement.className || document.activeElement.tagName || '')")
+    const preActive = await cdp.evaluate("({ name: document.activeElement === null ? null : String(document.activeElement.className || document.activeElement.tagName || ''), isBody: document.activeElement === null || document.activeElement === document.body })")
     const escTriggerDiag = await focusThenClick('.nv-cplus')
     const modalOpenedBefore = await waitFor("document.querySelector('.nv-cmodal') !== null", 10000, '弹窗（Esc 场景）')
     await pressEsc()
     await sleep(600)
-    const escState = await cdp.evaluate("({ modal: document.querySelector('.nv-cmodal') !== null, console: document.querySelector('.nv-console') !== null, active: document.activeElement === null ? null : String(document.activeElement.className || document.activeElement.tagName || '') })")
-    report.facts.escCreate = { preActive, escTriggerDiag, modalOpenedBefore, ...escState }
+    // R1 C-3：`activeIsBody` 用**元素身份**判定（原 `active !== 'body'` 与 tagName 取值 `'BODY'` 大小写失配 ⇒ 恒真）
+    const escState = await cdp.evaluate("({ modal: document.querySelector('.nv-cmodal') !== null, console: document.querySelector('.nv-console') !== null, active: document.activeElement === null ? null : String(document.activeElement.className || document.activeElement.tagName || ''), activeIsBody: document.activeElement === null || document.activeElement === document.body })")
+    report.facts.escCreate = { preActive, escTriggerDiag, modalOpenedBefore, focusMovable, ...escState }
     assertion('UX012-A5-esc-close-console-kept', '新建弹窗/Esc', 'Esc 关新建弹窗且控制台保持打开（NvConsole 自持 Esc 处理；对照 CLEAN-004 `B17-esc-layer-yield`；前置 = 弹窗确在场——防空真断言）',
       modalOpenedBefore === true && escState.modal === false && escState.console === true, report.facts.escCreate)
-    const triggerFocused = escTriggerDiag.afterFocus === true
-    const returnedToTrigger = triggerFocused === true && typeof escState.active === 'string' && escState.active.indexOf('nv-cplus') >= 0
-    const returnedToPreFocus = triggerFocused !== true && escState.active === preActive && escState.active !== null && escState.active !== 'body'
-    const restoredOk = returnedToTrigger === true || returnedToPreFocus === true
-    semantics.restored = restoredOk === true
-    assertion('UX012-A6-focus-restore', '新建弹窗/F6', '模态关闭后焦点**归还**打开前聚焦的元素（触发器可聚焦 ⇒ 归还到＋磁贴；否则归还到更早的前置焦点元素）且不落 body、不留在模态内（原实现无归还 ⇒ 焦点丢失）',
-      restoredOk === true && escState.active !== null && escState.active !== 'body',
-      { preActive, triggerFocused, returnedToTrigger, returnedToPreFocus, activeAfterClose: escState.active, triggerDiag: escTriggerDiag })
+    // A6（R1 C-3 重构）：**焦点归还**——受 `focusMovable` 闸门约束（不可移 ⇒ N-A）；可移时经共享登记表
+    // 谓词 `A6-focus-restore` 判定（red = 删除归还逻辑 ⇒ 焦点落 body ⇒ 必红）。原实现为真空 PASS：
+    // inert 下焦点从未进入模态，「关闭后 === 打开前」在不执行归还逻辑时同样为真。
+    const a6Measured = { focusMovable: focusMovable === true, preFocus: preActive.name, preFocusIsBody: preActive.isBody === true, postFocus: escState.active }
+    semantics.restored = focusMovable === true ? evalPred('A6-focus-restore', a6Measured) : false
+    if (focusMovable !== true) {
+      assertion('UX012-A6-focus-restore', '新建弹窗/F6', '模态关闭后焦点**归还**打开前聚焦的元素：宿主环境使插件子树焦点不可移（祖先链含 `inert`）⇒ 焦点从未进入模态、「归还」面**无判别力**（删除归还逻辑亦不会红 = 原真空 PASS）⇒ **N-A**，如实标注不渲染成 PASS（R1 C-3）',
+        false, { ...a6Measured, focusGate, escTriggerDiag, activeAfterClose: escState.active, activeIsBody: escState.activeIsBody }, 'N-A')
+    } else {
+      assertion('UX012-A6-focus-restore', '新建弹窗/F6', '模态关闭后焦点**归还**打开前聚焦的元素（谓词取自共享登记表 `A6-focus-restore`：焦点可移 ∧ 打开前焦点非 body ∧ 关闭后焦点 ≡ 打开前焦点；删除归还逻辑 ⇒ 焦点落 body ⇒ 必红）',
+        semantics.restored === true, { ...a6Measured, activeIsBody: escState.activeIsBody })
+    }
 
-    // semantics 汇总（F6 谓词单点判定：语义 + 陷阱 + 归还）
-    assertion('UX012-A2b-modal-semantics-full', '新建弹窗/F6', 'F6 三面齐备：role/aria-modal/aria-label ∧ 焦点陷阱 ∧ 焦点归还（谓词取自共享登记表 `F6-modal-semantics`）',
-      evalPred('F6-modal-semantics', semantics), semantics)
+    // semantics 汇总（F6 三面：语义 + 陷阱 + 归还）。R1 C-3：焦点面不可观测时同闸门记 **N-A**
+    // （「归还」面无判别力 ⇒ 不能判「三面齐备」；语义面/陷阱接线面另有 A2/A7 独立锚定）。
+    if (focusMovable !== true) {
+      assertion('UX012-A2b-modal-semantics-full', '新建弹窗/F6', 'F6 三面齐备（role/aria-modal/aria-label ∧ 焦点陷阱 ∧ 焦点归还）：其中「归还」面在本环境不可观测（宿主 `inert`）⇒ **N-A**，如实标注不渲染成 PASS（R1 C-3）；语义面 = A2、陷阱接线面 = A7 各有独立断言',
+        false, { semantics, focusGate }, 'N-A')
+    } else {
+      assertion('UX012-A2b-modal-semantics-full', '新建弹窗/F6', 'F6 三面齐备：role/aria-modal/aria-label ∧ 焦点陷阱 ∧ 焦点归还（谓词取自共享登记表 `F6-modal-semantics`）',
+        evalPred('F6-modal-semantics', semantics), semantics)
+    }
 
     // A9/A10/A11：真实请求体 + busy 禁关 + 创建成功链（CDP Fetch 域名挂起请求做真实「在飞」态）
     const createdId = 'probe-ux012-a1'
@@ -858,10 +938,10 @@ async function main() {
     await sleep(400)
     const backdropWhileBusy = await cdp.evaluate("document.querySelector('.nv-cmodal') !== null")
     report.facts.busy = { modal: busyState, escWhileBusy, backdropWhileBusy }
-    assertion('UX012-A10-busy-blocks-close', '新建弹窗/busy', '创建请求在飞（Fetch 域挂起）时：两钮 + 输入框 disabled ∧ Esc 不关 ∧ 遮罩点击不关（避免请求完成后无处落 notice）',
-      evalPred('D1-busy-keeps-panel', { busy: true, modal: escWhileBusy === true && backdropWhileBusy === true })
+    assertion('UX012-A10-busy-blocks-close', '新建弹窗/busy', '**新建弹窗**创建请求在飞（Fetch 域挂起真实 POST）时：两钮 + 输入框 disabled ∧ Esc 不关 ∧ 遮罩点击不关（避免请求完成后无处落 notice）（R1 C-7：谓词按真实部署面改名为 `A10-busy-create-modal`—原借 `D1-busy-*` 属错配）',
+      evalPred('A10-busy-create-modal', { busy: true, modal: escWhileBusy === true && backdropWhileBusy === true })
       && busyState.disabledBtns === 2 && busyState.inputDisabled === true,
-      { disabledBtns: busyState.disabledBtns, inputDisabled: busyState.inputDisabled, escWhileBusy, backdropWhileBusy })
+      { disabledBtns: busyState.disabledBtns, inputDisabled: busyState.inputDisabled, escWhileBusy, backdropWhileBusy, predicateId: 'A10-busy-create-modal' })
     if (intercepted !== null) await cdp.send('Fetch.continueRequest', { requestId: intercepted.requestId })
     await cdp.send('Fetch.disable')
     const createClosed = await waitFor("document.querySelector('.nv-cmodal') === null", 20000, '创建成功 → 弹窗关闭')
@@ -902,6 +982,27 @@ async function main() {
       && beforeBound === null && typeof afterAutoBound === 'string' && afterAutoBound.length > 0,
       { ...report.facts.consumer1 })
 
+    // ══ C4（R1 C-1）：**分栏态 Esc 分层** —— 面板开在分栏之上时，一次 Esc 只关面板、不连关创作台 ══
+    // 触发路径（即复审所列可达路径）：侧栏抽屉卡 → `openCtl.open` 的 stale 分支 → `store.set({ bind })`
+    // （分栏保持在场）。修复前 `SplitWorkspace` 的全局 Esc **无让位守卫** ⇒ 同一次 Esc 先
+    // `closeWorkbench()` 关掉整个创作台、再关面板 = **一键关两层**。修复后由让位守卫交面板处理。
+    const splitBeforeEscPanel = await cdp.evaluate("document.querySelector('.nv-bar') !== null")
+    const staleCardClickedSplit = await cdp.evaluate(`(() => {
+      const c = [...document.querySelectorAll('.nv-card')].find((x) => ((x.querySelector('.nv-card-title') || {}).textContent || '') === '失效绑定书')
+      if (c === undefined) return false
+      c.click(); return true
+    })()`)
+    const panelInSplit = await waitFor("document.querySelector('.nv-modal') !== null", 15000, '分栏态绑定面板')
+    const panelWasOpenInSplit = panelInSplit === true
+    await pressEsc()
+    await sleep(800)
+    const splitEscState = await cdp.evaluate("({ split: document.querySelector('.nv-bar') !== null, modal: document.querySelector('.nv-modal') !== null, console: document.querySelector('.nv-console') !== null })")
+    report.facts.splitEsc = { splitBeforeEscPanel, staleCardClickedSplit, panelWasOpenInSplit, ...splitEscState }
+    assertion('UX012-C4-split-state-esc-layering（R1 C-1）', '创建链/Esc 分层', '**C-1**：分栏激活 ∧ 绑定面板开在其上时，按一次 Esc **只关面板**、分栏/创作台保持在场（SplitWorkspace 让位守卫；修复前 = 一键关两层 `{split:false,modal:false}`；前置 = 面板确在场 ∧ 分栏确在场——防空真断言）',
+      splitBeforeEscPanel === true
+      && evalPred('C4-split-state-esc-layering', { panelWasOpen: panelWasOpenInSplit, panelClosed: splitEscState.modal === false, splitStillOpen: splitEscState.split === true }),
+      report.facts.splitEsc)
+
     // 消费点②：创作台控制条「绑定新会话」→ 仅绑定不打开（bindNewSessionCtl）
     const bindBtnClicked = await cdp.evaluate(`(() => {
       const b = [...document.querySelectorAll('.nv-wfctl-btn2')].find((x) => (x.getAttribute('title') || '') === ${JSON.stringify(i18n.bindNewSession)})
@@ -921,7 +1022,41 @@ async function main() {
       }) && bindBtnClicked === true,
       { ...report.facts.consumer2, previousBound: afterAutoBound })
 
-    // F2 单点收口（源码结构面，与上面两条**行为面**消费点互补）：实现数/消费点数/内联副本数
+    // ══ B3（R1 C-7 补）：**绑定面板 busy 守卫**行为面 —— 真挂起绑定请求 ⇒ busy 中 Esc 不得关面板 ══
+    // 面板 `busy` 来自 `finishBind`（pick 路径）→ `launcher.bindSession` → `apiJson('/overview')`（真实
+    // HTTP）⇒ 用 CDP Fetch 域**挂起该请求**构造真实「在飞」态；判定后放行全部被挂请求并关闭 Fetch。
+    // 观测「busy 已置位」的可判据 = 会话行被 `disabled: busy` 置灰（非猜测状态变量）。
+    const staleCardClickedBusy = await cdp.evaluate(`(() => {
+      const c = [...document.querySelectorAll('.nv-card')].find((x) => ((x.querySelector('.nv-card-title') || {}).textContent || '') === '失效绑定书')
+      if (c === undefined) return false
+      c.click(); return true
+    })()`)
+    const panelForBusy = await waitFor("document.querySelector('.nv-modal') !== null", 15000, '绑定面板（busy 场景）')
+    await cdp.evaluate("(() => { const g = document.querySelector('.nv-modal .nv-bgroup'); if (g !== null) g.click(); return g !== null })()")
+    await sleep(500)
+    const rowCount = await cdp.evaluate("document.querySelectorAll('.nv-modal .nv-srow').length")
+    await cdp.send('Fetch.enable', { patterns: [{ urlPattern: '*/novel-writing/api/overview*', requestStage: 'Request' }] })
+    const heldOverview = []
+    cdp.on('Fetch.requestPaused', (p) => { heldOverview.push(p) })
+    const rowClicked = await cdp.evaluate("(() => { const r = document.querySelector('.nv-modal .nv-srow'); if (r === null) return false; r.click(); return true })()")
+    await sleep(700)
+    const busyProof = await cdp.evaluate("({ rowsDisabled: document.querySelectorAll('.nv-modal .nv-srow[disabled]').length, panelOpen: document.querySelector('.nv-modal') !== null })")
+    await pressEsc()
+    await sleep(500)
+    const panelAfterEscBusy = await cdp.evaluate("document.querySelector('.nv-modal') !== null")
+    for (const p of heldOverview) { try { await cdp.send('Fetch.continueRequest', { requestId: p.requestId }) } catch { /* ignore */ } }
+    await cdp.send('Fetch.disable')
+    const panelClosedAfterRelease = await waitFor("document.querySelector('.nv-modal') === null", 25000, '绑定完成 → 面板关闭')
+    const splitAfterBindBusy = await cdp.evaluate("document.querySelector('.nv-bar') !== null")
+    report.facts.bindBusy = { staleCardClickedBusy, panelForBusy, rowCount, rowClicked, heldCount: heldOverview.length, busyProof, panelAfterEscBusy, panelClosedAfterRelease, splitAfterBindBusy }
+    assertion('UX012-B3-bind-busy-guard（R1 C-7）', '绑定面板/busy', '**绑定面板** busy（真实绑定请求在飞——Fetch 域挂起 `/overview`）时按 Esc **不关面板**（与 `close()` 同一 busy 守卫）；放行后绑定完成、面板自行关闭（谓词取自登记表 `D1-busy-bind-panel`；busy 的观测判据 = 会话行 `disabled`，非猜状态变量）',
+      rowClicked === true && heldOverview.length >= 1 && busyProof.rowsDisabled >= 1
+      && evalPred('D1-busy-bind-panel', { busy: true, modal: panelAfterEscBusy === true })
+      && panelClosedAfterRelease === true,
+      { ...report.facts.bindBusy })
+
+    // F2 单点收口（**结构面**断言——R1 C-5 如实标注：本条对 lib/client.js 作正则计数，非真驱动行为面；
+    // 与上面两条**行为面**消费点断言互补：行为面证「两消费点都真走通」，本条证「实现/消费点/内联副本计数」）
     const srcNow = readFileSync(CLIENT_SRC, 'utf8')
     const f2Counts = {
       defs: (srcNow.match(/async createSessionFor\(novel, opts\)/g) ?? []).length,
@@ -932,6 +1067,12 @@ async function main() {
     assertion('UX012-C3-single-source', '创建链/F2', '创建链单点收口：`launcher.createSessionFor` 实现恰 1 份 ∧ 消费点恰 2 处（两消费点共用）∧ 内联副本已删（`let createArg` 仅存于共享实现；谓词取自登记表 `F2-single-source`）',
       evalPred('F2-single-source', f2Counts), f2Counts)
     // 注意：**不在此处 return**——退出码由 finally 依断言 tally 计算（`return <常量>` 会覆盖 tally 判定）
+  } catch (e) {
+    // R1 加固：未捕获异常 MUST 入报告（原实现异常直接冒泡 ⇒ 报告只剩 finally 的 3~4 条断言，
+    // 错误原文在全量输出中被其它日志淹没，无法归因——实测两次 flake 的教训）
+    report.crash = { message: e instanceof Error ? e.message : String(e), stack: e instanceof Error ? String(e.stack).slice(0, 1500) : null, at: new Date().toISOString() }
+    console.error('[probe] 未捕获异常：' + report.crash.message)
+    assertion('UX012-CRASH', '探针自检', '探针全程无未捕获异常（异常即红；错误原文与堆栈入报告，避免「只剩 4 条断言」式信息丢失）', false, report.crash)
   } finally {
     // 可失败性自证（与部署面同源登记表；向量缺失/red 非 false 即自证失效）
     const fals = falsifiabilityReport()
