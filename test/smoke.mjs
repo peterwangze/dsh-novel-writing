@@ -661,6 +661,67 @@ check('客户端源码面：UX-012 新建 = 居中模态 + 仅目录名 + 创建
     && !clientSrc.includes('sessions.create({ cwd: r.path })')   // go 分支自动建会话链已删
     && !clientSrc.includes('bindSession(r.id')                   // 创建即绑定已删（绑定归 🔗/绑定面板）
 })(), 'ux012 create modal missing')
+// ── CLEAN-007（承接 UX-012-R1 备注批次：D-1 / F2 / F3 / F4 / F6 / F9）──────────────────────
+// ①D-1 绑定面板自挂 Esc（让位后有人接手）②F6 三处模态可访问性 + 焦点陷阱/归还公共件
+// ③F9 死参残留 / F3 关窗复位 / F4 订阅叶选择 ④F2 创建链单点收口（单一实现 + 两消费点）
+check('客户端源码面：CLEAN-007 D-1 绑定面板自挂 Esc（NvConsole 让位后由面板接手——只关面板、控制台保持打开；busy 中不关；监听随卸载移除）', (() => {
+  // 组件切片：自组件声明起至**下一个顶层 function**（4 空格缩进）——不用「到下一个组件名」的宽切片
+  // （中间会混入同名组件：切片混入后 'consoleOpen: false' 负断言会被邻近组件污染）
+  const compSrc = (name) => {
+    const i = clientSrc.indexOf('function ' + name + '(')
+    if (i < 0) return ''
+    const j = clientSrc.indexOf('\n    function ', i + 10)
+    return j > i ? clientSrc.slice(i, j) : clientSrc.slice(i)
+  }
+  const bindSrc = compSrc('BindDialog')
+  return bindSrc.includes("e.key === 'Escape' && busy !== true")          // busy 守卫（与 close() 同口径）
+    && bindSrc.includes("window.addEventListener('keydown', onKey)")
+    && bindSrc.includes("window.removeEventListener('keydown', onKey)")   // 清理（无监听泄漏）
+    && bindSrc.includes('store.set({ bind: null })')                      // 只关面板
+    && !bindSrc.includes('consoleOpen: false')                            // 负断言：不关控制台
+    && clientSrc.includes('if (s.bind !== null || s.entryOpen === true) return') // NvConsole 让位分支仍在
+})(), 'clean007 d1 binddialog esc missing')
+check('客户端源码面：CLEAN-007 F6 模态可访问性（三处模态 role=dialog + aria-modal + 焦点陷阱/焦点归还公共件；三处 hook 均在组件早退之前 = hook 恒定调用契约）', (() => {
+  const compSrc = (name) => {
+    const i = clientSrc.indexOf('function ' + name + '(')
+    if (i < 0) return ''
+    const j = clientSrc.indexOf('\n    function ', i + 10)
+    return j > i ? clientSrc.slice(i, j) : clientSrc.slice(i)
+  }
+  // 逐组件：hook 调用点 MUST 早于该组件的早退 return null（hook 恒定调用契约）
+  const ordered = (src, hook) => {
+    const h = src.indexOf(hook); const r = src.indexOf('if (open !== true) return null')
+    return h >= 0 && r > h
+  }
+  const bindOk = ordered(compSrc('BindDialog'), 'useModalFocus(open, panelRef)')
+  const cmodOk = ordered(compSrc('NvConsole'), 'useModalFocus(creating, cmodalRef)')
+  const wsOk = ordered(compSrc('WorkspaceDialog'), 'useModalFocus(open, wsdlgRef)')
+  return clientSrc.includes("return { role: 'dialog', 'aria-modal': 'true', 'aria-label': label }")
+    && (clientSrc.match(/\.\.\.modalDialogProps\(/g) ?? []).length === 3      // 三处消费（无第四处、无遗漏）
+    && (clientSrc.match(/useModalFocus\(/g) ?? []).length === 4              // 3 消费 + 1 定义
+    && bindOk === true && cmodOk === true && wsOk === true
+    && clientSrc.includes('function modalFocusables(node)')
+    && clientSrc.includes("window.addEventListener('focusin', focusTracker, true)")
+    && clientSrc.includes("window.removeEventListener('focusin', focusTracker, true)") // apply 清理面
+})(), 'clean007 f6 modal a11y missing')
+check('客户端源码面：CLEAN-007 F3+F4+F9（closeCreate 关窗即复位 dirName ∧ sessionsById 收窄为绑定叶 ∧ launchMsgOf 死参零残留）', (() => {
+  return clientSrc.includes("setCreating(false); setCreateNotice(''); setDirName('')") // F3
+    && clientSrc.includes('closeCreate()')                                             // F3：Esc 分支同点复位
+    && clientSrc.includes('const boundEntry = sessionsById')                            // F4：叶选择后直接取用
+    && (clientSrc.match(/\(s\) => \(boundId !== null && s\.byId !== null/g) ?? []).length === 1 // F4 叶选择形态
+    && !clientSrc.includes('? s.byId : {}')                                             // F4 负断言：不再返回整张 byId
+    && !clientSrc.includes('forceNew')                                                  // F9 负断言：死参零残留
+    && clientSrc.includes('function launchMsgOf(novels, id, title)')
+})(), 'clean007 f3/f4/f9 missing')
+check('客户端源码面：CLEAN-007 F2 创建链单点收口（launcher.createSessionFor 单一实现 + 两消费点共用；两处内联副本已删）', (() => {
+  const defs = (clientSrc.match(/async createSessionFor\(novel, opts\)/g) ?? []).length
+  const calls = (clientSrc.match(/launcher\.createSessionFor\(/g) ?? []).length
+  const createArgs = (clientSrc.match(/let createArg = /g) ?? []).length // 收口前为 2 份内联构造
+  return defs === 1 && calls === 2 && createArgs === 1
+    && clientSrc.includes('const r = await launcher.createSessionFor(novel, { t: ctx.t, rootBasis: ctx.wsRoot })')
+    && clientSrc.includes('requirePreset: true')   // 第二消费点的缺面口径（sessionsMissing）参数化
+    && clientSrc.includes("!launcher.apiHas('sessions', 'create') || (needPreset === true && !launcher.apiHas('agentPresets', 'select'))")
+})(), 'clean007 f2 create chain not consolidated')
 check('客户端源码面：UX-059 工作流控制条（标题栏 ▶ 启动钮迁移至创作台下半区；主按钮按绑定会话状态切换 go/stop 形态 + busy 防连点 + promptLaunch 复用）', (() => {
   const css = (cls) => {
     const m = new RegExp(cls.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{([^}]*)\\}').exec(clientSrc)
@@ -750,13 +811,17 @@ check('客户端源码面：UX-013 卡片两钮（➤ 启动钮退役：onLaunch
 })(), 'ux013 card buttons missing')
 check('客户端源码面：UX-013 首次开卡自动链（workspaceId/cwd → create → 预设 → bind → open；无 prompt）', (() => {
   // UX-014⑦：链收口为 openCtl.autoCreate 单一事实源（控制台卡片与抽屉卡片共用）
+  // CLEAN-007 F2：创建链 a/b/c 进一步收口到 launcher.createSessionFor（openCtl.autoCreate 与
+  // 创作台「绑定新会话」共用同一实现）⇒ 本断言改指向**共享实现**的落点字面量（原断言指向已删除的
+  // autoCreate 内联副本，属「断言随实现迁移」而非放宽：新增 createSessionFor 存在性 + 打开链保留）。
   return clientSrc.includes('openCtl')
     && clientSrc.includes('autoCreate(novel, ctx)')
     && clientSrc.includes("if (st === 'none') { await openCtl.autoCreate(novel, ctx); return }")
-    && clientSrc.includes('hit.workspaceId') && clientSrc.includes('joinNovelRoot(ctx.wsRoot, novel.id)')
-    && clientSrc.includes("api.agentPresets.select({ sessionId, agentPreset: 'novel-writing' })")
+    && clientSrc.includes('async createSessionFor(novel, opts)')          // CLEAN-007 F2 单一事实源
+    && clientSrc.includes('hit.workspaceId') && clientSrc.includes('joinNovelRoot(rootBasis, novel.id)')
+    && clientSrc.includes("agentPresets.select({ sessionId, agentPreset: 'novel-writing' })")
     && clientSrc.includes('launcher.bindSession(novel.id, sessionId)')
-    && clientSrc.includes('launcher.open(sessionId)')
+    && clientSrc.includes('launcher.open(r.sessionId)')
     && !clientSrc.includes("content: [{ type: 'text', text: START_MSG }]")
 })(), 'ux013 auto chain missing')
 check('客户端源码面：UX-013 抽屉字形（width 100% 对齐 + 13px/📖16px/14px/12.5px/9px 点/l2 分隔线/8px 留白）', (() => {
@@ -2091,7 +2156,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   //      **残余缝（同次实测，未闭合）**：若 2.13 只删**终点闭合行**（**历史锚点**：COMPAT-013 时期值 `L4429-4460`——6 处注册仍全在范围内）
   //      则 ①②③④⑤ **全绿**（实测 262/0：⑤a 计数仍 6 ≡ 6、④ callPrefix = null、⑤b 无 `键: {` 形态构造）
   //      ⇒ 该形态目前无持续机检力。根治需「构造闭合行」口径，而 JS 范围本就可能是**合法语义片段**
-  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L4895-L4897` +1 / 3.8 `L2829-2839` +1 实测均非配平）——
+  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L5060-L5062` +1 / 3.8 `L2977-L2987` +1 实测均非配平）——
   //      无差别要求配平会误报上述 3 项，故如实留档待另案（非本任务可安全落地）。
   // R1 承继偏移（2.12 −6 / 2.13 −7）在修复前正是 ①③④ 三项的失败用例，修复后全绿（见 CHANGELOG COMPAT-012）。
   //   ⑤ 范围**完整覆盖**所声明构造（COMPAT-013 F-1 新增，两子句，实现见下方 ⑫c）——见 ⑫c 处的口径论证。
@@ -2221,7 +2286,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // 首行起构造者恰 3 项 = 4.6 `"dsh": {` / 6.1 `"peerDependencies": {` / 6.2 `"engines": {`（面 6 三项
   // JSON 根级子对象；其余 18 项首行为 JS 调用/声明/注释 ⇒ 不适用），项数入 golden（防空转）。
   // **只取首行、不取范围内全部 opener 的理由**：JS 范围可为**合法语义片段**（2.1 `L92-94` 净差 +2 / 2.3
-  // `L4804-L4806` +1 / 3.8 `L2829-2839` +1 实测均非配平，⑤ 注释已留档）——无差别要求范围内每个 opener 配平
+  // `L4804-L4806` +1 / 3.8 `L2977-L2987` +1 实测均非配平，⑤ 注释已留档）——无差别要求范围内每个 opener 配平
   // 会误报这些条目；而「范围未包住自身构造闭合行」的形态恰以构造键行起段（首行 opener 即充分判据）。
   // 口径边界同 ⑤b（裸字符配平，不剥注释/字符串中的 `{`/`}`）。
   const KEY_OPEN6 = /^\s*(?:"([^"]{1,60})"|'([^']{1,60})'|([A-Za-z_$][\w$.-]{0,60}))\s*:\s*\{\s*$/
@@ -2253,9 +2318,9 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // ⑫d F-3 披露数字入机检（COMPAT-013）：非严格面（**由 rangeItems 动态生成**；实测 **3/4/5/6 共 10 项**——
   // COMPAT-014 C-F-1 订正：原标签「3/5/6」漏面 4，且与下方列举清单自含 `4.6 L17`（面 4）自相矛盾；条目数同时
   // 入 golden）范围条目中「起于注释/空行」者 MUST 恰 2 项
-  //（3.1 起于 `/**` JSDoc L987、3.5 起于**空行** L1037——互操作说明在本段内、非起点）。动因 = 该计数原为**人工转写**且写错
+  //（3.1 起于 `/**` JSDoc L1071、3.5 起于**空行** L1121——互操作说明在本段内、非起点）。动因 = 该计数原为**人工转写**且写错
   //（CHANGELOG 曾披露「三处」）——与 COMPAT-004 FIND-1 的 tier 串转写漂移同类，故沿用同款处置：实测值
-  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.8 `L2829` 函数行 / 4.6 `L17`
+  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.8 `L2977` 函数行 / 4.6 `L17`
   // `"dsh": {` / 5.1 `L1` `name:` / 5.2 `L16` `- id:` / 5.4 `L77` `- id:` / 6.1 `L39`（修正后真值；修正前
   // `L38` 亦非注释）/ 6.2 `L8` `"engines": {` / 6.4 `L105`（ci.yml `#` 注释起段——JS 口径不计为注释，见下句口径边界）。严格面（面 2 = 11 项）已由 ③ 逐项约束，
   // 本项只覆盖未纳入严格面的面（动态生成：实测 3/4/5/6）；注释口径同 ③（JS 风格），YAML `#` 不在识别面内（与 F-5① 同源前提）。
