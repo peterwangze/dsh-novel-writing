@@ -6,6 +6,8 @@
 **状态**：**DONE_WITH_LIMITS**（R2 返工：**D-3 撤回** + `B21a`/`B21b` 前提重设计并实测命中 + 部署谓词与自证**同源**（`PREDICATE_REGISTRY` + 注入式核对）；局限见 §10）
 **本目录性质**：CLEAN-004 的持久证据面（`%TEMP%` 已按要求清零，见 §7）。本轮为 **R2 测试审查（`docs/review/CLEAN-004-TEST-R2.md`，NEEDS_CHANGE，5 BLOCKING = N-01~N-05）的返工**。
 
+> **复跑报告归档位置（CLEAN-006 **N-4** 口径）**：**本目录的 `report.json` 仍是 R2 权威记录运行**（`head=21b100ce9ac32e534c6215e507f9835f87e0ff4c`、`headDirty=false`、`tally 49/42/4/3`），**未被后续复跑替换**；后续任何**复跑**报告不再只落 `%TEMP%`（临时目录清理后不可复核）或覆盖本目录，而归档到**冻结资产目录之外**的新目录 **`docs/evidence/CLEAN-004-reruns/<task>-<head 短 sha>/`**（每个子目录内含当轮 `report.json` + `README.md` 一行 provenance；逐轮一子目录、互不覆盖）。**冻结资产边界**：`probe-clean-004.mjs` / `falsifiability-check.mjs` / `gen-defects-evidence.mjs` 属**冻结面**，只运行、不修改（sha256 锚值见 §3）。
+
 ---
 
 ## 1. 一句话结论
@@ -256,12 +258,17 @@ R2 的 5 条 BLOCKING（N-01~N-05）逐条落地，并随附 3 条 P3（N-06~N-0
    **残余不确定性**：谓词「检索 0 行 ⇒ FAIL」在本轮未触发（实测命中），故「镜像空但检索有行」这类**不可能组合**无法被本机观测排除；该读数的缺失在本轮**不影响结论方向**（宿主三面认可 + 检索命中 ⇒ 镜像必非空，逻辑上互斥）。
 3. **`D6` 的未定性**：本机宿主侧栏 `button[class*="sessionRow"]` 计数 0（`facts.hostSessionRowsAtB21 = {count:0, withText:0, selectorPresent:false, projectRows:1}`），
    仅有「新建会话」入口 ⇒「切换会话」动作不可构造 ⇒ 记 **N-A**（归入 checklist §9 R-04 + U-13）。
-   **归因的残余不确定性**：`withText=0` 证明「插件页面内没有带文本的宿主会话行」，但**不足以区分**「宿主确实未渲染」与「宿主选择器/形态差异」——
-   后者需要宿主前端内部知识（host snapshots / `sessions.list`）才能证否，本任务未做。
+   **归因订正（CLEAN-006 **F6**，依据 `docs/review/BUG-009-R1.md` F6 的独立三重取证）**：该 N-A 的**依据不是**「宿主未渲染会话行」，而是**探针选择器失配**——
+   `readHostSessionRows` 用 `button[class*="sessionRow"]`，而宿主该类名的**唯一**使用点是 **`div` + `role:"treeitem"`**（`@deepseek-ai/dsh-client-ui-workspace/lib/client.js:966-969`）
+   ⇒ 该选择器在本宿主构建下**恒不命中**（不对称对照：同 run 内无限定标签的 `[class*="projectRow"]` 命中 1，宿主 `projectRow` 同为 `div`）。
+   **正确选择器形态** = `div[role="treeitem"][class*="sessionRow"], [class*="sessionRow"]`（或按 `role="treeitem"` + 文本提取）；
+   且宿主 `sessionVisible`（`!blank || id === current`，宿主 `L338-340`）⇒ **自动链建出的 blank 会话在非 current 时不渲染**，修完选择器仍可能 0 行 ⇒ 须显式构造**非 blank 或 current** 的会话行。
+   原「不足以区分『宿主未渲染』与『选择器/形态差异』」的表述**已被上述取证取代**（后者即实况）。
+   **界定（本 run 读数不受影响）**：`C3b`/`C9`/`C10`/`C11` 读的是**插件卡面文本/DOM**（`.nv-*`），与宿主会话行选择器无关；`B5`/`D6` 仍为「前置未取得」的如实记录，只是归因改为选择器失配。
 4. **`report-run1.json` / `report-rework-run.json` 的退出码为推定值 1**（依据：探针尾部 `process.exitCode = report.ok ? 0 : 1`，且两份报告 `ok=false`）。
 5. **`C5` 的落定依赖跨运行对照**：`final4` 的 `splitClosed:true` 属竞态窗口，本轮多次运行均未复现（`splitFate` 13/13 帧在场）⇒ 结论建立在「多次干净运行 + 一次崩溃对照 + 机制代码」之上，未做注入式复现。
 6. **真实用户实例未验证**：隔离实例不能代表用户真实工作区/真实会话/真实 API Key 的面；D-1/D-2 的真实实例表现与 U-1~U-14 全部条目仍需用户在**重启 DSH 后**目检（用户实例运行前后 `.dsh-bundle-version=0.5.2`，本任务按红线未触碰）。
-7. **`B5` 本轮记 N-A**：宿主真实会话行 = 0 ⇒ 前置未取得（不再冒充 PASS）；`B5` 的**可失败性**由 §9 的反例向量机证，不依赖本轮是否触达。
+7. **`B5` 本轮记 N-A**：**且归因已订正（CLEAN-006 **F6**）**——依据**不是**「宿主真实会话行 = 0」，而是**探针选择器 `button[class*="sessionRow"]` 在本宿主构建下恒不命中**（宿主该类名唯一使用点为 `div` + `role="treeitem"`）；`B5` 的**可失败性**由 §9 的反例向量机证，不依赖本轮是否触达。**界定**：该 N-A 不影响本 run 的 `C3b`/`C9`/`C10`/`C11`（读插件卡面 `.nv-*`）。
    `C-face-availability` 同理（闸门未进入 ⇒ 运行期 0 消费，静态绑定 = 1 已机证）。**豁免台账登记（R3-09）**：该断言在报告 `assertions[]` **无行**（闸门未进入即不产生行）；本轮**不改探针**（保「记录运行修订 = 终版」不变量），故以本局限条 + 建议任务登记，**不在报告中伪列 N-A 行**。
 8. **`E1` 的行内像素读数 `h` 已降为非判定项**（R2 N-04 的连带订正）：判定改为「在场 ∧ form=row ∧ 单行 ∧ title 置空 ∧ 无横向/纵向溢出」；纵向溢出逐后代取 `max(scrollHeight)/max(clientHeight)`。
 9. **命中行标题的观感口径（新观察项 O-1）**：检索命中的会话行标题显示为 `displayTitleOf` 的结果（本轮为 cwd 目录名 `novels`），**与会话 id 不同形**——

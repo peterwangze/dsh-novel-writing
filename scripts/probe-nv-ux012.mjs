@@ -8,10 +8,19 @@
  * smoke 仍会全绿。本探针补上该行为面。
  *
  * 断言面**以真驱动为主**（真点击 / 真键盘事件 / 真 HTTP 拦截 / 真宿主 RPC），不构造 DOM、不 mock 产品
- * 代码。**口径如实披露（R1 复审 C-5；计数与分桶按 R2 复审 N-1 订正）**：26 条断言 = **18 条真驱动行为级**
- * + 4 条 DOM 属性读数（A2 新建弹窗模态语义 / B2 绑定面板模态语义 / A1b autoFocus 落点 / A2b F6 三面汇总）
- * + **1 条结构面**（`UX012-C3-single-source`：对 `lib/client.js` 作 3 个正则计数，判「创建链单点收口」结构
- * 事实）+ 1 条自证面（`FALSIFIABILITY`：谓词向量求值）+ 2 条隔离面（Z1/Z2：真实 `$DSH_HOME` 指纹与隔离根清理）。
+ * 代码。**口径如实披露（R1 复审 C-5；计数与分桶按 R2 复审 N-1 订正；分类台账与机检按 CLEAN-006 N-1/N-5
+ * 固化）**：
+ *   · **分类按「判定闸门」口径**（不以驱动手段命名）——驱动+状态比较 = 判定输入含驱动动作**及其后**
+ *     的状态观测；单次快照读数 = 动作缺口之后的一次 DOM 快照（属性/子节点计数），**不含**前后态比较。
+ *   · 分类桶（**声明式常量 = 单一事实源**，见本文件 `assertionLedger()`）：28 条 = 20 条驱动+状态比较 + 2 条单次快照读数 + 1 条结构面（读产品源码计数） + 3 条探针自证面（谓词向量 / 未捕获异常 / 台账机检） + 2 条隔离面（真实环境零写入 + 隔离根清理）。
+ *   · **「禁止判绿」是与分类桶正交的第二个维度**：受 `focusMovable` 前置闸门约束、判定输入不成立时
+ *     记 N-A 的 4 条 = A7b-focus-wrap / A1b-input-autofocus / A6-focus-restore / A2b-modal-semantics-full（**全部落在驱动桶**，非单次快照读数桶）；其余 24 条按
+ *     各自桶计入 PASS/FAIL。**`tally.total` 计入 N-A 记录** ⇒ 断言条数（唯一 id）= 28，其中 N-A 4 条、其余 24 条计 PASS/FAIL（R1 复审 N-5 的归属
+ *     偏差与「26 是否含 N-A」歧义在此显式闭合；口径机检 = `UX012-CLASSIFICATION-LEDGER`）。
+ *   · **1 条结构面**（`UX012-C3-single-source`：对 `lib/client.js` 作 3 个正则计数，判「创建链单点收口」
+ *     结构事实）+ 3 条探针自证面（`FALSIFIABILITY` 谓词向量自证 / `CRASH` 未捕获异常 / 台账机检）
+ *     + 2 条隔离面（Z1/Z2：真实 `$DSH_HOME` 指纹与隔离根清理）；上列分类桶与「禁止判绿」均由
+ *     `UX012-CLASSIFICATION-LEDGER` 机检（桶和 ≡ 断言条数 ≡ 桶↔id 映射）。
  * **唯一两处源码读取面**已在标签内显式标注：C3（结构计数）与 `readI18n()`（期望文案与产品同源，
  * 避免复制字面量）——**不做**「源码字符串直查替代行为验证」（同族教训 = CLEAN-006 F-2 / UX-060 R1 F-2）：
  *   A 新建弹窗（几何/模态语义/卡片内点击不自关/遮罩关/Esc 关且控制台保留/焦点归还/焦点陷阱/
@@ -135,6 +144,11 @@ const PREDICATE_REGISTRY = [
     // 命中 ⇒ 一次 Esc MUST **只关对话框本层**，控制台与分栏层**状态不变**。修复前 `WorkspaceDialog`
     // 全文件无 Esc 监听（`'Escape'` 字面量仅 3 处，无其一）⇒ 让位后**无人接手** ⇒ 对话框仍在场。
     // 前置合取 `opened === true` 防空真；`consoleKept`/`splitKept` 为「前后同值」不变式（连关两层即红）。
+    // **判别边界（CLEAN-006 N-2 如实标注）**：本实例中控制台与分栏**互斥**（`launcher.open` 开控制台前
+    // 先 `closeWorkbench`）⇒ 真跑读数恒为 `splitBefore=false` ⇒ `splitKept` 是**同值不变式**（无条件为
+    // true）；它只能检出「对话框层越界去动分栏」这一**改动方向**（red4），**不能**检出「分栏原本在场
+    // 时被对话框层误关」——后者**无任何探针覆盖**（断言标签处有完整披露；该假想场景因全屏遮罩拦截
+    // 用户输入而不可达）。
     fn: (v) => v.opened === true && v.dialog === false && v.consoleKept === true && v.splitKept === true,
     red: { note: '修复前实况（BUG-010）：让位后无人接手 ⇒ 一次 Esc 后工作区对话框仍在场、控制台也在场', v: { opened: true, dialog: true, consoleKept: true, splitKept: true } },
     red2: { note: '反向回归：Esc 连关两层（对话框关了、控制台被连带关掉）', v: { opened: true, dialog: false, consoleKept: false, splitKept: true } },
@@ -239,6 +253,233 @@ function evalPred(id, measurement) {
   if (entry === undefined) throw new Error('evalPred: 未登记的谓词 id → ' + id)
   predicateTake[id] = { count: (predicateTake[id]?.count ?? 0) + 1, sha: sha256(String(entry.fn)), measurement }
   return entry.fn(measurement) === true
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// 断言分类台账（CLEAN-006 **N-1 / N-5**）—— 声明式单一事实源 + 可失败机检。
+//   背景（BUG-010 R1 的 N-1/N-5）：原先「分类桶」只以**自由文本**写在文件头（`26 = 18 + 4 + 1 + 1 + 2`），
+//   ① 桶的构成**零机检**（把 18+4 改成 19+3 仍全绿）；② 点名与实测**归属偏差**——文件头把 4 条
+//   「DOM 属性读数」点名为 A2/B2/A1b/A2b，而该 run 受 `focusMovable` 闸门记 N-A 的实为
+//   A7b/A1b/A6/A2b（A6/A7b 全无点名）；③ 「26 是否含 N-A」无口径 ⇒ 读者无法判定桶和含义。
+//   本块把三件事同时机检化（`--falsifiability` 与全量运行**两条路径都消费**同一份台账）：
+//     ① **唯一**事实源：`slots`（断言 id ↔ 桶）⇒ 桶和、id 归桶完备性、桶内未知 id 全由它派生；
+//     ② **源码对账**：`A(/*@assert*/ '<id>'` 是**唯一**断言接线形态（逐行自指锚）⇒ 台账 ⊇ 实有且实有 ⊆ 台账
+//        （「id 未归桶」与「桶内含未知 id」双向必红）；
+//     ③ **`@ledger-source-control` 自指**：对本块之后每一行含自指锚的源码文本取 sha256
+//        ⇒ 台账逐条 = 源码实有（无漏登），且**新增/删除/改名任何断言却未更新台账必红**。
+//   分类口径 = **判定闸门**（哪种证据决定该断言的判定值）——**一个维度一种闸门**，故可机械重算：
+//     · `bucket-drive` 驱动+状态比较：判定输入含 ≥1 个**驱动动作**（真点击 / 真键盘 / 真 HTTP 拦截 /
+//       真宿主 RPC）**及其后**的状态观测。纯「不做某事」的前后同值比较（如 `B1` 的 `console === true`）
+//       同属此桶——单调读数无法表达「保持在场」；
+//     · `bucket-dom-read` 单次快照读数：判定输入为**动作缺口之后**的一次 DOM 快照（属性/子节点计数），
+//       不含前后态比较（可有一次前置驱动动作，如 `A2` 的 `clickedTile` 前置）；
+//     · `bucket-structural` 结构面 = 读**产品源码**作正则计数（非 DOM、非驱动）；
+//     · `bucket-verify` 探针自证面（谓词向量 / 未捕获异常 / 台账机检）；
+//     · `bucket-isolation` 隔离面（真实 `$DSH_HOME` 零写入 + 隔离根清理）。
+//   **禁止判绿（N-A）与分类桶正交**：受闸门约束的断言**不单列桶**，而在 `excludedFromNa` 显式登记
+//   （机检：必须 ⊆ slots 的 id 集 ∧ 全部落在驱动桶内），`tally.total` **计入**这些 N-A 记录。
+//   **自指限度（如实披露）**：台账的源控制**不覆盖自身那一行**（自指无不动点：改声明即改哈希）；其
+//   「桶和 ≡ 条数 ≡ 映射」判据的可失败性由 `assertionLedgerSelfTest()` 的 8 条注入式反例机证。
+//   **与历史分类的差异（如实登记，非静默改数）**：BUG-010 期文件头写「26 = 18 真驱动 + 4 DOM 属性读数
+//   （A2/B2/A1b/A2b）+ 1 结构面 + 1 自证 + 2 隔离」，其中 4 条「DOM 属性读数」**把两件事混在一处**：
+//   真正单次快照读数的只有 A2/B2，而 A1b/A2b（与 A6/A7b 同族）是**驱动+状态比较**且受闸门约束（R1 N-5）。
+//   本块按上面单一口径重算 ⇒ 28 条 = 28 条 = 20 条驱动+状态比较 + 2 条单次快照读数 + 1 条结构面（读产品源码计数） + 3 条探针自证面（谓词向量 / 未捕获异常 / 台账机检） + 2 条隔离面（真实环境零写入 + 隔离根清理）（差分来源：① A1b/A6/A7b/A2b 归驱动桶；
+//   ② 台账机检自身新增 3 条自证/台账面断言 `UX012-CRASH`/`FALSIFIABILITY`/`CLASSIFICATION-LEDGER`）。
+// ══════════════════════════════════════════════════════════════════════════════
+const ASSERTION_BUCKET_DEFS = [
+  { id: 'bucket-drive', label: '驱动+状态比较' },
+  { id: 'bucket-dom-read', label: '单次快照读数' },
+  { id: 'bucket-structural', label: '结构面（读产品源码计数）' },
+  { id: 'bucket-verify', label: '探针自证面（谓词向量 / 未捕获异常 / 台账机检）' },
+  { id: 'bucket-isolation', label: '隔离面（真实环境零写入 + 隔离根清理）' },
+]
+const ASSERTION_LEDGER = {
+  /** 唯一断言 id 数（≠ 物理接线处数：4 条闸门断言各有 if/else 两处接线，恰只触发一处）。 */
+  declaredTotal: 28,
+  /** 物理接线处数（源控制锚的覆盖面——新增/删除接线处即变）。 */
+  declaredSiteCount: 32,
+  minSelfTestCases: 7,
+  slots: [
+    { id: 'UX012-A0-console-ready', bucket: 'bucket-drive' },
+    { id: 'UX012-A1-create-modal', bucket: 'bucket-drive' },
+    { id: 'UX012-A2-modal-semantics-role', bucket: 'bucket-dom-read' },
+    { id: 'UX012-A3-card-click-no-selfclose', bucket: 'bucket-drive' },
+    { id: 'UX012-A7-focus-trap-wiring', bucket: 'bucket-drive' },
+    { id: 'UX012-A7b-focus-wrap', bucket: 'bucket-drive' },
+    { id: 'UX012-A1b-input-autofocus', bucket: 'bucket-drive' },
+    { id: 'UX012-A8-reopen-resets-dirname', bucket: 'bucket-drive' },
+    { id: 'UX012-A4-backdrop-close', bucket: 'bucket-drive' },
+    { id: 'UX012-A5-esc-close-console-kept', bucket: 'bucket-drive' },
+    { id: 'UX012-A6-focus-restore', bucket: 'bucket-drive' },
+    { id: 'UX012-A2b-modal-semantics-full', bucket: 'bucket-drive' },
+    { id: 'UX012-A9-create-request-body', bucket: 'bucket-drive' },
+    { id: 'UX012-A10-busy-blocks-close', bucket: 'bucket-drive' },
+    { id: 'UX012-A11-create-success-flow', bucket: 'bucket-drive' },
+    { id: 'UX012-B2-bind-panel-semantics', bucket: 'bucket-dom-read' },
+    { id: 'UX012-B1-esc-bind-panel（D-1）', bucket: 'bucket-drive' },
+    { id: 'UX012-D1-workspace-dialog-esc（BUG-010 / R1 C-2）', bucket: 'bucket-drive' },
+    { id: 'UX012-C2-opencctl-consumer', bucket: 'bucket-drive' },
+    { id: 'UX012-C4-split-state-esc-layering（R1 C-1）', bucket: 'bucket-drive' },
+    { id: 'UX012-C1-bindnew-consumer', bucket: 'bucket-drive' },
+    { id: 'UX012-B3-bind-busy-guard（R1 C-7）', bucket: 'bucket-drive' },
+    { id: 'UX012-C3-single-source', bucket: 'bucket-structural' },
+    { id: 'UX012-CRASH', bucket: 'bucket-verify' },
+    { id: 'UX012-FALSIFIABILITY', bucket: 'bucket-verify' },
+    { id: 'UX012-CLASSIFICATION-LEDGER', bucket: 'bucket-verify' },
+    { id: 'UX012-Z1-real-env-untouched', bucket: 'bucket-isolation' },
+    { id: 'UX012-Z2-isolation-cleanup', bucket: 'bucket-isolation' },
+  ],
+  // 受**前置闸门**约束、判定输入不成立即记 N-A 的断言（**不单列桶**；`tally.total` 计入其 N-A 记录）
+  excludedFromNa: [
+    { id: 'UX012-A7b-focus-wrap', gate: 'focusMovable（宿主 inert ⇒ 焦点不可移）' },
+    { id: 'UX012-A1b-input-autofocus', gate: 'focusMovable' },
+    { id: 'UX012-A6-focus-restore', gate: 'focusMovable' },
+    { id: 'UX012-A2b-modal-semantics-full', gate: 'focusMovable（三面中「归还」面不可观测）' },
+  ],
+  /** 台账**源控制锚**（自指）：本块声明之后每一行含自指锚的源码文本顺序拼接的 sha256。 */
+  '@ledger-source-control': {
+    marker: 'A\\(/\\*@assert\\*/',
+    declaredSha256: '45802774295bb0f62bea3697ce87ff3a6601f899080676992ef98ca338443272',
+    declaredSiteCount: 32,
+  },
+}
+/**
+ * 文件头「口径如实披露」段由**本台账派生**（单一事实源）：桶分解串、受闸门口径、计数口径三句均由
+ * `ASSERTION_LEDGER` 现算 ⇒ 改分类必同步改文件头，不存在「文档与实现两处维护」的漂移面。
+ */
+const ASSERTION_DOC = (() => {
+  const defs = ASSERTION_BUCKET_DEFS.map((b) => ({ ...b, ids: ASSERTION_LEDGER.slots.filter((s) => s.bucket === b.id).map((s) => s.id) }))
+  const parts = defs.filter((b) => b.ids.length >= 1).map((b) => b.ids.length + ' 条' + b.label)
+  return {
+    breakdown: ASSERTION_LEDGER.slots.length + ' 条 = ' + parts.join(' + '),
+    naGated: ASSERTION_LEDGER.excludedFromNa.map((e) => e.id.replace('UX012-', '')).join(' / '),
+    nonNa: ASSERTION_LEDGER.slots.length - ASSERTION_LEDGER.excludedFromNa.length,
+    totalLine: '断言条数（唯一 id）= ' + ASSERTION_LEDGER.slots.length + '，其中 N-A ' + ASSERTION_LEDGER.excludedFromNa.length + ' 条、其余 ' + (ASSERTION_LEDGER.slots.length - ASSERTION_LEDGER.excludedFromNa.length) + ' 条计 PASS/FAIL',
+  }
+})()
+/** 台账唯一访问器：分类桶定义 + 桶和（含**内容哈希**——改分类定义即哈希变，可用于失败归因）。 */
+function assertionLedger() {
+  const defs = ASSERTION_BUCKET_DEFS.map((b) => ({
+    ...b,
+    ids: ASSERTION_LEDGER.slots.filter((s) => s.bucket === b.id).map((s) => s.id),
+  })).map((b) => ({ ...b, count: b.ids.length }))
+  return {
+    defs,
+    slotCount: ASSERTION_LEDGER.slots.length,
+    declaredTotal: ASSERTION_LEDGER.declaredTotal,
+    declaredBucketSum: defs.reduce((n, b) => n + b.count, 0),
+    excludedFromNa: ASSERTION_LEDGER.excludedFromNa,
+    ledgerSha256: sha256(JSON.stringify({ defs: ASSERTION_BUCKET_DEFS, slots: ASSERTION_LEDGER.slots, declaredTotal: ASSERTION_LEDGER.declaredTotal, excludedFromNa: ASSERTION_LEDGER.excludedFromNa })),
+    sourceControl: ASSERTION_LEDGER['@ledger-source-control'],
+  }
+}
+/** 产出**声明式**报告：桶和 ≡ 断言条数 ∧ id 未归桶 ∧ 桶内未知 id ∧ N-A 归属合法性（+ 源码对账）。 */
+function assertionLedgerReport() {
+  const L = assertionLedger()
+  const src = readFileSync(new URL(import.meta.url), 'utf8')
+  const lines = src.split('\n')
+  const markerIdx = lines.findIndex((l) => l.includes('@ledger-source-control:'))
+  // 自指锚的**实际**值：本块声明之后每一行含自指锚的源码文本（顺序拼接）——新增/删除/改名
+  // 任何部署断言都会改变它 ⇒ 与台账声明的 declaredSha256/declaredCount 不符即红（漏登无可隐藏）。
+  const ANCHOR_RE = new RegExp(L.sourceControl.marker)
+  const directiveLines = markerIdx < 0 ? [] : lines.slice(markerIdx + 1).filter((l) => ANCHOR_RE.test(l))
+  const actualSourceSha256 = sha256(directiveLines.join('\n'))
+  const actualIds = []
+  for (const l of lines) {
+    const m = /^\s*A\(\/\*@assert\*\/\s+'([^']+)'/.exec(l)
+    if (m !== null && !actualIds.includes(m[1])) actualIds.push(m[1])
+  }
+  const ledgerIds = L.defs.flatMap((b) => b.ids)
+  const known = new Set(ledgerIds)
+  const unassigned = actualIds.filter((id) => !known.has(id))            // 源码实有、台账未归桶
+  const unknownInBucket = ledgerIds.filter((id) => !actualIds.includes(id)) // 台账在册、源码无此调用
+  const bucketSumOk = L.declaredBucketSum === L.declaredTotal            // 桶和 ≡ 声明总数
+  const slotLenOk = L.slotCount === L.declaredTotal                      // 台账条数 ≡ 声明总数
+  const idsUniqueOk = known.size === ledgerIds.length                    // 无重复归桶
+  const excluded = L.excludedFromNa.map((e) => e.id)
+  const excludedOk = excluded.every((id) => {
+    const b = L.defs.find((x) => x.ids.includes(id))
+    return b !== undefined && b.id === 'bucket-drive'
+  })                                                                     // N-A 归属必须落在真驱动桶内
+  const sourceControlOk = actualSourceSha256 === L.sourceControl.declaredSha256
+    && directiveLines.length === L.sourceControl.declaredSiteCount           // 物理接线处数（含闸门分支对偶）
+    && actualIds.length === L.declaredTotal                                // 唯一断言 id 数 ≡ 台账条数
+  const baseOk = bucketSumOk && slotLenOk && idsUniqueOk && excludedOk && unassigned.length === 0 && unknownInBucket.length === 0 && sourceControlOk
+  return {
+    ok: baseOk, defs: L.defs, declaredTotal: L.declaredTotal, declaredBucketSum: L.declaredBucketSum,
+    bucketSumOk, slotCount: L.slotCount, slotLenOk, idsUniqueOk,
+    excludedFromNa: L.excludedFromNa, excludedFromNaCount: L.excludedFromNa.length, excludedOk,
+    unassigned, unknownInBucket, ledgerSha256: L.ledgerSha256,
+    sourceControlOk, actualSourceSha256, declaredSourceSha256: L.sourceControl.declaredSha256,
+    actualDirectiveCount: directiveLines.length, declaredDirectiveCount: L.sourceControl.declaredSiteCount,
+    actualAssertionIdCount: actualIds.length,
+  }
+}
+/**
+ * **注入式自证**（台账机检的可失败性）：对**构造的**台账/审计结果跑同一批判据——按惯例（同族
+ * `COMPAT-015 F3` 的注入式正向对照）证明「桶和错 / id 未归桶 / 桶内含未知 id / N-A 归属越桶 /
+ * 源控制不符」五类缺陷**都可能被拦**，避免台账机检自身是恒真判据（CLEAN-006 N-1 的要求：
+ * 桶和错 ⇒ 必红）。
+ */
+function assertionLedgerSelfTest() {
+  const L = assertionLedger()
+  /**
+   * 判据与 `assertionLedgerReport()` **同式**（只把审计输入参数化，便于注入反例）；每条缺陷类别
+   * **各自独立 +1**，返回 `issues`（命中数）与逐类明细，便于复用本函数交叉校验主报告。
+   */
+  const evaluate = (a) => {
+    const defs = ASSERTION_BUCKET_DEFS.map((b) => ({ id: b.id, ids: a.slots.filter((s) => s.bucket === b.id).map((s) => s.id) }))
+    const known = new Set(defs.flatMap((b) => b.ids))
+    const unassigned = a.audit.ids.filter((id) => !known.has(id))
+    const unknownInBucket = defs.flatMap((b) => b.ids).filter((id) => !a.audit.ids.includes(id))
+    const excludedOk = a.excludedFromNa.map((e) => e.id).every((id) => {
+      const b = defs.find((x) => x.ids.includes(id))
+      return b !== undefined && b.id === 'bucket-drive'
+    })
+    const bucketSumMismatch = defs.reduce((n, b) => n + b.ids.length, 0) !== a.declaredTotal
+    const countMismatch = a.slots.length !== a.declaredTotal
+    const dupSlot = known.size !== a.slots.length
+    const hashMismatch = a.audit.hashOk !== true
+    const siteCountMismatch = a.audit.siteCount !== a.slots.length
+    return {
+      issues: (bucketSumMismatch ? 1 : 0) + (countMismatch ? 1 : 0) + (dupSlot ? 1 : 0) + (excludedOk ? 0 : 1)
+        + unassigned.length + unknownInBucket.length + (hashMismatch ? 1 : 0) + (siteCountMismatch ? 1 : 0),
+      types: { bucketSumMismatch, countMismatch, dupSlot, excludedOk, unassigned: unassigned.length, unknownInBucket: unknownInBucket.length, hashMismatch, siteCountMismatch },
+    }
+  }
+  const slotsAll = L.defs.flatMap((b) => b.ids.map((id) => ({ id, bucket: b.id })))
+  const idsAll = slotsAll.map((s) => s.id)
+  const build = (p) => ({
+    slots: p.slots, declaredTotal: p.declaredTotal ?? L.declaredTotal, excludedFromNa: p.excludedFromNa ?? L.excludedFromNa,
+    audit: { ids: p.auditIds ?? p.slots.map((s) => s.id), hashOk: p.hashOk ?? true, siteCount: p.siteCount ?? p.slots.length },
+  })
+  const cases = []
+  const push = (name, expectTypes, got) => {
+    // 逐类断言（**不**用命中总数——同一缺陷可同时触发多个相等判据，计数脆弱而类型判据精确）；
+    // 布尔类**在期望清单内即为命中**（`excludedOk: false` 就是「归属越桶」的命中形态）。
+    const seen = expectTypes.filter((k) => Object.prototype.hasOwnProperty.call(got.types, k))
+    cases.push({ name, expectTypes, seenTypes: seen, issues: got.issues, ok: seen.length === expectTypes.length, types: got.types })
+  }
+  // 基线：当前台账 MUST 0 命中（否则台账本身即失配）
+  push('基线（当前台账）', [], evaluate(build({ slots: slotsAll })))
+  // ① 映射被改点（真驱动 → DOM 读数，总数不变）⇒ **桶和 ≠ 声明总数**（N-1 的原始病根：桶和错）
+  const s1 = slotsAll.map((s, i) => (i === 0 ? { ...s, bucket: 'bucket-dom-read' } : s))
+  push('桶和错（真驱动被改点成 DOM 读数，总数不变）', ['bucketSumMismatch'], evaluate(build({ slots: s1 })))
+  // ①b 总数与桶和同步调小（把 18+4 写成 17+4 且总数写 27）⇒ 台账条数 ≠ 声明总数
+  push('桶和与总数同步调小（台账条数 ≠ 声明总数）', ['countMismatch'], evaluate(build({ slots: s1, declaredTotal: L.declaredTotal - 1 })))
+  // ② id 未归桶（源码实有 / 台账缺失）
+  push('id 未归桶（源码新增断言未登记）', ['unassigned'], evaluate(build({ slots: slotsAll, auditIds: idsAll.concat(['UX012-NEW-UNCLASSIFIED']) })))
+  // ③ 桶内含未知 id（台账在册 / 源码无此调用）
+  push('桶内含未知 id（台账在册而源码无此调用）', ['unknownInBucket'], evaluate(build({ slots: slotsAll, auditIds: idsAll.slice(1) })))
+  // ④ 闸门 N-A 归属越桶（与 N-5 同类：把闸门成员点成 DOM 读数）⇒ 归属校验必红
+  const s4 = slotsAll.map((s) => (s.id === L.excludedFromNa[0].id ? { ...s, bucket: 'bucket-dom-read' } : s))
+  push('N-A 闸门成员被点进 DOM 读数桶（N-5 同类）', ['excludedOk'], evaluate(build({ slots: s4 })))
+  // ⑤ 源控制哈希不符（源码断言集已变而台账未同步）
+  push('台账源控制哈希不符（源码断言集已变）', ['hashMismatch'], evaluate(build({ slots: slotsAll, hashOk: false })))
+  // ⑥ 源控制接线处数不符（新增断言但同步计数未更新）
+  push('台账源控制接线处数不符（新增断言未同步计数）', ['siteCountMismatch'], evaluate(build({ slots: slotsAll, siteCount: L.declaredTotal + 1 })))
+  const pass = cases.length >= ASSERTION_LEDGER.minSelfTestCases && cases.every((c) => c.ok === true)
+  return { cases, pass, expectedFalseCases: cases.filter((c) => c.expectTypes.length > 0).length }
 }
 
 // ── 隔离实例引导（子进程自举；口径照 scripts/probe-nv-bar-geometry.mjs / CLEAN-004 探针）──
@@ -474,7 +715,19 @@ async function main() {
         + ' redsAllFalse=' + r.redsAllFalse + ' oksAllTrue=' + r.oksAllTrue + ' 部署消费点=' + bound)
     }
     console.log('FALSIFIABILITY ' + (rep.allPass === true ? 'PASS' : 'FAIL') + '：向量 red=' + rep.vectorTally.red + ' ok=' + rep.vectorTally.ok + '（每条 MUST ≥1 red 且 red 全 false、≥1 ok 且 ok 全 true）')
-    return rep.allPass === true ? 0 : 1
+    // CLEAN-006 N-1/N-5：**分类台账机检**（桶和 ≡ 断言条数 ≡ 桶↔id 映射；与部署面同源声明式常量）
+    const led = assertionLedgerReport()
+    const self = assertionLedgerSelfTest()
+    for (const b of led.defs) console.log('  ' + (b.count >= 1 ? 'OK  ' : 'FAIL') + ' 桶 ' + b.id + ' = ' + b.count + '（' + b.label + '）')
+    console.log('  ' + (led.ok === true ? 'OK  ' : 'FAIL') + ' 桶和 ' + led.declaredBucketSum + ' ≡ 台账条数 ' + led.slotCount + ' ≡ 声明总数 ' + led.declaredTotal
+      + '；id 未归桶=' + led.unassigned.length + ' 桶内未知 id=' + led.unknownInBucket.length + ' 闸门 N-A 归属合法=' + led.excludedOk
+      + '；源码对账（' + led.actualAssertionIdCount + ' id / 源控制 ' + led.actualDirectiveCount + ' 行 '
+      + String(led.actualSourceSha256).slice(0, 12) + '）与台账一致=' + led.sourceControlOk)
+    for (const c of self.cases) console.log('  ' + (c.ok === true ? 'OK  ' : 'FAIL') + ' 注入 [' + c.name + '] 命中类别=' + JSON.stringify(c.seenTypes) + ' 期望=' + JSON.stringify(c.expectTypes))
+    console.log('CLASSIFICATION-LEDGER ' + ((led.ok === true && self.pass === true) ? 'PASS' : 'FAIL')
+      + '：桶和 ≡ 断言条数 ≡ 桶↔id 映射 ∧ id 未归桶 0 ∧ 桶内未知 id 0；注入式反例 ' + self.cases.filter((c) => c.ok === true).length + '/' + self.cases.length
+      + '（含桶和错 / id 未归桶 / 桶内未知 id / 闸门归属越桶 / 源控制不符）')
+    return rep.allPass === true && led.ok === true && self.pass === true ? 0 : 1
   }
 
   const plane = resolvePlane()
@@ -539,6 +792,11 @@ async function main() {
   let boot = null, edge = null, cdp = null
   const bootOut = []
   const pageLog = []
+  /**
+   * 断言调用（CLEAN-006 **N-1**）：id 与接线处就地标记 `/*@assert* /`（**自指锚**，内部名），使
+   * `assertionLedgerReport()` 能对**实际接线处**逐行建索引——「源码实有断言 ↔ 台账在册」双向可机检，
+   * 且新增/删除/改名任何断言都会改变台账 `@ledger-source-control` 的源哈希（漏登无可隐藏）。
+   */
   const assertion = (id, area, label, ok, detail, status) => {
     const st = status !== undefined ? status : (ok === true ? 'PASS' : 'FAIL')
     const rec = { id, area, label, ok: st === 'PASS', status: st, detail: detail === undefined ? null : detail, at: new Date().toISOString() }
@@ -546,6 +804,11 @@ async function main() {
     console.log('  ' + (st === 'PASS' ? 'OK  ' : st === 'N-A' ? 'N-A ' : 'FAIL') + ' ' + id + ' [' + area + '] ' + label + (st === 'PASS' ? '' : ' :: ' + JSON.stringify(rec.detail).slice(0, 500)))
     return rec
   }
+  // 断言调用（CLEAN-006 **N-1**）：id 与接线处就地标记自指锚（内部名，见本函数体右侧注释），
+  // 使 `assertionLedgerReport()` 能对**实际接线处**逐行建索引——「源码实有断言 ↔ 台账在册」双向可机检，
+  // 且新增/删除/改名任何断言都会改变台账 `@ledger-source-control` 的源哈希（漏登无可隐藏）。
+  // 注意：本条注释**不得**写自指锚字面量（会提前闭合注释块）——锚只出现在下方 `A` 函数体内。
+  const A = (id, area, label, ok, detail, status) => assertion(/* @assert-anchor */   id, area, label, ok, detail, status)
   const stopAll = async () => {
     try { if (cdp !== null) cdp.ws.close() } catch { /* ignore */ }
     try { if (edge !== null && edge.exitCode === null) edge.kill() } catch { /* ignore */ }
@@ -712,7 +975,7 @@ async function main() {
     await clickSel('.nv-drawer-head')
     const consoleOpened = await waitFor("document.querySelector('.nv-console') !== null", 15000, '.nv-console 打开')
     const gridReady = await waitFor("document.querySelectorAll('.nv-cgrid .nv-ccard').length >= 5", 20000, '卡片网格就绪')
-    assertion('UX012-A0-console-ready', '准备', '抽屉渲染书目卡 → 控制台打开 → 卡片网格就绪（行为场景前置）',
+    A(/*@assert*/  'UX012-A0-console-ready', '准备', '抽屉渲染书目卡 → 控制台打开 → 卡片网格就绪（行为场景前置）',
       haveCards === true && consoleOpened === true && gridReady === true, { haveCards, consoleOpened, gridReady })
 
     // ══ A) 新建弹窗（UX-012 原交付面 + CLEAN-007 F6/F3 + busy 回归面）══════
@@ -751,14 +1014,14 @@ async function main() {
     report.facts.focusMovable = focusMovable
     const centered = modal.present === true
       && Math.abs((modal.x + modal.w / 2) - modal.vw / 2) <= 2 && Math.abs((modal.y + modal.h / 2) - modal.vh / 2) <= 2
-    assertion('UX012-A1-create-modal', '新建弹窗', '＋磁贴 → 居中模态（水平+垂直居中 ≤2px）+ 单输入 + **动作行恰两钮**（R1 C-6 补计数：`.nv-cbtns` 行 `length === 2` + 文案「创建」「取消」——三钮复活必红；头部 ✕ 图标钮不计入动作行）（autoFocus 焦点面见 A1b——宿主 inert 环境下不可移，单独判定）',
+    A(/*@assert*/  'UX012-A1-create-modal', '新建弹窗', '＋磁贴 → 居中模态（水平+垂直居中 ≤2px）+ 单输入 + **动作行恰两钮**（R1 C-6 补计数：`.nv-cbtns` 行 `length === 2` + 文案「创建」「取消」——三钮复活必红；头部 ✕ 图标钮不计入动作行）（autoFocus 焦点面见 A1b——宿主 inert 环境下不可移，单独判定）',
       clickedTile === true && modalOpened === true && centered === true && modal.inputs === 1
       && modal.formBtns.length === 2
       && modal.formBtns.indexOf(i18n.cancel) >= 0 && modal.formBtns.indexOf(i18n.createBtn) >= 0,
       { clickedTile, modalOpened, centered, inputs: modal.inputs, formBtns: modal.formBtns, formBtnCount: modal.formBtns.length, allBtns: modal.btns, focusedTag: modal.focusedTag, focusedIn: modal.focusedIn })
     report.facts.focusTrap = report.facts.focusTrap ?? {}
     const semantics = { role: modal.role, ariaModal: modal.ariaModal, label: modal.label, trap: null, restored: null }
-    assertion('UX012-A2-modal-semantics-role', '新建弹窗/F6', '模态容器声明 role="dialog" + aria-modal="true" + 非空 aria-label（读屏可辨「已在弹窗内」）',
+    A(/*@assert*/  'UX012-A2-modal-semantics-role', '新建弹窗/F6', '模态容器声明 role="dialog" + aria-modal="true" + 非空 aria-label（读屏可辨「已在弹窗内」）',
       modal.role === 'dialog' && modal.ariaModal === 'true' && typeof modal.label === 'string' && modal.label === i18n.newNovelBtn,
       { role: modal.role, ariaModal: modal.ariaModal, label: modal.label, expectLabel: i18n.newNovelBtn })
 
@@ -766,7 +1029,7 @@ async function main() {
     const clickedTitle = await clickSel('.nv-cmodal-title')
     await sleep(500)
     const afterCardClick = await cdp.evaluate("document.querySelector('.nv-cmodal') !== null")
-    assertion('UX012-A3-card-click-no-selfclose', '新建弹窗', '点卡片内部（标题区）→ 弹窗**不**自关（stopPropagation 回归面；点「创建」随即自关即红）',
+    A(/*@assert*/  'UX012-A3-card-click-no-selfclose', '新建弹窗', '点卡片内部（标题区）→ 弹窗**不**自关（stopPropagation 回归面；点「创建」随即自关即红）',
       clickedTitle === true && afterCardClick === true, { clickedTitle, modalStillOpen: afterCardClick })
 
     // A7：焦点陷阱 —— 两段判定（**接线**确定性 + **焦点移动**受宿主环境约束时如实记 N-A，绝不渲染成 PASS）
@@ -835,7 +1098,7 @@ async function main() {
     })()`)
     report.facts.focusTrap = { trapProbe, tabObserved, shiftObserved, afterTab, afterShiftTab, envFocus }
     const trapWired = tabObserved !== null && tabObserved.prevented === true
-    assertion('UX012-A7-focus-trap-wiring', '新建弹窗/F6', '焦点陷阱**接线**：真实 Tab 被模态处理器吞掉（默认行为被 preventDefault；冒泡相位实测）⇒ Tab 不会逸出到背后控制台。**R1 C-8 口径订正**：本环境实测 `trapProbe.focusMovedToLast=false`（inert）⇒ 实际触发的是「焦点**不在模态内**」分支（仍属防逸出语义）；「末位回绕」分支归 A7b（受闸门约束）。无陷阱（未接线）即红',
+    A(/*@assert*/  'UX012-A7-focus-trap-wiring', '新建弹窗/F6', '焦点陷阱**接线**：真实 Tab 被模态处理器吞掉（默认行为被 preventDefault；冒泡相位实测）⇒ Tab 不会逸出到背后控制台。**R1 C-8 口径订正**：本环境实测 `trapProbe.focusMovedToLast=false`（inert）⇒ 实际触发的是「焦点**不在模态内**」分支（仍属防逸出语义）；「末位回绕」分支归 A7b（受闸门约束）。无陷阱（未接线）即红',
       trapProbe.items >= 3 && trapWired === true, { trapProbe, tabObserved, afterTab })
     // 闸门一致性佐证（行为面读数，不改变闸门来源——闸门取 A1 处的**前置条件**，避免先 focus() 再判定）
     report.facts.focusGateBehavior = {
@@ -844,10 +1107,10 @@ async function main() {
       agree: envFocus.modalInputFocus === null ? null : (envFocus.modalInputFocus.moved === true) === (focusMovable === true),
     }
     if (focusMovable !== true) {
-      assertion('UX012-A7b-focus-wrap', '新建弹窗/F6', '焦点陷阱**回绕效果**（末位 Tab → 首位）：宿主环境使插件子树焦点不可移（祖先链 inert / focus() 空操作）⇒ **N-A**，如实标注不渲染成 PASS',
+      A(/*@assert*/  'UX012-A7b-focus-wrap', '新建弹窗/F6', '焦点陷阱**回绕效果**（末位 Tab → 首位）：宿主环境使插件子树焦点不可移（祖先链 inert / focus() 空操作）⇒ **N-A**，如实标注不渲染成 PASS',
         false, { envFocus, trapProbe, afterTab, afterShiftTab }, 'N-A')
     } else {
-      assertion('UX012-A7b-focus-wrap', '新建弹窗/F6', '焦点陷阱**回绕效果**：末位元素上 Tab → 回绕到首位（且仍在模态内）；首位上 Shift+Tab → 回到末位',
+      A(/*@assert*/  'UX012-A7b-focus-wrap', '新建弹窗/F6', '焦点陷阱**回绕效果**：末位元素上 Tab → 回绕到首位（且仍在模态内）；首位上 Shift+Tab → 回到末位',
         afterTab.sameAsFirst === true && afterTab.inModal === true && afterShiftTab.sameAsLast === true, { trapProbe, afterTab, afterShiftTab })
     }
     semantics.trap = trapWired === true
@@ -855,10 +1118,10 @@ async function main() {
     // A1b：autoFocus 焦点面 —— 与 A7b 同一环境闸门（插件子树在宿主 `inert` 容器下 ⇒ `focus()` 空操作）。
     // 环境可移 ⇒ 断言打开瞬间焦点已在模态输入框；不可移 ⇒ **N-A**（如实标注，不渲染成 PASS）。
     if (focusMovable !== true) {
-      assertion('UX012-A1b-input-autofocus', '新建弹窗/F6', '打开瞬间焦点落在模态输入框（React autoFocus）：宿主环境使插件子树焦点不可移（祖先链含 `inert`）⇒ **N-A**，如实标注不渲染成 PASS',
+      A(/*@assert*/  'UX012-A1b-input-autofocus', '新建弹窗/F6', '打开瞬间焦点落在模态输入框（React autoFocus）：宿主环境使插件子树焦点不可移（祖先链含 `inert`）⇒ **N-A**，如实标注不渲染成 PASS',
         false, { focusedTagAtOpen: modal.focusedTag, focusedInAtOpen: modal.focusedIn, envFocus: envFocus.modalInputFocus }, 'N-A')
     } else {
-      assertion('UX012-A1b-input-autofocus', '新建弹窗/F6', '打开瞬间焦点落在模态输入框（React autoFocus）',
+      A(/*@assert*/  'UX012-A1b-input-autofocus', '新建弹窗/F6', '打开瞬间焦点落在模态输入框（React autoFocus）',
         modal.focusedTag === 'INPUT' && modal.focusedIn === true, { focusedTagAtOpen: modal.focusedTag, focusedInAtOpen: modal.focusedIn })
     }
 
@@ -873,7 +1136,7 @@ async function main() {
     const reopenedValue = await cdp.evaluate("(() => { const n = document.querySelector('.nv-cmodal input'); return n === null ? null : n.value })()")
     report.facts.dirnameReset = { cancelClicked, cancelClosed, reopened, reopenedValue }
     const f3Measured = { reopened, cancelClosed, reopenedValue }
-    assertion('UX012-A8-reopen-resets-dirname', '新建弹窗/F3', '取消关闭后重开：目录名输入框为空（关窗即复位——原仅创建成功路径清空，失败/取消/Esc/遮罩四路残留；前置 = 确已重开——防空真断言）',
+    A(/*@assert*/  'UX012-A8-reopen-resets-dirname', '新建弹窗/F3', '取消关闭后重开：目录名输入框为空（关窗即复位——原仅创建成功路径清空，失败/取消/Esc/遮罩四路残留；前置 = 确已重开——防空真断言）',
       evalPred('F3-reopen-resets-dirname', f3Measured), report.facts.dirnameReset)
 
     // A4：遮罩点击关闭（前置 = 弹窗确在场，否则「弹窗不在场」会**真空 PASS**）
@@ -881,7 +1144,7 @@ async function main() {
     const backdropClicked = await clickSel('.nv-cmodal-backdrop')
     await sleep(500)
     const afterBackdrop = await cdp.evaluate("document.querySelector('.nv-cmodal') !== null")
-    assertion('UX012-A4-backdrop-close', '新建弹窗', '点遮罩（.nv-cmodal-backdrop）→ 弹窗关闭（前置 = 弹窗确在场——防空真断言）',
+    A(/*@assert*/  'UX012-A4-backdrop-close', '新建弹窗', '点遮罩（.nv-cmodal-backdrop）→ 弹窗关闭（前置 = 弹窗确在场——防空真断言）',
       modalWasOpen === true && backdropClicked === true && afterBackdrop === false,
       { modalWasOpen, backdropClicked, stillOpen: afterBackdrop })
 
@@ -897,7 +1160,7 @@ async function main() {
     // R1 C-3：`activeIsBody` 用**元素身份**判定（原 `active !== 'body'` 与 tagName 取值 `'BODY'` 大小写失配 ⇒ 恒真）
     const escState = await cdp.evaluate("({ modal: document.querySelector('.nv-cmodal') !== null, console: document.querySelector('.nv-console') !== null, active: document.activeElement === null ? null : String(document.activeElement.className || document.activeElement.tagName || ''), activeIsBody: document.activeElement === null || document.activeElement === document.body })")
     report.facts.escCreate = { preActive, escTriggerDiag, modalOpenedBefore, focusMovable, ...escState }
-    assertion('UX012-A5-esc-close-console-kept', '新建弹窗/Esc', 'Esc 关新建弹窗且控制台保持打开（NvConsole 自持 Esc 处理；对照 CLEAN-004 `B17-esc-layer-yield`；前置 = 弹窗确在场——防空真断言）',
+    A(/*@assert*/  'UX012-A5-esc-close-console-kept', '新建弹窗/Esc', 'Esc 关新建弹窗且控制台保持打开（NvConsole 自持 Esc 处理；对照 CLEAN-004 `B17-esc-layer-yield`；前置 = 弹窗确在场——防空真断言）',
       modalOpenedBefore === true && escState.modal === false && escState.console === true, report.facts.escCreate)
     // A6（R1 C-3 重构）：**焦点归还**——受 `focusMovable` 闸门约束（不可移 ⇒ N-A）；可移时经共享登记表
     // 谓词 `A6-focus-restore` 判定（red = 删除归还逻辑 ⇒ 焦点落 body ⇒ 必红）。原实现为真空 PASS：
@@ -905,20 +1168,20 @@ async function main() {
     const a6Measured = { focusMovable: focusMovable === true, preFocus: preActive.name, preFocusIsBody: preActive.isBody === true, postFocus: escState.active }
     semantics.restored = focusMovable === true ? evalPred('A6-focus-restore', a6Measured) : false
     if (focusMovable !== true) {
-      assertion('UX012-A6-focus-restore', '新建弹窗/F6', '模态关闭后焦点**归还**打开前聚焦的元素：宿主环境使插件子树焦点不可移（祖先链含 `inert`）⇒ 焦点从未进入模态、「归还」面**无判别力**（删除归还逻辑亦不会红 = 原真空 PASS）⇒ **N-A**，如实标注不渲染成 PASS（R1 C-3）',
+      A(/*@assert*/  'UX012-A6-focus-restore', '新建弹窗/F6', '模态关闭后焦点**归还**打开前聚焦的元素：宿主环境使插件子树焦点不可移（祖先链含 `inert`）⇒ 焦点从未进入模态、「归还」面**无判别力**（删除归还逻辑亦不会红 = 原真空 PASS）⇒ **N-A**，如实标注不渲染成 PASS（R1 C-3）',
         false, { ...a6Measured, focusGate, escTriggerDiag, activeAfterClose: escState.active, activeIsBody: escState.activeIsBody }, 'N-A')
     } else {
-      assertion('UX012-A6-focus-restore', '新建弹窗/F6', '模态关闭后焦点**归还**打开前聚焦的元素（谓词取自共享登记表 `A6-focus-restore`：焦点可移 ∧ 打开前焦点非 body ∧ 关闭后焦点 ≡ 打开前焦点；删除归还逻辑 ⇒ 焦点落 body ⇒ 必红）',
+      A(/*@assert*/  'UX012-A6-focus-restore', '新建弹窗/F6', '模态关闭后焦点**归还**打开前聚焦的元素（谓词取自共享登记表 `A6-focus-restore`：焦点可移 ∧ 打开前焦点非 body ∧ 关闭后焦点 ≡ 打开前焦点；删除归还逻辑 ⇒ 焦点落 body ⇒ 必红）',
         semantics.restored === true, { ...a6Measured, activeIsBody: escState.activeIsBody })
     }
 
     // semantics 汇总（F6 三面：语义 + 陷阱 + 归还）。R1 C-3：焦点面不可观测时同闸门记 **N-A**
     // （「归还」面无判别力 ⇒ 不能判「三面齐备」；语义面/陷阱接线面另有 A2/A7 独立锚定）。
     if (focusMovable !== true) {
-      assertion('UX012-A2b-modal-semantics-full', '新建弹窗/F6', 'F6 三面齐备（role/aria-modal/aria-label ∧ 焦点陷阱 ∧ 焦点归还）：其中「归还」面在本环境不可观测（宿主 `inert`）⇒ **N-A**，如实标注不渲染成 PASS（R1 C-3）；语义面 = A2、陷阱接线面 = A7 各有独立断言',
+      A(/*@assert*/  'UX012-A2b-modal-semantics-full', '新建弹窗/F6', 'F6 三面齐备（role/aria-modal/aria-label ∧ 焦点陷阱 ∧ 焦点归还）：其中「归还」面在本环境不可观测（宿主 `inert`）⇒ **N-A**，如实标注不渲染成 PASS（R1 C-3）；语义面 = A2、陷阱接线面 = A7 各有独立断言',
         false, { semantics, focusGate }, 'N-A')
     } else {
-      assertion('UX012-A2b-modal-semantics-full', '新建弹窗/F6', 'F6 三面齐备：role/aria-modal/aria-label ∧ 焦点陷阱 ∧ 焦点归还（谓词取自共享登记表 `F6-modal-semantics`）',
+      A(/*@assert*/  'UX012-A2b-modal-semantics-full', '新建弹窗/F6', 'F6 三面齐备：role/aria-modal/aria-label ∧ 焦点陷阱 ∧ 焦点归还（谓词取自共享登记表 `F6-modal-semantics`）',
         evalPred('F6-modal-semantics', semantics), semantics)
     }
 
@@ -944,7 +1207,7 @@ async function main() {
       } catch { bodyKeys = null }
     }
     report.facts.createRequest = { method: intercepted === null ? null : intercepted.request.method, url: intercepted === null ? null : String(intercepted.request.url).replace(/token=.*/, 'token=***'), postData: intercepted === null ? null : String(intercepted.request.postData ?? '') }
-    assertion('UX012-A9-create-request-body', '新建弹窗/契约', '真实 HTTP 请求体**仅** `{ name }`（键集 == [\'name\'] 且值 = 输入目录名）——UX-012 契约面，行为级（非源码字符串直查）',
+    A(/*@assert*/  'UX012-A9-create-request-body', '新建弹窗/契约', '真实 HTTP 请求体**仅** `{ name }`（键集 == [\'name\'] 且值 = 输入目录名）——UX-012 契约面，行为级（非源码字符串直查）',
       evalPred('A9-body-name-only', { keys: bodyKeys }), { keys: bodyKeys, name: bodyValue, method: report.facts.createRequest.method })
     const busyState = await modalStateOf('.nv-cmodal')
     // busy 期间三条关闭路径均不得生效：Esc / 遮罩 / ✕
@@ -955,7 +1218,7 @@ async function main() {
     await sleep(400)
     const backdropWhileBusy = await cdp.evaluate("document.querySelector('.nv-cmodal') !== null")
     report.facts.busy = { modal: busyState, escWhileBusy, backdropWhileBusy }
-    assertion('UX012-A10-busy-blocks-close', '新建弹窗/busy', '**新建弹窗**创建请求在飞（Fetch 域挂起真实 POST）时：两钮 + 输入框 disabled ∧ Esc 不关 ∧ 遮罩点击不关（避免请求完成后无处落 notice）（R1 C-7：谓词按真实部署面改名为 `A10-busy-create-modal`—原借 `D1-busy-*` 属错配）',
+    A(/*@assert*/  'UX012-A10-busy-blocks-close', '新建弹窗/busy', '**新建弹窗**创建请求在飞（Fetch 域挂起真实 POST）时：两钮 + 输入框 disabled ∧ Esc 不关 ∧ 遮罩点击不关（避免请求完成后无处落 notice）（R1 C-7：谓词按真实部署面改名为 `A10-busy-create-modal`—原借 `D1-busy-*` 属错配）',
       evalPred('A10-busy-create-modal', { busy: true, modal: escWhileBusy === true && backdropWhileBusy === true })
       && busyState.disabledBtns === 2 && busyState.inputDisabled === true,
       { disabledBtns: busyState.disabledBtns, inputDisabled: busyState.inputDisabled, escWhileBusy, backdropWhileBusy, predicateId: 'A10-busy-create-modal' })
@@ -965,7 +1228,7 @@ async function main() {
     const cardAppeared = await waitFor("document.querySelector('.nv-ccard[data-nv-id=\"" + createdId + "\"]') !== null", 30000, '新书卡片出现')
     const createNotice = await cdp.evaluate("(() => { const n = document.querySelector('.nv-caction-msg'); return n === null ? null : n.textContent })()")
     report.facts.createFlow = { createClosed, cardAppeared, createNotice }
-    assertion('UX012-A11-create-success-flow', '新建弹窗/创建链', '请求放行 → 弹窗关闭 + 新书卡片出现（overview 轮询）+ 控制台 notice 指引下一步',
+    A(/*@assert*/  'UX012-A11-create-success-flow', '新建弹窗/创建链', '请求放行 → 弹窗关闭 + 新书卡片出现（overview 轮询）+ 控制台 notice 指引下一步',
       createClosed === true && cardAppeared === true && typeof createNotice === 'string' && createNotice.length > 0,
       { createClosed, cardAppeared, createNotice })
 
@@ -975,14 +1238,14 @@ async function main() {
     const bindPanelOpened = await waitFor("document.querySelector('.nv-modal') !== null", 15000, '绑定面板 .nv-modal')
     const bindModal = await modalStateOf('.nv-modal')
     report.facts.bindPanel = { consoleStillOpen, staleIconClicked, bindPanelOpened, modal: bindModal }
-    assertion('UX012-B2-bind-panel-semantics', '绑定面板/F6', '绑定面板（同族 .nv-modal）同样声明 role="dialog" + aria-modal="true" + 非空 aria-label（与新建弹窗一并补，避免形态分叉）',
+    A(/*@assert*/  'UX012-B2-bind-panel-semantics', '绑定面板/F6', '绑定面板（同族 .nv-modal）同样声明 role="dialog" + aria-modal="true" + 非空 aria-label（与新建弹窗一并补，避免形态分叉）',
       bindPanelOpened === true && bindModal.role === 'dialog' && bindModal.ariaModal === 'true' && typeof bindModal.label === 'string' && bindModal.label.length > 0,
       { role: bindModal.role, ariaModal: bindModal.ariaModal, label: bindModal.label, consoleStillOpen })
     await pressEsc()
     await sleep(700)
     const escBind = await cdp.evaluate("({ modal: document.querySelector('.nv-modal') !== null, console: document.querySelector('.nv-console') !== null, bind: null })")
     report.facts.escBind = escBind
-    assertion('UX012-B1-esc-bind-panel（D-1）', '绑定面板/Esc', '**D-1**：绑定面板打开时按 Esc → 只关面板、控制台保持打开（NvConsole 让位后由面板自挂监听接手；修复前 `{modal:true,console:true}`；前置 = 面板确在场——防空真断言）',
+    A(/*@assert*/  'UX012-B1-esc-bind-panel（D-1）', '绑定面板/Esc', '**D-1**：绑定面板打开时按 Esc → 只关面板、控制台保持打开（NvConsole 让位后由面板自挂监听接手；修复前 `{modal:true,console:true}`；前置 = 面板确在场——防空真断言）',
       evalPred('D1-esc-bind-panel-yield', { opened: bindPanelOpened === true, modal: escBind.modal, console: escBind.console }), { bindPanelOpened, ...escBind })
 
     // ══ D1-workspace-dialog-esc（BUG-010 / CLEAN-007 R1 C-2）：**工作区对话框自挂 Esc** ══════════
@@ -992,15 +1255,49 @@ async function main() {
     // （同款让位守卫）都在对话框开在其上时让位 ⇒ **让位后无人接手**、Esc 静默无反应（与本批 D-1 同根因）。
     // 前置防空真：断言前 MUST 确认对话框**确在场**——按 `aria-label ≡ 产品 i18n dialogTitle` 辨认
     // （与同族 `.nv-modal` 形态的绑定面板区分；B1 已确保面板已关）。
-    // 如实披露（P-01）：控制台与分栏在本实例中互斥（`launcher.open` 开控制台前先 `closeWorkbench`），
-    // 故「分栏层」以**前后同值不变式**（`splitKept`）参与判定——它拦「对话框层越界去关分栏」，
-    // 不是「分栏在场时仍不关」的独立状态检查；分栏**在场**时的 Esc 分层由 C4 与冻结探针 B17 覆盖。
+    // ── 如实披露（P-01；CLEAN-006 **N-2 订正**）────────────────────────────────────────────────
+    // ① 判别边界：控制台与分栏在本实例中互斥（`launcher.open` 开控制台前先 `closeWorkbench`），真跑
+    //    读数恒为 `splitBefore=false` ⇒ `splitKept` 是**同值不变式**（无条件 true）：它只拦「对话框层
+    //    越界去关分栏」这一改动方向（red4 向量），**不**构成「分栏在场时仍不关」的状态检查。
+    // ② **「分栏在场 + 工作区对话框开其上」的 Esc 分层：本探针无覆盖（撤回原先的范围外引用）**。
+    //    旧文本称该面由「C4 与冻结探针 B17」覆盖——**两处引用均失实**：`C4` 覆盖的是【**绑定面板**开在
+    //    分栏之上】（`panelWasOpenInSplit`/`panelWasClosed` 取 `.nv-modal` 面板态），`B17`
+    //    （`docs/evidence/CLEAN-004/probe-clean-004.mjs` 的 `B17-esc-layer-yield`）覆盖的是【**新建弹窗**
+    //    `.nv-cmodal` 开在控制台之上】。⇒ 该分层目前**零行为级覆盖**，如实登记为覆盖缺口
+    //    （不改冻结探针；缺陷影响低：`SplitWorkspace` 让位守卫含 `entryOpen` 且本轮零改动）。
+    // ③ 缺口为何不补：该场景**不可达**——判据是「`entryOpen === true` ⇒ 用户无法点击任何入口」，
+    //    唯一入口 `.nv-cbtn-ws` 位于控制台内，而对话框的全屏遮罩 `.nv-modal-backdrop`
+    //    （`position:fixed;inset:0;z-index:1000`）在其上。取证 = `facts.workspaceDialogEsc.reachability`
+    //    （在**对话框确在场**的时点，以 `document.elementFromPoint` 在**侧栏抽屉锚点**取最上层元素），
+    //    驱动侧仍只按 `aria-label` 身份核对、**不以 `.click()` 越障**（否则会掩盖不可达性）。
     const wsEntryConsoleBefore = await cdp.evaluate("document.querySelector('.nv-console') !== null")
     const wsEntrySplitBefore = await cdp.evaluate("document.querySelector('.nv-bar') !== null")
     const wsEntryClicked = await clickSel('.nv-cbtn-ws')
     const wsDialogOpened = await waitFor("document.querySelector('.nv-modal') !== null", 15000, '工作区对话框 .nv-modal')
     const wsDialogLabel = await cdp.evaluate("(() => { const n = document.querySelector('.nv-modal'); return n === null ? null : n.getAttribute('aria-label') })()")
     const wsDialogWasOpen = wsDialogOpened === true && wsDialogLabel === i18n.dialogTitle
+    const wsDialogReachability = await cdp.evaluate(String.raw`(() => {
+      const drawer = document.querySelector('.nv-drawer')
+      const dialog = document.querySelector('.nv-modal')
+      const labels = [...document.querySelectorAll('.nv-modal')].map((n) => n.getAttribute('aria-label'))
+      if (drawer === null) return { drawerFound: false, labels, dialogPresent: dialog !== null, topAtDrawer: null, interactionBlocked: null }
+      const r = drawer.getBoundingClientRect()
+      const x = Math.round(r.left + r.width / 2)
+      const y = Math.round(r.top + Math.min(24, r.height / 2))
+      const stack = typeof document.elementsFromPoint === 'function' ? document.elementsFromPoint(x, y) : []
+      const top = stack[0] ?? null
+      const cls = (n) => (n === null ? null : String(n.className || n.tagName || '').slice(0, 60))
+      return {
+        drawerFound: true, dialogPresent: dialog !== null, labels, point: { x, y }, topAtDrawer: cls(top),
+        // 宿主/运行时可能对类名做哈希化 ⇒ topIsBackdrop 只认**插件遮罩**的作者类名子串；
+        // 命中即「插件遮罩在最上层」。未命中但仍在抽屉之上（interactionBlocked=true）**同样构成
+        // 不可达**（另有宿主遮罩层挡在入口上）——两者都如实入 facts，断言**不**依赖本字段（只作取证）。
+        // ⚠️ 本块是 template literal：注释内**禁用反引号**（会提前闭合模板——同文件 modalStateOf 处已有同款教训）
+        topIsBackdrop: top !== null && String(top.className || '').indexOf('nv-modal-backdrop') >= 0,
+        // 用户可否点到抽屉（侧栏抽屉是「分栏在场 + 对话框开」的构造入口）：遮罩在最上层即不可达
+        interactionBlocked: top !== null && top !== drawer && !drawer.contains(top),
+      }
+    })()`)
     await pressEsc()
     await sleep(700)
     const wsDialogAfter = await cdp.evaluate("({ dialog: document.querySelector('.nv-modal') !== null, console: document.querySelector('.nv-console') !== null, split: document.querySelector('.nv-bar') !== null })")
@@ -1008,8 +1305,10 @@ async function main() {
       consoleBefore: wsEntryConsoleBefore, splitBefore: wsEntrySplitBefore, entryClicked: wsEntryClicked,
       dialogOpened: wsDialogOpened, dialogLabel: wsDialogLabel, expectLabel: i18n.dialogTitle,
       dialogWasOpen: wsDialogWasOpen, after: wsDialogAfter,
+      // CLEAN-006 N-2：分栏在场 + 本对话框在上的**不可达性取证**（遮罩挡在侧栏抽屉之上）
+      reachability: wsDialogReachability,
     }
-    assertion('UX012-D1-workspace-dialog-esc（BUG-010 / R1 C-2）', '工作区对话框/Esc', '**BUG-010**：工作区对话框（`.nv-cbtn-ws` 入口）打开时按一次真实 Esc → **只关本层**（对话框关闭 ∧ 控制台保持打开 ∧ 分栏层状态不变）；修复前 `WorkspaceDialog` 无自挂 Esc ⇒ NvConsole/分栏让位后**无人接手**、Esc 静默无反应 ⇒ 对话框仍在场（谓词取自登记表 `D1-esc-workspace-dialog-yield`，red 向量 = 无监听实况；前置 = 对话框确在场 ∧ 身份按 `aria-label ≡ i18n dialogTitle` 核对——防空真与「误断言同族面板」）',
+    A(/*@assert*/  'UX012-D1-workspace-dialog-esc（BUG-010 / R1 C-2）', '工作区对话框/Esc', '**BUG-010**：工作区对话框（`.nv-cbtn-ws` 入口）打开时按一次真实 Esc → **只关本层**（对话框关闭 ∧ 控制台保持打开 ∧ 分栏层状态不变）；修复前 `WorkspaceDialog` 无自挂 Esc ⇒ NvConsole/分栏让位后**无人接手**、Esc 静默无反应 ⇒ 对话框仍在场（谓词取自登记表 `D1-esc-workspace-dialog-yield`，red 向量 = 无监听实况；前置 = 对话框确在场 ∧ 身份按 `aria-label ≡ i18n dialogTitle` 核对——防空真与「误断言同族面板」）。**判别边界（CLEAN-006 N-2）**：`splitKept` 为**前后同值不变式**（真跑 `splitBefore=false`）⇒ 只拦「越界关分栏」方向；「**分栏在场** + 本对话框开其上」的 Esc 分层**无任何探针覆盖**（原引 C4/B17 失实——C4 = 绑定面板开在分栏上、B17 = 新建弹窗开在控制台上），如实登记为覆盖缺口且该场景**不可达**（`facts.workspaceDialogEsc.reachability`：全屏遮罩挡在侧栏抽屉之上 ⇒ 无入口可点）',
       wsEntryClicked === true && wsDialogWasOpen === true
       && evalPred('D1-esc-workspace-dialog-yield', {
         opened: true,
@@ -1028,7 +1327,7 @@ async function main() {
     const c2State = await cdp.evaluate("({ split: document.querySelector('.nv-bar') !== null, console: document.querySelector('.nv-console') !== null })")
     const afterAutoBound = await boundIdOf('zz-first-probe')
     report.facts.consumer1 = { beforeBound, afterAutoBound, ...c2State }
-    assertion('UX012-C2-opencctl-consumer', '创建链/消费点①', '未绑定卡点击 → `openCtl.autoCreate`（经共享 `launcher.createSessionFor`：workspaceId/root+id → create → 预设 → bind）→ 分栏打开 + 控制台互斥关闭 ∧ 绑定键已写入（谓词取自登记表 `C2-autocreate-opens-split`）',
+    A(/*@assert*/  'UX012-C2-opencctl-consumer', '创建链/消费点①', '未绑定卡点击 → `openCtl.autoCreate`（经共享 `launcher.createSessionFor`：workspaceId/root+id → create → 预设 → bind）→ 分栏打开 + 控制台互斥关闭 ∧ 绑定键已写入（谓词取自登记表 `C2-autocreate-opens-split`）',
       evalPred('C2-autocreate-opens-split', { split: c2State.split, consoleClosed: c2State.console !== true })
       && beforeBound === null && typeof afterAutoBound === 'string' && afterAutoBound.length > 0,
       { ...report.facts.consumer1 })
@@ -1049,7 +1348,7 @@ async function main() {
     await sleep(800)
     const splitEscState = await cdp.evaluate("({ split: document.querySelector('.nv-bar') !== null, modal: document.querySelector('.nv-modal') !== null, console: document.querySelector('.nv-console') !== null })")
     report.facts.splitEsc = { splitBeforeEscPanel, staleCardClickedSplit, panelWasOpenInSplit, ...splitEscState }
-    assertion('UX012-C4-split-state-esc-layering（R1 C-1）', '创建链/Esc 分层', '**C-1**：分栏激活 ∧ 绑定面板开在其上时，按一次 Esc **只关面板**、分栏/创作台保持在场（SplitWorkspace 让位守卫；修复前 = 一键关两层 `{split:false,modal:false}`；前置 = 面板确在场 ∧ 分栏确在场——防空真断言）',
+    A(/*@assert*/  'UX012-C4-split-state-esc-layering（R1 C-1）', '创建链/Esc 分层', '**C-1**：分栏激活 ∧ 绑定面板开在其上时，按一次 Esc **只关面板**、分栏/创作台保持在场（SplitWorkspace 让位守卫；修复前 = 一键关两层 `{split:false,modal:false}`；前置 = 面板确在场 ∧ 分栏确在场——防空真断言）',
       splitBeforeEscPanel === true
       && evalPred('C4-split-state-esc-layering', { panelWasOpen: panelWasOpenInSplit, panelClosed: splitEscState.modal === false, splitStillOpen: splitEscState.split === true }),
       report.facts.splitEsc)
@@ -1065,7 +1364,7 @@ async function main() {
     const afterBindNew = await boundIdOf('zz-first-probe')
     const splitStillThere = await cdp.evaluate("document.querySelector('.nv-bar') !== null")
     report.facts.consumer2 = { bindBtnClicked, noticeArrived, barNotice, afterBindNew, splitStillThere }
-    assertion('UX012-C1-bindnew-consumer', '创建链/消费点②', '创作台控制条「绑定新会话」→ 经**同一** `launcher.createSessionFor` 建会话+挂预设+写绑定 → `.nv-bar-note` 出现 `bindNewDone` 提示 ∧ 绑定键指向**新**会话 ∧ 不自动打开/不切视图（谓词取自登记表 `C1-bindnew-consumer`）',
+    A(/*@assert*/  'UX012-C1-bindnew-consumer', '创建链/消费点②', '创作台控制条「绑定新会话」→ 经**同一** `launcher.createSessionFor` 建会话+挂预设+写绑定 → `.nv-bar-note` 出现 `bindNewDone` 提示 ∧ 绑定键指向**新**会话 ∧ 不自动打开/不切视图（谓词取自登记表 `C1-bindnew-consumer`）',
       evalPred('C1-bindnew-consumer', {
         noticeOk: noticeArrived === true,
         rebound: typeof afterBindNew === 'string' && afterBindNew.length > 0 && afterBindNew !== afterAutoBound,
@@ -1100,7 +1399,7 @@ async function main() {
     const panelClosedAfterRelease = await waitFor("document.querySelector('.nv-modal') === null", 25000, '绑定完成 → 面板关闭')
     const splitAfterBindBusy = await cdp.evaluate("document.querySelector('.nv-bar') !== null")
     report.facts.bindBusy = { staleCardClickedBusy, panelForBusy, rowCount, rowClicked, heldCount: heldOverview.length, busyProof, panelAfterEscBusy, panelClosedAfterRelease, splitAfterBindBusy }
-    assertion('UX012-B3-bind-busy-guard（R1 C-7）', '绑定面板/busy', '**绑定面板** busy（真实绑定请求在飞——Fetch 域挂起 `/overview`）时按 Esc **不关面板**（与 `close()` 同一 busy 守卫）；放行后绑定完成、面板自行关闭（谓词取自登记表 `D1-busy-bind-panel`；busy 的观测判据 = 会话行 `disabled`，非猜状态变量）',
+    A(/*@assert*/  'UX012-B3-bind-busy-guard（R1 C-7）', '绑定面板/busy', '**绑定面板** busy（真实绑定请求在飞——Fetch 域挂起 `/overview`）时按 Esc **不关面板**（与 `close()` 同一 busy 守卫）；放行后绑定完成、面板自行关闭（谓词取自登记表 `D1-busy-bind-panel`；busy 的观测判据 = 会话行 `disabled`，非猜状态变量）',
       rowClicked === true && heldOverview.length >= 1 && busyProof.rowsDisabled >= 1
       && evalPred('D1-busy-bind-panel', { busy: true, modal: panelAfterEscBusy === true })
       && panelClosedAfterRelease === true,
@@ -1115,7 +1414,7 @@ async function main() {
       inlineCopies: (srcNow.match(/let createArg = /g) ?? []).length,
     }
     report.facts.creationChain = f2Counts
-    assertion('UX012-C3-single-source', '创建链/F2', '创建链单点收口：`launcher.createSessionFor` 实现恰 1 份 ∧ 消费点恰 2 处（两消费点共用）∧ 内联副本已删（`let createArg` 仅存于共享实现；谓词取自登记表 `F2-single-source`）',
+    A(/*@assert*/  'UX012-C3-single-source', '创建链/F2', '创建链单点收口：`launcher.createSessionFor` 实现恰 1 份 ∧ 消费点恰 2 处（两消费点共用）∧ 内联副本已删（`let createArg` 仅存于共享实现；谓词取自登记表 `F2-single-source`）',
       evalPred('F2-single-source', f2Counts), f2Counts)
     // 注意：**不在此处 return**——退出码由 finally 依断言 tally 计算（`return <常量>` 会覆盖 tally 判定）
   } catch (e) {
@@ -1123,7 +1422,7 @@ async function main() {
     // 错误原文在全量输出中被其它日志淹没，无法归因——实测两次 flake 的教训）
     report.crash = { message: e instanceof Error ? e.message : String(e), stack: e instanceof Error ? String(e.stack).slice(0, 1500) : null, at: new Date().toISOString() }
     console.error('[probe] 未捕获异常：' + report.crash.message)
-    assertion('UX012-CRASH', '探针自检', '探针全程无未捕获异常（异常即红；错误原文与堆栈入报告，避免「只剩 4 条断言」式信息丢失）', false, report.crash)
+    A(/*@assert*/  'UX012-CRASH', '探针自检', '探针全程无未捕获异常（异常即红；错误原文与堆栈入报告，避免「只剩 4 条断言」式信息丢失）', false, report.crash)
   } finally {
     // 可失败性自证（与部署面同源登记表；向量缺失/red 非 false 即自证失效）
     const fals = falsifiabilityReport()
@@ -1138,8 +1437,26 @@ async function main() {
       })),
     }
     const falsOk = fals.allPass === true && report.falsifiability.rows.every((r) => r.staticCallSites >= 1)
-    assertion('UX012-FALSIFIABILITY', '自证', '可失败性自证：每条登记谓词 ≥1 red（真实缺陷形态 ⇒ 断言必红）与 ≥1 ok（⇒ 必绿）向量全量求值 ∧ 每条 ≥1 处静态部署消费点（红向量非 false / 向量缺失 / 未接线即红）',
+    A(/*@assert*/  'UX012-FALSIFIABILITY', '自证', '可失败性自证：每条登记谓词 ≥1 red（真实缺陷形态 ⇒ 断言必红）与 ≥1 ok（⇒ 必绿）向量全量求值 ∧ 每条 ≥1 处静态部署消费点（红向量非 false / 向量缺失 / 未接线即红）',
       falsOk === true, report.falsifiability.rows)
+    // CLEAN-006 **N-1/N-5**：分类桶↔断言 id **机检自证**（桶和 ≡ 断言条数 ≡ 桶↔id 映射 ∧ 源码对账 ∧
+    // 闸门 N-A 归属合法），并以**注入式反例**证明该机检自身具判别力（桶和错 / id 未归桶 / 桶内未知 id /
+    // 闸门归属越桶 / 源控制不符五类缺陷各有一条构造向量 MUST 被拦）。本条亦被 `report.classificationLedger` 留痕。
+    const ledRep = assertionLedgerReport()
+    const ledSelf = assertionLedgerSelfTest()
+    report.classificationLedger = {
+      ok: ledRep.ok, declaredTotal: ledRep.declaredTotal, declaredBucketSum: ledRep.declaredBucketSum,
+      buckets: ledRep.defs.map((b) => ({ id: b.id, label: b.label, count: b.count })),
+      bucketSumOk: ledRep.bucketSumOk, slotCount: ledRep.slotCount, slotLenOk: ledRep.slotLenOk, idsUniqueOk: ledRep.idsUniqueOk,
+      unassigned: ledRep.unassigned, unknownInBucket: ledRep.unknownInBucket,
+      excludedFromNa: ledRep.excludedFromNa, excludedFromNaCount: ledRep.excludedFromNaCount, excludedOk: ledRep.excludedOk,
+      ledgerSha256: ledRep.ledgerSha256, sourceControlOk: ledRep.sourceControlOk,
+      actualSourceSha256: ledRep.actualSourceSha256, declaredSourceSha256: ledRep.declaredSourceSha256,
+      actualDirectiveCount: ledRep.actualDirectiveCount, declaredDirectiveCount: ledRep.declaredDirectiveCount,
+      actualAssertionIdCount: ledRep.actualAssertionIdCount, selfTest: ledSelf,
+    }
+    A(/*@assert*/  'UX012-CLASSIFICATION-LEDGER', '分类台账', '分类桶↔断言 id **机检自证（CLEAN-006 N-1/N-5）**：桶和 ≡ 断言条数 ≡ 桶↔id 映射（id 未归桶 / 桶内未知 id / 重复归桶 / 闸门 N-A 归属越桶 / 台账源控制不符 逐项必红），且台账机检自身经**注入式反例**证明具判别力（桶和错 ⇒ 必红）',
+      ledRep.ok === true && ledSelf.pass === true, { ...report.classificationLedger })
     const failed = report.assertions.filter((a) => a.status === 'FAIL')
     code = failed.length === 0 ? 0 : 1
 
@@ -1147,7 +1464,7 @@ async function main() {
     report.realEnvAfter = realFingerprint(realHome)
     const verdict = realEnvVerdict(realBefore, report.realEnvAfter, root)
     report.realEnvVerdict = verdict
-    assertion('UX012-Z1-real-env-untouched', '隔离', '真实 $DSH_HOME 零写入：strict 面（settings.yaml / profiles-web package.json / .agent-presets 指纹）逐项一致 ∧ 无「workspaceRoot 指向隔离根」污染签名',
+    A(/*@assert*/  'UX012-Z1-real-env-untouched', '隔离', '真实 $DSH_HOME 零写入：strict 面（settings.yaml / profiles-web package.json / .agent-presets 指纹）逐项一致 ∧ 无「workspaceRoot 指向隔离根」污染签名',
       verdict.ok === true, { strictDeltas: verdict.strictDeltas, inventoryDeltaCount: verdict.inventoryDeltaCount, leakSignature: verdict.leakSignature })
     if (opts.keep === true) {
       report.cleanup = { root, kept: true }
@@ -1159,7 +1476,7 @@ async function main() {
         if (removed !== true) await sleep(600)
       }
       report.cleanup = { root, kept: false, rootRemoved: removed }
-      assertion('UX012-Z2-isolation-cleanup', '隔离', '隔离根在收尾清理（process.exit 之前执行——同族 BUG-007 R1 F-7 / UX-060 R1 F-1 的 %TEMP% 残留教训）', removed === true, report.cleanup)
+      A(/*@assert*/  'UX012-Z2-isolation-cleanup', '隔离', '隔离根在收尾清理（process.exit 之前执行——同族 BUG-007 R1 F-7 / UX-060 R1 F-1 的 %TEMP% 残留教训）', removed === true, report.cleanup)
     }
 
     const tally = { total: report.assertions.length, pass: report.assertions.filter((a) => a.status === 'PASS').length, fail: report.assertions.filter((a) => a.status === 'FAIL').length, na: report.assertions.filter((a) => a.status === 'N-A').length }

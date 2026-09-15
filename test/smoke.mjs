@@ -681,7 +681,7 @@ check('客户端源码面：CLEAN-007 D-1 绑定面板自挂 Esc（NvConsole 让
     && !bindSrc.includes('consoleOpen: false')                            // 负断言：不关控制台
     && clientSrc.includes('if (s.bind !== null || s.entryOpen === true) return') // NvConsole 让位分支仍在
 })(), 'clean007 d1 binddialog esc missing')
-check('客户端源码面：CLEAN-007 F6 模态可访问性（三处模态 role=dialog + aria-modal + 焦点陷阱/焦点归还公共件；三处 hook 均在组件早退之前 = hook 恒定调用契约）', (() => {
+check('客户端源码面：CLEAN-007 F6 模态可访问性（三处模态 role=dialog + aria-modal + 焦点陷阱/焦点归还公共件；`useModalFocus` 三处调用 + BUG-010 的 `WorkspaceDialog` 自挂 Esc effect 均位于组件早退之前 = hook 恒定调用契约）', (() => {
   const compSrc = (name) => {
     const i = clientSrc.indexOf('function ' + name + '(')
     if (i < 0) return ''
@@ -696,10 +696,49 @@ check('客户端源码面：CLEAN-007 F6 模态可访问性（三处模态 role=
   const bindOk = ordered(compSrc('BindDialog'), 'useModalFocus(open, panelRef)')
   const cmodOk = ordered(compSrc('NvConsole'), 'useModalFocus(creating, cmodalRef)')
   const wsOk = ordered(compSrc('WorkspaceDialog'), 'useModalFocus(open, wsdlgRef)')
+  // BUG-010（CLEAN-006 N-3 扩面）：**WorkspaceDialog 自挂 Esc effect** 的早退顺序亦入机检
+  // （原检查只覆盖 `useModalFocus`；真实误置会因 `close()` 的前向引用触发 TDZ 而被探针捕获，
+  //  但**断言作用域与注释口径**未覆盖新 effect ⇒ 本条补上判据面）。
+  // 锚定方式：该 effect 的 payload 是 `store.set({ entryOpen: false })`（全仓**恰一处**）⇒ 以
+  // **整个 effect 文本**为锚（全仓唯一），判「该处早于组件早退 `if (open !== true) return null`」。
+  // 不用 `ordered()` 的字面串：三条同类 effect 的起手两行逐字相同，且 `compSrc('WorkspaceDialog')`
+  // 的边界是**超集**（其 `\n    function ` 落在 66 KB 之后）⇒ 会误配到 BindDialog/NvConsole 的 effect。
+  // **判别力（正向对照，防恒真）**：人为把该 effect 挪到早退**之后** ⇒ 该处索引 > 早退索引 ⇒ 必红。
+  const wsEscBody = ["      useEffect(() => {",
+    "        if (open !== true) return undefined",
+    "        const onKey = (e) => { if (e.key === 'Escape' && busy !== true) store.set({ entryOpen: false }) }",
+    "        try { if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') window.addEventListener('keydown', onKey) } catch { /* ignore */ }",
+    "        return () => { try { if (typeof window !== 'undefined' && typeof window.removeEventListener === 'function') window.removeEventListener('keydown', onKey) } catch { /* ignore */ } }",
+    "      }, [open, busy])"].join('\n')
+  // 注：`clientSrc` 为磁盘原文（CRLF）⇒ 多行锚串须在 **LF 归一化**副本上匹配（口径同既有 LINE_SEG 面）
+  const clientLf = clientSrc.replace(/\r\n/g, '\n')
+  const wsEscH = clientLf.indexOf(wsEscBody)
+  const wsEscUnique = wsEscH < 0 ? 0 : clientLf.split(wsEscBody).length - 1
+  // 组件归属：赋值串前**最近**的组件函数须为 WorkspaceDialog（防空串误配）
+  const wsEscOwner = wsEscH < 0 ? null : ['BindDialog', 'NvConsole', 'WorkspaceDialog'].filter((n) => {
+    const i = clientLf.lastIndexOf('function ' + n + '(', wsEscH)
+    return i >= 0 && i < wsEscH
+  }).pop()
+  const wsEscR = clientLf.indexOf('if (open !== true) return null', wsEscH)
+  const wsEscOk = wsEscH >= 0 && wsEscUnique === 1 && wsEscOwner === 'WorkspaceDialog' && wsEscR > wsEscH
+  // 正向对照（防空转）：把该 effect 从原处摘出、插到**本组件早退之后** ⇒ 早退索引 < effect 索引
+  // ⇒ 原判据必红（构造实测：`mh=207 / mr=176`）。
+  // 注意两处坑（首次实现实测踩到）：① 比较必须写 `!(mr > mh)`——写 `mr > mh === false` 因
+  // `===` 优先级高于 `>` 而恒 false；② 「挪动」MUST 限定在 WorkspaceDialog 区段内——全局 replace
+  // 会命中 BindDialog 的首个早退（索引比本 effect 小 88 KB）⇒ 构造失真、判据自证失效。
+  const wsEscCounterTest = wsEscOk === true
+    && (() => {
+      const region = clientLf.slice(wsEscH, wsEscH + 3000)
+      const movedRegion = region.replace(wsEscBody + '\n', '').replace('if (open !== true) return null', 'if (open !== true) return null\n' + wsEscBody)
+      const mh = movedRegion.indexOf(wsEscBody)
+      const mr = movedRegion.indexOf('if (open !== true) return null')
+      return mh > 0 && !(mr > mh)
+    })()
   return clientSrc.includes("return { role: 'dialog', 'aria-modal': 'true', 'aria-label': label }")
     && (clientSrc.match(/\.\.\.modalDialogProps\(/g) ?? []).length === 3      // 三处消费（无第四处、无遗漏）
     && (clientSrc.match(/useModalFocus\(/g) ?? []).length === 4              // 3 消费 + 1 定义
     && bindOk === true && cmodOk === true && wsOk === true
+    && wsEscOk === true && wsEscCounterTest === true
     && clientSrc.includes('function modalFocusables(node)')
     && clientSrc.includes("window.addEventListener('focusin', focusTracker, true)")
     && clientSrc.includes("window.removeEventListener('focusin', focusTracker, true)") // apply 清理面
@@ -2158,6 +2197,10 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   //      ⇒ 该形态目前无持续机检力。根治需「构造闭合行」口径，而 JS 范围本就可能是**合法语义片段**
   //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L5095-L5097` +1 / 3.8 `L2983-L2993` +1 实测均非配平）——
   //      无差别要求配平会误报上述 3 项，故如实留档待另案（非本任务可安全落地）。
+  //      **本行 3 个契约行号副本的同步方（CLEAN-006 **N-6** 归属订正，避免审计归因错位）**：本块随
+  //      契约 `line` 重基**必须同步**，其**机检执行者 = `COMPAT-015 F3 行号引用对账`**（把本行 2.3
+  //      的副本回退为上一版数值后实测：仅 F3 转红）。与本文件的 smoke 断言**计数**无关（计数由末条
+  //      `COMPAT-014 A-F9 README smoke 计数同步` 负责）⇒ 两者不可混写为同一断言。
   // R1 承继偏移（2.12 −6 / 2.13 −7）在修复前正是 ①③④ 三项的失败用例，修复后全绿（见 CHANGELOG COMPAT-012）。
   //   ⑤ 范围**完整覆盖**所声明构造（COMPAT-013 F-1 新增，两子句，实现见下方 ⑫c）——见 ⑫c 处的口径论证。
   const RANGE_STRICT_FACES = [2]

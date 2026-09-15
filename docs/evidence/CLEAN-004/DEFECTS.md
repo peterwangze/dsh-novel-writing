@@ -218,20 +218,27 @@ R1 返工曾把 `B21a`/`B21b` 的形态判定为 **P2 产品缺陷 D-3**：「�
 | `C3b-binding-convergence` | FAIL | 缺陷 **D-2** 本身 | `converged:false`；13/13 采样 `sub` 含「会话失效」、`dotSt:'stale'`（会话已落盘、宿主已挂工作区）；同轮 `D4`=`PASS` ⇒ **收敛迟滞**（≥2′06″ 未收敛，见 §2 上表；R3-05 订正原写值 1′46″） |
 | ~~`B21a` / `B21b`~~ | **PASS**（R2 返工后） | **无缺陷**——原判定的 **D-3 已撤回**（§3） | 检索前提改为宿主已认可会话的 UI 展示串 ⇒ **命中**：`foundTitle='找到的会话（1）'`、`rows=[{t:'novels'}]`；`B22` 亦 PASS |
 | `C11-flip-back` | PASS（**空真**）→ **N-A（R1 返工改判）** | 探针判定口径问题（R1 §3.1「空真追加项」） | 分栏未重开 ⇒ ⇄ 从未被点击，`chatSide` 本就为 `right` ⇒ 断言条件平凡成立。**已修**：谓词加 `flipBackClick === true` 前置 ⇒ 未点击时记 N-A，不再冒充 PASS；并纳入 `FALSIFIABILITY-PROOF` 机证 |
-| `B5-found-sessions-area` | PASS（**空真**）→ **N-A（R1 返工改判）** | 探针判定口径问题（R1 F-01） | 原谓词第三析取 `|| foundTitle === null` **恒真**。**已修**：谓词取自共享登记表（可失败合取：宿主会话行 ≥1 ⇒ 本区必渲染）；本运行宿主真实会话行 = 0 ⇒ 前置未取得 ⇒ N-A |
+| `B5-found-sessions-area` | PASS（**空真**）→ **N-A（R1 返工改判）** | 探针判定口径问题（R1 F-01） | 原谓词第三析取 `|| foundTitle === null` **恒真**。**已修**：谓词取自共享登记表（可失败合取：宿主会话行 ≥1 ⇒ 本区必渲染）；本运行宿主真实会话行 = 0 ⇒ 前置未取得 ⇒ N-A。**归因订正（CLEAN-006 F6）**：该 0 行的**成因 = 探针选择器失配**（`button[class*="sessionRow"]` 在本宿主恒不命中；宿主该类名唯一使用点为 `div` + `role="treeitem"`，`dsh-client-ui-workspace/lib/client.js:966-969`）——**不是**「宿主未渲染会话行」 |
 | `B22-session-row-opens` | **PASS**（R2 返工后首次取得） | — | 检索命中后有行可点 ⇒ 点击后控制台关闭（`rowClick.clicked=true ∧ consoleOpen=false`） |
 | `FALSIFIABILITY-PROOF` | **PASS**（R2 返工后） | 机制面（R2 N-02 修复后） | 共享登记表 9 谓词：19 反例向量全红 / 11 正例向量全真；9/9 源码级 `evalPred` 消费点；`CHECK-OK`（独立脚本 `falsifiability-check-stdout.log`） |
-**其余 N-A ×3**（`B5` 宿主无会话行 / `C11` ⇄ 未被点击 / `D6` 无宿主会话行）均为「前置不成立」的如实记录，非 PASS、非缺陷；E/F 面（`E1`~`E4`/`F1`）本轮**全部实测 PASS**。
+**其余 N-A ×3**（`B5` / `C11` ⇄ 未被点击 / `D6`）均为「前置不成立」的如实记录，非 PASS、非缺陷；**其中 `B5`/`D6` 的前置成因已按 CLEAN-006 **F6** 订正为「探针宿主会话行选择器失配」（非「宿主无会话行」），见下表末行与 §4 说明**；E/F 面（`E1`~`E4`/`F1`）本轮**全部实测 PASS**。
 > **R1 返工复审后的状态订正（2026-09-14 R2 前一版）**：
 > 1. **`E1`~`E4` / `F1` 已从 N-A 转为实测**（R1 F-04 修复：前置改用 fixture 中从未绑定的卡 `mm-third-probe` 触发 `openCtl` 自动链，
 >    见 `report.json.facts.splitReadyForNotice = {ok:true, attempts:[{cardId:'mm-third-probe', clicked:true, opened:true}], reason:'unbound-card-reopen'}`）：
 >    **`E1`/`E2`/`E3`/`E4`/`F1` 全部 PASS** ⇒ UX-060 长短双形态 + `dsh:split-claim` 协议面**首次获得自动化覆盖**（此前为零覆盖）。
 > 2. **`C11` 不再计入 PASS**（R1 §3.1 空真追加项）：加「⇄ 确被点击」前置后记 **N-A**。
-> 3. **`D6-session-switch-close`** 由 FAIL 改判 **未定性（N-A）**（同本表末行依据：本机宿主侧栏**无会话行**（`hostRowsBefore=0`，
+> 3. **`D6-session-switch-close`** 由 FAIL 改判 **未定性（N-A）**（依据：本机宿主侧栏**会话行读数 = 0**（`hostRowsBefore=0`，
 >    仅有「新建会话」按钮）⇒「切换会话」动作不可构造；原实现以「新建」按钮为代理判 FAIL 属**依据不足**）。
+>    **⚠️ 归因订正（CLEAN-006 **F6**，依据 `docs/review/BUG-009-R1.md` F6 的三重独立取证）**：该 0 行的成因**不是**「宿主未渲染会话行」，
+>    而是**探针选择器失配**——`readHostSessionRows` 用 `button[class*="sessionRow"]`（`probe-clean-004.mjs:345,356`），而宿主该类名的**唯一**使用点是
+>    **`div` + `role:"treeitem"`**（`@deepseek-ai/dsh-client-ui-workspace/lib/client.js:966-969`）⇒ **恒不命中**（不对称对照：同 run 内无限定标签的
+>    `[class*="projectRow"]` 命中 1）。**正确选择器形态** = `div[role="treeitem"][class*="sessionRow"], [class*="sessionRow"]`（或按 `role="treeitem"` + 文本提取）；
+>    且宿主 `sessionVisible`（`!blank || id === current`，宿主 `L338-340`）⇒ 自动链建出的 blank 会话非 current 时不渲染 ⇒ 修选择器后仍可能 0 行，
+>    须显式构造**非 blank 或 current** 的会话行。**界定**：本 run 的 `C3b`/`C9`/`C10`/`C11` 读插件卡面 `.nv-*`，与本选择器**无关** ⇒ 读数不受影响；
+>    归口 = **CLEAN-006 F6（只订正归因，不动冻结探针；`probe-clean-004.mjs` sha256 保持 `de2de511…`）**。
 >    该面归入 `CLEAN-004-checklist.md` §9 R-04 未覆盖风险 + 用户项 U-13。
 > 4. **`D5`** 判据改为读 `degraded` 派生渲染面（L3148/L2893/L4034），并把「降级分支在本实例不可达」如实暴露（不再用 `cdot>=1` 代理）。
-> 5. **`B5`** 由空真 PASS 改判 **N-A**（谓词重写为可失败合取；宿主侧栏真实会话行 = 0 ⇒ 前置未取得，**不再冒充 PASS 计数**）。
+> 5. **`B5`** 由空真 PASS 改判 **N-A**（谓词重写为可失败合取；宿主侧栏会话行读数 = 0 ⇒ 前置未取得，**不再冒充 PASS 计数**）。**归因订正（CLEAN-006 F6）同上第 3 条**：该 0 行成因 = **探针选择器失配**，非「宿主未渲染」。
 
 ---
 
