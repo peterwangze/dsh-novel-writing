@@ -1,5 +1,136 @@
 {
   "version": 1,
-  "generated_at": "2026-09-14T18:19:31",
-  "packets": {}
+  "generated_at": "2026-09-16T09:53:02",
+  "packets": {
+    "REL-007": {
+      "task_id": "REL-007",
+      "priority": "P1",
+      "status": "🔄 **进行中**（2026-09-15：CHANGELOG 定稿 + 三件套全绿 + 候选态门禁实测；**commit 曾被 pre-commit hook 阻断 = 本行登记缺失（Coordinator 漏登，已补）**；候选态两检查受**上游工具缺陷**阻断（`check-release` 读插件仓 `project/CHANGELOG.md`、`release-ledger` 硬编码插件 `manifests_dir` 崩溃）⇒ 按 DEC-027「上游缺陷仅登记不改插件仓」如实登记为 BLOCKED-by-upstream，**不包装为 PASS**）",
+      "goal": "REL-007 **发布 v0.5.3（修复批）**：范围 = 6 个已闭环任务（`BUG-007` P0 预设 persona 断裂 / `UX-060` P1 告警重叠 / `BUG-009` P2 卡片收敛迟滞 / `CLEAN-007` P2 D-1 Esc + 创建链收口 + 模态可访问性 + 行为探针入仓 / `BUG-010` P2 工作区对话框 Esc / `CLEAN-006` P2 验证资产正确性 + F1 `useSyncExternalStore`）；**号段依据** = 0.x 补丁号承载修复、无 breaking（预设 `config.text→config.prefix` 为内部配置面修正，用户侧仅需重启由 `ensurePreset()` 重同步）；**COMPAT-* 新增/修复条目保留在 `[Unreleased]`**（遵 v0.5.2 先例）；**回滚点 = `v0.5.2`**、本版**无数据/状态 schema 迁移**；**用户 2026-09-15 经 ask_user_question 确认 Go**；交付 = CHANGELOG `## [0.5.3] - 2026-09-15` 定稿 + 三件套 + 本地 annotated tag + **隔离回滚演练实跑** + 候选态检查 + 发布文档三件（`docs/release/*-0.5.3.md`）+ Release Reviewer 后置审查 + push（commit 与 tag 由 Coordinator 在审查通过后执行）",
+      "product_success_contract": {
+        "user": "插件使用者（本仓作者/维护者的本地 DSH 实例）——经 dsh 升级通道获得 v0.5.3 后，其可感知结果为：预设挂载恢复（继续工作流/绑定新会话/宿主预设切换器可用）、长告警不再与标题栏重叠、卡片不再长时间显示「会话失效」、Esc 在绑定面板与工作区对话框只关本层。",
+        "job_to_be_done": "把 6 个已闭环修复以 v0.5.3 交付到用户可获得的版本面（远端 main + annotated tag），并保证可回滚。",
+        "non_goals": [
+          "不在本版引入任何功能新增或 breaking 变更（纯修复批）",
+          "不在本版处置 G6/G7/G8 闸门与未完成任务 CLEAN-005/CLEAN-008/CLEAN-009/BUG-008/COMPAT-017",
+          "不修改冻结验证资产（docs/evidence/CLEAN-004/probe-clean-004.mjs 等三脚本 sha256 不变）"
+        ],
+        "success_metrics": [
+          "TO_BE_DEFINED: user-visible outcome or acceptance scenario for this task.",
+          "TO_BE_DEFINED: runnable E2E, test, or command that proves the outcome."
+        ],
+        "competitive_baseline": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+        "done_definition": [
+          "TO_BE_DEFINED: product success evidence is recorded with concrete facts.",
+          "TO_BE_DEFINED: independent review confirms the user outcome is not replaced by process completion."
+        ]
+      },
+      "acceptance_contract": {
+        "scenario": "① 三件套全绿（node --check 23/0、validate-preset PASSED、smoke 302/0）；② 隔离环境回滚演练实跑（安装 v0.5.3 → 回退 v0.5.2 → 再安装；幂等/闭环残余 0；真实 $DSH_HOME 零写入）；③ Release Review R1 = APPROVED_WITH_NOTES / unresolved_blockers=0；④ push 后远端 tag 与本地 peel 一致。",
+        "command": "node test/smoke.mjs && node test/validate-preset.mjs",
+        "expected_output": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+        "last_run": {
+          "status": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+          "exit_code": null,
+          "summary": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。"
+        },
+        "demo_evidence": "本地 annotated tag v0.5.3（peel f608c17）+ docs/review/REL-007-R1.md + docs/release/evidence/rel007-drill-20260915/（28 件）+ docs/release/*-0.5.3.md 三件。"
+      },
+      "quality_budget": {
+        "dimensions": {
+          "performance": {
+            "threshold": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+            "validation": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+            "status": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+            "evidence": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+            "exception": ""
+          },
+          "reliability": {
+            "threshold": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+            "validation": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+            "status": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+            "evidence": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+            "exception": ""
+          },
+          "security": {
+            "threshold": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+            "validation": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+            "status": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+            "evidence": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+            "exception": ""
+          },
+          "accessibility": {
+            "threshold": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+            "validation": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+            "status": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+            "evidence": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+            "exception": ""
+          },
+          "ux": {
+            "threshold": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+            "validation": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+            "status": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+            "evidence": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+            "exception": ""
+          },
+          "maintainability": {
+            "threshold": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+            "validation": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+            "status": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+            "evidence": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+            "exception": ""
+          },
+          "status": "PASS",
+          "evidence": "见 docs/release/release-checklist-0.5.3.md 与 docs/release/evidence/rel007-drill-20260915/"
+        }
+      },
+      "vertical_slice": {
+        "user_visible_slice": "本地 annotated tag v0.5.3 → push 后远端 main 与 tag 同时可见 ⇒ 用户下一次 dsh 升级即获得本版。",
+        "demo_path": "docs/release/evidence/rel007-drill-20260915/drill-summary.json",
+        "scope_guard": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+        "rollback_plan": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+        "status": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+        "evidence": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。"
+      },
+      "interruption_policy": {
+        "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
+        "critical_triggers": [
+          "Ask the user when product intent is unclear.",
+          "Ask the user when acceptance standard or done criteria are unclear.",
+          "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions."
+        ],
+        "auto_execute": [
+          "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible.",
+          "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied."
+        ],
+        "assumption_record": {
+          "assumption": "G6/G7/G8 闸门在发布时仍 pending（用户已显式授权，DEC-029）；check-release / release-ledger 两门禁因上游跨根缺陷不可用，以替代判据集合自证（不包装为 PASS）。",
+          "basis": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+          "reversibility": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+          "validation": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
+          "rollback": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。"
+        },
+        "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
+      },
+      "allowed_change_scope": [
+        "Only change files required by this task row: open",
+        "Keep unrelated refactors, release version bumps, and fixture sync out of this task unless listed in the task scope."
+      ],
+      "required_evidence": [
+        "evidence-log entry with 事实依据, 目标对齐, 用户影响, and 结构化事实 JSON",
+        "validation commands with exit_code and concise output summary",
+        "independent review evidence or explicit degraded review evidence that does not claim full separation"
+      ],
+      "next_commands": [
+        "python -m unittest skills/software-project-governance/infra/tests/test_verify_workflow.py -v",
+        "python skills/software-project-governance/infra/verify_workflow.py check-governance --fail-on-issues"
+      ],
+      "done_definition": [
+        "open",
+        "Code Reviewer or matching Reviewer has APPROVED the product-code change.",
+        "Commit and push are completed for this single task."
+      ],
+      "source": "plan-tracker.md##当前活跃事项"
+    }
+  }
 }
