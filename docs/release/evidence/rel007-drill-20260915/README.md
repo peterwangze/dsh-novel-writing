@@ -74,6 +74,7 @@ powershell -ExecutionPolicy Bypass -File "<repo>\install.ps1" -LocalPath "<repo>
 | `snap-R0/C1/C2/C3/C4/C5*.txt` | 各 leg 的 `DSH_HOME` 文件面快照（相对路径 + 长度 + SHA256 / LINK，不递归 reparse） |
 | `pre-dsh-fingerprint.txt` / `post-dsh-fingerprint.txt` | 真实 `$DSH_HOME` 前后只读指纹（STRICT 面 + INVENTORY 面 + LEAK_SIGNATURE） |
 | `isolate-env.ps1` / `run-drill.ps1` | 演练脚本本体（fail-closed 守卫 + 泄漏检测器 + 6 项包含性断言 + R0 参照 leg） |
+| `verify-tag-changelog.py` | **CHANGELOG 逐字性复核脚本（可复跑）** —— 对 `bab9687:CHANGELOG.md`（发布前）vs `v0.5.3:CHANGELOG.md`（tag 内）独立重算 V1~V6 判据（见 §7） |
 | `pre-tag-run/` | **tag 建立前**的等价候选树（`T = 8fae6881…`）预跑副本，供对照（R1） |
 | `README.md` | 本文件 |
 
@@ -93,4 +94,22 @@ pwsh -NoProfile -File "docs\release\evidence\rel007-drill-20260915\run-drill.ps1
 # 真实环境只读复核（不写入任何东西）
 Get-ChildItem "$env:USERPROFILE\.dsh" -Force | Select-Object Name,Length,LastWriteTime
 Get-Content "docs\release\evidence\rel007-drill-20260915\report.json" | Select-String 'verdict|strict_delta_count|rollback_seconds'
+# CHANGELOG 逐字性复核（§7）
+python "docs\release\evidence\rel007-drill-20260915\verify-tag-changelog.py"
 ```
+
+## 7. CHANGELOG 逐字性复核（tag 内，可复跑）
+
+`verify-tag-changelog.py` 对 **发布前** `bab9687:CHANGELOG.md` 与 **tag 内** `v0.5.3:CHANGELOG.md` 独立重算判据
+（与发布期工作树复核**同口径、无共享代码**；实测 `ALL_OK = true`）：
+
+| 判据 | 含义 | 实测 |
+| --- | --- | --- |
+| V1 | 无行丢失（`Counter(旧) − Counter(新)` 为空） | `lost = {}` ✅ |
+| V2 | 新增行**恰为**必需要素 | `## [0.5.3] - 2026-09-15`(1) + `### 修复`(1) + **恢复的 CLEAN-007 标题**(1) + 空行(7)；键数恰 4 ✅ |
+| V4 | `[0.5.3]` 段结构 | **9 条**顶层条目 / 覆盖 6 任务（缺项 `[]`）/ 零 `COMPAT-*` ✅ |
+| V5 | `[Unreleased]` 分层 | **15 条**顶层条目**全为 COMPAT-***（非 COMPAT 项 `[]`）✅ |
+| V6 | 9 条正文逐字且连续 | 在 `bab9687` 连续命中 L33/44/53/64/76/93/102/111/191，互不重叠，合计 **100 行**，源序保持 ✅ |
+
+⇒ 发布段对本批 6 任务的承载**逐字节可验证**；唯一新增非结构行 = 恢复的 `CLEAN-007` 标题（`a04ea89` 原文）。
+
