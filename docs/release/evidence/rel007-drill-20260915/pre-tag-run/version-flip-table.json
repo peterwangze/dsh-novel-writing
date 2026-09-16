@@ -1,0 +1,56 @@
+[
+  {
+    "Leg": "R0",
+    "Ref": "v0.5.2",
+    "RepoSimVer": "0.5.2",
+    "EffVer": "0.5.2",
+    "LegacyVer": "n/a",
+    "Exit": 0,
+    "Seconds": 0.621
+  },
+  {
+    "Leg": "C1",
+    "Ref": "tree:8fae6881aff950557f5647dd29a50ef53b7b6148",
+    "RepoSimVer": "0.5.3",
+    "EffVer": "0.5.3",
+    "LegacyVer": "n/a",
+    "Exit": 0,
+    "Seconds": 0.585
+  },
+  {
+    "Leg": "C2",
+    "Ref": "tree:8fae6881aff950557f5647dd29a50ef53b7b6148",
+    "RepoSimVer": "0.5.3",
+    "EffVer": "0.5.3",
+    "LegacyVer": "n/a",
+    "Exit": 0,
+    "Seconds": 0.51
+  },
+  {
+    "Leg": "C3",
+    "Ref": "v0.5.2",
+    "RepoSimVer": "0.5.2",
+    "EffVer": "0.5.2",
+    "LegacyVer": "n/a",
+    "Exit": 0,
+    "Seconds": 0.611
+  },
+  {
+    "Leg": "C4",
+    "Ref": "tree:8fae6881aff950557f5647dd29a50ef53b7b6148",
+    "RepoSimVer": "0.5.3",
+    "EffVer": "0.5.3",
+    "LegacyVer": "n/a",
+    "Exit": 0,
+    "Seconds": 0.485
+  },
+  {
+    "Leg": "C5",
+    "Ref": "tree:8fae6881aff950557f5647dd29a50ef53b7b6148",
+    "RepoSimVer": "0.5.3",
+    "EffVer": "0.5.3",
+    "LegacyVer": "n/a",
+    "Exit": 0,
+    "Seconds": 0.477
+  }
+]

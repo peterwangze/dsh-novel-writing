@@ -1,0 +1,185 @@
+
+=== REL-007 隔离回滚演练（v0.5.3）2026-09-16T09:23:23.1105541+08:00 ===
+ISOLATED_ROOT = C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915
+REAL_ENV (只读参照) : USERPROFILE=C:\Users\peter ; DSH_HOME=C:\Users\peter\.dsh ; TEMP=C:\Users\peter\AppData\Local\Temp
+CANDIDATE_REF = v0.5.3 ; ROLLBACK_REF = v0.5.2 ; PROFILE = web
+TREE SOURCE: git archive --format=tar <ref> -o <ISO>\*.tar ; tar -xf  （禁止 git checkout 切换工作树）
+CANDIDATE source_kind=tag/commit commit=f608c17ad281b072f02aaa17658d509da212f62a tree=5aa4da51a0f68c7d37ada27f26555d8c36d7052e
+ROLLBACK  commit=914725f86b61c8f57522f4d240925086f120fff8 tree=8f7382e4abf324c69e78b75e6382d539882666fb
+EXPORTED v0.5.3 -> C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\tree-candidate  (tar sha256=ACF5E4A12161538AB2FF7844C56C01CE2D6BE5A684FF5F50F41621C8B5486818)
+EXPORTED v0.5.2 -> C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\tree-v0.5.2  (tar sha256=0D67119F0D85DD812D7DD3A3E23E7B78EE0223D5AD547828A0AA4C66B62A8ADF)
+VERSION CHECK: candidate tree package.json=0.5.3 (期望 0.5.3) ; rollback tree package.json=0.5.2 (期望 0.5.2)
+FIXTURE: C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new\profiles\web\package.json = 新布局夹具（bundles 2 项 + dependencies 1 项）
+FIXTURE(ref): C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-ref52\profiles\web\package.json = 同款新布局夹具（参照 home，仅装 v0.5.2）
+repo-sim node_modules = 隔离根内真实空目录（不进真实仓库；零外部 junction）
+PRE-DSH-FINGERPRINT: 已写入 pre-dsh-fingerprint.txt（22 行；strict 键 6 项；inventory 13 项）
+PRE-DSH-FINGERPRINT leak_signature: workspaceRoot=D:\AI\writing pointsIntoIsolation=False
+
+==== LEG R0 : 换树 -> v0.5.2 (repo-sim package.json = 0.5.2) ; 重跑 install.ps1 ; DSH_HOME = C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-ref52 ====
+  ENV REDIRECT: DSH_HOME=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-ref52 ; USERPROFILE=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user ; HOME=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user ; APPDATA=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\AppData\Roaming ; LOCALAPPDATA=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\AppData\Local ; TEMP=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\tmp ; TMP=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\tmp ; XDG_CONFIG_HOME=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\.config ; PNPM_HOME=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\pnpm ; npm_config_cache=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\cache\npm ; npm_config_ignore_scripts=true
+  CONTAINMENT DSH_HOME       inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-ref52
+  CONTAINMENT USERPROFILE    inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user
+  CONTAINMENT HOME           inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user
+  CONTAINMENT APPDATA        inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\AppData\Roaming
+  CONTAINMENT LOCALAPPDATA   inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\AppData\Local
+  CONTAINMENT TEMP           inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\tmp
+  | ==> 离线模式：使用本地源码 C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\repo-sim
+  | ==> 检测到 dsh 新布局（≥0.1.5 per-profile）：接入 C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-ref52\profiles\web\node_modules
+  | ==> 已创建 junction：C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-ref52\profiles\web\node_modules\dsh-novel-writing -> C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\repo-sim
+  | ==> 已写入 dependencies.dsh-novel-writing = file:C:/Users/peter/AppData/Local/Temp/rel007-drill-20260915/repo-sim
+  | ==> 已注册 profile dependencies + bundles（dsh ≥0.1.5）：C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-ref52\profiles\web\package.json
+  | ==> 创建 C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-ref52\profiles\web\cordis.patch.yml
+  | ==> agent 预设已同步：C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-ref52\.agent-presets\novel-writing（roster 中显示为「小说写作工作流」）
+  | ==> 已创建 C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-ref52\settings.yaml（默认配置）
+  | 
+  | [OK] dsh-novel-writing 安装完成（源码：C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\repo-sim；profile：web）
+  |   已注册 profile dependencies + bundles（dsh ≥0.1.5）+ patch 行兜底双保险。
+  |   请重启 DSH。然后在预设选择器中选「小说写作工作流」开始创作；
+  |   浏览器会话顶部「小说」标签 = 工作台（实时渲染/章节编辑/发布/数据）。
+  EXIT=0 ; elapsed=1.442s ; realPathLeak=0
+  RESULT: exit=0 ; 有效版本(profile link)=0.5.2 ; legacy link 版本=n/a ; newLink=True ; legacyLink=False ; profileDep=YES ; patchRows=1 ; presetFiles=47 ; settingsNs=1 ; snapLines=87
+
+==== LEG C1 : 换树 -> v0.5.3 (repo-sim package.json = 0.5.3) ; 重跑 install.ps1 ; DSH_HOME = C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new ====
+  ENV REDIRECT: DSH_HOME=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new ; USERPROFILE=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user ; HOME=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user ; APPDATA=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\AppData\Roaming ; LOCALAPPDATA=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\AppData\Local ; TEMP=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\tmp ; TMP=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\tmp ; XDG_CONFIG_HOME=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\.config ; PNPM_HOME=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\pnpm ; npm_config_cache=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\cache\npm ; npm_config_ignore_scripts=true
+  CONTAINMENT DSH_HOME       inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new
+  CONTAINMENT USERPROFILE    inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user
+  CONTAINMENT HOME           inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user
+  CONTAINMENT APPDATA        inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\AppData\Roaming
+  CONTAINMENT LOCALAPPDATA   inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\AppData\Local
+  CONTAINMENT TEMP           inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\tmp
+  | ==> 离线模式：使用本地源码 C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\repo-sim
+  | ==> 检测到 dsh 新布局（≥0.1.5 per-profile）：接入 C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new\profiles\web\node_modules
+  | ==> 已创建 junction：C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new\profiles\web\node_modules\dsh-novel-writing -> C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\repo-sim
+  | ==> 已写入 dependencies.dsh-novel-writing = file:C:/Users/peter/AppData/Local/Temp/rel007-drill-20260915/repo-sim
+  | ==> 已注册 profile dependencies + bundles（dsh ≥0.1.5）：C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new\profiles\web\package.json
+  | ==> 创建 C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new\profiles\web\cordis.patch.yml
+  | ==> agent 预设已同步：C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new\.agent-presets\novel-writing（roster 中显示为「小说写作工作流」）
+  | ==> 已创建 C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new\settings.yaml（默认配置）
+  | 
+  | [OK] dsh-novel-writing 安装完成（源码：C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\repo-sim；profile：web）
+  |   已注册 profile dependencies + bundles（dsh ≥0.1.5）+ patch 行兜底双保险。
+  |   请重启 DSH。然后在预设选择器中选「小说写作工作流」开始创作；
+  |   浏览器会话顶部「小说」标签 = 工作台（实时渲染/章节编辑/发布/数据）。
+  EXIT=0 ; elapsed=1.246s ; realPathLeak=0
+  RESULT: exit=0 ; 有效版本(profile link)=0.5.3 ; legacy link 版本=n/a ; newLink=True ; legacyLink=False ; profileDep=YES ; patchRows=1 ; presetFiles=47 ; settingsNs=1 ; snapLines=87
+
+==== LEG C2 : 换树 -> v0.5.3 (repo-sim package.json = 0.5.3) ; 重跑 install.ps1 ; DSH_HOME = C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new ====
+  ENV REDIRECT: DSH_HOME=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new ; USERPROFILE=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user ; HOME=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user ; APPDATA=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\AppData\Roaming ; LOCALAPPDATA=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\AppData\Local ; TEMP=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\tmp ; TMP=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\tmp ; XDG_CONFIG_HOME=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\.config ; PNPM_HOME=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\pnpm ; npm_config_cache=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\cache\npm ; npm_config_ignore_scripts=true
+  CONTAINMENT DSH_HOME       inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new
+  CONTAINMENT USERPROFILE    inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user
+  CONTAINMENT HOME           inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user
+  CONTAINMENT APPDATA        inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\AppData\Roaming
+  CONTAINMENT LOCALAPPDATA   inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\AppData\Local
+  CONTAINMENT TEMP           inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\tmp
+  | ==> 离线模式：使用本地源码 C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\repo-sim
+  | ==> 检测到 dsh 新布局（≥0.1.5 per-profile）：接入 C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new\profiles\web\node_modules
+  | ==> 链接已存在：C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new\profiles\web\node_modules\dsh-novel-writing
+  | ==> dependencies.dsh-novel-writing 已注册，跳过
+  | ==> profile package.json 注册项已齐全，跳过写入
+  | ==> C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new\profiles\web\cordis.patch.yml 已配置，跳过
+  | ==> agent 预设已同步：C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new\.agent-presets\novel-writing（roster 中显示为「小说写作工作流」）
+  | ==> C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new\settings.yaml 已含 novel-writing 节，跳过默认配置写入
+  | 
+  | [OK] dsh-novel-writing 安装完成（源码：C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\repo-sim；profile：web）
+  |   已注册 profile dependencies + bundles（dsh ≥0.1.5）+ patch 行兜底双保险。
+  |   请重启 DSH。然后在预设选择器中选「小说写作工作流」开始创作；
+  |   浏览器会话顶部「小说」标签 = 工作台（实时渲染/章节编辑/发布/数据）。
+  EXIT=0 ; elapsed=5.475s ; realPathLeak=0
+  RESULT: exit=0 ; 有效版本(profile link)=0.5.3 ; legacy link 版本=n/a ; newLink=True ; legacyLink=False ; profileDep=YES ; patchRows=1 ; presetFiles=47 ; settingsNs=1 ; snapLines=87
+
+==== LEG C3 : 换树 -> v0.5.2 (repo-sim package.json = 0.5.2) ; 重跑 install.ps1 ; DSH_HOME = C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new ====
+  ENV REDIRECT: DSH_HOME=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new ; USERPROFILE=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user ; HOME=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user ; APPDATA=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\AppData\Roaming ; LOCALAPPDATA=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\AppData\Local ; TEMP=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\tmp ; TMP=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\tmp ; XDG_CONFIG_HOME=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\.config ; PNPM_HOME=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\pnpm ; npm_config_cache=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\cache\npm ; npm_config_ignore_scripts=true
+  CONTAINMENT DSH_HOME       inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new
+  CONTAINMENT USERPROFILE    inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user
+  CONTAINMENT HOME           inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user
+  CONTAINMENT APPDATA        inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\AppData\Roaming
+  CONTAINMENT LOCALAPPDATA   inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\AppData\Local
+  CONTAINMENT TEMP           inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\tmp
+  | ==> 离线模式：使用本地源码 C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\repo-sim
+  | ==> 检测到 dsh 新布局（≥0.1.5 per-profile）：接入 C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new\profiles\web\node_modules
+  | ==> 链接已存在：C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new\profiles\web\node_modules\dsh-novel-writing
+  | ==> dependencies.dsh-novel-writing 已注册，跳过
+  | ==> profile package.json 注册项已齐全，跳过写入
+  | ==> C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new\profiles\web\cordis.patch.yml 已配置，跳过
+  | ==> agent 预设已同步：C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new\.agent-presets\novel-writing（roster 中显示为「小说写作工作流」）
+  | ==> C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new\settings.yaml 已含 novel-writing 节，跳过默认配置写入
+  | 
+  | [OK] dsh-novel-writing 安装完成（源码：C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\repo-sim；profile：web）
+  |   已注册 profile dependencies + bundles（dsh ≥0.1.5）+ patch 行兜底双保险。
+  |   请重启 DSH。然后在预设选择器中选「小说写作工作流」开始创作；
+  |   浏览器会话顶部「小说」标签 = 工作台（实时渲染/章节编辑/发布/数据）。
+  EXIT=0 ; elapsed=3.195s ; realPathLeak=0
+  RESULT: exit=0 ; 有效版本(profile link)=0.5.2 ; legacy link 版本=n/a ; newLink=True ; legacyLink=False ; profileDep=YES ; patchRows=1 ; presetFiles=47 ; settingsNs=1 ; snapLines=87
+
+==== LEG C4 : 换树 -> v0.5.3 (repo-sim package.json = 0.5.3) ; 重跑 install.ps1 ; DSH_HOME = C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new ====
+  ENV REDIRECT: DSH_HOME=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new ; USERPROFILE=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user ; HOME=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user ; APPDATA=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\AppData\Roaming ; LOCALAPPDATA=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\AppData\Local ; TEMP=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\tmp ; TMP=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\tmp ; XDG_CONFIG_HOME=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\.config ; PNPM_HOME=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\pnpm ; npm_config_cache=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\cache\npm ; npm_config_ignore_scripts=true
+  CONTAINMENT DSH_HOME       inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new
+  CONTAINMENT USERPROFILE    inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user
+  CONTAINMENT HOME           inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user
+  CONTAINMENT APPDATA        inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\AppData\Roaming
+  CONTAINMENT LOCALAPPDATA   inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\AppData\Local
+  CONTAINMENT TEMP           inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\tmp
+  | ==> 离线模式：使用本地源码 C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\repo-sim
+  | ==> 检测到 dsh 新布局（≥0.1.5 per-profile）：接入 C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new\profiles\web\node_modules
+  | ==> 链接已存在：C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new\profiles\web\node_modules\dsh-novel-writing
+  | ==> dependencies.dsh-novel-writing 已注册，跳过
+  | ==> profile package.json 注册项已齐全，跳过写入
+  | ==> C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new\profiles\web\cordis.patch.yml 已配置，跳过
+  | ==> agent 预设已同步：C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new\.agent-presets\novel-writing（roster 中显示为「小说写作工作流」）
+  | ==> C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new\settings.yaml 已含 novel-writing 节，跳过默认配置写入
+  | 
+  | [OK] dsh-novel-writing 安装完成（源码：C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\repo-sim；profile：web）
+  |   已注册 profile dependencies + bundles（dsh ≥0.1.5）+ patch 行兜底双保险。
+  |   请重启 DSH。然后在预设选择器中选「小说写作工作流」开始创作；
+  |   浏览器会话顶部「小说」标签 = 工作台（实时渲染/章节编辑/发布/数据）。
+  EXIT=0 ; elapsed=0.924s ; realPathLeak=0
+  RESULT: exit=0 ; 有效版本(profile link)=0.5.3 ; legacy link 版本=n/a ; newLink=True ; legacyLink=False ; profileDep=YES ; patchRows=1 ; presetFiles=47 ; settingsNs=1 ; snapLines=87
+
+==== LEG C5 : 换树 -> v0.5.3 (repo-sim package.json = 0.5.3) ; 重跑 install.ps1 ; DSH_HOME = C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new ====
+  ENV REDIRECT: DSH_HOME=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new ; USERPROFILE=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user ; HOME=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user ; APPDATA=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\AppData\Roaming ; LOCALAPPDATA=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\AppData\Local ; TEMP=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\tmp ; TMP=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\tmp ; XDG_CONFIG_HOME=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\.config ; PNPM_HOME=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\pnpm ; npm_config_cache=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\cache\npm ; npm_config_ignore_scripts=true
+  CONTAINMENT DSH_HOME       inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new
+  CONTAINMENT USERPROFILE    inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user
+  CONTAINMENT HOME           inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user
+  CONTAINMENT APPDATA        inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\AppData\Roaming
+  CONTAINMENT LOCALAPPDATA   inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\user\AppData\Local
+  CONTAINMENT TEMP           inside_isolation=True value=C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\tmp
+  | ==> 离线模式：使用本地源码 C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\repo-sim
+  | ==> 检测到 dsh 新布局（≥0.1.5 per-profile）：接入 C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new\profiles\web\node_modules
+  | ==> 链接已存在：C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new\profiles\web\node_modules\dsh-novel-writing
+  | ==> dependencies.dsh-novel-writing 已注册，跳过
+  | ==> profile package.json 注册项已齐全，跳过写入
+  | ==> C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new\profiles\web\cordis.patch.yml 已配置，跳过
+  | ==> agent 预设已同步：C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new\.agent-presets\novel-writing（roster 中显示为「小说写作工作流」）
+  | ==> C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\dshhome-new\settings.yaml 已含 novel-writing 节，跳过默认配置写入
+  | 
+  | [OK] dsh-novel-writing 安装完成（源码：C:\Users\peter\AppData\Local\Temp\rel007-drill-20260915\repo-sim；profile：web）
+  |   已注册 profile dependencies + bundles（dsh ≥0.1.5）+ patch 行兜底双保险。
+  |   请重启 DSH。然后在预设选择器中选「小说写作工作流」开始创作；
+  |   浏览器会话顶部「小说」标签 = 工作台（实时渲染/章节编辑/发布/数据）。
+  EXIT=0 ; elapsed=0.719s ; realPathLeak=0
+  RESULT: exit=0 ; 有效版本(profile link)=0.5.3 ; legacy link 版本=n/a ; newLink=True ; legacyLink=False ; profileDep=YES ; patchRows=1 ; presetFiles=47 ; settingsNs=1 ; snapLines=87
+
+======== 判定（隔离环境） ========
+
+======== 结构化汇总 ========
+
+Leg Ref    ExpectVer RepoSimVer Exit Seconds EffVer LegacyVer NewLink LegacyLink
+--- ---    --------- ---------- ---- ------- ------ --------- ------- ----------
+R0  v0.5.2 0.5.2     0.5.2         0    1.44 0.5.2  n/a          True      False
+C1  v0.5.3 0.5.3     0.5.3         0    1.25 0.5.3  n/a          True      False
+C2  v0.5.3 0.5.3     0.5.3         0    5.47 0.5.3  n/a          True      False
+C3  v0.5.2 0.5.2     0.5.2         0    3.19 0.5.2  n/a          True      False
+C4  v0.5.3 0.5.3     0.5.3         0    0.92 0.5.3  n/a          True      False
+C5  v0.5.3 0.5.3     0.5.3         0    0.72 0.5.3  n/a          True      False
+
+
+IDEMPOTENCY: C1->C2=0  C4->C5=0  C2->C5(闭环)=0  C3->C4=2  C1->C3(回滚)=2  R0-vs-C3(回滚残余)=0
+TIMING(seconds): C1(安装)=1.246  C2(重装)=5.475  C3(回滚安装)=3.195  C4(再安装)=0.924  C5(重装)=0.719  往返合计=13.001
+
+======== 真实环境零污染判定（只读指纹）========
+REAL_ENV strict_deltas=0 inventory_deltas=0 verdict_ok=True
+  LEAK_BEFORE: workspaceRoot=D:\AI\writing pointsIntoIsolation=False
+  LEAK_AFTER : workspaceRoot=D:\AI\writing pointsIntoIsolation=False
+
+REPORT: verdict=PASS all_legs_exit_zero=True real_env_ok=True rollback_seconds=3.195
+DRILL_END

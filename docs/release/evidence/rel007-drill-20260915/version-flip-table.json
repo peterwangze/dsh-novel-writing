@@ -1,0 +1,56 @@
+[
+  {
+    "Leg": "R0",
+    "Ref": "v0.5.2",
+    "RepoSimVer": "0.5.2",
+    "EffVer": "0.5.2",
+    "LegacyVer": "n/a",
+    "Exit": 0,
+    "Seconds": 1.442
+  },
+  {
+    "Leg": "C1",
+    "Ref": "v0.5.3",
+    "RepoSimVer": "0.5.3",
+    "EffVer": "0.5.3",
+    "LegacyVer": "n/a",
+    "Exit": 0,
+    "Seconds": 1.246
+  },
+  {
+    "Leg": "C2",
+    "Ref": "v0.5.3",
+    "RepoSimVer": "0.5.3",
+    "EffVer": "0.5.3",
+    "LegacyVer": "n/a",
+    "Exit": 0,
+    "Seconds": 5.475
+  },
+  {
+    "Leg": "C3",
+    "Ref": "v0.5.2",
+    "RepoSimVer": "0.5.2",
+    "EffVer": "0.5.2",
+    "LegacyVer": "n/a",
+    "Exit": 0,
+    "Seconds": 3.195
+  },
+  {
+    "Leg": "C4",
+    "Ref": "v0.5.3",
+    "RepoSimVer": "0.5.3",
+    "EffVer": "0.5.3",
+    "LegacyVer": "n/a",
+    "Exit": 0,
+    "Seconds": 0.924
+  },
+  {
+    "Leg": "C5",
+    "Ref": "v0.5.3",
+    "RepoSimVer": "0.5.3",
+    "EffVer": "0.5.3",
+    "LegacyVer": "n/a",
+    "Exit": 0,
+    "Seconds": 0.719
+  }
+]

@@ -76,7 +76,7 @@
 | 归档触发 | `python "<plugin>/infra/archive.py" migrate --auto --dry-run` | `📦 治理数据归档: 跳过（无可归档数据——已发布版本数不足（0 < 2））`，exit 0 | 不阻断（SYSGAP-001 家族边缘，无数据损失） |
 | 发布就绪 | `python "<plugin>/infra/verify_workflow.py" check-release --version 0.5.3 --require-changelog --lineage-mode candidate` | **FAILED — 22 issue(s)**，exit 1（283.5 s；补三件文档后复跑同值） | **不可用（上游跨根缺陷 U1~U6）** + 宿主侧真实缺失（§H.2）逐条列出 —— **未包装为 PASS** |
 | Release ledger | `python "<plugin>/infra/verify_workflow.py" release-ledger --version 0.5.3 --no-remote` | **未处理异常崩溃**：`ValueError: '…/core/releases/0.5.3.json' is not in the subpath of 'D:\AI\agent\deepseek\harness\writing-workflow'`，exit 1 | **BLOCKED-by-upstream**（工具崩溃，无 JSON 输出，**不得读作 PASS/FAIL**） |
-| 回滚演练 | `pwsh -File docs/release/evidence/rel007-drill-20260915/run-drill.ps1` | `verdict=PASS`；R0+C1~C5 **全 leg exit 0**；有效版本序列 `0.5.2(R0) → 0.5.3 → 0.5.3 → 0.5.2 → 0.5.3 → 0.5.3`；幂等 diff `C1→C2=0 / C4→C5=0 / C2→C5(闭环)=0 / C3→C4=2 / C1→C3=2 / R0-vs-C3=0`；**回滚安装实测 ≈0.61 s**（往返合计 ≈3.29 s）；真实 `$DSH_HOME` `strict_deltas=0 ∧ inventory_deltas=0` | **PASS** |
+| 回滚演练 | `pwsh -File docs/release/evidence/rel007-drill-20260915/run-drill.ps1 -CandidateRef v0.5.3` | `verdict=PASS`；R0+C1~C5 **全 leg exit 0**；有效版本序列 `0.5.2(R0) → 0.5.3 → 0.5.3 → 0.5.2 → 0.5.3 → 0.5.3`；幂等 diff `C1→C2=0 / C4→C5=0 / C2→C5(闭环)=0 / C3→C4=2 / C1→C3=2 / R0-vs-C3=0`；**回滚安装实测 3.195 s**（tag 权威跑；预跑等价树 0.611 s）；真实 `$DSH_HOME` `strict_deltas=0 ∧ inventory_deltas=0` | **PASS** |
 
 ## H. 门禁不可用 / 宿主侧缺失的逐条归因（**不得混入「已通过」**）
 
