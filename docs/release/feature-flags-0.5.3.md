@@ -17,7 +17,7 @@
 | 取证项 | 命令/位置 | 实测结果 |
 | --- | --- | --- |
 | 产品代码无 feature flag 机制 | `Select-String -Path lib\*.js,lib\*.mjs -Pattern 'featureFlag\|feature_flag\|FEATURE_FLAG\|flagEnabled'` | **0 命中** |
-| 本批产品代码改动面 = 2 文件 | `git diff --stat v0.5.2..HEAD -- lib/ agent-presets/` | `lib/client.js`（+558/−…）、`lib/host-contract.mjs`（+92/−…）、`agent-presets/novel-writing/agent.cordis.yml`（8 行）——**仅此三处**；`lib/index.js`、`lib/tools.js`、`lib/host-boundary.js` **零改动** |
+| 本批产品代码改动面 = **3 路径**（**2 个 `lib/` 文件 + 1 个预设文件**） | `git diff --stat v0.5.2..HEAD -- lib/ agent-presets/` | `lib/client.js`（+558/−…）、`lib/host-contract.mjs`（+92/−…）、`agent-presets/novel-writing/agent.cordis.yml`（8 行）= `3 files changed, 531 insertions(+), 127 deletions(-)`；`lib/index.js`、`lib/tools.js`、`lib/host-boundary.js` **零改动**（**口径订正**：本行原标「= **2 文件**」，与同格列举的 **3 路径**自相矛盾；来源 `docs/review/REL-007-R1.md` F-05） |
 | 本批未引入 flag 载体 | 上述 diff 内容面 | 两处改动分别为：客户端 UI 行为修复（Esc 让位链 / 告警流式面 / 会话镜像 hook / 模态 ARIA 与焦点）+ 契约行号重基与 `revisions[]` 注记；**无开关分支、无灰度分支** |
 
 > 取证时点 = 2026-09-16（REL-007 发布准备期）。`v0.5.2` = 上一发布 tag（对象 `793dde78…` → peel `914725f8…`）；范围下界用**绝对 ref**（`v0.5.2`），任何时点复跑结果一致。

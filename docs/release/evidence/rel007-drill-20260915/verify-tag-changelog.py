@@ -4,6 +4,8 @@
 old = git show bab9687:CHANGELOG.md（发布前 HEAD）
 new = git show v0.5.3:CHANGELOG.md（tag 指向的发布提交树内）
 判据 V1~V6 与发布前工作树复核同口径（无共享代码：本文件独立重写）。
+V2b（F-07 订正）：恢复的 CLEAN-007 标题 MUST 与 a04ea89:CHANGELOG.md L44 逐字节相同
+（且在 a04ea89 恰 1 次、在发布前 bab9687 0 次）——非仅前缀存在性。
 """
 import subprocess, json
 from collections import Counter
@@ -32,7 +34,19 @@ V["V2_added_keys"] = {("<blank>" if k == "" else k[:50]): v for k, v in added.it
 V["V2_added_ok"] = (added.get("## [0.5.3] - 2026-09-15", 0) == 1 and added.get("### 修复", 0) == 1
                     and added.get("", 0) == 7 and len(added) == 4)
 c007 = [l for l in new if l.startswith("- **CLEAN-007 UX-012 R1 备注批次")]
-V["V2_c007_heading_restored"] = len(c007) == 1
+# V2b（订正，来源 docs/review/REL-007-R1.md F-07）：恢复标题 MUST 与 `a04ea89:CHANGELOG.md` L44
+# **逐字节相同**——原实现只校验「前缀存在恰 1 次」，单独运行无法发现恢复被改写；
+# 另加两侧计数断言：在 a04ea89 恰 1 次 ∧ 在发布前 bab9687 **0 次**（证明属「恢复」而非既有行）。
+ref = [l for l in blob("a04ea89:CHANGELOG.md") if l.startswith("- **CLEAN-007 UX-012 R1 备注批次")]
+in_old = [l for l in old if l.startswith("- **CLEAN-007 UX-012 R1 备注批次")]
+V["V2b_detail"] = {
+    "restored_count_in_new": len(c007),
+    "ref_count_in_a04ea89": len(ref),
+    "count_in_pre_release_bab9687": len(in_old),
+    "byte_identical_to_a04ea89_L44": bool(len(c007) == 1 and len(ref) == 1 and c007[0] == ref[0]),
+}
+V["V2_c007_heading_restored"] = bool(len(c007) == 1 and len(ref) == 1 and len(in_old) == 0
+                                     and c007[0] == ref[0])
 V["V1_ok"] = len(lost) == 0
 
 def section(lines, marker):

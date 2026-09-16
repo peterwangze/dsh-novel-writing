@@ -27,7 +27,7 @@
 
 **legs**：`R0`（参照：全新隔离 DSH_HOME 仅装 v0.5.2）→ `C1` 安装 v0.5.3 → `C2` 重装（幂等）→ **`C3` 回退 v0.5.2** → `C4` 再安装 v0.5.3 → `C5` 重装（幂等）
 
-| 判据 | R1 预跑（候选 = 发布提交树 `T`） | **R2 权威跑（候选 = tag `v0.5.3`）** |
+| 判据 | R1 预跑（候选 = 发布前**索引树** `T`＝`8fae6881…`，**非**发布树） | **R2 权威跑（候选 = tag `v0.5.3`）** |
 | --- | --- | --- |
 | 全部 leg `exit` | 0（6/6） | **0（6/6）** |
 | 有效版本序列 | `0.5.2 → 0.5.3 → 0.5.3 → 0.5.2 → 0.5.3 → 0.5.3` | **同左** |
@@ -42,6 +42,7 @@
 | 真实 `$DSH_HOME` strict / inventory delta | 0 / 0 | **0 / 0** |
 | `verdict` | PASS | **PASS** |
 
+- **候选口径（P2 订正，来源 `docs/review/REL-007-R1.md` F-02）**：两次**判据集一致，但候选树不同——不是「字节等价」**。预跑候选 `T = 8fae6881aff950557f5647dd29a50ef53b7b6148` 是**发布前的索引树**（`git cat-file -t` = `tree`；`git fsck` 列为 **dangling tree**；`git log --all` 无 commit 引用），**不含**三件发布文档；权威跑候选 = tag `v0.5.3` → 提交 `f608c17` → 树 `5aa4da51a0f68c7d37ada27f26555d8c36d7052e`。二者差异 = `git diff --stat 8fae6881 5aa4da51` = **恰 3 文件 / 290 行插入**（三件 `docs/release/*-0.5.3.md`）；候选 tar 指纹亦不同（预跑 `4926DE84…` vs 权威 `ACF5E4A1…`）。正确表述 = **安装面等价**（差异全为 markdown 文档，`install.ps1` 不读 `docs/**`），**非字节等价**。**全部结论一律以权威跑（tag 候选）为准。**
 - **耗时两次差异归因（如实）**：同机负载波动（预跑紧接首次执行、缓存热；权威跑期间本机另有活动）。**判据（幂等/闭环/残余/零写入）两次完全一致** ⇒ 不影响结论；**对外口径取权威跑 3.195 s**。
 - `C3→C4` / `C1→C3` 各 2 项差异**全部**为 `.agent-presets/novel-writing/agent.cordis.yml`（v0.5.2 12677 B ↔ v0.5.3 13256 B，两者内容随版本重写）——**预期行为**（v0.5.3 携带 BUG-007 persona `config.prefix` 修复等预设变更），非缺陷。
 
@@ -75,8 +76,8 @@ powershell -ExecutionPolicy Bypass -File "<repo>\install.ps1" -LocalPath "<repo>
 | `pre-dsh-fingerprint.txt` / `post-dsh-fingerprint.txt` | 真实 `$DSH_HOME` 前后只读指纹（STRICT 面 + INVENTORY 面 + LEAK_SIGNATURE） |
 | `isolate-env.ps1` / `run-drill.ps1` | 演练脚本本体（fail-closed 守卫 + 泄漏检测器 + 6 项包含性断言 + R0 参照 leg） |
 | `verify-tag-changelog.py` | **CHANGELOG 逐字性复核脚本（可复跑）** —— 对 `bab9687:CHANGELOG.md`（发布前）vs `v0.5.3:CHANGELOG.md`（tag 内）独立重算 V1~V6 判据（见 §7） |
-| `pre-tag-run/` | **tag 建立前**的等价候选树（`T = 8fae6881…`）预跑副本，供对照（R1） |
-| `README.md` | 本文件 |
+| `pre-tag-run/` | **tag 建立前**预跑副本（候选 = 发布前**索引树** `T = 8fae6881…`，**非发布树**；与发布树差 3 件发布文档 / 290 行），供耗时与判据对照（R1） |
+| `README.md` | 本文件（含 §8「tag 树 vs tip 树的证据可见性差异」） |
 
 ## 5. 实现期的一次 fail-closed 拦截（如实留档）
 
@@ -111,5 +112,24 @@ python "docs\release\evidence\rel007-drill-20260915\verify-tag-changelog.py"
 | V5 | `[Unreleased]` 分层 | **15 条**顶层条目**全为 COMPAT-***（非 COMPAT 项 `[]`）✅ |
 | V6 | 9 条正文逐字且连续 | 在 `bab9687` 连续命中 L33/44/53/64/76/93/102/111/191，互不重叠，合计 **100 行**，源序保持 ✅ |
 
-⇒ 发布段对本批 6 任务的承载**逐字节可验证**；唯一新增非结构行 = 恢复的 `CLEAN-007` 标题（`a04ea89` 原文）。
+⇒ 发布段对本批 6 任务的承载**逐字节可验证**；唯一新增非结构行 = 恢复的 `CLEAN-007` 标题（`a04ea89` 原文，脚本内 V2b 逐字断言）。
+
+**V2b（F-07 订正）= 恢复标题逐字断言**（原实现只校验「前缀存在恰 1 次」）：实测
+`V2b_detail = {restored_count_in_new: 1, ref_count_in_a04ea89: 1, count_in_pre_release_bab9687: 0, byte_identical_to_a04ea89_L44: true}`。
+
+**可失败性自证（负控，2026-09-16）**：把 tag 侧恢复标题中 1 个字符改掉（`本批`→`本次`）后重跑同一脚本 ⇒
+`byte_identical_to_a04ea89_L44 = false` ∧ `V2_c007_heading_restored = false` ∧ `ALL_OK = false`（基线为 `true/true/true`）
+⇒ **V2b 具备判别力，非恒真**。（负控在 `%TEMP%` 变体副本上执行，仓内脚本与 tag 未受影响。
+注：脚本按设计只输出 JSON、不设非零退出码——判读以 `ALL_OK` 字段为准，此约定与入仓时读数一致。）
+
+## 8. tag 树 vs tip 树的证据可见性差异（P2 订正，来源 `docs/review/REL-007-R1.md` F-03）
+
+本版**不重指 tag**（`v0.5.3` 不可变，peel 恒 = 发布提交 `f608c17`；见 §0）。由此产生一处**必须说明的可见性差异**：
+
+| 对象 | 内容 | 后果 |
+| --- | --- | --- |
+| **tag 树** `v0.5.3`（= 发布时点快照） | `git ls-tree -r v0.5.3 docs/release` = 六件 0.5.x 发布文档 + **仅 `rel006-drill-20260912/` 证据（16 件）**；**不含** `rel007-drill-20260915/**` | tag 树内 `rollback-plan-0.5.3.md` 的 §6 证据指针与复现命令**在该树内不可解析**；其 §4 亦只含预跑单列 `0.611 s`（无权威值） |
+| **tip 树**（`471020c` / `ac12e79` 及后续订正提交） | 本目录全部证据（28 件）+ 双列耗时 + 本节说明 | 复现与取证须在 **tip 侧**执行；`git archive <tip>` 导出后亦可 |
+
+**处置与理由**：本版选择**保留 tag 不变**（发布不可变性优先），改由 tip 侧提交补全证据、并在本文件与 `rollback-plan-0.5.3.md` §6 显式标注该差异 ⇒ **不制造静默悬空指针**。对照：v0.5.2 曾按 DEC-027 授权**重定** tag；本版**不采用**该路径。
 

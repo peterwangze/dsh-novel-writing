@@ -79,9 +79,9 @@ git -C "<repo>" checkout v0.5.2        # v0.5.2 代码基准 = tag peel 914725f8
 
 ## 4. 实测回滚耗时（隔离环境演练，2026-09-16）
 
-两次实跑（同一脚本、同一机、候选内容字节等价）：
+两次实跑（同一脚本、同一机；**判据集一致，但候选树不同**——见下「候选口径」）：
 
-| 步骤 | leg | 预跑（候选 = 发布提交树 `T`） | **权威跑（候选 = tag `v0.5.3`）** |
+| 步骤 | leg | 预跑（候选 = 发布前**索引树** `T`＝`8fae6881…`） | **权威跑（候选 = tag `v0.5.3`）** |
 | --- | --- | --- | --- |
 | （参照）全新 v0.5.2 安装 | R0 | 0.62 s | 1.44 s |
 | 安装 v0.5.3（候选） | C1 | 0.585 s | 1.246 s |
@@ -92,6 +92,11 @@ git -C "<repo>" checkout v0.5.2        # v0.5.2 代码基准 = tag peel 914725f8
 | **往返合计（C1→C5）** | — | **3.289 s** | **13.001 s** |
 
 - **结论**：**回滚耗时实测 3.195 s**（tag 权威跑；预跑 0.611 s）——**两次均远优于 ≤5 分钟窗口**；全部 leg `exit=0`。
+- **候选口径（P2 订正，来源 `docs/review/REL-007-R1.md` F-02）**：两次**判据集一致，但候选树不同，非「字节等价」**——
+  - 预跑候选 = `T = 8fae6881aff950557f5647dd29a50ef53b7b6148`，为**发布前的索引树**（`git cat-file -t` = `tree`；`git fsck` 列为 **dangling tree**；`git log --all` 无任何 commit 引用它），**不含**三件发布文档；
+  - 权威跑候选 = **tag `v0.5.3`** → 提交 `f608c17` → 树 `5aa4da51a0f68c7d37ada27f26555d8c36d7052e`；
+  - 二者差异 = `git diff --stat 8fae6881 5aa4da51` = **恰 3 文件 / 290 行插入**（`docs/release/{feature-flags,release-checklist,rollback-plan}-0.5.3.md`）；候选 tar 指纹亦不同（预跑 `4926DE84…` vs 权威 `ACF5E4A1…`）；
+  - 因此正确表述为「**安装面等价**（三件差异均为 markdown 文档，`install.ps1` 不读取 `docs/**`）**而非字节等价**」；**本表对外口径与全部结论一律取权威跑（tag 候选）**。
 - **两次差异归因（如实）**：同机负载波动（预跑紧接脚本首次执行、文件系统缓存热；权威跑期间本机另有活动）。**判据（幂等/闭环/残余/零写入）两次完全一致**，说明耗时差异不影响结论；**取权威跑值 3.195 s 作为对外口径**。
 - **口径**：以上为**隔离环境**（`DSH_HOME`/`USERPROFILE`/`HOME`/`APPDATA`/`LOCALAPPDATA`/`TEMP` 全重定向至 `%TEMP%\rel007-drill-20260915`）实测值；**不主张**任何无限定语的「真实环境」耗时。
 
@@ -104,7 +109,11 @@ git -C "<repo>" checkout v0.5.2        # v0.5.2 代码基准 = tag peel 914725f8
 
 ## 6. 演练证据指针与复现命令
 
-**证据目录**：`docs/release/evidence/rel007-drill-20260915/`
+> ⚠️ **可见性口径（P2 订正，来源 `docs/review/REL-007-R1.md` F-03）**：本节指向的**证据目录**与复现命令是**tip（当前分支）侧**路径。
+> **tag 树 `v0.5.3` 内不含** `docs/release/evidence/rel007-drill-20260915/**`（实测 `git ls-tree -r v0.5.3 docs/release/evidence` 仅 rel006 目录，共 16 件）——**tag 是发布时点快照**，演练证据在发布提交之后固化。
+> 因此：**在 tag 树上复现演练或按本节路径取证不可行**；须在 tip 侧执行（或 `git archive <tip>` 导出后再跑）。本版的处置是**不重指 tag**（不可变纪律），并由 `471020c`（证据固化）/ `ac12e79`（复核脚本入仓）在 tip 侧补全。
+
+**证据目录（tip 侧）**：`docs/release/evidence/rel007-drill-20260915/`
 
 | 文件 | 内容 |
 | --- | --- |
@@ -114,10 +123,11 @@ git -C "<repo>" checkout v0.5.2        # v0.5.2 代码基准 = tag peel 914725f8
 | `snap-R0/C1…C5*.txt` | 各 leg 的 `DSH_HOME` 文件面快照（相对路径 + 长度 + SHA256 / LINK） |
 | `pre-dsh-fingerprint.txt` / `post-dsh-fingerprint.txt` | 真实 `$DSH_HOME` 前后只读指纹（strict + inventory 两面） |
 | `isolate-env.ps1` / `run-drill.ps1` | 演练脚本本体（fail-closed 路径守卫 + 真实路径泄漏检测器 + 6 项包含性断言） |
-| `pre-tag-run/` | 发布 tag 建立前的等价候选树预跑副本（供对照） |
-| `README.md` | 演练复算方式 + 回滚方案摘要 |
+| `verify-tag-changelog.py` | CHANGELOG 逐字性复核脚本（`ac12e79` 入仓） |
+| `pre-tag-run/` | 发布 tag 建立前预跑副本（候选 = 发布前**索引树** `T`＝`8fae6881…`；**与发布树差 3 件发布文档 / 290 行，非等价候选**，仅供耗时对照） |
+| `README.md` | 演练复算方式 + 回滚方案摘要 + **tag 树 vs tip 树证据可见性差异**小节 |
 
-**复现（隔离环境，只读真实环境）**：
+**复现（隔离环境，只读真实环境；须在 tip 侧执行）**：
 
 ```powershell
 pwsh -NoProfile -File "docs\release\evidence\rel007-drill-20260915\run-drill.ps1" -CandidateRef v0.5.3
