@@ -11,3 +11,4 @@ node_modules/
 .DS_Store
 Thumbs.db
 .governance/agent-locks.json
+.governance/.write-guard-*
