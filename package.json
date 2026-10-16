@@ -35,12 +35,14 @@
     "install.sh",
     "README.md"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "js-yaml": "^4.3.2"
+  },
   "peerDependencies": {
     "@deepseek-ai/cordis": "*",
-    "@deepseek-ai/schemastery": "*",
-    "@deepseek-ai/dsh-settings": "*",
     "@deepseek-ai/dsh-home-paths": "*",
-    "@deepseek-ai/dsh-tools": "*"
+    "@deepseek-ai/dsh-settings": "*",
+    "@deepseek-ai/dsh-tools": "*",
+    "@deepseek-ai/schemastery": "*"
   }
 }

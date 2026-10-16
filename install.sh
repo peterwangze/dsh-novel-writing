@@ -3,10 +3,13 @@
 # 在线：curl -fsSL https://raw.githubusercontent.com/peterwangze/dsh-novel-writing/main/install.sh | sh
 # 离线：解压发行包后，在包目录内执行  ./install.sh --local .
 # 环境变量 DSH_HOME 可覆盖配置目录（默认 ~/.dsh）；--profile 指定目标 profile（默认 web）。
-# 自动检测 dsh 布局版本（双通道自适应）：0.1.5+ per-profile（profiles/<Profile>/package.json
+# 自动检测 dsh 布局版本与宿主代系（双通道自适应）：0.1.5+ per-profile（profiles/<Profile>/package.json
 # 存在 → 接入 profile 私有 node_modules 并注册 package.json dependencies + dsh.profile.bundles，
 # 注册用 node -e，无 node 时回退 python3，两者皆无则降级仅写 patch 行并提示）/ 旧版全局（行为不变）；
 # 两种布局均以 cordis.patch.yml 插行兜底。
+# 宿主代系（BUG-011）：0.2.0+ 声明代（dsh 安装闭包含 @deepseek-ai/dsh-agent-preset）下，
+# 预设由 bundle patch 声明行承载（跳过 .agent-presets 同步）、不写 settings.yaml 默认节
+# （改打数据迁移提示）；0.1.x 分支行为不变。
 #
 # ─────────────────────────────────────────────────────────────────────────────
 # 宿主布局契约（HOST LAYOUT CONTRACT）——单点清单；唯一事实源 = lib/host-contract.mjs 面 4 / 面 5。
@@ -15,7 +18,11 @@
 #   [4.2] 接入通道名 = junction/symlink
 #   [4.3] 注册通道名 = dependencies.dsh-novel-writing + dsh.profile.bundles
 #   [4.4] 兜底注册通道 = cordis.patch.yml
+#   [4.7] 0.2.0 声明代探测 = @deepseek-ai/dsh-agent-preset
 #   [5.5] 预设目录约定 = .agent-presets/<preset-id>/
+# 注（BUG-011）：[4.7] = 宿主闭包能力探测（npm root -g 下 dsh 安装的嵌套 node_modules 含
+#   dsh-agent-preset 包 ⇒ 0.2.0 声明代；0.1.5-rc.2 闭包无此包）。[5.5] 目录机制 0.2.0+ 已废弃
+# （预设组合由 bundle patch 声明行承载）——预设同步/配置写入步骤按此代系分流（0.1.x 行为不变）。
 # 固定标记行 `host-contract:v1` 是 CI 正则对账锚点（test/fixtures/host-surfaces/probe-face.mjs ⑧，在 sanity 步骤内
 # 执行）：改动任一约定字面量 MUST 同步本块 + lib/host-contract.mjs 对应条目——三者不一致即 CI 红（防「脚本知识
 # vs 契约声明」静默漂移）。本块为纯注释、无可执行语句：install 行为零变化（COMPAT-009 强等价证据见 CHANGELOG）。
@@ -67,6 +74,18 @@ else
   NEW_LAYOUT=0
   NM="$DSH_HOME/profiles/node_modules"
   echo "==> 检测到 dsh 旧布局（<=0.1.2 全局 node_modules）：接入 $NM"
+fi
+
+# 宿主代系探测（BUG-011；能力检测，非版本号字符串）：npm root -g 下 dsh 安装闭包含
+# @deepseek-ai/dsh-agent-preset = 0.2.0 声明代（该包首版 0.1.7-alpha.1，0.1.5-rc.2 闭包无此包）。
+# 探测失败（npm 不在 PATH / 非全局 npm 安装）⇒ 保守走 0.1.x 分支：后续步骤多做无害动作、不少做关键动作。
+HOST_DECL_GEN=0
+NPM_ROOT=$(command -v npm >/dev/null 2>&1 && npm root -g 2>/dev/null | head -n 1 | tr -d '\r' || true)
+if [ -n "$NPM_ROOT" ] && [ -d "$NPM_ROOT/@deepseek-ai/dsh/node_modules/@deepseek-ai/dsh-agent-preset" ]; then
+  HOST_DECL_GEN=1
+  echo "==> 检测到 dsh 0.2.0+ 声明代宿主（dsh-agent-preset 在安装闭包）"
+else
+  echo "==> 未检测到 0.2.0 声代号迹（按 0.1.x 分支执行预设/配置步骤）"
 fi
 DST="$NM/$PLUGIN"
 mkdir -p "$NM"
@@ -198,12 +217,73 @@ PYEOF
   fi
 fi
 
-echo "==> 幂等写入 cordis.patch.yml"
+# ── cordis.patch.yml 宿主行（按宿主代系分流）──────────────────────────────
 PATCH="$PDIR/cordis.patch.yml"
 mkdir -p "$PDIR"
-if grep -q "name: dsh-novel-writing" "$PATCH" 2>/dev/null; then
+if [ "$HOST_DECL_GEN" = "1" ]; then
+  # 0.2.0 声明代（BUG-011）：宿主行 + 预设声明行由包内 cordis.patch.yml 经 bundles 通道承载——
+  # 此处不插入；且幂等撤除本安装器历史版本插入的同 id insert 行（双层同 id 条目会让宿主
+  # SettingsForms 对本条目写 config 即 fatal，隔离实例实证）。撤除范围严格限定 `- insert:` 块内
+  # 的 novel-writing 条目；顶层 id-targeted 覆盖行（宿主设置面写的 config）绝不触碰。
+  # 撤除用 node 行级处理（HOST_DECL_GEN=1 ⇒ npm 可用 ⇒ node 必在场）。
+  if [ -f "$PATCH" ] && grep -q "name: dsh-novel-writing" "$PATCH" 2>/dev/null; then
+    REMOVED=$(node -e '
+const fs = require("fs");
+const p = process.argv[1];
+const lines = fs.readFileSync(p, "utf8").replace(/\r\n/g, "\n").split("\n");
+let removed = false;
+for (let i = 0; i < lines.length && !removed; i++) {
+  const m = lines[i].match(/^(\s*)(-\s+)?insert:\s*$/);
+  if (!m) continue;
+  const insertIndent = m[1].length;
+  let itemIndent = -1; let blockEnd = i + 1;
+  for (let j = i + 1; j < lines.length; j++) {
+    const l = lines[j];
+    if (/^\s*$/.test(l) || /^\s*#/.test(l)) continue;
+    const ind = (l.match(/^\s*/) || [""])[0].length;
+    if (ind <= insertIndent) { blockEnd = j; break }
+    blockEnd = j + 1;
+    if (itemIndent < 0) itemIndent = ind;
+  }
+  if (itemIndent < 0) continue;
+  const itemRe = new RegExp("^ {" + itemIndent + "}- ");
+  const keep = [];
+  let skipping = false; let sawTarget = false;
+  for (let j = i + 1; j < blockEnd; j++) {
+    const l = lines[j];
+    if (itemRe.test(l)) {
+      const isOurs = new RegExp("^ {" + itemIndent + "}- id:\\s*novel-writing\\s*$").test(l)
+        && j + 1 < blockEnd && /^\s*name:\s*dsh-novel-writing\s*$/.test(lines[j + 1]);
+      if (isOurs) sawTarget = true;
+      skipping = isOurs;
+    }
+    if (!skipping) keep.push(l);
+  }
+  if (!sawTarget) continue;
+  const hasItem = keep.some((l) => itemRe.test(l));
+  const rebuilt = lines.slice(0, i);
+  if (hasItem) { rebuilt.push(lines[i]); rebuilt.push(...keep); }
+  rebuilt.push(...lines.slice(blockEnd));
+  lines.length = 0; lines.push(...rebuilt);
+  removed = true;
+}
+if (!removed) { console.log("NONE"); process.exit(0); }
+const hasAnyEntry = lines.some((l) => /^\s*-\s+/.test(l));
+fs.writeFileSync(p, hasAnyEntry ? lines.join("\n") + "\n" : "[]\n", "utf8");
+console.log("REMOVED");
+' "$PATCH" 2>/dev/null)
+    case "$REMOVED" in
+      REMOVED) echo "==> 已撤除历史 insert 宿主行（0.2.0 双通道同 id 冲突防护）：$PATCH" ;;
+      *) echo "==> 0.2.0+ 宿主：宿主行/预设声明行由 bundle patch 承载，跳过 insert（顶层 id-targeted 行保持不动）" ;;
+    esac
+  else
+    echo "==> 0.2.0+ 宿主：宿主行/预设声明行由 bundle patch 承载，跳过 insert"
+  fi
+elif grep -q "name: dsh-novel-writing" "$PATCH" 2>/dev/null; then
+  echo "==> 幂等写入 cordis.patch.yml"
   echo "    已配置，跳过"
 else
+  echo "==> 幂等写入 cordis.patch.yml"
   if [ -f "$PATCH" ]; then
     printf '%s\n' '' '- insert:' '    - id: novel-writing' '      name: dsh-novel-writing' >> "$PATCH"
   else
@@ -217,31 +297,54 @@ EOF
   echo "    已更新 $PATCH"
 fi
 
-echo "==> 同步 agent 预设"
+# ── agent 预设（按宿主代系分流）──────────────────────────────────────────
 PRESET_SRC="$SRC/agent-presets/novel-writing"
 PRESET_DST="$DSH_HOME/.agent-presets/novel-writing"
-if [ -f "$PRESET_SRC/agent.cordis.yml" ]; then
+if [ "$HOST_DECL_GEN" = "1" ]; then
+  # 0.2.0+：.agent-presets 目录机制官方废弃（Nothing reads that directory any more）——
+  # 预设组合由包内 cordis.patch.yml 的 @deepseek-ai/dsh-agent-preset 声明行经 bundles 通道承载。
+  echo "==> 0.2.0+ 宿主：预设由 bundle patch 声明行承载（preset-novel-writing），跳过 .agent-presets 目录同步"
+elif [ -f "$PRESET_SRC/agent.cordis.yml" ]; then
+  echo "==> 同步 agent 预设"
   mkdir -p "$PRESET_DST"
   cp -R "$PRESET_SRC/." "$PRESET_DST/"
   echo "    预设已同步：$PRESET_DST"
 else
+  echo "==> 同步 agent 预设"
   echo "    未找到包内预设目录，跳过" >&2
 fi
 
-echo "==> 幂等写入 settings.yaml"
+# ── 配置默认值 / 数据迁移提示（按宿主代系分流）────────────────────────────
 SETTINGS="$DSH_HOME/settings.yaml"
-if grep -q '^novel-writing:' "$SETTINGS" 2>/dev/null; then
-  echo "    已含 novel-writing 节，跳过"
-else
-  {
+IMPORTED="$DSH_HOME/settings.yaml.imported"
+if [ "$HOST_DECL_GEN" = "1" ]; then
+  # 0.2.0+：全局 settings.yaml 机制整体移除——不写默认节（插件 Config 声明承载默认值；
+  # 写了也会触发宿主一次性 importLegacyDocument rename 副作用）。
+  if [ -f "$IMPORTED" ] && grep -q '^novel-writing:' "$IMPORTED" 2>/dev/null; then
     echo ''
-    echo 'novel-writing:'
-    echo '  enabled: true'
-    echo '  workspaceRoot: ""'
-    echo '  pollMs: 2000'
-    echo '  apiPublic: false'
-  } >> "$SETTINGS"
-  echo "    已写入默认配置"
+    echo "[数据迁移] 检测到 $IMPORTED 含 novel-writing 配置节（小说↔会话绑定等）。"
+    echo "  0.2.0 宿主的旧文档导入器存在时序缺陷（inactive context 写入失败即丢节，隔离实例实证），"
+    echo "  本插件已内置自动迁移：下次启动 dsh 后自动把该节读入 profile（工作区根/绑定/平台配置恢复）；"
+    echo "  也可在工作台调用 /novel-writing/api/settings-migrate 手动触发（body {\"force\":true} 可越过全新护栏）。"
+    echo "  迁移成功后 .imported 存档不再被读取，确认工作台数据无误后可自行归档删除。"
+  else
+    echo "==> 0.2.0+ 宿主：配置默认值由插件 Config 声明承载，跳过 settings.yaml 写入"
+  fi
+else
+  echo "==> 幂等写入 settings.yaml"
+  if grep -q '^novel-writing:' "$SETTINGS" 2>/dev/null; then
+    echo "    已含 novel-writing 节，跳过"
+  else
+    {
+      echo ''
+      echo 'novel-writing:'
+      echo '  enabled: true'
+      echo '  workspaceRoot: ""'
+      echo '  pollMs: 2000'
+      echo '  apiPublic: false'
+    } >> "$SETTINGS"
+    echo "    已写入默认配置"
+  fi
 fi
 
 echo ''
@@ -252,6 +355,9 @@ elif [ "$NEW_LAYOUT" = "1" ]; then
   echo "  仅写入 patch 行（未注册 profile package.json——node/python3 均不可用）；建议可用后重跑以启用官方注册通道。"
 else
   echo "  已接入全局 profiles/node_modules + patch 行（dsh 旧布局）。"
+fi
+if [ "$HOST_DECL_GEN" = "1" ]; then
+  echo "  0.2.0+ 宿主：预设「小说写作工作流」由 bundle patch 声明行注册（重启后在预设选择器可选）。"
 fi
 echo "  请重启 DSH。然后在预设选择器中选「小说写作工作流」开始创作；"
 echo "  浏览器会话顶部「小说」标签 = 工作台（实时渲染/章节编辑/发布/数据）。"

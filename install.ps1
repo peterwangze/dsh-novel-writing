@@ -3,21 +3,29 @@
 # 离线：解压发行包后，在包目录内执行  .\install.ps1 -LocalPath .
 # 环境变量 DSH_HOME 可覆盖配置目录（默认 ~/.dsh）；-Profile 指定目标 profile（默认 web）。
 #
-# 安装内容（自动检测 dsh 布局版本，双通道自适应）：
+# 安装内容（自动检测 dsh 布局版本与宿主代系，双通道自适应）：
 #   1) 把插件包接入 node_modules（junction 优先，失败回退拷贝）——
 #      新布局（dsh ≥0.1.5，特征 = <DSH_HOME>\profiles\<Profile>\package.json 存在）：
 #        接入 <DSH_HOME>\profiles\<Profile>\node_modules，并幂等注册 profile package.json
 #        （dependencies.dsh-novel-writing = file:<源码路径> + dsh.profile.bundles 追加，
 #        dsh ≥0.1.5 官方注册通道）；
 #      旧布局（≤0.1.2）：接入 <DSH_HOME>\profiles\node_modules（行为不变）；
-#   2) 在 <DSH_HOME>\profiles\<Profile>\cordis.patch.yml 幂等插入一行（两种布局通用兜底，
-#      已独立验证有效）：
+#   2) 在 <DSH_HOME>\profiles\<Profile>\cordis.patch.yml 幂等插入宿主行（按宿主代系分流）：
+#      0.1.x（两种布局通用兜底，已独立验证有效）：
 #        - id: novel-writing
 #          name: dsh-novel-writing
-#      （dual-face 包：宿主小说管理服务 + 浏览器「小说工作台」）；
-#   3) 同步 agent 预设到 <DSH_HOME>\.agent-presets\novel-writing\（agent.cordis.yml +
-#      26+ SKILL + agents 参考文档，之后 roster 里可直接选择「小说写作工作流」）；
-#   4) 若 settings.yaml 没有 novel-writing 节，写入默认配置（开箱即用）。
+#      0.2.0+（声明代）：**不插入**，并撤除本安装器历史版本插入的同 id insert 行——宿主行 + 预设
+#      声明行均由包内 cordis.patch.yml 经 bundles 通道承载；profile patch 同 id insert 会形成
+#      双层同 id 条目，宿主 SettingsForms 对该条目写 config 即 fatal（"Configuration for
+#      novel-writing is overridden by a home patch or command-line overlay"，隔离实例 2026-10-16
+#      实证；宿主自身的 id-targeted config 覆盖行不受影响、保持不动）；
+#   3) agent 预设（按宿主代系分流）：
+#      0.1.x：同步到 <DSH_HOME>\.agent-presets\novel-writing\（agent.cordis.yml + 26+ SKILL）；
+#      0.2.0+：跳过（.agent-presets 目录机制已废弃——预设组合由 bundle patch 声明行承载）；
+#   4) 配置（按宿主代系分流）：
+#      0.1.x：settings.yaml 无 novel-writing 节则写默认配置（开箱即用）；
+#      0.2.0+：不写（配置默认值由插件 Config 声明承载）；若检测到 settings.yaml.imported
+#      残留 novel-writing 节（旧配置被宿主一次性迁移丢弃），打印恢复指引。
 #
 # ─────────────────────────────────────────────────────────────────────────────
 # 宿主布局契约（HOST LAYOUT CONTRACT）——单点清单；唯一事实源 = lib/host-contract.mjs 面 4 / 面 5。
@@ -26,7 +34,11 @@
 #   [4.2] 接入通道名 = junction/symlink
 #   [4.3] 注册通道名 = dependencies.dsh-novel-writing + dsh.profile.bundles
 #   [4.4] 兜底注册通道 = cordis.patch.yml
+#   [4.7] 0.2.0 声明代探测 = @deepseek-ai/dsh-agent-preset
 #   [5.5] 预设目录约定 = .agent-presets/<preset-id>/
+# 注（BUG-011）：[4.7] = 宿主闭包能力探测（npm root -g 下 dsh 安装的嵌套 node_modules 含
+#   dsh-agent-preset 包 ⇒ 0.2.0 声明代；0.1.5-rc.2 闭包无此包）。[5.5] 目录机制 0.2.0+ 已废弃
+# （预设组合由 bundle patch 声明行承载）——步骤 3/4 按此代系分流（0.1.x 行为不变）。
 # 固定标记行 `host-contract:v1` 是 CI 正则对账锚点（test/fixtures/host-surfaces/probe-face.mjs ⑧，在 sanity 步骤内
 # 执行）：改动任一约定字面量 MUST 同步本块 + lib/host-contract.mjs 对应条目——三者不一致即 CI 红（防「脚本知识
 # vs 契约声明」静默漂移）。本块为纯注释、无可执行语句：install 行为零变化（COMPAT-009 强等价证据见 CHANGELOG）。
@@ -136,6 +148,20 @@ if ($LocalPath) {
 # ── 布局检测（步骤 2/3 按此分流）：profiles\<Profile>\package.json 存在 = dsh ≥0.1.5 新布局
 $profileDir = Join-Path $dshHome "profiles\$Profile"
 $newLayout = Test-Path (Join-Path $profileDir 'package.json')
+
+# ── 宿主代系探测（BUG-011；能力检测，非版本号字符串）：dsh 安装闭包（npm root -g 定位）含
+#    @deepseek-ai/dsh-agent-preset 包 = 0.2.0 声明代（该包首版 0.1.7-alpha.1，0.1.5-rc.2 闭包无此包）。
+#    探测失败（npm 不在 PATH / 非全局 npm 安装）⇒ 保守走 0.1.x 分支：步骤 3/4 多做无害动作、不少做关键动作。
+$hostDeclGen = $false
+try {
+  $npmRootRaw = (npm root -g 2>$null | Select-Object -First 1)
+  if ($npmRootRaw) {
+    $npmRoot = (([string]$npmRootRaw) -replace [char]0xFEFF, '').Trim() -replace "`r|`n", ''
+  } else { $npmRoot = '' }
+  if ($npmRoot -ne '' -and (Test-Path (Join-Path $npmRoot '@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-agent-preset'))) { $hostDeclGen = $true }
+} catch { $hostDeclGen = $false }
+if ($hostDeclGen) { Write-Step "检测到 dsh 0.2.0+ 声明代宿主（dsh-agent-preset 在安装闭包）" }
+else { Write-Step "未检测到 0.2.0 声代号迹（按 0.1.x 分支执行步骤 3/4）" }
 
 # ── 2. 链接 / 拷贝到 node_modules（新布局 = profile 私有；旧布局 = 全局）────────
 if ($newLayout) {
@@ -250,7 +276,7 @@ if ($newLayout) {
   }
 }
 
-# ── 3c. 幂等写入 cordis.patch.yml（两种布局通用兜底，已独立验证有效）────────────
+# ── 3c. cordis.patch.yml 宿主行（按宿主代系分流）─────────────────────────────
 New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
 $patch = Join-Path $profileDir 'cordis.patch.yml'
 
@@ -265,7 +291,82 @@ function New-PatchTemplate {
   ) -join "`n"
 }
 
-if (-not (Test-Path $patch)) {
+if ($hostDeclGen) {
+  # 0.2.0 声明代（BUG-011）：宿主行 + 预设声明行由包内 cordis.patch.yml 经 bundles 通道承载——
+  # 此处**不插入**；且幂等撤除本安装器历史版本（≤0.1.5 双保险时代）插入的同 id insert 行：
+  # 双层同 id 条目会让宿主 SettingsForms 对本条目写 config 即 fatal（隔离实例实证
+  # "Configuration for novel-writing is overridden by a home patch or command-line overlay"）。
+  # 撤除范围严格限定在 `- insert:` 块内的 novel-writing 条目；顶层的 id-targeted 覆盖行
+  # （宿主设置面写入的 config，形如顶格 `- id: novel-writing` + `config:`）**绝不触碰**。
+  $removed = $false
+  if (Test-Path $patch) {
+    $content = [System.IO.File]::ReadAllText($patch)
+    if ($content.Contains('name: dsh-novel-writing') -and $content -match '(?m)^\s*-\s+insert:\s*$') {
+      $lines = ($content -replace "`r`n", "`n").Split("`n")
+      for ($i = 0; $i -lt $lines.Length; $i++) {
+        if ($lines[$i] -notmatch '^\s*(-\s+)?insert:\s*$') { continue }
+        $insertIndent = ([regex]::Match($lines[$i], '^\s*')).Value.Length
+        # 求该 insert 块的条目缩进（块内首个非空非注释行）
+        $itemIndent = -1
+        for ($j = $i + 1; $j -lt $lines.Length; $j++) {
+          $l = $lines[$j]
+          if ($l -match '^\s*$' -or $l -match '^\s*#') { continue }
+          $ind = ([regex]::Match($l, '^\s*')).Value.Length
+          if ($ind -le $insertIndent) { break }
+          if ($itemIndent -lt 0) { $itemIndent = $ind }
+        }
+        if ($itemIndent -lt 0) { continue }
+        # 块边界（首个缩进 ≤ insert 键缩进的行之前）
+        $blockEnd = $i + 1
+        while ($blockEnd -lt $lines.Length) {
+          $l = $lines[$blockEnd]
+          if ($l -match '^\s*$' -or $l -match '^\s*#') { $blockEnd++; continue }
+          $ind = ([regex]::Match($l, '^\s*')).Value.Length
+          if ($ind -le $insertIndent) { break }
+          $blockEnd++
+        }
+        # 块内逐条目过滤：条目起始行 = 恰在 itemIndent 缩进的 `- `；命中「- id: novel-writing 且次行 name: dsh-novel-writing」即整条摘除
+        $window = New-Object System.Collections.Generic.List[string]
+        $keep = $true; $sawTarget = $false
+        for ($j2 = $i + 1; $j2 -lt $blockEnd; $j2++) {
+          $l = $lines[$j2]
+          if ($l -match ('^ {' + $itemIndent + '}- ')) {
+            $isOurs = ($l -match ('^ {' + $itemIndent + '}- id:\s*novel-writing\s*$')) -and ($j2 + 1 -lt $blockEnd) -and ($lines[$j2 + 1] -match '^\s*name:\s*dsh-novel-writing\s*$')
+            if ($isOurs) { $sawTarget = $true }
+            $keep = -not $isOurs
+          }
+          if ($keep) { $window.Add($l) }
+        }
+        if (-not $sawTarget) { continue }
+        # 块内已无任何条目 ⇒ 连 insert 键一并撤除
+        $hasItem = $false
+        foreach ($wl in $window) { if ($wl -match ('^ {' + $itemIndent + '}- ')) { $hasItem = $true; break } }
+        $rebuilt = New-Object System.Collections.Generic.List[string]
+        for ($k = 0; $k -lt $i; $k++) { $rebuilt.Add($lines[$k]) }
+        if ($hasItem) { $rebuilt.Add($lines[$i]); foreach ($wl in $window) { $rebuilt.Add($wl) } }
+        for ($k = $blockEnd; $k -lt $lines.Length; $k++) { $rebuilt.Add($lines[$k]) }
+        $lines = $rebuilt.ToArray()
+        $removed = $true
+        break # 单块处理即可：本安装器只写过一个 insert 块
+      }
+      if ($removed) {
+        $body = ($lines -join "`n") + "`n"
+        # 文件已无任何条目（只剩注释/空行）⇒ 归一为空列表根（注释型空文档对 loader 是 null，不安全）
+        $hasAnyEntry = $false
+        foreach ($l in $lines) { if ($l -match '^\s*-\s+') { $hasAnyEntry = $true; break } }
+        if (-not $hasAnyEntry) { $body = "[]`n" }
+        [System.IO.File]::WriteAllText($patch, $body, (New-Object System.Text.UTF8Encoding($false)))
+        Write-Step "已撤除历史 insert 宿主行（0.2.0 双通道同 id 冲突防护）：$patch"
+      } else {
+        Write-Step "0.2.0+ 宿主：宿主行/预设声明行由 bundle patch 承载，跳过 insert（检测到顶层 id-targeted 行，保持不动）"
+      }
+    } else {
+      Write-Step "0.2.0+ 宿主：宿主行/预设声明行由 bundle patch 承载，跳过 insert"
+    }
+  } else {
+    Write-Step "0.2.0+ 宿主：宿主行/预设声明行由 bundle patch 承载，跳过 insert"
+  }
+} elseif (-not (Test-Path $patch)) {
   Write-Step "创建 $patch"
   [System.IO.File]::WriteAllText($patch, (New-PatchTemplate), (New-Object System.Text.UTF8Encoding($false)))
 } else {
@@ -316,10 +417,14 @@ if (-not (Test-Path $patch)) {
   }
 }
 
-# ── 4. 同步 agent 预设 ─────────────────────────────────────────────────
+# ── 4. agent 预设（按宿主代系分流）───────────────────────────────────────
 $presetSrc = Join-Path $src 'agent-presets\novel-writing'
 $presetDst = Join-Path $dshHome '.agent-presets\novel-writing'
-if (Test-Path (Join-Path $presetSrc 'agent.cordis.yml')) {
+if ($hostDeclGen) {
+  # 0.2.0+：.agent-presets 目录机制官方废弃（Nothing reads that directory any more）——
+  # 预设组合由包内 cordis.patch.yml 的 @deepseek-ai/dsh-agent-preset 声明行经 bundles 通道承载。
+  Write-Step "0.2.0+ 宿主：预设由 bundle patch 声明行承载（preset-novel-writing），跳过 .agent-presets 目录同步"
+} elseif (Test-Path (Join-Path $presetSrc 'agent.cordis.yml')) {
   New-Item -ItemType Directory -Path $presetDst -Force | Out-Null
   robocopy $presetSrc $presetDst /E /XD .git /NFL /NDL /NJH /NJS | Out-Null
   if ($LASTEXITCODE -gt 7) { Write-Error "预设同步失败（robocopy 退出码 $LASTEXITCODE）" }
@@ -328,27 +433,47 @@ if (Test-Path (Join-Path $presetSrc 'agent.cordis.yml')) {
   Write-Warning "未找到包内预设目录：$presetSrc（跳过预设同步）"
 }
 
-# ── 5. 幂等写入默认配置（settings.yaml：novel-writing 节）─────────────
+# ── 5. 配置默认值 / 数据迁移提示（按宿主代系分流）────────────────────────
 $settingsFile = Join-Path $dshHome 'settings.yaml'
-$defaultConfig = @(
-  'novel-writing:'
-  '  enabled: true'
-  '  workspaceRoot: ""'
-  '  pollMs: 2000'
-  '  apiPublic: false'
-) -join "`n"
-if (Test-Path $settingsFile) {
-  $settingsContent = [System.IO.File]::ReadAllText($settingsFile)
-  if ($settingsContent -match '(?m)^novel-writing:\s*$') {
-    Write-Step "$settingsFile 已含 novel-writing 节，跳过默认配置写入"
+$importedFile = Join-Path $dshHome 'settings.yaml.imported'
+if ($hostDeclGen) {
+  # 0.2.0+：全局 settings.yaml 机制整体移除——不写默认节（插件 Config 声明承载默认值；
+  # 写了也会触发宿主一次性 importLegacyDocument rename 副作用）。
+  $importedHasNv = $false
+  if (Test-Path $importedFile) {
+    try { if (([System.IO.File]::ReadAllText($importedFile) -match '(?m)^novel-writing:\s*$')) { $importedHasNv = $true } } catch { }
+  }
+  if ($importedHasNv) {
+    Write-Host ''
+    Write-Host "[数据迁移] 检测到 $importedFile 含 novel-writing 配置节（小说↔会话绑定等）。" -ForegroundColor Yellow
+    Write-Host "  0.2.0 宿主的旧文档导入器存在时序缺陷（inactive context 写入失败即丢节，隔离实例实证），" -ForegroundColor Yellow
+    Write-Host "  本插件已内置自动迁移：下次启动 dsh 后自动把该节读入 profile（工作区根/绑定/平台配置恢复）；" -ForegroundColor Yellow
+    Write-Host "  也可在工作台调用 /novel-writing/api/settings-migrate 手动触发（body {""force"":true} 可越过全新护栏）。" -ForegroundColor Yellow
+    Write-Host "  迁移成功后 .imported 存档不再被读取，确认工作台数据无误后可自行归档删除。" -ForegroundColor Yellow
   } else {
-    $nl = if ($settingsContent.EndsWith("`n")) { '' } else { "`n" }
-    [System.IO.File]::WriteAllText($settingsFile, $settingsContent + $nl + $defaultConfig + "`n", (New-Object System.Text.UTF8Encoding($false)))
-    Write-Step "已写入默认配置到 ${settingsFile}"
+    Write-Step "0.2.0+ 宿主：配置默认值由插件 Config 声明承载，跳过 settings.yaml 写入"
   }
 } else {
-  [System.IO.File]::WriteAllText($settingsFile, $defaultConfig + "`n", (New-Object System.Text.UTF8Encoding($false)))
-  Write-Step "已创建 ${settingsFile}（默认配置）"
+  $defaultConfig = @(
+    'novel-writing:'
+    '  enabled: true'
+    '  workspaceRoot: ""'
+    '  pollMs: 2000'
+    '  apiPublic: false'
+  ) -join "`n"
+  if (Test-Path $settingsFile) {
+    $settingsContent = [System.IO.File]::ReadAllText($settingsFile)
+    if ($settingsContent -match '(?m)^novel-writing:\s*$') {
+      Write-Step "$settingsFile 已含 novel-writing 节，跳过默认配置写入"
+    } else {
+      $nl = if ($settingsContent.EndsWith("`n")) { '' } else { "`n" }
+      [System.IO.File]::WriteAllText($settingsFile, $settingsContent + $nl + $defaultConfig + "`n", (New-Object System.Text.UTF8Encoding($false)))
+      Write-Step "已写入默认配置到 ${settingsFile}"
+    }
+  } else {
+    [System.IO.File]::WriteAllText($settingsFile, $defaultConfig + "`n", (New-Object System.Text.UTF8Encoding($false)))
+    Write-Step "已创建 ${settingsFile}（默认配置）"
+  }
 }
 
 Write-Host ''
@@ -357,6 +482,9 @@ if ($newLayout) {
   Write-Host "  已注册 profile dependencies + bundles（dsh ≥0.1.5）+ patch 行兜底双保险。"
 } else {
   Write-Host "  已接入全局 profiles\node_modules + patch 行（dsh 旧布局）。"
+}
+if ($hostDeclGen) {
+  Write-Host "  0.2.0+ 宿主：预设「小说写作工作流」由 bundle patch 声明行注册（重启后在预设选择器可选）。"
 }
 Write-Host "  请重启 DSH。然后在预设选择器中选「小说写作工作流」开始创作；"
 Write-Host "  浏览器会话顶部「小说」标签 = 工作台（实时渲染/章节编辑/发布/数据）。"
