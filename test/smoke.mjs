@@ -1831,16 +1831,29 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
     const at = codeSrc.indexOf("ctx.on('internal/service'")
     const block = at >= 0 ? codeSrc.slice(at, at + 520) : ''
     const listenerCount = (codeSrc.match(/ctx\.on\('internal\/service'/g) ?? []).length
-    const setupCount = (codeSrc.match(/launcher\.setup\(\{ api: base\.api, sessions: ctx\.get\('sessions'\) \}\)/g) ?? []).length
+    // BUG-011：setup 增第三参 resolveService（uiWorkspace 等未 inject 服务的惰性解析通道）——钉死文本随之
+    const setupRe = /launcher\.setup\(\{ api: base\.api, sessions: ctx\.get\('sessions'\), resolveService: \(n\) => ctx\.get\(n\) \}\)/g
+    const setupCount = (codeSrc.match(setupRe) ?? []).length
     check('BUG-005 单一 internal/service 监听器同时刷新 launcher 面与 hook 面（合并监听不重复注册）',
       listenerCount === 1
-      && block.includes("launcher.setup({ api: base.api, sessions: ctx.get('sessions') })")
+      && block.includes("launcher.setup({ api: base.api, sessions: ctx.get('sessions'), resolveService: (n) => ctx.get(n) })")
       && block.includes('useSessionsH.refresh()') && block.includes("if (name !== 'sessions') return"),
       'listeners=' + listenerCount + ' block=' + JSON.stringify(block.slice(0, 220)))
     check('BUG-005 launcher 首装与 hook 同源：apply 期 launcher.setup 直读 ctx.get（无冻结局部变量）',
       setupCount === 2, 'count=' + setupCount)
     check('BUG-005 清理路径保持：监听 disposer 仍在 apply 返回函数内移除',
       codeSrc.includes('if (offServiceEvent !== null)') && codeSrc.includes('offServiceEvent()'))
+    // ── BUG-011 客户端会话面双表面（0.2.0-rc.2：sessions.open 消失 / list 快照 current·completed 移出）──
+    const currentSelectors = (codeSrc.match(/useSessions\(\(s\) => sessionsCurrentOf\(s\)\)/g) ?? []).length
+    check('BUG-011 会话当前派生双表面：sessionsCurrentOf（0.1.x s.current 字段优先 → 0.2.0 retainedBy.mainView>0 派生）定义在场 ∧ 两消费面（控制台 sessionsCurrent / 分栏 splitCurrent）全部改走该 helper ∧ 旧裸 `typeof s.current` 选择器零残留',
+      codeSrc.includes('function sessionsCurrentOf(s)') && codeSrc.includes("if (typeof s.current === 'string') return s.current")
+      && codeSrc.includes('rb.mainView === \'number\' && rb.mainView > 0') && currentSelectors === 2
+      && !/useSessions\(\(s\) => \(typeof s\.current === 'string'/.test(codeSrc),
+      'selectors=' + currentSelectors)
+    check('BUG-011 打开会话双通道：launcher.open 先 sessions.open（0.1.x）→ 回退 resolveSvc(\'uiWorkspace\').openSession（0.2.0；未 inject 服务经 try/catch 惰性探测，不抛 BUG-003 形态错）∧ 豁免令牌双分支等价（markOpened 因子化）',
+      /open\(sessionId\) \{[\s\S]{0,400}typeof s\.open === 'function'[\s\S]{0,300}resolveSvc\('uiWorkspace'\)[\s\S]{0,200}typeof ws\.openSession === 'function'/.test(codeSrc)
+      && codeSrc.includes('const markOpened = () => {'),
+      'open-dual-channel')
   }
   // ⑨ 消费端与守卫零改动（回归钉：条件调用形态 + degraded 公式 + 联动守卫调用点）
   const neqCount = (codeSrc.match(/useSessions !== null/g) ?? []).length
@@ -2482,7 +2495,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   //      **残余缝（同次实测，未闭合）**：若 2.13 只删**终点闭合行**（**历史锚点**：COMPAT-013 时期值 `L4429-4460`——6 处注册仍全在范围内）
   //      则 ①②③④⑤ **全绿**（实测 262/0：⑤a 计数仍 6 ≡ 6、④ callPrefix = null、⑤b 无 `键: {` 形态构造）
   //      ⇒ 该形态目前无持续机检力。根治需「构造闭合行」口径，而 JS 范围本就可能是**合法语义片段**
-  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L5137-L5139` +1 / 3.8 `L3025-L3035` +1 实测均非配平）——
+  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L5178-L5180` +1 / 3.8 `L3066-L3076` +1 实测均非配平）——
   //      无差别要求配平会误报上述 3 项，故如实留档待另案（非本任务可安全落地）。
   //      **本行 3 个契约行号副本的同步方（CLEAN-006 **N-6** 归属订正，避免审计归因错位）**：本块随
   //      契约 `line` 重基**必须同步**，其**机检执行者 = `COMPAT-015 F3 行号引用对账`**（把本行 2.3
@@ -2616,7 +2629,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // 首行起构造者恰 3 项 = 4.6 `"dsh": {` / 6.1 `"peerDependencies": {` / 6.2 `"engines": {`（面 6 三项
   // JSON 根级子对象；其余 18 项首行为 JS 调用/声明/注释 ⇒ 不适用），项数入 golden（防空转）。
   // **只取首行、不取范围内全部 opener 的理由**：JS 范围可为**合法语义片段**（2.1 `L92-94` 净差 +2 / 2.3
-  // `L4804-L4806` +1 / 3.8 `L3025-L3035` +1 实测均非配平，⑤ 注释已留档）——无差别要求范围内每个 opener 配平
+  // `L4804-L4806` +1 / 3.8 `L3066-L3076` +1 实测均非配平，⑤ 注释已留档）——无差别要求范围内每个 opener 配平
   // 会误报这些条目；而「范围未包住自身构造闭合行」的形态恰以构造键行起段（首行 opener 即充分判据）。
   // 口径边界同 ⑤b（裸字符配平，不剥注释/字符串中的 `{`/`}`）。
   const KEY_OPEN6 = /^\s*(?:"([^"]{1,60})"|'([^']{1,60})'|([A-Za-z_$][\w$.-]{0,60}))\s*:\s*\{\s*$/
@@ -2648,9 +2661,9 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // ⑫d F-3 披露数字入机检（COMPAT-013）：非严格面（**由 rangeItems 动态生成**；实测 **3/4/5/6 共 10 项**——
   // COMPAT-014 C-F-1 订正：原标签「3/5/6」漏面 4，且与下方列举清单自含 `4.6 L17`（面 4）自相矛盾；条目数同时
   // 入 golden）范围条目中「起于注释/空行」者 MUST 恰 2 项
-  //（3.1 起于 `/**` JSDoc L1075、3.5 起于**空行** L1125——互操作说明在本段内、非起点）。动因 = 该计数原为**人工转写**且写错
+  //（3.1 起于 `/**` JSDoc L1093、3.5 起于**空行** L1143——互操作说明在本段内、非起点）。动因 = 该计数原为**人工转写**且写错
   //（CHANGELOG 曾披露「三处」）——与 COMPAT-004 FIND-1 的 tier 串转写漂移同类，故沿用同款处置：实测值
-  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.8 `L3025` 函数行 / 4.6 `L17`
+  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.8 `L3066` 函数行 / 4.6 `L17`
   // `"dsh": {` / 5.1 `L1` `name:` / 5.2 `L16` `- id:` / 5.4 `L77` `- id:` / 6.1 `L39`（修正后真值；修正前
   // `L38` 亦非注释）/ 6.2 `L8` `"engines": {` / 6.4 `L105`（ci.yml `#` 注释起段——JS 口径不计为注释，见下句口径边界）。严格面（面 2 = 11 项）已由 ③ 逐项约束，
   // 本项只覆盖未纳入严格面的面（动态生成：实测 3/4/5/6）；注释口径同 ③（JS 风格），YAML `#` 不在识别面内（与 F-5① 同源前提）。
@@ -3653,6 +3666,120 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   check('BUG-007 看护三态自洽（本环境判定 ' + report7.verdict + (report7.coverage === null ? '' : '，checked=' + report7.coverage.checked + '/' + report7.coverage.enabled) + '）：PASS **只允许**出现在 checked>0（发现项 ' + (report7.coverage?.findings ?? '-') + '）时——NOT_RUN 绝不渲染成 PASS',
     vacuous7 === false && report7.rows.length > 0,
     'verdict=' + report7.verdict + ' vacuous=' + vacuous7 + ' reason=' + String(report7.reason))
+}
+
+// ── BUG-011 B2：双源等价机检（agent.cordis.yml = 0.1.x 通道真源 ↔ cordis.patch.yml = 0.2.0 通道真源）──
+// 动因：预设组合从 0.2.0 起由 bundle patch 的 `@deepseek-ai/dsh-agent-preset` 声明行承载（`.agent-presets/`
+// 目录机制官方废弃），同一份组合行从此存在两份真源——无守卫的双源必然漂移（本批实现期即被本判据抓到
+// 两处转录差：persona「无法确证」与 plan-mode「手动切换模式」）。判据（离线、加载器同方言解析）：
+//   ① 两源行序列（id 依序）全等，**唯一**允许差异 = 已知代际变体（yml `workflow-worker-thread` ↔
+//      patch `workflow-ptc`，同位置成对替换，config 同为 {provider:spawn}）；
+//   ② 共享行 config 深度全等，**唯一**例外 = skill-filesystem 的 customSkillDirs 表达式
+//      （0.1.x baseUrl=预设目录 `skills/`；0.2.0 baseUrl=profile 目录 ⇒ 包内路径
+//      `node_modules/dsh-novel-writing/agent-presets/novel-writing/skills/`——两式各自钉死）；
+//   ③ patch 侧声明行形状：name=@deepseek-ai/dsh-agent-preset ∧ config.id=novel-writing ∧ plugins 数组
+//      ∧ 显示名与 preset.yml 一致 ∧ order 为数字；宿主行 novel-writing 在 insert 内。
+// 判别力正向对照：构造变体（删 ptc 行 / 改共享行 config / 删声明行）喂同一判据必红（非恒真）。
+{
+  const yaml11mod = await import('js-yaml')
+  const yaml11 = yaml11mod.default ?? yaml11mod
+  const JsExpr11 = new yaml11.Type('tag:yaml.org,2002:js', { kind: 'scalar', construct: (data) => ({ __jsExpr: data }) })
+  const schema11 = yaml11.DEFAULT_SCHEMA.extend([JsExpr11])
+  const patchText11 = readFileSync(new URL('../cordis.patch.yml', import.meta.url), 'utf8')
+  const ymlText11 = readFileSync(new URL('../agent-presets/novel-writing/agent.cordis.yml', import.meta.url), 'utf8')
+  const presetMeta11 = readFileSync(new URL('../agent-presets/novel-writing/preset.yml', import.meta.url), 'utf8')
+  const VARIANT_LEGACY_11 = 'workflow-worker-thread:@deepseek-ai/dsh-workflow-worker-thread'
+  const VARIANT_CURRENT_11 = 'workflow-ptc:@deepseek-ai/dsh-workflow-ptc'
+  const SKILL_LEGACY_11 = "new URL('skills/', baseUrl)"
+  const SKILL_PATCH_11 = "new URL('node_modules/dsh-novel-writing/agent-presets/novel-writing/skills/', baseUrl)"
+  const flatRows11 = (rows, out = []) => {
+    for (const row of rows) {
+      if (row === null || typeof row !== 'object' || Array.isArray(row)) continue
+      const { id, config, ...rest } = row
+      // 叶行：config 入比较面（漂移即红）；group 行：config=子行列表由递归摊平逐位比较，不入 JSON。
+      const comparable = row.group === true ? rest : { ...rest, ...(config !== undefined ? { config } : {}) }
+      out.push({ key: String(id ?? '') + ':' + String(row.name ?? ''), rest: JSON.stringify(comparable) })
+      if (row.group === true && Array.isArray(config)) flatRows11(config, out)
+    }
+    return out
+  }
+  /** 纯判据：两源解析产物 → 问题清单（空 = 等价）。group 行摊平后逐位比较（子行差即组差）。 */
+  const dualProblems11 = (patchObj, ymlObj, presetName11) => {
+    const problems = []
+    const inserts = Array.isArray(patchObj) ? patchObj.flatMap((p) => (p && Array.isArray(p.insert)) ? p.insert : []) : []
+    const decl = inserts.find((r) => r && r.name === '@deepseek-ai/dsh-agent-preset')
+    if (decl === undefined) return ['patch 缺少 @deepseek-ai/dsh-agent-preset 声明行']
+    if (!inserts.some((r) => r && r.id === 'novel-writing' && r.name === 'dsh-novel-writing')) problems.push('patch 缺少宿主行 novel-writing（dsh-novel-writing）')
+    if (decl.config?.id !== 'novel-writing') problems.push('声明行 config.id ≠ novel-writing（实为 ' + String(decl.config?.id) + '）')
+    if (!Array.isArray(decl.config?.plugins)) problems.push('声明行 config.plugins 不是数组')
+    if (typeof decl.config?.order !== 'number') problems.push('声明行 config.order 非数字')
+    if (typeof decl.config?.name !== 'string' || decl.config.name !== presetName11) problems.push('声明行显示名 ≠ preset.yml name（' + String(decl.config?.name) + ' ≠ ' + presetName11 + '）')
+    const A = flatRows11(Array.isArray(decl.config?.plugins) ? decl.config.plugins : [])
+    const B = flatRows11(Array.isArray(ymlObj) ? ymlObj : [])
+    if (A.length !== B.length) problems.push(`行数不等（patch ${A.length} ≠ yml ${B.length}）`)
+    const n = Math.min(A.length, B.length)
+    let variants = 0
+    for (let i = 0; i < n; i++) {
+      const a = A[i]; const b = B[i]
+      if (a.key === b.key) continue
+      if (a.key === VARIANT_CURRENT_11 && b.key === VARIANT_LEGACY_11) { variants += 1; continue }
+      problems.push(`行 ${i + 1} 不一致：patch=${a.key} ≠ yml=${b.key}`)
+    }
+    if (variants !== 1) problems.push('代际变体行恰为 1 对（实测 ' + variants + '；0 对 = 变体丢失，>1 = 白名单外差异）')
+    for (let i = 0; i < n; i++) {
+      if (A[i].key !== B[i].key) continue
+      if (A[i].rest === B[i].rest) continue
+      if (A[i].key === 'skill-filesystem:@deepseek-ai/dsh-skill-filesystem') continue
+      problems.push(`行 ${A[i].key} config 漂移：patch=${A[i].rest.slice(0, 160)} ≠ yml=${B[i].rest.slice(0, 160)}`)
+    }
+    return problems
+  }
+  const parse11 = (text) => yaml11.load(text, { schema: schema11 })
+  const patchObj11 = parse11(patchText11)
+  const ymlObj11 = parse11(ymlText11)
+  const presetName11 = ((/^name:\s*(.+)$/m.exec(presetMeta11)) ?? [])[1]?.trim() ?? ''
+  const problems11 = dualProblems11(patchObj11, ymlObj11, presetName11)
+  // 变体行 config 同构（provider:spawn）与 skills 两式钉死（文本面，防表达式本身被改坏）。
+  // 变体行在 delegation group 的子行列表内 ⇒ 按行 id 递归查找（group 行 config = 子行数组）。
+  const findRow11 = (rows, id) => {
+    for (const row of rows) {
+      if (row === null || typeof row !== 'object') continue
+      if (row.id === id) return row
+      if (row.group === true && Array.isArray(row.config)) {
+        const hit = findRow11(row.config, id)
+        if (hit !== undefined) return hit
+      }
+    }
+    return undefined
+  }
+  const decl11 = patchObj11.flatMap((p) => p.insert).find((r) => r.name === '@deepseek-ai/dsh-agent-preset')
+  const ptcRow11 = JSON.stringify(findRow11(decl11.config.plugins, 'workflow-ptc')?.config)
+  const wtRow11 = JSON.stringify(findRow11(ymlObj11, 'workflow-worker-thread')?.config)
+  const skillPatched11 = patchText11.includes(SKILL_PATCH_11)
+  const skillLegacy11 = ymlText11.includes(SKILL_LEGACY_11)
+  check('BUG-011 B2 双源等价：agent.cordis.yml（0.1.x 真源，worker-thread 行保留）↔ cordis.patch.yml 声明行 plugins（0.2.0 真源，ptc 行）行序列/config 全等（唯一允许差异 = 代际变体 + skills 相对路径两式）∧ 声明行形状（id=novel-writing/显示名=preset.yml/order 数字）∧ 宿主行在场',
+    problems11.length === 0 && ptcRow11 === wtRow11 && ptcRow11 === '{"provider":"spawn"}' && skillPatched11 && skillLegacy11,
+    'problems=' + JSON.stringify(problems11.slice(0, 4)) + '(total ' + problems11.length + ') ptc=' + ptcRow11 + ' wt=' + wtRow11 + ' skillP=' + skillPatched11 + ' skillL=' + skillLegacy11)
+  // 判别力正向对照（同判据喂构造变体，必红）：① 删 patch 的 ptc 行；② 改一个共享行 config；③ 删声明行。
+  const declMut1 = structuredClone(decl11)
+  declMut1.config.plugins = declMut1.config.plugins.filter((r) => r.id !== 'workflow-ptc')
+  const neg1 = dualProblems11([{ insert: [declMut1] }], ymlObj11, presetName11)
+  const declMut2 = structuredClone(decl11)
+  declMut2.config.plugins.find((r) => r.id === 'tool-todo').config = { allowParallelInProgress: false }
+  const neg2 = dualProblems11([{ insert: [declMut2] }], ymlObj11, presetName11)
+  const neg3 = dualProblems11([{ insert: [] }], ymlObj11, presetName11)
+  check('BUG-011 B2 判别力正向对照：删 ptc 行 ⇒ 红（' + neg1.length + ' 项）∧ 改共享行 config ⇒ 红（' + neg2.length + ' 项）∧ 删声明行 ⇒ 红（' + neg3.length + ' 项）——判据非恒真',
+    neg1.length > 0 && neg2.length > 0 && neg3.length > 0,
+    'neg1=' + JSON.stringify(neg1.slice(0, 2)) + ' neg2=' + JSON.stringify(neg2.slice(0, 2)) + ' neg3=' + JSON.stringify(neg3.slice(0, 2)))
+  // preset-schema-face 双源接线自断言：validate-preset 以 dual 模式调用；工具导出双源常量与抽取器。
+  const psfSrc11 = readFileSync(new URL('./fixtures/host-surfaces/preset-schema-face.mjs', import.meta.url), 'utf8')
+  const vpSrc11 = readFileSync(new URL('./validate-preset.mjs', import.meta.url), 'utf8')
+  check('BUG-011 B2 双源看护接线：preset-schema-face 导出 PATCH_COMPOSITION/DECLARATION_PACKAGE/GENERATION_VARIANT/extractDeclarationPlugins ∧ GENERATION_VARIANT 为披露项 ∧ DUAL_SOURCE_DRIFT 为发现项 ∧ validate-preset 以 dual:true 调用',
+    psfSrc11.includes('export const PATCH_COMPOSITION') && psfSrc11.includes('export const DECLARATION_PACKAGE')
+      && psfSrc11.includes('export const GENERATION_VARIANT') && psfSrc11.includes('export function extractDeclarationPlugins')
+      && psfSrc11.includes("'GENERATION_VARIANT',") && psfSrc11.includes("'DUAL_SOURCE_DRIFT',")
+      && vpSrc11.includes('dual: true'),
+    'wired=' + (vpSrc11.includes('dual: true')))
 }
 //   至少 4 个任务周期（179 vs 276，正落在 COMPAT-007 修改的代码块内）；本断言把「随 smoke 计数变更同步」由
 //   文档纪律升级为机检（改 README 计数与改 smoke 断言数必须同 commit）。**必须保持为本文件最后一条 check**

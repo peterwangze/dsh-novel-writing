@@ -108,7 +108,7 @@ jobs:
       - name: 宿主服务逻辑冒烟（schemastery 真包 + 其余最小替身）
         run: |
           mkdir -p node_modules/@deepseek-ai/cordis node_modules/@deepseek-ai/dsh-settings node_modules/@deepseek-ai/dsh-home-paths node_modules/@deepseek-ai/dsh-tools
-          npm install --no-save @deepseek-ai/schemastery >/dev/null 2>&1
+          npm install --no-save @deepseek-ai/schemastery js-yaml >/dev/null 2>&1
           cat > node_modules/@deepseek-ai/cordis/index.js <<'EOF'
           export class Service { constructor(ctx, name) { ctx.reflect.provide(name, this) } }
           EOF

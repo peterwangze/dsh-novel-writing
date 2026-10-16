@@ -99,7 +99,7 @@ const INSTALL_HEAD_LIMIT = 60
 // COMPAT-016 P3-11（收口 REVIEW-COMPAT-015-R1 P3-11）：golden 由「数量 5」改为**有序 id 集**——原实现只锁数量 ⇒
 // 两脚本同步把 `[4.2]` 换成 `[4.6]` 并写入 ∈ 4.6 symbol 的字面量即可全绿（`keysA === keysB` 只保证两脚本自洽，
 // 面 4/5 的**覆盖面脱靶**零信号）。扩项 / 删项 / 换项 MUST 显式改 golden（同仓 golden 先例）。
-const INSTALL_GOLDEN_ENTRIES = ['4.1', '4.2', '4.3', '4.4', '5.5']
+const INSTALL_GOLDEN_ENTRIES = ['4.1', '4.2', '4.3', '4.4', '4.7', '5.5']
 // COMPAT-008：探针固化脚本的接线（离线自检模式在 sanity 内执行 ⇒ PR 面即可发现脚本回归）
 const PROBE_HOST = 'scripts/probe-host.mjs'
 const PROBE_HOST_INVOCATION = 'node scripts/probe-host.mjs --self-check'

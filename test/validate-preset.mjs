@@ -34,10 +34,12 @@ console.log(profileAvailable ? 'mode: full (profile dir available)' : 'mode: deg
 // ── 0. 预设行 × 已装宿主 Config schema（BUG-007；三态：PASS / FAIL / NOT_RUN）────
 // 本段与下面的形状/解析段**相互独立**：形状合法（行有 name、模块可解析）并不保证 config 合法——
 // 正是 BUG-007 的失效模式（persona 行 `text` 键让整棵预设挂载被否决，而形状检查全绿）。
+// BUG-011 起 dual 模式：同时核对两源（agent.cordis.yml = 0.1.x 真源 / cordis.patch.yml 声明行
+// plugins = 0.2.0 真源），已知代际变体（worker-thread ↔ ptc）按平面代系披露并对侧互钉。
 let schemaVerdict = 'NOT_RUN'
 async function schemaFace(compositionPath) {
   const { checkComposition, formatRows, VERDICT_PASS, VERDICT_FAIL } = await import('./fixtures/host-surfaces/preset-schema-face.mjs')
-  const report = await checkComposition({ composition: compositionPath })
+  const report = await checkComposition({ composition: compositionPath, dual: true })
   schemaVerdict = report.verdict
   console.log('  schema-face host-plane: ' + report.plane.source + (report.plane.nodeModules === null ? '' : ' (' + report.plane.nodeModules + ')')
     + ' | oracle: ' + JSON.stringify(report.oracle?.versions ?? null))
@@ -126,6 +128,34 @@ function entryListSchemaCompat() {
 }
 
 // ── 2. 行形状与模块解析（与 discovery.entryListProblem 相同的规则）────────
+// BUG-011 代际变体容忍口径（与 preset-schema-face GENERATION_VARIANT 同源常量）：本源是 0.1.x
+// 真源（agent.cordis.yml 保留 worker-thread 行），在 0.2.0 平面上必然 MODULE_NOT_FOUND——对侧包
+// 在场即判「已知代际变体」披露通过（双源等价由 schema-face dual 模式互钉）；对侧也不在 ⇒ 真缺包仍 FAIL。
+const { GENERATION_VARIANT } = await import('./fixtures/host-surfaces/preset-schema-face.mjs')
+const generationCounterpart = (name) => name === GENERATION_VARIANT.legacy.name ? GENERATION_VARIANT.current.name
+  : name === GENERATION_VARIANT.current.name ? GENERATION_VARIANT.legacy.name : null
+// 平面探测双通道（BUG-011）：①profile 目录 require.resolve（经典通道——但 profiles/node_modules
+// 符号链接农场是环境投影，可能对新包滞后/对已删包悬空）；②全局安装闭包直查（<npm root -g>/
+// @deepseek-ai/dsh/node_modules/@deepseek-ai/<pkg>——宿主 app-boot collectInstallationScopePackages
+// 的安装锚点真相，与运行时 loader 解析同源）。两通道任一命中即「包在场」，输出标注命中通道。
+import { execFileSync } from 'node:child_process'
+const globalClosureDir = (() => {
+  try {
+    const npmRoot = execFileSync('npm', ['root', '-g'], { encoding: 'utf8', shell: process.platform === 'win32' }).trim()
+    return npmRoot === '' ? null : join(npmRoot, '@deepseek-ai', 'dsh', 'node_modules', '@deepseek-ai')
+  } catch { return null }
+})()
+function packageOnPlane(name) {
+  if (require !== null) { try { return { hit: 'profile-resolve', path: require.resolve(name) } } catch { /* 落全局闭包通道 */ } }
+  // 闭包目录已停在 @deepseek-ai 作用域层 ⇒ 相对它只用裸包名（scoped 名去作用域段），防双重拼接
+  if (globalClosureDir !== null) {
+    const relParts = name.startsWith('@') ? name.split('/').slice(1) : name.split('/')
+    if (existsSync(join(globalClosureDir, ...relParts, 'package.json'))) {
+      return { hit: 'install-anchor', path: join(globalClosureDir, ...relParts) }
+    }
+  }
+  return null
+}
 function checkRows(list, at) {
   for (const [index, row] of list.entries()) {
     const label = `${at}row ${index + 1}`
@@ -154,13 +184,18 @@ function checkRows(list, at) {
       fail(`${label} (${row.id ?? '?'} → ${row.name}) unknown plugin without profile to resolve`)
       continue
     }
-    // 模块解析（loader 以 profile 目录为 baseUrl）
-    try {
-      const resolved = require.resolve(row.name)
-      ok(`${label} (${row.id ?? '?'} → ${row.name}) resolves → ${resolved.replace(process.env.USERPROFILE ?? '', '~')}`)
-    } catch (error) {
-      fail(`${label} (${row.id ?? '?'} → ${row.name}) cannot resolve from profile dir: ${error.code ?? error.message}`)
+    // 包在场探测（loader 以 profile 目录为 baseUrl；BUG-011 起叠加安装锚点直查通道）
+    const present = packageOnPlane(row.name)
+    if (present !== null) {
+      ok(`${label} (${row.id ?? '?'} → ${row.name}) resolves[${present.hit}] → ${present.path.replace(process.env.USERPROFILE ?? '', '~')}`)
+      continue
     }
+    const counterpart = generationCounterpart(row.name)
+    if (counterpart !== null && packageOnPlane(counterpart) !== null) {
+      ok(`${label} (${row.id ?? '?'} → ${row.name}) [generation-variant：本平面已无此包；对侧 ${counterpart} 在场，双源核对覆盖]`)
+      continue
+    }
+    fail(`${label} (${row.id ?? '?'} → ${row.name}) cannot resolve from profile dir: MODULE_NOT_FOUND`)
   }
 }
 checkRows(rows, '')

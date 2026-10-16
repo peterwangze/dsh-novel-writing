@@ -52,10 +52,10 @@ export const EXIT = { PASS: 0, FAIL: 1, NOT_RUN: 2 }
 /** 发现项：任一命中 ⇒ 整体 FAIL（行级报文即证据）。 */
 export const FINDING_KINDS = [
   'ROW_SHAPE', 'GROUP_NAME_UNRESOLVED', 'DISABLED_EXPR_ERROR', 'CONFIG_EXPR_ERROR',
-  'MODULE_UNRESOLVED', 'IMPORT_ERROR', 'CONFIG_INVALID',
+  'MODULE_UNRESOLVED', 'IMPORT_ERROR', 'CONFIG_INVALID', 'DUAL_SOURCE_DRIFT',
 ]
 /** 披露项：不是发现项，**也不能计入「已校验」**（PASS 要求逐行披露它们）。 */
-export const UNVERIFIED_KINDS = ['NO_SCHEMA', 'BUILTIN', 'DISABLED_INHERITED', 'DISABLED_INHERITED_UNKNOWN']
+export const UNVERIFIED_KINDS = ['NO_SCHEMA', 'BUILTIN', 'DISABLED_INHERITED', 'DISABLED_INHERITED_UNKNOWN', 'GENERATION_VARIANT']
 const PASS_KIND = 'PASS'
 
 /** 宿主耦合字面量（P-10）：oracle 包与符号名 = 契约 item 5.6 登记面，新增/改名 MUST 同步契约。 */
@@ -72,6 +72,64 @@ export const ORACLE = {
 }
 /** group 行的内建名（加载器内建；其余形态 = 无法核验 ⇒ 发现项）。 */
 export const GROUP_NAME = 'cordis:group'
+
+// ── BUG-011 双源（0.1.x agent.cordis.yml ／ 0.2.0 cordis.patch.yml）────────────
+/** 包内 bundle patch（0.2.0 通道真源；plugins 子树 = 预设组合行）。 */
+export const PATCH_COMPOSITION = join(REPO_ROOT, 'cordis.patch.yml')
+/** 0.2.0 预设声明行的宿主包名（声明代标记：0.1.5-rc.2 闭包无此包——首版 0.1.7-alpha.1，2026-09-22）。 */
+export const DECLARATION_PACKAGE = '@deepseek-ai/dsh-agent-preset'
+/** 已知代际变体行（唯一允许的双源行差）：0.1.x `dsh-workflow-worker-thread`（0.2.0 闭包已不存在）↔ 0.2.0 `dsh-workflow-ptc`（官方用法 provider:spawn，宿主 standard.patch.yml 同款）。 */
+export const GENERATION_VARIANT = {
+  legacy: { id: 'workflow-worker-thread', name: '@deepseek-ai/dsh-workflow-worker-thread' },
+  current: { id: 'workflow-ptc', name: '@deepseek-ai/dsh-workflow-ptc' },
+  config: { provider: 'spawn' },
+}
+
+/**
+ * 平面是否为声明代（0.2.0 系）：`@deepseek-ai/dsh-agent-preset` 可达即声明代（能力检测，非版本号字符串）。
+ * 两处探测（与 install 脚本同口径）：① 平面直接解析（隔离实例 / pnpm hoisted 布局）；② dsh 安装闭包
+ * （全局 npm 安装的真实布局——宿主包不在 profile node_modules，运行期经 PluginPackages 双锚点解析；本工具
+ * 的平面 req.resolve 看不到 dsh-agent-preset 本体，但 `@deepseek-ai/dsh` 可解析 ⇒ 其嵌套 node_modules
+ * 即安装闭包）。0.1.5-rc.2 闭包无 dsh-agent-preset（首版 0.1.7-alpha.1，2026-09-22）⇒ 两处皆不可达 = 旧代。
+ */
+function planeIsDeclarationGeneration(oracle) {
+  try {
+    oracle.req.resolve(DECLARATION_PACKAGE + '/package.json')
+    return true
+  } catch { /* 平面直连不可达 → 试 dsh 安装闭包 */ }
+  try {
+    const dshDir = dirname(oracle.req.resolve('@deepseek-ai/dsh/package.json'))
+    return existsSync(join(dshDir, 'node_modules', DECLARATION_PACKAGE))
+  } catch {
+    return false
+  }
+}
+
+/**
+ * 解析宿主包模块（BUG-011 双锚点，与宿主 PluginPackages 同序）：① 平面 req.resolve（profile/pnpm 布局）；
+ * ② dsh 安装闭包（全局 npm 安装布局——`@deepseek-ai/dsh` 可解析 ⇒ 其嵌套 node_modules 为安装锚点）。
+ * 两锚点均不可达 → null。
+ */
+function resolveHostModule(oracle, name) {
+  try { return oracle.req.resolve(name) } catch { /* 平面直连不可达 → 试 dsh 安装闭包 */ }
+  try {
+    const dshDir = dirname(oracle.req.resolve('@deepseek-ai/dsh/package.json'))
+    return createRequire(join(dshDir, 'node_modules', '__nv_anchor__.js')).resolve(name)
+  } catch {
+    return null
+  }
+}
+
+/** 从 bundle patch 提取预设声明行的 config.plugins 子树（加载器方言解析；patch 顶层 = patch 行列表）。 */
+export function extractDeclarationPlugins(oracle, patchPath) {
+  const patches = oracle.yaml.load(readFileSync(patchPath, 'utf8'), { schema: oracle.entryListSchema })
+  if (!Array.isArray(patches)) return { ok: false, reason: 'bundle patch 必须是顶层 patch 行列表' }
+  const rows = patches.flatMap((patch) => (patch && Array.isArray(patch.insert)) ? patch.insert : [])
+  const decl = rows.find((row) => row && row.name === DECLARATION_PACKAGE)
+  if (decl === undefined) return { ok: false, reason: `bundle patch 内未找到声明行（name: ${DECLARATION_PACKAGE}）` }
+  if (!Array.isArray(decl.config?.plugins)) return { ok: false, reason: '声明行 config.plugins 不是行列表' }
+  return { ok: true, plugins: decl.config.plugins, declaration: decl, rows }
+}
 
 // ── 宿主平面定位（只读）─────────────────────────────────────────────────────
 /**
@@ -160,7 +218,11 @@ function locateSchema(modulePath, source) {
 const message = (error) => (error === null || error === undefined ? String(error) : String(error.message ?? error).split('\n')[0])
 
 // ── 行遍历（加载器判定规则的忠实复现）──────────────────────────────────────
-async function walk(rows, at, ctx, entry, oracle, inheritedBy) {
+// tolerance（BUG-011 双源）：'legacy-on-current' = 在声明代平面上核对 0.1.x 源时，
+//   已知改名行（worker-thread）不按 MODULE_UNRESOLVED 判死，降为 GENERATION_VARIANT 披露项
+//   （对侧源的 ptc 行由 dual 模式交叉核对——缺失/未通过 ⇒ DUAL_SOURCE_DRIFT 发现项）；
+//   'current-on-legacy' = 反向对称（旧平面上核对 0.2.0 源的 ptc 行）。null = 无容忍（历史语义）。
+async function walk(rows, at, ctx, entry, oracle, inheritedBy, tolerance = null) {
   for (const [index, row] of rows.entries()) {
     const positional = at === '' ? `row ${index + 1}` : `${at} row ${index + 1}`
     const record = { row: positional, id: null, name: '', kind: '', message: '', detail: null, schema: null, version: null }
@@ -213,7 +275,7 @@ async function walk(rows, at, ctx, entry, oracle, inheritedBy) {
         }
         continue
       }
-      await walk(row.config, positional, ctx, entry, oracle, '')
+      await walk(row.config, positional, ctx, entry, oracle, '', tolerance)
       entry.rows.push({ ...record, kind: 'BUILTIN', message: `group 内建 — 枚举 ${row.config.length} 个子行` })
       continue
     }
@@ -248,10 +310,19 @@ async function walk(rows, at, ctx, entry, oracle, inheritedBy) {
     if (name.startsWith('file:') || isAbsolute(name)) target = name.startsWith('file:') ? name : pathToFileURL(name).href
     else if (name.startsWith('.')) target = new URL(name, ctx.baseUrl).href
     else {
-      try { target = pathToFileURL(oracle.req.resolve(name)).href } catch (error) {
-        entry.rows.push({ ...record, kind: 'MODULE_UNRESOLVED', message: `无法从已装宿主平面解析：${message(error)}` })
+      const resolved = resolveHostModule(oracle, name)
+      if (resolved === null) {
+        const variant = tolerance === 'legacy-on-current' && name === GENERATION_VARIANT.legacy.name ? GENERATION_VARIANT.legacy
+          : tolerance === 'current-on-legacy' && name === GENERATION_VARIANT.current.name ? GENERATION_VARIANT.current
+          : null
+        if (variant !== null) {
+          entry.rows.push({ ...record, kind: 'GENERATION_VARIANT', message: `已知代际变体行（${name}，本平面已不存在；对侧源 ${tolerance === 'legacy-on-current' ? GENERATION_VARIANT.current.name : GENERATION_VARIANT.legacy.name} 由双源核对覆盖）` })
+          continue
+        }
+        entry.rows.push({ ...record, kind: 'MODULE_UNRESOLVED', message: `无法从已装宿主平面解析：${name}（平面与 dsh 安装闭包两锚点均不可达）` })
         continue
       }
+      target = pathToFileURL(resolved).href
     }
     let exports
     try { exports = unwrapExports(await import(target)) } catch (error) {
@@ -313,13 +384,18 @@ function readSource(path) {
 
 /**
  * 校验一个组合文件：解析 → 逐行核对 → 三态判定。
- * @param {{ composition?: string, env?: NodeJS.ProcessEnv }} [options]
+ * @param {{ composition?: string, dual?: boolean, env?: NodeJS.ProcessEnv }} [options]
+ *   dual（BUG-011）：同时核对第二个真源——0.1.x 组合（agent.cordis.yml）核对 bundle patch 的声明行
+ *   plugins 子树（cordis.patch.yml），反之亦然；两源各自按平面代系取容忍方向，且互相钉住代际变体
+ *   的对侧行（一侧按 GENERATION_VARIANT 披露 ⇒ 另一侧的对应行 MUST 真实存在且通过 schema 核对，
+ *   否则 DUAL_SOURCE_DRIFT 发现项）。
  * @returns {Promise<object>} 报告（verdict/rows/coverage/oracle/plane/…）
  */
 export async function checkComposition(options = {}) {
   const composition = options.composition ?? DEFAULT_COMPOSITION
+  const dual = options.dual === true
   const plane = resolvePlane(options.env ?? process.env)
-  const base = { tool: 'preset-schema-face', composition, plane: { source: plane.source, nodeModules: plane.nodeModules, anchor: plane.anchor }, oracle: null, rows: [], coverage: null }
+  const base = { tool: 'preset-schema-face', composition, dual, plane: { source: plane.source, nodeModules: plane.nodeModules, anchor: plane.anchor }, oracle: null, rows: [], coverage: null }
   if (!existsSync(composition)) return { ...base, verdict: VERDICT_NOT_RUN, reason: `组合文件不存在：${composition}` }
   if (plane.reason !== null) return { ...base, verdict: VERDICT_NOT_RUN, reason: plane.reason }
   const oracle = await loadOracle(plane)
@@ -332,9 +408,51 @@ export async function checkComposition(options = {}) {
     return { ...base, verdict: VERDICT_FAIL, reason: `组合不是合法 entry list（加载器方言）：${message(error)}` }
   }
   if (!Array.isArray(rows)) return { ...base, verdict: VERDICT_FAIL, reason: '组合必须是顶层插件行列表' }
+  const currentGeneration = planeIsDeclarationGeneration(oracle)
+  const isPatchSource = composition === PATCH_COMPOSITION
+  // 容忍方向：声明代平面核对 0.1.x 源 → 容忍 worker-thread；旧平面核对 0.2.0 源（patch）→ 容忍 ptc。
+  const tolerance = currentGeneration === !isPatchSource ? (isPatchSource ? 'current-on-legacy' : 'legacy-on-current') : null
   const entry = { rows: [], enabled: 0, checked: 0 }
   const ctx = { baseUrl: pathToFileURL(composition).href, process, console }
-  await walk(rows, '', ctx, entry, oracle, '')
+  await walk(rows, '', ctx, entry, oracle, '', tolerance)
+  entry.rows = entry.rows.map((r) => ({ ...r, source: dual ? (isPatchSource ? 'patch' : 'yml') : undefined }))
+  // ── 双源第二源（BUG-011）───────────────────────────────────────────────
+  const otherPath = isPatchSource ? DEFAULT_COMPOSITION : PATCH_COMPOSITION
+  let otherTolerance = null
+  if (dual && existsSync(otherPath)) {
+    let otherRows
+    if (otherPath === PATCH_COMPOSITION) {
+      const extracted = extractDeclarationPlugins(oracle, otherPath)
+      if (extracted.ok !== true) {
+        entry.rows.push({ row: 'patch', id: 'preset-declaration', name: DECLARATION_PACKAGE, kind: 'DUAL_SOURCE_DRIFT', message: extracted.reason, detail: null, schema: null, version: null, source: 'patch' })
+        otherRows = []
+      } else otherRows = extracted.plugins
+    } else {
+      try {
+        otherRows = oracle.yaml.load(readFileSync(otherPath, 'utf8'), { schema: oracle.entryListSchema })
+      } catch (error) {
+        entry.rows.push({ row: 'other', id: '—', name: '', kind: 'DUAL_SOURCE_DRIFT', message: `第二源不是合法 entry list：${message(error)}`, detail: null, schema: null, version: null, source: 'yml' })
+        otherRows = []
+      }
+    }
+    const otherIsPatch = otherPath === PATCH_COMPOSITION
+    otherTolerance = currentGeneration === !otherIsPatch ? (otherIsPatch ? 'current-on-legacy' : 'legacy-on-current') : null
+    const otherCtx = { baseUrl: pathToFileURL(otherPath).href, process, console }
+    const before = entry.rows.length
+    await walk(otherRows, '', otherCtx, entry, oracle, '', otherTolerance)
+    for (const r of entry.rows.slice(before)) r.source = otherIsPatch ? 'patch' : 'yml'
+  }
+  // 代际变体交叉钉：任一侧出现 GENERATION_VARIANT 披露 ⇒ 对侧源 MUST 有对应行且非发现项
+  const variantRows = entry.rows.filter((r) => r.kind === 'GENERATION_VARIANT')
+  for (const vr of variantRows) {
+    const isLegacyVariant = vr.name === GENERATION_VARIANT.legacy.name
+    const wantName = isLegacyVariant ? GENERATION_VARIANT.current.name : GENERATION_VARIANT.legacy.name
+    const wantSource = isLegacyVariant ? 'patch' : 'yml'
+    const counterpart = entry.rows.find((r) => r.name === wantName && (dual ? r.source === wantSource : true) && r.kind !== 'GENERATION_VARIANT')
+    if (counterpart === undefined || FINDING_KINDS.includes(counterpart.kind)) {
+      entry.rows.push({ row: vr.row, id: vr.id, name: vr.name, kind: 'DUAL_SOURCE_DRIFT', message: `代际变体行 ${vr.name}（${vr.source ?? '?'}）的对侧行 ${wantName}（${wantSource}）缺失或未通过核对——双源已漂移`, detail: null, schema: null, version: null, source: vr.source })
+    }
+  }
   const findings = entry.rows.filter((row) => FINDING_KINDS.includes(row.kind))
   const unverified = entry.rows.filter((row) => UNVERIFIED_KINDS.includes(row.kind))
   const coverage = {
@@ -360,23 +478,25 @@ export async function checkComposition(options = {}) {
 export function formatRows(report) {
   const lines = []
   const mark = (kind) => (FINDING_KINDS.includes(kind) ? '✗' : kind === PASS_KIND ? '✓' : '·')
+  const sourceTagOf = (row) => (row.source === undefined ? '' : `[${row.source}] `)
   for (const row of report.rows) {
     const evidence = row.schema !== null && row.schema !== undefined
       ? `evidence=${row.schema.file}${row.schema.line === null ? '' : ':' + row.schema.line}`
       : row.kind === 'CONFIG_INVALID' ? 'evidence=' + (report.oracle?.paths?.[ORACLE.cordis] ?? '?') : 'evidence=-'
-    lines.push(`${mark(row.kind)} ${row.kind.padEnd(24)} ${String(row.id).padEnd(24)} ${String(row.name).padEnd(48)} ${row.version ?? '-'} ${row.message}${row.message === '' ? '' : ' | '}${evidence}`)
+    lines.push(`${mark(row.kind)} ${sourceTagOf(row)}${row.kind.padEnd(24)} ${String(row.id).padEnd(24)} ${String(row.name).padEnd(48)} ${row.version ?? '-'} ${row.message}${row.message === '' ? '' : ' | '}${evidence}`)
   }
   return lines
 }
 
 // ── CLI ─────────────────────────────────────────────────────────────────────
 function parseArgs(argv) {
-  const opts = { composition: DEFAULT_COMPOSITION, json: false, requirePlane: false, table: true }
+  const opts = { composition: DEFAULT_COMPOSITION, json: false, requirePlane: false, table: true, dual: true }
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i]
     if (a === '--json') opts.json = true
     else if (a === '--require-plane') opts.requirePlane = true
     else if (a === '--no-table') opts.table = false
+    else if (a === '--no-dual') opts.dual = false
     else if (a === '--companion' || a === '--composition') opts.composition = argv[++i]
     else if (a === '--help' || a === '-h') opts.help = true
     else { console.error('[preset-schema-face] 未知参数：' + a); process.exit(2) }
@@ -387,10 +507,10 @@ function parseArgs(argv) {
 async function main() {
   const opts = parseArgs(process.argv.slice(2))
   if (opts.help === true) {
-    console.log('用法：node test/fixtures/host-surfaces/preset-schema-face.mjs [--composition <path>] [--plane <node_modules>] [--json] [--require-plane] [--no-table]')
+    console.log('用法：node test/fixtures/host-surfaces/preset-schema-face.mjs [--composition <path>] [--json] [--require-plane] [--no-table] [--no-dual]')
     process.exit(EXIT.PASS)
   }
-  const report = await checkComposition({ composition: opts.composition })
+  const report = await checkComposition({ composition: opts.composition, dual: opts.dual })
   if (opts.json === true) console.log(JSON.stringify(report, null, 2))
   else {
     console.log(`[preset-schema-face] 组合：${report.composition}`)
