@@ -1,48 +1,38 @@
-# 会话快照 — 2026-09-16（**v0.5.3 已发布**；六项修复闭环 + 一条全绿验证资产）
+# 会话快照 — 2026-10-17（dsh 0.2.0-rc.2 适配实现完成，待用户重装实机验收）
 
-**session_date**: 2026-09-16（会话自 2026-09-13 起，跨五次）
-**工作流版本**: 0.81.0
-**会话标识**: dsh-writing-workflow-20260913
-**HEAD / 远端**: `419c7fa`（远端 `main` 已同步）；**annotated tag `v0.5.3` 对象 `12715e2d…`（peel `f608c17`）已推送，远端对象与本地逐位一致**
+**session_date**: 2026-10-17
+**工作流版本**: 0.81.0（插件已升 0.91.0——**bootstrap 自升级欠账**，见下）
+**会话标识**: dsh-writing-workflow-20261017
+**HEAD**: `d8d93c2`（+ 治理收尾 commit）；远端 main 待 push
 
-## 发布产物（REL-007，2026-09-16）
+## 本轮完成（BUG-011 + COMPAT-018 部分；用户诉求 = 0.2.0 适配 + 版本依赖解耦）
 
-| 项 | 值 |
-|---|---|
-| 发布链 | `f608c17`（发布 commit：CHANGELOG 定稿 9 条/100 行逐字 + 三件发布文档）→ `471020c`/`ac12e79`（演练证据固化 + 逐字性校验脚本入仓）→ `9da2276`（R1 后置审查 F-02~F-07 订正，**不重指 tag**）→ `419c7fa`（治理收尾） |
-| 审查 | `REVIEW-REL-007-R1` = **APPROVED_WITH_NOTES / unresolved_blockers=0，判 GO** |
-| 回滚演练（实跑） | 候选 = tag；安装 `v0.5.3` → 回退 `v0.5.2` **3.195 s** → 再安装；幂等/闭环**残余 0**；真实 `$DSH_HOME` **零写入**（4 份指纹全同）；证据 28 件于 `docs/release/evidence/rel007-drill-20260915/` |
-| 三件套 | `node --check` 23/0 ∧ `validate-preset` PASSED(29/29) ∧ `smoke` **302/0** |
-| **闸门披露** | 形式上越过 **G6/G7/G8**（pending）⇒ `Check 37 [G-s2]` **持续 FAIL 至 G6/G7 通过**；**用户经 ask_user_question 显式授权 + `DEC-029` 机读留痕**（v0.5.2 同带该状态，DEC-153 ② 定性为历史披露） |
-| 两项门禁**不可用** | 上游跨根缺陷（DEC-027 仅登记、不改插件仓）：`check-release --lineage-mode released` 仍 FAILED；`release-ledger --remote` **崩溃**（`ValueError` 实证：插件 `core/releases/0.5.3.json` `relative_to` 宿主根）；`archive --dry-run` = 跳过（exit 0） |
-| 收录范围 | 6 任务（BUG-007 / UX-060 / BUG-009 / CLEAN-007 / BUG-010 / CLEAN-006）；**COMPAT-* 留在 `[Unreleased]`**（遵 v0.5.2 先例） |
+- **调查**：两路只读 agent 定案 0.2.0-rc.2 四断裂（settings 范式 / worker-thread→ptc / .agent-presets→声明行 / sessions 三面）；0.2.0 兼容门实证（钉版本被禁载 ⇒ peers 保持 `*`）
+- **实现 3 commits**：`9cb629b`（服务端 Config+volatile 活引用 / injectWhenReady 延迟路由 / 声明行 bundle patch / migrateLegacySettings 惰性迁移+手动路由 / install 代系分流撤同 id insert / js-yaml 依赖）+ `970e802`（客户端 sessionsCurrentOf 派生 + launcher.open 双通道）+ `d8d93c2`（契约 hunk 重基 + smoke 307/0 + preset-schema-face dual + CHANGELOG/README）
+- **隔离实例八项实证**（EVD-131）：装配/激活/HTTP 200/dump 树/写路径重启持久/数据迁移端到端/撤除双测/skills 可达；真实 ~/.dsh 零写入
+- **发现并绕行宿主三缺陷**（RISK-011）：importLegacyDocument inactive-context 丢节 / boot 期 patch 写 HMR fatal 竞态 / 双层同 id 拒写
+- **DEC-154**：能力检测双表面范式定案（零版本号分支；0.1.x 回退保留）
 
-## 用户侧待办（**一次重启可验五项修复**）
+## 用户侧验收清单（重装后）
 
-1. 重启 DSH ⇒ 客观标志：`%DSH_HOME%\.agent-presets\novel-writing\.dsh-bundle-version` `0.5.2` → **`0.5.3`**
-2. **BUG-007**：创作台「继续工作流」/「绑定新会话」/ 宿主预设切换器三处失败消失
-3. **UX-060**：长告警在标题栏**下方**整行流式面（可读完 + 关闭钮），横幅/⇄⟳☆ 不被遮挡
-4. **BUG-009**：自动链建会话后卡片**不再长时间「会话失效」**（U-4；修复前 ≥2′06″ 未收敛、≈2′31.3″ 内收敛）
-5. **CLEAN-007 / D-1**：绑定面板打开时 Esc **只关面板、控制台保持**；分栏态 Esc **不连关两层**
-6. **BUG-010**：工作区对话框（`.nv-modal`）打开时 Esc **只关它自己**
-7. 其余按 `docs/verification/CLEAN-004-checklist.md` §8 + §9.2（U-1~U-14）；任一新失败 → 取告警原文回报；**若需回滚**：`docs/release/rollback-plan-0.5.3.md`（A/B/C 三路径，实测 3.195 s、无数据迁移）
+1. `dsh plugin --profile web add <本仓路径>` 或 install.ps1（0.2.0 代自动分流）
+2. 重启 dsh ⇒ 预设选择器可选「小说写作工作流」；工作台「小说」页正常
+3. **绑定数据自动恢复**：`~/.dsh/settings.yaml.imported` 含 novel-writing 节 ⇒ 首次打开工作台后 ~2s 内绑定恢复（惰性迁移；也可 POST /novel-writing/api/settings-migrate）
+4. 打开会话/切换会话/点其他会话自动退出工作台（客户端双表面）
 
-## 候选池（`task-priority-analysis` 口径：110+ 任务 / 98+ 完成 / 10 unblocked）
+## 欠账（下批）
 
-- **CLEAN-008（P2）**：UX-060 R1 备注项（探针清理入 finally + 隔离口径 / smoke 断言改行为面 / 单帧叠字 / 证据固化入仓）
-- **CLEAN-009（P2）**：CLEAN-006 R3 三条 P3（台账块头陈旧桶串 / 自证代理集与术语残留 / 契约成因叙述）
-- **CLEAN-005（P2）**：BUG-007 R1 备注 + 契约面 3 全量重基 + smoke 判别力加固 + **1.7/2.4 陈旧锚点**
-- **BUG-008（P2）**：`createProject` 失败不回滚 ⇒ 残留空目录
-- **COMPAT-017（P9/v0.6.0）**：`probe-host --run` 真机面收口
-- **治理欠债（我的）**：① plan-tracker 缺 `1.0.0 依赖链`/roadmap row/`REQ-059~064`；② REL-007 执行包部分必填字段不合规（关单后不再适用，若要长期合规需另立任务）；③ `risk-log` RISK-002/RISK-005 两行**表格参差**；④ `evidence-log` 356.7 KB 超限 + RISK-002 缓解口径过期 —— **两条 FAIL 需用户裁定处置方式**；⑤ **待立任务**：CHANGELOG 顶层条目标题唯一性机检（本轮实证过一次静默丢失：CLEAN-007 标题被 CLEAN-006 顶替，已由 Release 角色逐字恢复）
-- **上游工具缺陷 U1~U7**（跨根读插件仓 / `release-ledger` 崩溃 / execution gate 以插件根 cwd 运行等）：按 DEC-027 仅登记
+- **RISK-012**：Code Review 补审 `9cb629b..d8d93c2`（Agent 配额 2026-10-18 08:48 重置后第一件事）
+- **COMPAT-018 剩余**：0.2.0-rc.2 fixtures 转正 + CI mock 面对齐 + probe-host 0.2.0 实跑（.scratch-bug011/host-surfaces-0.2.0-rc.2.json 为现成提取产物，勿重提）
+- **bootstrap 自升级**：plan-tracker 工作流版本 0.81.0 → 插件 0.91.0（AGENTS.md Governance Bootstrap 段模板替换 + cleanup.py + plan-tracker 版本更新）
+- 0.1.x 运行时回归未跑隔离实例（静态保证 + fixtures 断言在位）；宿主 0.2.0 正式版发布时复核 RISK-011 绕行可否简化
+- 既有欠账沿用上轮快照：CLEAN-005/008/009、BUG-008、治理欠账五条
 
-## 判断失误与教训（本轮新增两条，累计同族八次）
+## 判断失误与教训（新增两条）
 
-**新增**：⑦ 追加 `risk-log` 履历时用 `.Replace($old,$new,1)` —— PowerShell 下**命中了两行**（RISK-002 + RISK-003），造成同一段履历被插入到不属于它的风险行（已修正）；⑧ `execution-packet --write` 自动生成的执行包**全是 `TO_BE_DEFINED` 占位**，直接触发了 18d/18f/18i 一批 FAIL（已逐字段填实）。
-**另有**：REL-007 取锁/triage 后**漏登记 plan-tracker 行** ⇒ pre-commit hook 正当地拦下了 Release 角色的 commit（该角色拒绝 `--no-verify`，处置正确）。
-**既有教训**（沿用）：① 子代理给的新事实/新缺陷结论，未独立验证前不得写入治理记录或向用户汇报；② 派发稿中的事实引用 MUST 以源文件实读为准；③ 文档订正 MUST 整表/全文逐格比对原件；④ 表格单元格文本不得含裸 `|`；⑤ 契约 `line` 每个数值 MUST 按目标 file 分组算 Δ；⑥ **声称不得超过事实**（测试守卫的 ok/结论必须与代码事实一致）；⑦ **批量字符串替换 MUST 先验证命中数**（`.Replace` 无 count 语义时尤其）；⑧ **自动生成的记录 MUST 逐字段复核后再落**（占位符 = 未填）。
+⑨ **重基脚本对单文件多段 line 值只处理首段**——丢失 2.4/3.2/3.3/3.4/3.6 的第 2/3 段并把多段项变成单段范围项（golden 计数 21→25 暴露）；修复=多段结构恢复真值。教训：**批量改写结构化字段先枚举全部段格式**。
+⑩ **迁移初版在 boot 期（loader.await 后）写 patch**——隔离实例同代码一成一败（HMR 收尾竞态），第一轮成功造成「已验证」错觉；第二轮 fatal 才暴露。教训：**时序敏感路径的成功一次不等于稳态，至少两轮不同时点复验**。
 
-## 门禁基线（发布后实测）
+## 门禁基线
 
-`node --check` 23 文件 0 failed ｜ `validate-preset` **PASSED**（schema-face PASS，29/29）｜ `smoke` **302 passed / 0 failed** ｜ 冻结 CLEAN-004 探针 **49 / 47 PASS / 0 FAIL / 2 N-A**（`head=4b70182`、`headDirty=false`；归档 3 份）｜ `scripts/probe-nv-ux012.mjs` 全量 27 / 23 PASS / 0 FAIL / 4 N-A（自证 `RUNTIME-LEDGER-CHECK 10/10` + 注入 8/8）｜ **发布回滚演练实跑**（回滚 3.195 s、残余 0、真实 `$DSH_HOME` 零写入）｜ `governance-write-guard` PASS ｜ `check-review-debt` PASS
+`node --check` 改动文件 0 错 ｜ `validate-preset` PASSED（schema-face dual PASS）｜ `smoke` **307/0** ｜ 隔离实例 0.2.0-rc.2 八项实证（EVD-131）｜ 真实 ~/.dsh 零写入（mtime 复核）
