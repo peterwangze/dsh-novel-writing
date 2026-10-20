@@ -402,3 +402,5 @@
 | TRIAGE-UX-061 | UX-061 | 变更控制 | change-triage CLI 机器写入 triage 记录（依赖/优先级/冲突/版本/执行副作用五步分析）〔用户点名〕 | 事实依据：change-triage 输出摘要（机器写入；命令输出 JSON 快照见 change-triage/UX-061.json） | UX-061.json | change-triage | 2026-10-20 | G11 | TRIAGED |
 
 | TRIAGE-UX-062 | UX-062 | 变更控制 | change-triage CLI 机器写入 triage 记录（依赖/优先级/冲突/版本/执行副作用五步分析）〔用户点名〕 | 事实依据：change-triage 输出摘要（机器写入；命令输出 JSON 快照见 change-triage/UX-062.json） | UX-062.json | change-triage | 2026-10-20 | G11 | TRIAGED |
+
+| REVIEW-BUG-011-R1-CODE-REVIEWER-SUBAGENT | BUG-011 | 治理记录 | review-record CLI 机器写入 review 结论记录（round 1） | 事实依据：review-record 输出摘要（机器写入） | .governance/review-BUG-011-R1.md; review-BUG-011-R1-code-reviewer-subagent.md; report_sha256=e8a182473040; commit=1055b3799fa3; obligation=RECHECK-BUG-011-R2 | Code-Reviewer(subagent) | 2026-10-20 | G11 | NEEDS_CHANGE |
