@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 98 | 86 | 0 | 4 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 117 | 101 | 0 | 8 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -171,6 +171,8 @@
 | **P1** | COMPAT-018 | 版本依赖解耦（用户 2026-10-16 直接要求：避免每次 dsh 升级插件都失效）：调查证实 0.2.0 新增 peerDependencies `@deepseek-ai/dsh*` semver 兼容门（dsh-agent-router@0.5.0 钉 ^0.1.5-rc.2 被拦实锤）→ **peers 保持 `*` + 运行时能力检测** 定为正道。落地轴：①宿主状态读写所有权收归服务端（客户端经本插件 HTTP API，少依赖宿主 settings 表面）②全部已知断裂面双表面特性检测（settings/open/current/completed）③0.2.0-rc.2 第四份 fixture 入仓 + 契约重基 + CI mock 面对齐（SettingsProvider→SettingsForms）④probe-host 对 0.2.0 实跑核验（衔接 COMPAT-017）⑤版本支持矩阵更新（README/契约 6.3） | BUG-011 | v0.6.0 | open | 🔄 **部分完成**（2026-10-17：DEC-154 双表面范式 + peers `*` 决策 + 双源等价机检 + 契约 hunk 重基落地；**剩余**：① 0.2.0-rc.2 fixtures 转正 + smoke fixture 断言集扩 + CI mock 面对齐〔SettingsProvider→SettingsForms〕② probe-host 对 0.2.0 实跑〔承接 COMPAT-017 P2-3/P2-4〕③ 宿主正式版发布时复核双表面窗口） |
 | **P1** | COMPAT-019 | dsh 0.2.1-rc.2 解耦有效性复核（用户 2026-10-20 要求：确认解耦策略是否有效/是否存在新适配）：8 看护包 API 面零漂移 + 9 未看护包内容级 diff + 隔离实例端到端（正式 `dsh plugin add` 通道首跑）——**结论：DEC-154 双表面 + peers `*` 有效，零必改适配**；唯一键漂移 backgroundMode（tool-subagent 0.2.1 移除）= 静默剥离死键不否决挂载，保留该键对 0.2.0-rc.2 仍合法且有意义 ⇒ 维持现状（代际容忍配置） | COMPAT-018 | v0.6.0 | closed | ✅ 完成 (2026-10-20，EVD-132；挂载级证据缺口如实披露：headless 凭据缺失早夭，静态判定以 apply()/非 strict Config 源码为准) |
 | **P2** | GOV-004 | 治理工作流升级 0.81.0 → 0.98.0（跨 18 个发布；用户 2026-10-20 `/governance` 经 AskUserQuestion 确认执行）：A 入口 bootstrap 段替换（AGENTS.md，sync_entry_projection 投影 + PASS 校验）/ B plan-tracker 结构核验（8 节齐，无缺节）/ C hooks 三件存活 / C-2 插件残留清理 dry-run（CLEANUP-ERR-002 无残留，免删）/ D `工作流版本` 字段更新 / E 归档触发检测（auto 面 = 已发布版本 0 < 2；显式区间 v0.1.0~v0.5.1 = 0 task/0 evidence ⇒ RISK-002 同族上游缺陷复现，本轮不迁移并登记） | — | — | closed | ✅ 完成 (2026-10-20，EVD-133) |
+| **P1** | UX-061 | **工作台 UI 美术重设计（视觉呈现提升）**（用户 2026-10-20 直接要求）：在 UX-053 统一设计语言（DEC-019）既有基座上重做视觉呈现——信息层级 / 留白与栅格 / 字体尺度 / 色彩与对比 / 图标与状态语义 / 空态与载入骨架一致性；流程 = 架构师产出设计方向提案（2~3 方向 + 开源参考系统，P-08 不造轮子）→ 用户定方向（关键决策）→ Developer 实现 → Design Reviewer + Code Reviewer 双审；范围限工作台（管理台 + 创作台）视觉层，不改业务逻辑；DEC-019 基线延续或显式替换 MUST 落决策记录 | — | v0.6.0 | open | ⏳ 待执行（设计方向待用户确认；triage = change-triage/UX-061.json） |
+| **P1** | UX-062 | **工作台易用性演进（信息架构与交互效率）**（用户 2026-10-20 直接要求：美术重设计之后演进而提升易用性）：核心路径（选书 → 看进度 → 写作/修订 → 发布 → 数据）步数与认知负荷下降、状态可见性、错误可恢复、快捷操作与键盘可达、轮询与长任务反馈；产出 = IA/交互方案 + 实现 + Design/Code 双审 | UX-061 | v0.6.0 | open | ⏳ 待执行（依赖 UX-061 视觉基座；triage = change-triage/UX-062.json） |
 
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 
