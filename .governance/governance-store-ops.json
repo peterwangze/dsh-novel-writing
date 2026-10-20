@@ -1,0 +1,197 @@
+{
+  "schema_version": 1,
+  "operations": {
+    "op-d737eb509f404daaa47642ff186d8aaf": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "REL-007",
+      "input_fingerprint": "4cd3530cff6d832a3b65dcb2c41d61554227dae5e14d79c3f6bd0aafd25488bf",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-d737eb509f404daaa47642ff186d8aaf",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-10-20T19:57:27",
+      "updated_at": "2026-10-20T19:57:27",
+      "released_files": [
+        "docs/review/REL-007-R1.md"
+      ]
+    },
+    "op-f82332f7c58e4fbbb1c6959a48225208": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "BUG-011",
+      "input_fingerprint": "4da876902b6bbf35092e2631c6754d6d03b4f62e269e83a9d64e73865ab9ef06",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-f82332f7c58e4fbbb1c6959a48225208",
+        "code": "ok",
+        "new_revision": 842,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-10-20T20:07:30",
+      "updated_at": "2026-10-20T20:07:30",
+      "released_files": [
+        ".governance/review-BUG-011-R1.md"
+      ]
+    },
+    "op-65782d53689c4a29be823e8b6dbf88f5": {
+      "schema_version": 1,
+      "command": "decision-append",
+      "task_id": "",
+      "input_fingerprint": "4704d721eb37a19cd2758e1e67b22a3e5c04bc6f04a0fee77f3f0dc8397bae25",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-65782d53689c4a29be823e8b6dbf88f5",
+        "code": "ok",
+        "new_revision": 38095,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-10-20T20:07:39",
+      "updated_at": "2026-10-20T20:07:39",
+      "authority": {
+        "state": "MD_ACTIVE",
+        "epoch": 0,
+        "generation": 0,
+        "backend": "md"
+      }
+    },
+    "op-08f69877c5b843f6984a8d83c5247ddf": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-061",
+      "input_fingerprint": "d680bad45f4d9dd206f0fdcb91edaaa2d4a437e1f5580c1df48d80305735c437",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-08f69877c5b843f6984a8d83c5247ddf",
+        "code": "ok",
+        "new_revision": 3523,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-10-20T20:07:52",
+      "updated_at": "2026-10-20T20:07:52",
+      "released_files": [
+        "docs/design/UX-061-visual-directions.md"
+      ]
+    },
+    "op-1e50cea21b8042aeb16fadc388114bd9": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "BUG-011",
+      "input_fingerprint": "4da876902b6bbf35092e2631c6754d6d03b4f62e269e83a9d64e73865ab9ef06",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-1e50cea21b8042aeb16fadc388114bd9",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-10-20T20:21:00",
+      "updated_at": "2026-10-20T20:21:00",
+      "released_files": [
+        "install.ps1",
+        "install.sh",
+        "lib/host-boundary.js",
+        "lib/host-contract.mjs",
+        "lib/index.js",
+        "package.json",
+        "test/fixtures/host-surfaces/probe-face.mjs",
+        "test/smoke.mjs",
+        "test/validate-preset.mjs"
+      ]
+    },
+    "op-0068973b2bdf4e04bba9a572c534bcfb": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "BUG-011",
+      "input_fingerprint": "4da876902b6bbf35092e2631c6754d6d03b4f62e269e83a9d64e73865ab9ef06",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-0068973b2bdf4e04bba9a572c534bcfb",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-10-20T20:30:08",
+      "updated_at": "2026-10-20T20:30:08",
+      "released_files": [
+        ".governance/review-BUG-011-R2.md"
+      ]
+    },
+    "op-2d0f3a1b06cf4aa4aacaed4464f1eb23": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "BUG-011",
+      "input_fingerprint": "4da876902b6bbf35092e2631c6754d6d03b4f62e269e83a9d64e73865ab9ef06",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-2d0f3a1b06cf4aa4aacaed4464f1eb23",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-10-20T20:37:11",
+      "updated_at": "2026-10-20T20:37:11",
+      "released_files": [
+        ".github/workflows/ci.yml",
+        ".gitignore",
+        "CHANGELOG.md",
+        "install.ps1",
+        "install.sh",
+        "lib/host-contract.mjs"
+      ]
+    },
+    "op-2d8fd17fc31a4dfca8d5fba434d1ac02": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "BUG-011",
+      "input_fingerprint": "4da876902b6bbf35092e2631c6754d6d03b4f62e269e83a9d64e73865ab9ef06",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-2d8fd17fc31a4dfca8d5fba434d1ac02",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-10-20T20:51:05",
+      "updated_at": "2026-10-20T20:51:05",
+      "released_files": [
+        ".governance/review-BUG-011-R3.md"
+      ]
+    }
+  }
+}
