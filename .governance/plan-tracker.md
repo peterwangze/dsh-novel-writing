@@ -39,7 +39,7 @@
 
 | 项目 | 当前阶段 | 总任务数 | 已完成 | 阻塞中 | 关键风险数 | 最近 Gate 结论 | 最近复盘日期 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| dsh-novel-writing | development (6/11) | 117 | 101 | 0 | 8 | G5 passed-with-conditions | — |
+| dsh-novel-writing | development (6/11) | 120 | 101 | 0 | 8 | G5 passed-with-conditions | — |
 
 ## 当前活跃事项
 
@@ -173,6 +173,9 @@
 | **P2** | GOV-004 | 治理工作流升级 0.81.0 → 0.98.0（跨 18 个发布；用户 2026-10-20 `/governance` 经 AskUserQuestion 确认执行）：A 入口 bootstrap 段替换（AGENTS.md，sync_entry_projection 投影 + PASS 校验）/ B plan-tracker 结构核验（8 节齐，无缺节）/ C hooks 三件存活 / C-2 插件残留清理 dry-run（CLEANUP-ERR-002 无残留，免删）/ D `工作流版本` 字段更新 / E 归档触发检测（auto 面 = 已发布版本 0 < 2；显式区间 v0.1.0~v0.5.1 = 0 task/0 evidence ⇒ RISK-002 同族上游缺陷复现，本轮不迁移并登记） | — | — | closed | ✅ 完成 (2026-10-20，EVD-133) |
 | **P1** | UX-061 | **工作台 UI 美术重设计（视觉呈现提升）**（用户 2026-10-20 直接要求）：在 UX-053 统一设计语言（DEC-019）既有基座上重做视觉呈现——信息层级 / 留白与栅格 / 字体尺度 / 色彩与对比 / 图标与状态语义 / 空态与载入骨架一致性；流程 = 架构师产出设计方向提案（2~3 方向 + 开源参考系统，P-08 不造轮子）→ 用户定方向（关键决策）→ Developer 实现 → Design Reviewer + Code Reviewer 双审；范围限工作台（管理台 + 创作台）视觉层，不改业务逻辑；DEC-019 基线延续或显式替换 MUST 落决策记录 | — | v0.6.0 | open | 🔄 **设计方向已定 = A→B**（DEC-155：A 阶段先修 P0 令牌桥 + 语义令牌层 + 尺度系统，B 阶段做正文 measure/低 chrome；布局修改已获用户授权；骨架屏 + ⌘K 拆 UX-062）；阶段 1 待派发（6 个幽灵宿主令牌 / 138 调用点）；triage = change-triage/UX-061.json |
 | **P1** | UX-062 | **工作台易用性演进（信息架构与交互效率）**（用户 2026-10-20 直接要求：美术重设计之后演进而提升易用性）：核心路径（选书 → 看进度 → 写作/修订 → 发布 → 数据）步数与认知负荷下降、状态可见性、错误可恢复、快捷操作与键盘可达、轮询与长任务反馈；产出 = IA/交互方案 + 实现 + Design/Code 双审 | UX-061 | v0.6.0 | open | ⏳ 待执行（依赖 UX-061；范围含 DEC-155③ 拆入的骨架屏 + ⌘K 命令面板；triage = change-triage/UX-062.json） |
+| **P2** | CLEAN-010 | **安装器健壮性批次**（REVIEW-BUG-011-R2 留票，非阻塞）：P2-18 安装器写 profile patch 非原子（temp+rename + 失败退出码）/ P2-21 stale npm root 误判 legacy / P2-15 离线·junction 通道 `js-yaml` 依赖根因（离线发行包真实依赖布局待核） | BUG-011 | v0.6.0 | open | ⏳ 待执行（triage = change-triage/CLEAN-010.json） |
+| **P2** | CLEAN-011 | **看护面补强**（REVIEW-BUG-011-R2 留票）：P2-16 迁移级自动化看护扩面（现仅 `settingsFormsUpdate` 有回归断言）/ P2-17 Check 1.8 探针假绿 + `logWarn` 死分支（改动牵动诊断面板 rows/checks golden，需独立审查） | BUG-011 | v0.6.0 | open | ⏳ 待执行（triage = change-triage/CLEAN-011.json） |
+| **P2** | CLEAN-012 | **legacy 迁移触发时机演进**（REVIEW-BUG-011-R2 留票）：P2-19 headless 不迁移（现仅首个 HTTP 请求触发）；改 idle 触发须避开 RISK-011② HMR 竞态，需隔离实例真机验证 | BUG-011 | v0.6.0 | open | ⏳ 待执行（triage = change-triage/CLEAN-012.json） |
 
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 
