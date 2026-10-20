@@ -28,7 +28,7 @@
  *       三版本差异 golden〔settingsNamespace·connection.api 两个断点 = BUG-003·BUG-004〕/
  *       ci.yml dsh-settings mock 导出面面钉〔F1：静态解析 + 动态 import 两法互证〕/
  *       契约 file·line 活性与每面锚点抽核 / 递归 own-descriptor 纯数据强化）。
- *       COMPAT-002 宿主契约对账（lib/host-contract.mjs 六面 49 项结构 / F10 口径 /
+ *       COMPAT-002 宿主契约对账（lib/host-contract.mjs 六面 52 项结构 / F10 口径 /
  *       纯数据守卫 + 槽位名·CSS 令牌·DOM selector 三类 region 字面量双向对账 + 服务名
  *       与事件名双向对账）。
  *       COMPAT-004 宿主边界层（lib/host-boundary.js 收口 lib/index.js 宿主调用——9 类直连模式 grep
@@ -2155,11 +2155,12 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   const contractSrc = readFileSync(new URL('../lib/host-contract.mjs', import.meta.url), 'utf8')
   const codeOnly = clientSrc.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '') // 剥注释——对账提取一律代码级（同 ⑩ 口径）
 
-  // ① 契约结构：六面 49 项分布 11/13/8/6/6/5（面 3 含 COMPAT-003 F1 补录的 3.8；面 5 含 BUG-007 补录的 5.6）
+  // ① 契约结构：六面 52 项分布 11/14/8/7/7/5（面 3 含 COMPAT-003 F1 补录的 3.8；面 5 含 BUG-007 补录的 5.6、
+  // BUG-011 补录的 5.7；面 2 含 BUG-011 补录的 2.14；面 4 含 BUG-011 补录的 4.7）
   const faceCount = {}
   for (const it of hostContract.items) faceCount[it.face] = (faceCount[it.face] ?? 0) + 1
-  check('COMPAT-002 契约：六面 49 项全覆盖（面分布 11/13/8/6/6/5）',
-    hostContract.items.length === 49 && [1, 2, 3, 4, 5, 6].every((f) => faceCount[f] === [11, 13, 8, 6, 6, 5][f - 1]),
+  check('COMPAT-002 契约：六面 52 项全覆盖（面分布 11/14/8/7/7/5）',
+    hostContract.items.length === 52 && [1, 2, 3, 4, 5, 6].every((f) => faceCount[f] === [11, 14, 8, 7, 7, 5][f - 1]),
     'items=' + hostContract.items.length + ' faces=' + JSON.stringify(faceCount))
   // ② schema：七字段齐全 + item 编号 face 前缀正确且面内连续（§3 溯源结构机检）
   const FIELDS = ['face', 'item', 'kind', 'symbol', 'file', 'line', 'necessity']
@@ -2504,12 +2505,12 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // R1 承继偏移（2.12 −6 / 2.13 −7）在修复前正是 ①③④ 三项的失败用例，修复后全绿（见 CHANGELOG COMPAT-012）。
   //   ⑤ 范围**完整覆盖**所声明构造（COMPAT-013 F-1 新增，两子句，实现见下方 ⑫c）——见 ⑫c 处的口径论证。
   const RANGE_STRICT_FACES = [2]
-  const GOLDEN_RANGE_ITEMS = 21
+  const GOLDEN_RANGE_ITEMS = 23
   // COMPAT-013 F-5②：严格面条目数提为 golden——原守卫 `rangeStrict.length > 0` 允许严格面退化到 1 项仍绿
   // （golden 只锁了总范围条目 21 项）。面 2 实测 11 项（13 项中 **2.2**〔`L97` 单行号形态〕与 **2.4**〔多段〕非单段
   // 范围形态——COMPAT-014 C-F-2 订正：原注释写「2.3/2.4」，而 2.3 `L4804-L4806` 命中 RANGE_LINE 属**单段范围**条目），
   // RANGE_STRICT_FACES 的覆盖面即 11 ⇒ 与 GOLDEN_RANGE_ITEMS 同款漂移探测约定（brittle-by-design，扩面/删项须显式改 golden）。
-  const GOLDEN_RANGE_STRICT_ITEMS = 11
+  const GOLDEN_RANGE_STRICT_ITEMS = 12
   const RANGE_LINE = /^L(\d+)-L?(\d+)$/
   const lineIsComment = (l) => l.trim() === '' || /^(\/\/|\/\*|\*)/.test(l.trim())
   const callPrefix = (l) => {
@@ -2670,7 +2671,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   const GOLDEN_RANGE_COMMENT_START = 2
   const rangeNonStrict = rangeItems.filter((it) => !RANGE_STRICT_FACES.includes(it.face))
   const rangeNonStrictFaces = [...new Set(rangeNonStrict.map((it) => it.face))].sort()
-  const GOLDEN_RANGE_NONSTRICT_ITEMS = 10
+  const GOLDEN_RANGE_NONSTRICT_ITEMS = 11
   const commentStartRanges = []
   for (const it of rangeNonStrict) {
     const files = filesOf(it)
@@ -2684,16 +2685,16 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
     rangeNonStrict.length === GOLDEN_RANGE_NONSTRICT_ITEMS && commentStartRanges.length === GOLDEN_RANGE_COMMENT_START,
     'nonStrict=' + rangeNonStrict.length + '(golden ' + GOLDEN_RANGE_NONSTRICT_ITEMS + ') faces=' + JSON.stringify(rangeNonStrictFaces) + ' commentStart=' + JSON.stringify(commentStartRanges))
 
-  // ⑬ F6 necessity 九值 golden 分布（9 值全量 + 合计 49；防单值静默漂移）
-  const GOLDEN_NEC = { required: 40, consolidatable: 1, adapted: 1, optional: 1, improvable: 2, own: 1, eliminated: 1, 'adapted-drift': 1, awareness: 1 }
+  // ⑬ F6 necessity 九值 golden 分布（9 值全量 + 合计 52；防单值静默漂移）
+  const GOLDEN_NEC = { required: 43, consolidatable: 1, adapted: 1, optional: 1, improvable: 2, own: 1, eliminated: 1, 'adapted-drift': 1, awareness: 1 }
   const nec3 = {}
   for (const it of hc.items) nec3[it.necessity] = (nec3[it.necessity] ?? 0) + 1
   check('COMPAT-003 F6 necessity 九值 golden 分布（合计 ' + hc.items.length + ' = ' + Object.values(GOLDEN_NEC).reduce((a, b) => a + b, 0) + '）',
-    hc.items.length === 49 && Object.keys(nec3).length === 9
+    hc.items.length === 52 && Object.keys(nec3).length === 9
       && Object.entries(GOLDEN_NEC).every(([k, n]) => (nec3[k] ?? 0) === n),
     JSON.stringify(nec3))
 
-  // ⑭ F7a kind 封闭枚举：49 项 kind 全部 ∈ kindEnum 且枚举无空置值
+  // ⑭ F7a kind 封闭枚举：52 项 kind 全部 ∈ kindEnum 且枚举无空置值
   check('COMPAT-003 F7a kind 封闭枚举：items[].kind 全部 ∈ kindEnum（' + hc.kindEnum.length + ' 值）且无空置值',
     hc.items.every((it) => hc.kindEnum.includes(it.kind))
       && hc.kindEnum.every((k) => hc.items.some((it) => it.kind === k)),
@@ -2790,6 +2791,22 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   const directHits = DIRECT_HOST.filter(([, re]) => re.test(hostCode)).map(([n]) => n)
   check('COMPAT-004 收口①b（补充面）：index.js 零直连宿主字面量/调用（' + DIRECT_HOST.length + ' 类模式 grep，覆盖 webServer.register / .agent-presets 等非 ctx.* 形态）',
     directHits.length === 0, 'hits=' + JSON.stringify(directHits))
+  // ①d BUG-011 P0-2 回归（REVIEW-BUG-011-R1）：SettingsForms 写路径 MUST await + catch——
+  // 宿主 `SettingsForms.update` 是 async 且可 reject（双层同 id / 被 home patch 覆盖 / 非法 legacy 值 / I/O）；
+  // 原实现丢弃该 Promise ⇒ rejection 成为 unhandledRejection，在宿主 fail-loud 处理器下进程退出
+  // （RISK-011③ 的实机形态）。本断言以 mock SettingsForms 驱动**成功 / 拒绝 / 缺面**三形态：
+  // 成功须等写落定后 resolve {ok:true}；拒绝须被捕获为 {ok:false,error}（**不得抛出**）；缺面返回结构化失败。
+  let updCalls = 0
+  const updOkD = await boundary.settingsFormsUpdate({ settings: { update: async () => { updCalls += 1 } } }, 'novel-writing', { a: 1 })
+  const updRejectD = await boundary.settingsFormsUpdate({ settings: { update: async () => { throw new Error('overridden by a home patch or command-line overlay') } } }, 'novel-writing', { a: 1 })
+  const updMissingD = await boundary.settingsFormsUpdate({ settings: {} }, 'novel-writing', {})
+  const updNoSettingsD = await boundary.settingsFormsUpdate({}, 'novel-writing', {})
+  check('BUG-011 P0-2 回归（REVIEW-BUG-011-R1）：settingsFormsUpdate await 写落定（成功 {ok:true} / 拒绝被捕获为 {ok:false,error} 且不抛 / 0.1.x 缺面结构化失败）',
+    updOkD.ok === true && updOkD.error === undefined && updCalls === 1
+      && updRejectD.ok === false && typeof updRejectD.error === 'string' && updRejectD.error.includes('overridden')
+      && updMissingD.ok === false && typeof updMissingD.error === 'string'
+      && updNoSettingsD.ok === false && typeof updNoSettingsD.error === 'string',
+    'ok=' + JSON.stringify(updOkD) + ' reject=' + JSON.stringify(updRejectD) + ' missing=' + JSON.stringify(updMissingD) + ' noSettings=' + JSON.stringify(updNoSettingsD))
   check('COMPAT-004 收口②：index.js 唯一宿主入口 = ./host-boundary.js（import 面断言——宿主包零 import）',
     /^import\s*\{[\s\S]*?\}\s*from\s*'\.\/host-boundary\.js'$/m.test(hostSrc4) && !/from\s*'@deepseek-ai\//.test(hostCode),
     'boundary import')
@@ -3256,7 +3273,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   const notCoveredSum5 = diag5 === null ? 0 : diag5.faces.reduce((s, f) => s + f.notCovered, 0)
   const face456Probed5 = diag5 === null ? -1 : [4, 5, 6].reduce((s, id) => { const f = diag5.faces.find((x) => x.id === id); return s + (f === undefined ? 0 : f.probed) }, 0)
   check('COMPAT-005 D1⑤ 面覆盖台账：探测项 ' + serverProbeCount5 + '（面1）+ 8（客户端）= ' + (serverProbeCount5 + 8)
-      + ' ≤ 契约 ' + contractItemTotal5 + ' 项；未覆盖 ' + notCoveredSum5 + ' 项 = 49 − 19；面 4/5/6 探测数 = 0（未实现面不伪造）',
+      + ' ≤ 契约 ' + contractItemTotal5 + ' 项；未覆盖 ' + notCoveredSum5 + ' 项 = ' + contractItemTotal5 + ' − 19；面 4/5/6 探测数 = 0（未实现面不伪造）',
     diag5 !== null && coveredByProbe5 === serverProbeCount5 + 8
       && coveredByProbe5 + notCoveredSum5 === contractItemTotal5 && face456Probed5 === 0,
     'probed=' + coveredByProbe5 + ' notCovered=' + notCoveredSum5 + ' f456=' + face456Probed5)
@@ -3320,7 +3337,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
       && rp5.report.probes.length === 11 && rp5.report.summary.ok === 9
       && rp5.report.unprobed.length === 2 && rp5.report.unprobed.every((u) => typeof u.code === 'string' && u.reason === undefined)
       && rp5.report.notCovered.length === 5 && rp5.report.notCovered.every((n) => typeof n.code === 'string' && n.reason === undefined)
-      && rp5.contract.items.length === 49 && rp5.contract.faces.length === 6
+      && rp5.contract.items.length === 52 && rp5.contract.faces.length === 6
       && rp5.contract.revision === hc5.revisions.at(-1).task
       && rp5.contract.items.every((it) => it.item !== undefined && it.face !== undefined && it.kind !== undefined && it.necessity !== undefined
         && it.symbol === undefined && it.file === undefined && it.line === undefined)

@@ -391,3 +391,41 @@ jobs:
           process.exit(1)
           PROBE_EOF
           node "$RUNNER_TEMP/nv-host-latest-probe.mjs" "$PROBE_DIR" test/fixtures/host-surfaces lib/host-contract.mjs
+
+  # ── BUG-011 / REVIEW-BUG-011-R2 P0-3：install.ps1 的 Windows PowerShell 5.1 解析门禁（BUG-001 防复发）────
+  # install.ps1 头部声明支持 Windows / PowerShell 5.1+，而两个陷阱在 pwsh 7 上**不可见**：
+  #   ① 无 UTF-8 BOM 的 .ps1 被 PS 5.1 按 ANSI/GBK 解码 ⇒ 中文注释/字符串乱码触发 ParserError（BUG-001 复发形态，
+  #      本批 R1 返工即因编辑工具剥离 BOM 而复发）；
+  #   ② `||` / `&&` 是 PowerShell 7 专属语句分隔符，PS 5.1 在解析期即报 "not a valid statement separator"。
+  # sanity 跑在 ubuntu 上、`node --check` 也不覆盖 .ps1 ⇒ 必须在 windows runner 上用真 PS 5.1 解析（BOM 三字节
+  # 在位 + 0 ParserError 双条件），并以 pwsh 7 对照防反向回归。本 job 与 sanity/host-logic 同门禁（非 schedule）。
+  install-ps-parse:
+    if: github.event_name != 'schedule'
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Windows PowerShell 5.1 解析 install.ps1（UTF-8 BOM 在位 + 0 ParserError）
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $bytes = [System.IO.File]::ReadAllBytes('install.ps1')
+          if ($bytes.Length -lt 3 -or $bytes[0] -ne 0xEF -or $bytes[1] -ne 0xBB -or $bytes[2] -ne 0xBF) {
+            throw "install.ps1 缺 UTF-8 BOM（首 3 字节 = $($bytes[0..2] -join ' ')）⇒ Windows PowerShell 5.1 按 ANSI/GBK 解码（BUG-001 复发）"
+          }
+          $tokens = $null; $errors = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path 'install.ps1').Path, [ref]$tokens, [ref]$errors)
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Host ("  {0} @L{1}" -f $_.Message, $_.Extent.StartLineNumber) }
+            throw "install.ps1 在 Windows PowerShell 5.1 下 ParserError $($errors.Count) 条"
+          }
+          Write-Host 'OK: install.ps1 在 Windows PowerShell 5.1 下 0 ParserError，且 UTF-8 BOM 在位'
+      - name: PowerShell 7 解析 install.ps1（对照，不允许回归）
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $tokens = $null; $errors = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path 'install.ps1').Path, [ref]$tokens, [ref]$errors)
+          if ($errors.Count -gt 0) { throw "install.ps1 在 PowerShell 7 下 ParserError $($errors.Count) 条" }
+          Write-Host 'OK: install.ps1 在 PowerShell 7 下 0 ParserError'

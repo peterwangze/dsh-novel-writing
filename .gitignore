@@ -10,5 +10,8 @@ node_modules/
 # OS
 .DS_Store
 Thumbs.db
+
+# 临时 / 实验目录（隔离实例状态、合成凭据等，永不入库——REVIEW-BUG-011-R2 P2-20）
+.scratch*/
 .governance/agent-locks.json
 .governance/.write-guard-*

@@ -84,7 +84,10 @@ const CONTRACT = join(REPO_ROOT, 'lib', 'host-contract.mjs')
 const FIXTURES_DIR = HERE
 const PROBE_SCRIPT_SUFFIX = 'nv-host-latest-probe.mjs'
 const PROBE_JOB = 'host-latest-probe'
-const GATE_BASIC_JOBS = ['sanity', 'host-logic']
+// 非探测 job 集（反向 if：`github.event_name != 'schedule'` ⇒ push / pull_request / workflow_dispatch 面执行）。
+// `install-ps-parse` 为 BUG-011 / REVIEW-BUG-011-R2 P0-3 新增的 Windows PowerShell 5.1 解析门禁——它必须和
+// sanity / host-logic 一样只在非 schedule 事件执行（解析检查无网络、无宿主副作用，但不进每日无人值守面）。
+const GATE_BASIC_JOBS = ['sanity', 'host-logic', 'install-ps-parse']
 // F1：`on` 必须含的四类事件键（缺任一 ⇒ 对应触发面静默消失：pull_request ⇒ PR 门禁、workflow_dispatch ⇒ 手动随查）
 const EVENT_KEYS = ['push', 'pull_request', 'schedule', 'workflow_dispatch']
 // F2：本工具的接线行——MUST 落在 sanity 段内（step run 行 + 语法检查清单行）
@@ -337,7 +340,7 @@ record('② A-F1 事件门禁结构断言：schedule ⇒ 仅 ' + PROBE_JOB + '�
   gateMismatch.length === 0 && gateUnknown.length === 0 && yml.includes('  schedule:'),
   'mismatch=' + JSON.stringify(gateMismatch) + ' unknown=' + JSON.stringify(gateUnknown) + ' jobs=' + JSON.stringify(jobNames))
 const permsBad = jobNames.filter((j) => JSON.stringify(jobPermissions(yml, j)) !== JSON.stringify(['contents: read']))
-record('② A-F1 最小 permissions：三个 job 均显式 `contents: read`（含既有 sanity/host-logic）', permsBad.length === 0, 'bad=' + JSON.stringify(permsBad))
+record('② A-F1 最小 permissions：' + jobNames.length + ' 个 job 均显式 `contents: read`（含既有 sanity/host-logic 与 install-ps-parse）', permsBad.length === 0, 'bad=' + JSON.stringify(permsBad))
 // F1：原实现只检 `  schedule:` ⇒ 从 `on:` 删除 pull_request / workflow_dispatch 时 ② 记录**仍全绿**（PR 门禁 /
 // 手动随查静默消失，假绿方向；evaluateGate 是 `if` 表达式纯函数，与 `on:` 无关）。四键各自断言存在。
 const missingEventKeys = eventKeysMissing(yml)

@@ -36,9 +36,12 @@
 #   [4.4] 兜底注册通道 = cordis.patch.yml
 #   [4.7] 0.2.0 声明代探测 = @deepseek-ai/dsh-agent-preset
 #   [5.5] 预设目录约定 = .agent-presets/<preset-id>/
-# 注（BUG-011）：[4.7] = 宿主闭包能力探测（npm root -g 下 dsh 安装的嵌套 node_modules 含
-#   dsh-agent-preset 包 ⇒ 0.2.0 声明代；0.1.5-rc.2 闭包无此包）。[5.5] 目录机制 0.2.0+ 已废弃
-# （预设组合由 bundle patch 声明行承载）——步骤 3/4 按此代系分流（0.1.x 行为不变）。
+# 注（BUG-011 / REVIEW-BUG-011-R1 P1-5）：[4.7] = 宿主闭包能力探测——解析**实际 dsh 安装根**
+#   （dsh 可执行文件位置 → npm/pnpm 全局根）后判其闭包含 @deepseek-ai/dsh-agent-preset 包 ⇒ 0.2.0 声明代；
+#   0.1.5-rc.2 闭包无此包。[5.5] 目录机制 0.2.0+ 已废弃（预设组合由 bundle patch 声明行承载）。
+#   三态 decl / legacy / unknown；**unknown 时 fail-safe：不插 insert、不写 settings.yaml、不同步预设目录**
+#   （0.2.x 上插 insert 会制造「双层同 id」fatal，RISK-011③ 实证），可用 -HostGeneration 显式指定代系。
+# （旧注：0.1.x 行为不变——步骤 3/4 仍按代系分流。）
 # 固定标记行 `host-contract:v1` 是 CI 正则对账锚点（test/fixtures/host-surfaces/probe-face.mjs ⑧，在 sanity 步骤内
 # 执行）：改动任一约定字面量 MUST 同步本块 + lib/host-contract.mjs 对应条目——三者不一致即 CI 红（防「脚本知识
 # vs 契约声明」静默漂移）。本块为纯注释、无可执行语句：install 行为零变化（COMPAT-009 强等价证据见 CHANGELOG）。
@@ -48,7 +51,12 @@ param(
   [string]$RepoUrl = 'https://github.com/peterwangze/dsh-novel-writing.git',
   [string]$Ref = 'main',
   [string]$LocalPath = '',
-  [string]$Profile = 'web'
+  [string]$Profile = 'web',
+  # 宿主代系覆盖（R1 P1-5 / R2 P2-14）：auto=自动探测；decl=强制 0.2.0+；legacy=强制 0.1.x；
+  # unknown=显式 fail-safe（与 install.sh 对称：不插 insert / 不写 settings / 不同步预设 / 不撤除）。
+  # 自动探测定位不到 dsh 安装根时同样 fail-safe（宁可少做，不可制造「双层同 id」fatal）。
+  [ValidateSet('auto', 'decl', 'legacy', 'unknown')]
+  [string]$HostGeneration = 'auto'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -149,19 +157,66 @@ if ($LocalPath) {
 $profileDir = Join-Path $dshHome "profiles\$Profile"
 $newLayout = Test-Path (Join-Path $profileDir 'package.json')
 
-# ── 宿主代系探测（BUG-011；能力检测，非版本号字符串）：dsh 安装闭包（npm root -g 定位）含
-#    @deepseek-ai/dsh-agent-preset 包 = 0.2.0 声明代（该包首版 0.1.7-alpha.1，0.1.5-rc.2 闭包无此包）。
-#    探测失败（npm 不在 PATH / 非全局 npm 安装）⇒ 保守走 0.1.x 分支：步骤 3/4 多做无害动作、不少做关键动作。
-$hostDeclGen = $false
+# ── 宿主代系探测（BUG-011；能力检测，非版本号字符串）──────────────────────────
+# 判据 = dsh **实际安装根**的闭包内含 @deepseek-ai/dsh-agent-preset（0.2.0 声明代首版包；0.1.5-rc.2 闭包无）。
+# 安装根按「dsh 可执行文件位置 → npm 全局根」逐一解析（覆盖 npm/pnpm/yarn 全局、非 npm 前缀、
+# 源码 checkout 运行等形态）——原实现只查 `npm root -g`，在非 npm-global 安装下误判 0.1.x。
+# **三态 + fail-safe（REVIEW-BUG-011-R1 P1-5）**：
+#   decl    = 0.2.0+ 声明代 → 不插 insert、不写 settings.yaml（行为同前）
+#   legacy  = 确定的 0.1.x → 原 0.1.x 分支（插 insert / 同步 .agent-presets / 写 settings.yaml）
+#   unknown = 定位不到 dsh 安装根 → **不插行、不写 settings.yaml、也不撤除**（在 0.2.x 上插 insert
+#             会制造「双层同 id」fatal —— RISK-011③ 隔离实例实证；在 0.1.x 上撤除自有 insert 会摘掉宿主行），
+#             只打印指引并要求用 -HostGeneration 显式指定代系后重跑。
+$hostGen = 'unknown'
+$dshInstallRoot = ''
+function Resolve-DshInstallRoots {
+  $roots = New-Object System.Collections.Generic.List[string]
+  $dshCmd = Get-Command dsh -ErrorAction SilentlyContinue
+  if ($dshCmd -and $dshCmd.Source) {
+    $binDir = Split-Path -Parent $dshCmd.Source
+    foreach ($cand in @(
+        (Join-Path $binDir 'node_modules\@deepseek-ai\dsh'),
+        (Join-Path $binDir '..\lib\node_modules\@deepseek-ai\dsh'),
+        (Join-Path $binDir '..\node_modules\@deepseek-ai\dsh'))) {
+      try { $roots.Add([System.IO.Path]::GetFullPath($cand)) } catch { }
+    }
+  }
+  if ($env:npm_config_prefix) {
+    try { $roots.Add([System.IO.Path]::GetFullPath((Join-Path $env:npm_config_prefix 'node_modules\@deepseek-ai\dsh'))) } catch { }
+  }
+  try {
+    $npmRootRaw = (npm root -g 2>$null | Select-Object -First 1)
+    if ($npmRootRaw) {
+      $npmRoot = (([string]$npmRootRaw) -replace [char]0xFEFF, '').Trim() -replace "`r|`n", ''
+      if ($npmRoot -ne '') { $roots.Add((Join-Path $npmRoot '@deepseek-ai\dsh')) }
+    }
+  } catch { }
+  return $roots
+}
 try {
-  $npmRootRaw = (npm root -g 2>$null | Select-Object -First 1)
-  if ($npmRootRaw) {
-    $npmRoot = (([string]$npmRootRaw) -replace [char]0xFEFF, '').Trim() -replace "`r|`n", ''
-  } else { $npmRoot = '' }
-  if ($npmRoot -ne '' -and (Test-Path (Join-Path $npmRoot '@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-agent-preset'))) { $hostDeclGen = $true }
-} catch { $hostDeclGen = $false }
-if ($hostDeclGen) { Write-Step "检测到 dsh 0.2.0+ 声明代宿主（dsh-agent-preset 在安装闭包）" }
-else { Write-Step "未检测到 0.2.0 声代号迹（按 0.1.x 分支执行步骤 3/4）" }
+  foreach ($candRoot in (Resolve-DshInstallRoots)) {
+    if ((-not $candRoot) -or (-not (Test-Path (Join-Path $candRoot 'package.json')))) { continue }
+    if (Test-Path (Join-Path $candRoot 'node_modules\@deepseek-ai\dsh-agent-preset')) {
+      $hostGen = 'decl'; $dshInstallRoot = $candRoot; break   # 声明代优先（多候选时不被先见的旧根覆盖）
+    }
+    if ($hostGen -ne 'decl') { $hostGen = 'legacy'; $dshInstallRoot = $candRoot }
+  }
+} catch { $hostGen = 'unknown' }
+$genSource = 'auto'
+if ($HostGeneration -ne 'auto') {
+  $hostGen = $HostGeneration
+  $genSource = 'override'
+}
+if ($genSource -eq 'override') {
+  if ($hostGen -eq 'unknown') { Write-Warning "已按 -HostGeneration unknown 指定：fail-safe 跳过 insert 行 / settings.yaml / 预设目录写入。" }
+  else { Write-Step "宿主代系：按 -HostGeneration $hostGen 强制指定（未做能力探测）" }
+} elseif ($hostGen -eq 'decl') {
+  Write-Step "检测到 dsh 0.2.0+ 声明代宿主（dsh-agent-preset 在安装闭包）"
+} elseif ($hostGen -eq 'legacy') {
+  Write-Step "检测到 dsh 0.1.x 宿主（安装根 $dshInstallRoot，无 dsh-agent-preset）"
+} else {
+  Write-Warning "无法定位 dsh 安装根 ⇒ 无法判定宿主代系。按 fail-safe 跳过 insert 行 / settings.yaml 写入 / 预设目录同步（不制造「双层同 id」fatal）。确认宿主代系后请加 -HostGeneration legacy（0.1.x）/ decl（0.2.0+）重跑，或显式 -HostGeneration unknown 声明 fail-safe。"
+}
 
 # ── 2. 链接 / 拷贝到 node_modules（新布局 = profile 私有；旧布局 = 全局）────────
 if ($newLayout) {
@@ -291,7 +346,7 @@ function New-PatchTemplate {
   ) -join "`n"
 }
 
-if ($hostDeclGen) {
+if ($hostGen -eq 'decl') {
   # 0.2.0 声明代（BUG-011）：宿主行 + 预设声明行由包内 cordis.patch.yml 经 bundles 通道承载——
   # 此处**不插入**；且幂等撤除本安装器历史版本（≤0.1.5 双保险时代）插入的同 id insert 行：
   # 双层同 id 条目会让宿主 SettingsForms 对本条目写 config 即 fatal（隔离实例实证
@@ -366,6 +421,10 @@ if ($hostDeclGen) {
   } else {
     Write-Step "0.2.0+ 宿主：宿主行/预设声明行由 bundle patch 承载，跳过 insert"
   }
+} elseif ($hostGen -eq 'unknown') {
+  # fail-safe（REVIEW-BUG-011-R1 P1-5）：代系未知 ⇒ **不插 insert**（0.2.x 上会制造「双层同 id」fatal，
+  # RISK-011③ 实证）**也不撤除**（0.1.x 上撤除自有 insert 会摘掉宿主行）。只提示，不做写操作。
+  Write-Step "宿主代系未知（fail-safe）：跳过 cordis.patch.yml 的 insert 写入/撤除；确认代系后用 -HostGeneration 重跑"
 } elseif (-not (Test-Path $patch)) {
   Write-Step "创建 $patch"
   [System.IO.File]::WriteAllText($patch, (New-PatchTemplate), (New-Object System.Text.UTF8Encoding($false)))
@@ -420,10 +479,13 @@ if ($hostDeclGen) {
 # ── 4. agent 预设（按宿主代系分流）───────────────────────────────────────
 $presetSrc = Join-Path $src 'agent-presets\novel-writing'
 $presetDst = Join-Path $dshHome '.agent-presets\novel-writing'
-if ($hostDeclGen) {
+if ($hostGen -eq 'decl') {
   # 0.2.0+：.agent-presets 目录机制官方废弃（Nothing reads that directory any more）——
   # 预设组合由包内 cordis.patch.yml 的 @deepseek-ai/dsh-agent-preset 声明行经 bundles 通道承载。
   Write-Step "0.2.0+ 宿主：预设由 bundle patch 声明行承载（preset-novel-writing），跳过 .agent-presets 目录同步"
+} elseif ($hostGen -eq 'unknown') {
+  # fail-safe（REVIEW-BUG-011-R1 P1-5）：代系未知 ⇒ 不写 $DSH_HOME 预设目录（宁可少做），只提示。
+  Write-Step "宿主代系未知（fail-safe）：跳过 .agent-presets 目录同步；0.2.0+ 由 bundle patch 声明行承载，0.1.x 需同步本目录"
 } elseif (Test-Path (Join-Path $presetSrc 'agent.cordis.yml')) {
   New-Item -ItemType Directory -Path $presetDst -Force | Out-Null
   robocopy $presetSrc $presetDst /E /XD .git /NFL /NDL /NJH /NJS | Out-Null
@@ -436,7 +498,7 @@ if ($hostDeclGen) {
 # ── 5. 配置默认值 / 数据迁移提示（按宿主代系分流）────────────────────────
 $settingsFile = Join-Path $dshHome 'settings.yaml'
 $importedFile = Join-Path $dshHome 'settings.yaml.imported'
-if ($hostDeclGen) {
+if ($hostGen -eq 'decl') {
   # 0.2.0+：全局 settings.yaml 机制整体移除——不写默认节（插件 Config 声明承载默认值；
   # 写了也会触发宿主一次性 importLegacyDocument rename 副作用）。
   $importedHasNv = $false
@@ -453,7 +515,7 @@ if ($hostDeclGen) {
   } else {
     Write-Step "0.2.0+ 宿主：配置默认值由插件 Config 声明承载，跳过 settings.yaml 写入"
   }
-} else {
+} elseif ($hostGen -eq 'legacy') {
   $defaultConfig = @(
     'novel-writing:'
     '  enabled: true'
@@ -474,6 +536,10 @@ if ($hostDeclGen) {
     [System.IO.File]::WriteAllText($settingsFile, $defaultConfig + "`n", (New-Object System.Text.UTF8Encoding($false)))
     Write-Step "已创建 ${settingsFile}（默认配置）"
   }
+} else {
+  # fail-safe（REVIEW-BUG-011-R1 P1-5）：代系未知 ⇒ 不写 settings.yaml——在 0.2.x 上写会触发宿主
+  # importLegacyDocument rename 副作用；在 0.1.x 上少写仅损失「开箱默认值」（可由插件 Config 兜底）。
+  Write-Step "宿主代系未知（fail-safe）：跳过 settings.yaml 默认节写入"
 }
 
 Write-Host ''
@@ -483,8 +549,10 @@ if ($newLayout) {
 } else {
   Write-Host "  已接入全局 profiles\node_modules + patch 行（dsh 旧布局）。"
 }
-if ($hostDeclGen) {
+if ($hostGen -eq 'decl') {
   Write-Host "  0.2.0+ 宿主：预设「小说写作工作流」由 bundle patch 声明行注册（重启后在预设选择器可选）。"
+} elseif ($hostGen -eq 'unknown') {
+  Write-Host "  ⚠ 宿主代系未知：已按 fail-safe 跳过 insert/settings/预设目录写入——确认代系后加 -HostGeneration 重跑。"
 }
 Write-Host "  请重启 DSH。然后在预设选择器中选「小说写作工作流」开始创作；"
 Write-Host "  浏览器会话顶部「小说」标签 = 工作台（实时渲染/章节编辑/发布/数据）。"
