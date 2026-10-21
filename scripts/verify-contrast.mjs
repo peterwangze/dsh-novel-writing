@@ -59,4 +59,23 @@ for (const [themeName, t] of Object.entries(THEMES)) {
 }
 console.table(rows)
 console.log(`TEXT_TOKENS=${rows.length} BELOW_4.5=${failures}`)
-process.exit(failures === 0 ? 0 : 1)
+
+// ── V-3（UX-061 1b-2，DR2/DR3 裁决）：--nv-fg-subtle 用于 <12px 信息文本不合规 ⟹ 三处改 --nv-fg-muted ──
+// 输入值来源：宿主 static neutral（label-secondary 亮 #61666b / 暗 #cfd3d6；label-tertiary 亮 #81858c / 暗 #adb2b8）
+// 承载底色：信息文本位于表面（surface）之上（srow-sub / cfound-title / cfold 均为透明底）。
+const MUTED_FG = { light: '#61666b', dark: '#cfd3d6' }
+const SUBTLE_FG = { light: '#81858c', dark: '#adb2b8' }
+const v3rows = []
+let v3fail = 0
+for (const [themeName, t] of Object.entries(THEMES)) {
+  const surface = hex(t.surface)
+  for (const [tokenName, fgHex] of [['--nv-fg-muted', MUTED_FG[themeName]], ['--nv-fg-subtle（改前基线）', SUBTLE_FG[themeName]]]) {
+    const r = +ratio(hex(fgHex), surface).toFixed(2)
+    const enforced = tokenName === '--nv-fg-muted'
+    if (enforced && r < 4.5) v3fail++
+    v3rows.push({ theme: themeName, token: tokenName, bg: 'surface', bgHex: toHex(surface), textHex: fgHex, ratio: r, enforced, pass: r >= 4.5 })
+  }
+}
+console.table(v3rows)
+console.log(`FG_MUTED_ROWS=${v3rows.length} V3_BELOW_4.5=${v3fail}`)
+process.exit(failures === 0 && v3fail === 0 ? 0 : 1)

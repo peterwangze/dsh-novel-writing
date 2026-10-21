@@ -325,3 +325,62 @@ $s=[System.IO.File]::ReadAllText($p,[System.Text.Encoding]::UTF8)
 - 亮/暗主题的实时渲染取值**未做浏览器实测**（无截图采集）；对比度按宿主令牌声明的静态值计算。
 - 本机 serif 栈（宋体/Noto Serif CJK）实际可用性 `待验证`（须在目标 OS 实测字形与行高）。
 - 用户当前宿主主题为默认亮色的判断依据 = 无 theme 配置行 + 宿主默认态；若用户已切暗色，P0 结论的"亮色下不可见"需改为"跨主题不跟随"表述（结论不变）。
+
+---
+
+## 7. 用法说明（1b-2 落地口径，G-3/G-4）
+
+> 依据：DEC-155（方向 A + 布局授权）· `REVIEW-UX-061-1B-DR2/DR3`（M-2/M-3 附条件与 P3 备注）· `REVIEW-UX-061-1B-CR3`（残留项）。以下三条是实现与后续迭代 MUST 遵守的用法口径。
+
+### 7.1 工作流状态 chip 三档语义（`.nv-wfchip[data-tone]`）
+
+| tone | 语义 | 使用约束 |
+|---|---|---|
+| `muted` | 待办 / 未开始 / 无动作 | 中性前景色，不得用于「完成」 |
+| `running` | 进行中（含轮询中） | 可配动效，但不得只靠动效传达状态 |
+| `err` | 阻塞 / 失败 / 需介入 | 必须同时在文案里说明处置动作 |
+
+原 5 档（含 `ok` / `warn`）中这两档**无消费者**，已删除以避免死规则；若要表达「工作流完成」或「警告」态，MUST 先接消费者再以 DEC 重新引入（不得先加规则后找用处）。
+
+### 7.2 边框令牌使用边界（亮色层级）
+
+- `--nv-border`（宿主 `border-l1`，亮色 `#0000000a`）在亮色下**近不可见** ⇒ **禁用于分隔线 / 层级边界**；
+- 分隔与边界一律用 `--nv-border-strong`（宿主 `border-l2`）；
+- 亮色下卡片与页面底同为 `#fff`，层级只能由 1px `border-strong`（约 1.26:1）+ hover 的 accent 边框承担 ⇒ 属**目检必查项**（G-5）。
+
+### 7.3 hover 可感知性定义
+
+- 可感知性 = **边框或前景变化**；表面 tint 单独**不构成**可感知反馈（亮色 `interactive-bg-hover` 相对页面约 1.11:1）；
+- 现行实现：`border-color: var(--nv-accent)` + `background: var(--nv-surface-hover)`（组合反馈）；
+- 新增/修改交互组件 MUST 至少包含边框或前景变化，不得只靠 tint（否则 hover 在亮色下等于无反馈）。
+
+### 7.4 尺度与控件令牌（V-1/V-2 收口口径）
+
+- 文本字号**唯一数值来源** = `:root` 的 `--nv-fs-*`；`TYPO` 只做「语义名 → 令牌」映射（JS 侧不持 px）；
+- **口径限定（CR1 P2-1）**：以上「唯一数值来源 / 字面量白名单 / 尺度外值归并」三条**只约束 CSS 规则**；React 内联 `fontSize:'Npx'` 现有 **44 处基线**（11px×12 / 12px×23 / 13px×6 / 14px×1 / 11.5px×2），由 smoke 基线冻结守卫（新增/变更即红），**全量迁移登记为 1b-3**（不与 1b-2 混）；
+- CSS 内 `font-size` 字面量**只允许**出现在图标/字形尺寸选择器上（smoke 白名单机检，新增文本字面量即红）；
+- 控件高度档位 = `--nv-ctl-sm`（28px，`min-height` 下限）/ `--nv-ctl-md`（32px，**输入类目标档**：border-box + 实测），由按钮 / 输入 / 折叠钮等消费者承担；新增控件 MUST 复用两档，不得新造高度；
+- **精确高度约束（DR2 P3）**：两档是 `min-height` 下限，不等于精确高度——若某控件需要**精确**高度，MUST 显式用 `height` 并统一 `box-sizing:border-box`，不得依赖 `min-height`；
+- **同行同档不变量（DR2 P2）**：**同一表单行内的控件 MUST 取同一档**；当前已知偏差 = 模态行 `.nv-cmodal .nv-cinput`（32，`ctl-md`）与同排 `.nv-cbtn`（实测 29，`ctl-sm`）约 3px 高差。处置：G-5 目检判定可见 ⇒ 按**预批准 1 行修复**（`.nv-cmodal .nv-cbtn{min-height:var(--nv-ctl-md)}`）；不可见 ⇒ 记录为**已知偏差**，不得宣称「高度完全统一」；
+- **实测高度表（环境：headless Edge + 规则直接从 `lib/client.js` 抽取；日期 2026-10-21）**：
+
+| 控件 | 档位 | 实测高度 |
+|---|---|---|
+| `.nv-cinput` | `ctl-md` | **32** |
+| `.nv-cmodal .nv-cinput` | `ctl-md` | **32** |
+| `.nv-csortbtn` | `ctl-sm` | 32 |
+| `.nv-cbtn` | `ctl-sm` | 29 |
+| `.nv-cbtn-accent` | `ctl-sm` | 28 |
+| `.nv-cfold` | `ctl-sm` | 28 |
+| `.nv-wfctl-btn` / `-btn2` | `ctl-sm` | 28 / 28 |
+
+- **盒模型约束（CR1 P1）**：`<button>` UA 默认 border-box，而 `<input>` 是 **content-box** ⇒ 输入类 MUST 显式 `box-sizing:border-box`，否则 `min-height` 落在内容盒（实测 29→44，模态 37→50）。修复后 `.nv-cinput` **32** / `.nv-cmodal .nv-cinput` **32**（模态垂直 padding 8→**5px**、与基础输入一致，以对齐 32 档；**Design 已裁决接受 5px**，理由：档位一致性优先，避免引入第三档 36px）；
+- `.nv-cfold` 22→28px（+6）为控制高度归一的**有意的**布局变化（原高由 padding+line-height 自然撑出）；
+- 尺度外字号（10 / 10.5 / 11.5px）在 CSS 内一律归入 11（`--nv-fs-caption`）或 12（`--nv-fs-base`）；内联 11.5px×2 待 1b-3；
+- 14px→15px 两处（`.nv-content h3` / `.nv-hero-btn`）为尺度收敛的 +1px 变化，属目检项（G-5）。
+### 7.5 三级文字色使用边界（1b-2 泛化结论）
+
+- 文本**最低**使用 `--nv-fg-muted`（宿主 `label-secondary`；亮 `#61666b` 5.80:1 / 暗 `#cfd3d6` 10.42:1）；
+- `--nv-fg-subtle`（宿主 `label-tertiary`；亮 `#81858c` **3.71:1**）**只允许用于非文本**：图标、状态点、边框、分隔线；
+- 依据：WCAG AA 对普通字号文本要求 ≥4.5:1，与字号是否 <12px 无关；1b-2 已把全部 14 处文本用法改为 muted（含 `TK.text3` 的 **7** 个内联小字号消费点），残留 5 处非文本 + 1 处定义；
+- 若后续需要更弱的"三级文本"层级，MUST 先由 Design Reviewer 裁决并给出可测的对比度下限（≥4.5:1），不得直接复用 subtle。

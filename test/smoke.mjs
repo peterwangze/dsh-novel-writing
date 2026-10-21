@@ -627,12 +627,12 @@ check('控制台源码面：UX-010 批注（✕ 醒目变体/排序 pill 13px/18
   const grid = css('.nv-cgrid')
   const sort = css('.nv-csortbtn')
   return xBtn.includes('width:28px') && xBtn.includes('height:28px') && xBtn.includes('border:1px solid')
-    && sort.includes('font-size:13px') && sort.includes('padding:7px 14px')
+    && sort.includes('font-size:var(--nv-fs-card)') && sort.includes('padding:7px 14px')
     && css('.nv-csort').includes('gap:8px')
     && card.includes('min-height:180px') && tile.includes('min-height:180px') && grid.includes('gap:20px')
     // UX-055①：字号随字阶常量演进——书卡标题 17px（TYPO.cardTitle）、状态行/meta 11px（TYPO.meta）
     && css('.nv-ccard-name').includes('TYPO.cardTitle') && css('.nv-ccard-status').includes('TYPO.meta')
-    && css('.nv-ccard-data').includes('font-size:13px') && css('.nv-cmeta').includes('TYPO.meta')
+    && css('.nv-ccard-data').includes('font-size:var(--nv-fs-card)') && css('.nv-cmeta').includes('TYPO.meta')
 })(), 'ux010 tokens missing')
 check('控制台源码面：UX-010④ current 联动（s.current 订阅 + ref 基准守卫 + 插件切换豁免）',
   clientSrc.includes('s.current') && clientSrc.includes('currentSeededRef') && clientSrc.includes('prevCurrentRef')
@@ -885,11 +885,11 @@ check('客户端源码面：UX-013 抽屉字形（width 100% 对齐 + 13px/📖1
   const cardDot = css('.nv-card .nv-dot')
   const sep = css('.nv-sep')
   return drawer.includes('width:100%') && drawer.includes('margin:2px 0 8px')
-    && title.includes('font-size:13px') && title.includes('font-weight:600') && title.includes('letter-spacing:.06em')
+    && title.includes('font-size:var(--nv-fs-card)') && title.includes('font-weight:600') && title.includes('letter-spacing:.06em')
     && ico.includes('font-size:16px')
     && card.includes('padding:6px 8px') && card.includes('border-radius:10px') && card.includes('margin:4px 0')
     && ct.includes('TYPO.smallTitle') && ct.includes('font-weight:600')    // UX-055⑥：抽屉卡标题 13→13.5px/600（小一档保层级）
-    && cs.includes('font-size:12px')
+    && cs.includes('font-size:var(--nv-fs-base)')
     && dot.includes('width:9px') && dot.includes('height:9px')      // 基型 9px（标题栏状态点）
     && cardDot.includes('width:8px') && cardDot.includes('height:8px') // 抽屉卡小一档 8px
     && sep.includes('--nv-border-strong')
@@ -982,7 +982,7 @@ check('客户端源码面：UX-015① 标题栏加高放大（38px 高 / 14px �
   return clientSrc.includes('const TITLE_BAR_H = 38')
     && bar.includes('height:38px') && bar.includes('padding:0 14px')
     && bt.includes('TYPO.page') && bt.includes('font-weight:600') && bt.includes('letter-spacing:-.015em') // UX-055①：书名 14→20px/600（字阶第一级）
-    && badge.includes('font-size:13px')
+    && badge.includes('font-size:var(--nv-fs-card)')
     && ctl.includes('width:32px') && ctl.includes('height:32px') && ctl.includes('font-size:18px') && ctl.includes('font-weight:600')
     && barMini.includes('width:24px') && barMini.includes('height:24px')
     && launch.includes('padding:5px 14px')  // UX-059：主按钮（工作流控制条）padding 沿用 5px 14px
@@ -1129,7 +1129,7 @@ check('客户端源码面：UX-015④ 抽屉小一档（13/12px + 6·8px + 4px �
   const empty = css('.nv-drawer .nv-empty')
   const ccard = css('.nv-ccard')
   return card.includes('padding:6px 8px') && card.includes('margin:4px 0')
-    && ct.includes('TYPO.smallTitle') && cs.includes('font-size:12px')   // UX-055⑥：抽屉卡标题 13→13.5px/600（管理台卡 17px 保层级）
+    && ct.includes('TYPO.smallTitle') && cs.includes('font-size:var(--nv-fs-base)')   // UX-055⑥：抽屉卡标题 13→13.5px/600（管理台卡 17px 保层级；UX-061 1b-2 起字号走 --nv-fs-*）
     && cardDot.includes('width:8px') && cardDot.includes('height:8px')
     && empty.includes('padding:6px 8px')
     && ccard.includes('min-height:180px') && ccard.includes('padding:16px') // 管理层卡片不动（层级感=抽屉小于控制台）
@@ -1283,6 +1283,9 @@ check('客户端源码面：UX-055① 字阶悬崖（TYPO 单点常量关键值 
     && clientSrc.includes("bodyLh: 'var(--nv-lh-reading)'") && clientSrc.includes("meta: 'var(--nv-fs-base)'") && clientSrc.includes("empty: 'var(--nv-fs-hero)'")
     // UX-061 1b DR2/CR2 P0-1 守卫：TYPO 值已含单位 ⇒ 任何 + 'px' 拼接都会生成 var(...)px 失效值
     && !/TYPO\.[A-Za-z]+\s*\+\s*'px/.test(clientSrc)          // 负断言：TYPO + 'px' 命中数必须为 0
+    && !/TYPO\.[A-Za-z]+\s*\+\s*["']px/.test(clientSrc)       // 1b-2 G-1：单/双引号拼接均须为 0
+    && !/\$\{TYPO\.[A-Za-z]+\}px/.test(clientSrc)             // 1b-2 G-1：模板字面量 ${TYPO.x}px 形态亦须为 0
+    && !/var\(--nv-[a-z-]+\)px/.test(clientSrc)               // 1b-2 G-1：产出形状负断言（var(...)px 为非法值）
     && /font-size:' \+ TYPO\./.test(clientSrc)                  // 正断言：CSS 内 font-size 走 TYPO 单源（无 px 拼接）
     && clientSrc.includes('--nv-fs-display:20px') && clientSrc.includes('--nv-fs-base:12px') && clientSrc.includes('--nv-fs-stat:18px') && clientSrc.includes('--nv-fs-chapter:16px')
     && clientSrc.includes('TYPO.page')        // 页面标题（管理台标题/创作台书名 20px）
@@ -1295,6 +1298,38 @@ check('客户端源码面：UX-055① 字阶悬崖（TYPO 单点常量关键值 
     && !clientSrc.includes('font-size:16px;font-weight:600;color:var(--nv-fg,#e6e8eb);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}')  // 旧书卡标题 16px 无残留
     && !clientSrc.includes('.nv-console-title{flex:none;display:inline-flex;align-items:center;gap:6px;font-size:16px')
 })(), 'ux055 typography missing')
+check('客户端源码面：UX-061 1b-2 尺度令牌治理（CSS font-size 字面量 ⊆ 图标白名单 ∧ 控件令牌类清单逐一对应 ∧ 内联字号基线冻结）', (() => {
+  // V-2（DR2/DR3 裁决）：**CSS 规则内** font-size 字面量只允许出现在「图标/字形尺寸」选择器上；
+  // 文本字号一律走 --nv-fs-* 尺度令牌（数值唯一来源 = :root）。新增文本字面量即红。
+  // 口径限定（CR1 P2-1）：React 内联 `fontSize:'Npx'` 属 1b-3 批次，本检查不覆盖其迁移，只做基线冻结。
+  const ICON_FS_SELECTORS = ['.nv-bar .nv-mini', '.nv-console-head .nv-mini', '.nv-cico', '.nv-drawer-title-ico',
+    '.nv-console-title-ico', '.nv-csearch-icon', '.nv-ccard-mono', '.nv-bar-ctl', '.nv-cplus-icon']
+  const literalFsLines = clientSrc.split('\n').filter((l) => /font-size:\s*[0-9.]+px/.test(l))
+  const literalSelectors = literalFsLines.map((l) => (l.match(/^\s*'([^'{]+)\{/) || [])[1] || '?')
+  const scaleOnlyIcons = literalSelectors.length > 0 && literalSelectors.every((s) => ICON_FS_SELECTORS.includes(s))
+  // V-1（DR2/DR3 裁决 + CR1 P2-2）：--nv-ctl-sm/md 必须有真实消费者，且逐类名对应（少一处即红）
+  const CTL_CLASSES = [
+    ['.nv-cbtn{min-height:var(--nv-ctl-sm)', 'cbtn'],
+    ['.nv-cbtn-accent{min-height:var(--nv-ctl-sm)', 'cbtn-accent'],
+    ['.nv-cfold{min-height:var(--nv-ctl-sm)', 'cfold'],
+    ['.nv-csortbtn{min-height:var(--nv-ctl-sm)', 'csortbtn'],
+    ['.nv-wfctl-btn{min-height:var(--nv-ctl-sm)', 'wfctl-btn'],
+    ['.nv-wfctl-btn2{min-height:var(--nv-ctl-sm)', 'wfctl-btn2'],
+  ]
+  const ctlSmMapped = CTL_CLASSES.every(([needle]) => clientSrc.includes(needle))
+  // CR1 P1：<input> 的 UA 默认 content-box ⇒ min-height 会落在内容盒（高度 44/50）。
+  // 输入类 MUST 显式 border-box，且固定 --nv-ctl-md 档位（基类覆盖 `.nv-cmodal .nv-cinput`，同一元素）。
+  const ctlMdMapped = clientSrc.includes('.nv-cinput{box-sizing:border-box;min-height:var(--nv-ctl-md)')
+  const ctlSm = (clientSrc.match(/var\(--nv-ctl-sm\)/g) || []).length
+  const ctlMd = (clientSrc.match(/var\(--nv-ctl-md\)/g) || []).length
+  // P2-1（CR1）：React 内联字号基线冻结（44 处；11.5px×2 属尺度外，归 1b-3）——新增/变更即红，须同批更新基线
+  const INLINE_FS_BASELINE = '11.5px:2,11px:12,12px:23,13px:6,14px:1'
+  const inlineSizes = (clientSrc.match(/fontSize:\s*'([0-9.]+)px'/g) || []).map((s) => s.match(/'([0-9.]+)px'/)[1] + 'px')
+  const inlineCount = {}
+  for (const v of inlineSizes) inlineCount[v] = (inlineCount[v] || 0) + 1
+  const inlineSig = Object.keys(inlineCount).sort().map((k) => k + ':' + inlineCount[k]).join(',')
+  return scaleOnlyIcons && ctlSmMapped && ctlMdMapped && ctlSm === 6 && ctlMd === 1 && inlineSig === INLINE_FS_BASELINE
+})(), 'ux061 scale token governance missing')
 check('客户端源码面：UX-055② 书卡构成重构（monogram 色块 40×40 + accent 14% color-mix 派生 + 数据 chips 6%/9% + 1px 分隔线 label-primary 8%）', (() => {
   return clientSrc.includes('.nv-ccard-mono{') && clientSrc.includes('width:40px;height:40px')
     && clientSrc.includes('border-radius:10px')
