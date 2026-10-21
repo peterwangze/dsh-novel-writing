@@ -652,6 +652,33 @@
         ".governance/review-UX-061-P2-CR2.md",
         ".governance/review-UX-061-P2-DR2.md"
       ]
+    },
+    "op-1956d5efc44b4eac996f8b153270388e": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-061",
+      "input_fingerprint": "d680bad45f4d9dd206f0fdcb91edaaa2d4a437e1f5580c1df48d80305735c437",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-1956d5efc44b4eac996f8b153270388e",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-10-21T13:05:45",
+      "updated_at": "2026-10-21T13:05:45",
+      "released_files": [
+        "docs/design/UX-061-visual-directions.md",
+        "docs/verification/UX-061-assertion-migration.md",
+        "lib/client.js",
+        "lib/host-contract.mjs",
+        "scripts/verify-visual-geometry.mjs",
+        "test/smoke.mjs"
+      ]
     }
   }
 }

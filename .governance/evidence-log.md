@@ -452,3 +452,5 @@
 | REVIEW-UX-061-R16 | UX-061 | 治理记录 | review-record CLI 机器写入 review 结论记录（round 16） | 事实依据：review-record 输出摘要（机器写入） | .governance/review-UX-061-P2-DR2.md; review-UX-061-R16.md; report_sha256=dd33423b972a; commit=c078040df208; obligation=RECHECK-UX-061-R17 | Design-Reviewer(subagent) | 2026-10-21 | G11 | NEEDS_CHANGE |
 
 | REVIEW-UX-061-R17 | UX-061 | 治理记录 | review-record CLI 机器写入 review 结论记录（round 17） | 事实依据：review-record 输出摘要（机器写入） | .governance/review-UX-061-P2-CR2.md; review-UX-061-R17.md; report_sha256=b600ce3e7549; commit=d3232058497d | Code-Reviewer(subagent) | 2026-10-21 | G11 | APPROVED_WITH_NOTES | unresolved_blockers=0 |
+
+| REVIEW-UX-061-R18 | UX-061 | 治理记录 | review-record CLI 机器写入 review 结论记录（round 18） | 事实依据：review-record 输出摘要（机器写入） | .governance/review-UX-061-P2-DR3.md; review-UX-061-R18.md; report_sha256=11d8092478d6; commit=43189683bce9 | Design-Reviewer(subagent) | 2026-10-21 | G11 | APPROVED_WITH_NOTES | unresolved_blockers=0 |
