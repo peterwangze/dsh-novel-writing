@@ -430,3 +430,7 @@
 | REVIEW-UX-061-R5 | UX-061 | 治理记录 | review-record CLI 机器写入 review 结论记录（round 5） | 事实依据：review-record 输出摘要（机器写入） | .governance/review-UX-061-1B-CR1.md; review-UX-061-R5.md; report_sha256=44688d497ff5; commit=237968713d4d; obligation=RECHECK-UX-061-R6 | Code-Reviewer(subagent) | 2026-10-21 | G11 | NEEDS_CHANGE |
 
 | REVIEW-UX-061-R6 | UX-061 | 治理记录 | review-record CLI 机器写入 review 结论记录（round 6） | 事实依据：review-record 输出摘要（机器写入） | .governance/review-UX-061-1B-DR2.md; review-UX-061-R6.md; report_sha256=032024cee595; commit=c8c28c1fed62; obligation=RECHECK-UX-061-R7 | Design-Reviewer(subagent) | 2026-10-21 | G11 | NEEDS_CHANGE |
+
+| REVIEW-UX-061-R7 | UX-061 | 治理记录 | review-record CLI 机器写入 review 结论记录（round 7） | 事实依据：review-record 输出摘要（机器写入） | .governance/review-UX-061-1B-CR2.md; review-UX-061-R7.md; report_sha256=1f79e5c83344; commit=154624edb9b5; obligation=RECHECK-UX-061-R8 | Code-Reviewer(subagent) | 2026-10-21 | G11 | NEEDS_CHANGE |
+
+| REVIEW-UX-061-R8 | UX-061 | 治理记录 | review-record CLI 机器写入 review 结论记录（round 8） | 事实依据：review-record 输出摘要（机器写入） | .governance/review-UX-061-1B-DR3.md; review-UX-061-R8.md; report_sha256=af83b4633e21; commit=ac3aeff28e39 | Design-Reviewer(subagent) | 2026-10-21 | G11 | APPROVED_WITH_NOTES | unresolved_blockers=0 |
