@@ -263,6 +263,50 @@
         "lib/host-contract.mjs",
         "test/smoke.mjs"
       ]
+    },
+    "op-f5eae3ecc7a8481ca2b56c13e3c79336": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-061",
+      "input_fingerprint": "d680bad45f4d9dd206f0fdcb91edaaa2d4a437e1f5580c1df48d80305735c437",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-f5eae3ecc7a8481ca2b56c13e3c79336",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-10-21T08:05:29",
+      "updated_at": "2026-10-21T08:05:29",
+      "released_files": [
+        ".governance/review-UX-061-R2.md"
+      ]
+    },
+    "op-1af293e3d4fe453898bdcf6d80fce22d": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-061",
+      "input_fingerprint": "d680bad45f4d9dd206f0fdcb91edaaa2d4a437e1f5580c1df48d80305735c437",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-1af293e3d4fe453898bdcf6d80fce22d",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-10-21T08:06:48",
+      "updated_at": "2026-10-21T08:06:48",
+      "released_files": [
+        ".governance/review-UX-061-R3.md"
+      ]
     }
   }
 }
