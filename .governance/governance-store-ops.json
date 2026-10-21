@@ -601,6 +601,34 @@
         ".governance/review-UX-061-P2-CR1.md",
         ".governance/review-UX-061-P2-DR1.md"
       ]
+    },
+    "op-fa8a819e046e4c0f91a8c1aa139c6c0e": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-061",
+      "input_fingerprint": "d680bad45f4d9dd206f0fdcb91edaaa2d4a437e1f5580c1df48d80305735c437",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-fa8a819e046e4c0f91a8c1aa139c6c0e",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-10-21T12:55:57",
+      "updated_at": "2026-10-21T12:55:57",
+      "released_files": [
+        ".github/workflows/ci.yml",
+        "README.md",
+        "docs/design/UX-061-visual-directions.md",
+        "docs/verification/UX-061-assertion-migration.md",
+        "lib/client.js",
+        "lib/host-contract.mjs",
+        "test/smoke.mjs"
+      ]
     }
   }
 }
