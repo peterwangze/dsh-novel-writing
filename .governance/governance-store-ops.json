@@ -356,6 +356,32 @@
         ".governance/review-UX-061-1B-CR1.md",
         ".governance/review-UX-061-1B-DR1.md"
       ]
+    },
+    "op-16c2e513093a4953a094e505cdf80b8d": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-061",
+      "input_fingerprint": "d680bad45f4d9dd206f0fdcb91edaaa2d4a437e1f5580c1df48d80305735c437",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-16c2e513093a4953a094e505cdf80b8d",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-10-21T08:17:07",
+      "updated_at": "2026-10-21T08:17:07",
+      "released_files": [
+        "docs/verification/UX-061-assertion-migration.md",
+        "lib/client.js",
+        "lib/host-contract.mjs",
+        "scripts/verify-contrast.mjs",
+        "test/smoke.mjs"
+      ]
     }
   }
 }
