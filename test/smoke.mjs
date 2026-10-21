@@ -1243,10 +1243,11 @@ check('客户端源码面：UX-053 光效收敛（.nv-csweep 扫光清除负断�
     && clientSrc.includes(".nv-ccard[data-glow=need]{border-color:var(--nv-border-strong,#3a4150);box-shadow:inset 0 2px 0 0 rgba(210,153,34,.7);box-shadow:inset 0 2px 0 0 color-mix(in srgb,var(--nv-warn,#d29922) 70%,transparent)}")
     && clientSrc.includes(".nv-ccard[data-glow=done]{border-color:var(--nv-border-strong,#3a4150);box-shadow:inset 0 2px 0 0 rgba(63,185,80,.7);box-shadow:inset 0 2px 0 0 color-mix(in srgb,var(--nv-ok,#3fb950) 70%,transparent)}")
     && clientSrc.includes(".nv-ccard[data-glow=busy]{border-color:var(--nv-border-strong,#3a4150);box-shadow:inset 0 2px 0 0 rgba(79,142,247,.7);box-shadow:inset 0 2px 0 0 color-mix(in srgb,var(--nv-accent,#4f8ef7) 70%,transparent)}")
-    // UX-055③（DEC-021 修订版）：卡片渐变白 alpha 写死 → color-mix(label-primary) 派生（见 ux055 负断言）
-    && clientSrc.includes('background:linear-gradient(135deg,color-mix(in srgb,var(--nv-fg,#e6e8eb) 4%,transparent),transparent 55%)')
+    // UX-061 1b（DEC-155 方向 A）：书卡去渐变/去重阴影 → 表面令牌 + hover 令牌（迁移表见 docs/verification/UX-061-assertion-migration.md）
+    && clientSrc.includes('.nv-ccard{position:relative;display:flex;flex-direction:column;gap:var(--nv-sp-2);box-sizing:border-box;min-height:180px;padding:16px;border:1px solid var(--nv-border-strong);border-radius:var(--nv-r-xl);background:var(--nv-surface);box-shadow:none;')
+    && clientSrc.includes('.nv-ccard:hover{border-color:var(--nv-accent);background:var(--nv-surface-hover)}')
+    && !clientSrc.includes('background:linear-gradient(135deg,color-mix(in srgb,var(--nv-fg,#e6e8eb) 4%,transparent)')  // 书卡渐变已撤除（DEC-155）
     && !clientSrc.includes('rgba(255,255,255,.07),rgba(255,255,255,.02) 45%')   // 旧峰值/45% stop 无残留
-    && clientSrc.includes('box-shadow:0 1px 3px rgba(0,0,0,.15)')              // 阴影收紧
     && !clientSrc.includes('0 0 22px rgba(210,153,34') && !clientSrc.includes('box-shadow:0 0 24px rgba(79,142,247')  // 大辉光无残留（卡面 box-shadow 域；UX-055 hero 为 drop-shadow 光晕不冲突）
 })(), 'ux053 glow converge missing')
 check('客户端源码面：UX-053 令牌化与其它（color-mix + rgba 兜底双声明 / 字重三档 700→600 / 选中态类化 .nv-ft-row[data-sel]/.nv-chrow[data-sel] / 空态 flex 图标 / 弹窗双层阴影 / 排序 pill 8% 底 + 徽标 pill 999）', (() => {
@@ -1276,9 +1277,14 @@ check('客户端源码面：UX-053 令牌化与其它（color-mix + rgba 兜底�
 //  ⑥细节统一（抽屉小卡 13.5px/当前阶段行 accent 8%+左缘条/排序 pill 600/tabular-nums 数字/＋磁贴 label-primary 15% 虚线）
 check('客户端源码面：UX-055① 字阶悬崖（TYPO 单点常量关键值 + page/cardTitle/body/bodyLh 引用面 + 无旧值残留）', (() => {
   return clientSrc.includes('const TYPO = {')
-    && clientSrc.includes('page: 20') && clientSrc.includes('cardTitle: 17')
-    && clientSrc.includes('stat: 18') && clientSrc.includes('body: 15')
-    && clientSrc.includes('bodyLh: 1.75') && clientSrc.includes('meta: 11') && clientSrc.includes('empty: 28')
+    // UX-061 1b P1-D2：TYPO 收敛为「语义名 → --nv-fs-*」唯一映射（JS 侧不持 px；数值唯一来源 = :root 令牌）
+    && clientSrc.includes("page: 'var(--nv-fs-display)'") && clientSrc.includes("cardTitle: 'var(--nv-fs-display-s)'")
+    && clientSrc.includes("stat: 'var(--nv-fs-stat)'") && clientSrc.includes("body: 'var(--nv-fs-body)'")
+    && clientSrc.includes("bodyLh: 'var(--nv-lh-reading)'") && clientSrc.includes("meta: 'var(--nv-fs-base)'") && clientSrc.includes("empty: 'var(--nv-fs-hero)'")
+    // UX-061 1b DR2/CR2 P0-1 守卫：TYPO 值已含单位 ⇒ 任何 + 'px' 拼接都会生成 var(...)px 失效值
+    && !/TYPO\.[A-Za-z]+\s*\+\s*'px/.test(clientSrc)          // 负断言：TYPO + 'px' 命中数必须为 0
+    && /font-size:' \+ TYPO\./.test(clientSrc)                  // 正断言：CSS 内 font-size 走 TYPO 单源（无 px 拼接）
+    && clientSrc.includes('--nv-fs-display:20px') && clientSrc.includes('--nv-fs-base:12px') && clientSrc.includes('--nv-fs-stat:18px') && clientSrc.includes('--nv-fs-chapter:16px')
     && clientSrc.includes('TYPO.page')        // 页面标题（管理台标题/创作台书名 20px）
     && clientSrc.includes('TYPO.cardTitle')   // 书卡标题 17px
     && clientSrc.includes('TYPO.stat')        // 统计数字 18px + tabular-nums
@@ -1307,7 +1313,7 @@ check('客户端源码面：UX-055③ 白 alpha 渐变清零（卡片背景无 r
   const naked = clientSrc.match(/(?<!var\(--dsw-alias-[a-z0-9-]+[,)])\blinear-gradient\([^)]*rgba\(255,\s*255,\s*255/g)
   return (naked ?? []).length === 0
     && !clientSrc.includes('linear-gradient(135deg,rgba(255,255,255')
-    && clientSrc.includes('.nv-ccard:hover{') && clientSrc.includes('color-mix(in srgb,var(--nv-fg,#e6e8eb) 7%,transparent)') // hover 7% 同步令牌化
+    && clientSrc.includes('.nv-ccard:hover{border-color:var(--nv-accent);background:var(--nv-surface-hover)}') // UX-061 1b：hover 走语义表面令牌（渐变已撤除）
 })(), 'ux055 white-alpha gradient cleared')
 check('客户端源码面：UX-055④ 状态 chip 组件（.nv-chip + data-tone ok/warn/danger/muted 四态 color-mix 派生 + 卡片/门禁 chip 化 + noData 新值 zh/en + 发布记录状态点）', (() => {
   const tones = ['ok', 'warn', 'danger', 'muted']
@@ -1340,13 +1346,13 @@ check('客户端源码面：UX-055③⑥ 空态英雄区 + 稀疏居中（hero �
     && clientSrc.includes('.nv-cplus:hover{background:rgba(230,232,235,.04);background:color-mix(in srgb,var(--nv-fg,#e6e8eb) 4%,transparent)') // hover 4% 底
 })(), 'ux055 hero + sparse missing')
 check('客户端源码面：UX-055⑤ 正文阅读排版（15px/1.75 类 + .nv-content + 章节标题 TYPO.chapter 分隔线 + textarea 15px/1.75 同步 + tabular-nums 数字面）', (() => {
-  return clientSrc.includes(".nv-content{font-size:' + TYPO.body + 'px;line-height:' + TYPO.bodyLh")
+  return clientSrc.includes(".nv-content{font-size:' + TYPO.body + ';line-height:' + TYPO.bodyLh")
     && clientSrc.includes('.nv-content p{margin:.75em 0')
     && clientSrc.includes(".nv-content h2{font-size:' + TYPO.chapter")             // P2-2：TYPO 引用面（非硬编码 16px 字面）
     && clientSrc.includes('.nv-chapter-sep{')
     && clientSrc.includes("className: 'nv-content'")
-    && clientSrc.includes("fontSize: TYPO.chapter + 'px'")                    // 阅读区章节标题 16px/600 + tabular
-    && clientSrc.includes("fontSize: TYPO.body + 'px', lineHeight: TYPO.bodyLh")  // textarea 同步 15px/1.75
+    && clientSrc.includes('fontSize: TYPO.chapter')                    // 阅读区章节标题 16px/600 + tabular
+    && clientSrc.includes('fontSize: TYPO.body, lineHeight: TYPO.bodyLh')  // textarea 同步 15px/1.75
     && clientSrc.includes("'.nv-chip{flex:none;display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;box-sizing:border-box;font-size:' + TYPO.meta") // P2-1：.nv-chip 11px→TYPO.meta 引用面
 })(), 'ux055 body typography missing')
 check('客户端源码面：UX-055⑥ 细节统一（抽屉小卡 13.5px / 当前阶段行 accent 8% 底+左缘条 / 排序 pill 选中 600 / 数据/表格 tabular-nums / mono 首字块渲染）', (() => {
@@ -2500,7 +2506,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   //      **残余缝（同次实测，未闭合）**：若 2.13 只删**终点闭合行**（**历史锚点**：COMPAT-013 时期值 `L4429-4460`——6 处注册仍全在范围内）
   //      则 ①②③④⑤ **全绿**（实测 262/0：⑤a 计数仍 6 ≡ 6、④ callPrefix = null、⑤b 无 `键: {` 形态构造）
   //      ⇒ 该形态目前无持续机检力。根治需「构造闭合行」口径，而 JS 范围本就可能是**合法语义片段**
-  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L5179-L5181` +1 / 3.8 `L3075-L3086` +1 实测均非配平）——
+  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L5190-L5192` +1 / 3.8 `L3075-L3086` +1 实测均非配平）——
   //      无差别要求配平会误报上述 3 项，故如实留档待另案（非本任务可安全落地）。
   //      **本行 3 个契约行号副本的同步方（CLEAN-006 **N-6** 归属订正，避免审计归因错位）**：本块随
   //      契约 `line` 重基**必须同步**，其**机检执行者 = `COMPAT-015 F3 行号引用对账`**（把本行 2.3
