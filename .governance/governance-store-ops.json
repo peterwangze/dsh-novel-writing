@@ -578,6 +578,29 @@
         "lib/host-contract.mjs",
         "test/smoke.mjs"
       ]
+    },
+    "op-8f04aea4543a4508ab3a291d2b8319dc": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-061",
+      "input_fingerprint": "d680bad45f4d9dd206f0fdcb91edaaa2d4a437e1f5580c1df48d80305735c437",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-8f04aea4543a4508ab3a291d2b8319dc",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-10-21T12:45:11",
+      "updated_at": "2026-10-21T12:45:11",
+      "released_files": [
+        ".governance/review-UX-061-P2-CR1.md",
+        ".governance/review-UX-061-P2-DR1.md"
+      ]
     }
   }
 }
