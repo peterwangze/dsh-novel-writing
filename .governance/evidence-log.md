@@ -434,3 +434,13 @@
 | REVIEW-UX-061-R7 | UX-061 | 治理记录 | review-record CLI 机器写入 review 结论记录（round 7） | 事实依据：review-record 输出摘要（机器写入） | .governance/review-UX-061-1B-CR2.md; review-UX-061-R7.md; report_sha256=1f79e5c83344; commit=154624edb9b5; obligation=RECHECK-UX-061-R8 | Code-Reviewer(subagent) | 2026-10-21 | G11 | NEEDS_CHANGE |
 
 | REVIEW-UX-061-R8 | UX-061 | 治理记录 | review-record CLI 机器写入 review 结论记录（round 8） | 事实依据：review-record 输出摘要（机器写入） | .governance/review-UX-061-1B-DR3.md; review-UX-061-R8.md; report_sha256=af83b4633e21; commit=ac3aeff28e39 | Design-Reviewer(subagent) | 2026-10-21 | G11 | APPROVED_WITH_NOTES | unresolved_blockers=0 |
+
+| REVIEW-UX-061-R9 | UX-061 | 治理记录 | review-record CLI 机器写入 review 结论记录（round 9） | 事实依据：review-record 输出摘要（机器写入） | .governance/review-UX-061-1B-CR3.md; review-UX-061-R9.md; report_sha256=d253981a6e69; commit=4a86ab7f4c4f | Code-Reviewer(subagent) | 2026-10-21 | G11 | APPROVED_WITH_NOTES | unresolved_blockers=0 |
+
+| REVIEW-UX-061-R10 | UX-061 | 治理记录 | review-record CLI 机器写入 review 结论记录（round 10） | 事实依据：review-record 输出摘要（机器写入） | .governance/review-UX-061-1B2-DR1.md; review-UX-061-R10.md; report_sha256=8b5ecf94a15e; commit=4a86ab7f4c4f | Design-Reviewer(subagent) | 2026-10-21 | G11 | APPROVED_WITH_NOTES | unresolved_blockers=0 |
+
+| REVIEW-UX-061-R11 | UX-061 | 治理记录 | review-record CLI 机器写入 review 结论记录（round 11） | 事实依据：review-record 输出摘要（机器写入） | .governance/review-UX-061-1B2-CR1.md; review-UX-061-R11.md; report_sha256=7d068fa7ebfe; commit=04b1269d1609; obligation=RECHECK-UX-061-R12 | Code-Reviewer(subagent) | 2026-10-21 | G11 | NEEDS_CHANGE |
+
+| REVIEW-UX-061-R12 | UX-061 | 治理记录 | review-record CLI 机器写入 review 结论记录（round 12） | 事实依据：review-record 输出摘要（机器写入） | .governance/review-UX-061-1B2-DR2.md; review-UX-061-R12.md; report_sha256=a2363a88ea3b; commit=04b1269d1609 | Design-Reviewer(subagent) | 2026-10-21 | G11 | APPROVED_WITH_NOTES | unresolved_blockers=0 |
+
+| REVIEW-UX-061-R13 | UX-061 | 治理记录 | review-record CLI 机器写入 review 结论记录（round 13） | 事实依据：review-record 输出摘要（机器写入） | .governance/review-UX-061-1B2-CR2.md; review-UX-061-R13.md; report_sha256=310b4b78df0b; commit=04b1269d1609 | Code-Reviewer(subagent) | 2026-10-21 | G11 | APPROVED_WITH_NOTES | unresolved_blockers=0 |

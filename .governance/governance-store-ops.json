@@ -430,6 +430,104 @@
         "lib/host-contract.mjs",
         "test/smoke.mjs"
       ]
+    },
+    "op-9fce58b9bca646e3a6f287edb6f00ee3": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-061",
+      "input_fingerprint": "d680bad45f4d9dd206f0fdcb91edaaa2d4a437e1f5580c1df48d80305735c437",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-9fce58b9bca646e3a6f287edb6f00ee3",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-10-21T08:25:01",
+      "updated_at": "2026-10-21T08:25:01",
+      "released_files": [
+        ".governance/review-UX-061-1B-CR3.md",
+        ".governance/review-UX-061-1B-DR3.md"
+      ]
+    },
+    "op-4ac13288de8247f096683a82ba0e6a68": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-061",
+      "input_fingerprint": "d680bad45f4d9dd206f0fdcb91edaaa2d4a437e1f5580c1df48d80305735c437",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-4ac13288de8247f096683a82ba0e6a68",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-10-21T08:31:50",
+      "updated_at": "2026-10-21T08:31:50",
+      "released_files": [
+        "README.md",
+        "docs/design/UX-061-visual-directions.md",
+        "docs/verification/UX-061-assertion-migration.md",
+        "lib/client.js",
+        "lib/host-contract.mjs",
+        "test/smoke.mjs"
+      ]
+    },
+    "op-caaf1c1f8f89446fa1e626a7af5ce6cc": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-061",
+      "input_fingerprint": "d680bad45f4d9dd206f0fdcb91edaaa2d4a437e1f5580c1df48d80305735c437",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-caaf1c1f8f89446fa1e626a7af5ce6cc",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-10-21T08:35:08",
+      "updated_at": "2026-10-21T08:35:08",
+      "released_files": [
+        ".governance/review-UX-061-1B2-CR1.md",
+        ".governance/review-UX-061-1B2-DR1.md"
+      ]
+    },
+    "op-f83fedd867864be692f9e92cece1582c": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-061",
+      "input_fingerprint": "d680bad45f4d9dd206f0fdcb91edaaa2d4a437e1f5580c1df48d80305735c437",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-f83fedd867864be692f9e92cece1582c",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-10-21T08:39:01",
+      "updated_at": "2026-10-21T08:39:01",
+      "released_files": [
+        "docs/design/UX-061-visual-directions.md",
+        "docs/verification/UX-061-assertion-migration.md",
+        "lib/client.js",
+        "test/smoke.mjs"
+      ]
     }
   }
 }
