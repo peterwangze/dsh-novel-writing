@@ -158,3 +158,79 @@
 **门禁（返工后真跑）**：`node --check` 0 · smoke **309/0** · `validate-preset` PASSED · `probe-face` 28/28 · `ci-mock-face` 4/4 · `verify-contract-anchors` 76/FAIL 0 · `verify-contrast` 18/0 + `V3_BELOW_4.5=0`。
 
 **仍未做**：G-5 浏览器目检；1b-3 内联字号全量迁移；0.1.x 宿主降级验证。
+
+---
+
+## 7. 阶段 2（方向 B）断言迁移与机检基线（DEC-155 布局授权）
+
+> 依据：DEC-155（显式替换 UX-059「控制条与章节列等宽」形态）· `REVIEW-UX-061-1B-*`（A 迭代收口）· 设计文档 §2.2/§7。
+> 迁移原则：**只改判据、不删守卫**——每条旧判据都换成对方向 B 新形态的精确断言（含负断言残留检查）。
+
+| # | 旧判据（A 迭代及以前） | 新判据（方向 B） | 依据 |
+|---|---|---|---|
+| B-1 | `.nv-wfctl` 与控制条等宽（`const wfW = resolveChapterW(snap.chapterW)` + `flex: '0 0 ' + wfW + 'px'` + 容器 `paddingLeft: '10px'`） | 控制条 = `.nv-rail{flex:none;width:44px}`；按钮 32×32；`role: 'toolbar'`；每个图标按钮 MUST 有 `title` + `aria-label`（键盘/读屏可达） | DEC-155 显式替换；§2.2 组件级应用 1 |
+| B-2 | `.nv-ccard` / `.nv-cplus` / `.nv-cgrid` 均含 `min-height:180px` | 书卡**不再固定高度**（`!card.includes('min-height:180px')`），高度随内容；`.nv-cplus`/`.nv-cgrid` 保持原值 | §2.2 组件级应用 2（卡片高度随内容） |
+| B-3 | 标题栏 `height:38px` / `const TITLE_BAR_H = 38` | `height:36px` / `TITLE_BAR_H = 36` | §2.2「标题栏 38→36px」 |
+| B-4 | 书卡 monogram 色块（`.nv-ccard-mono` 40×40，accent 14%）+ 首字提取 `const mono = titleStr…` | 撤除彩色块；卡片左侧 3px `border-l2` 书脊线；书名 17px（`--nv-fs-display-s`；CR1 P3 订正令牌名） | §2.2「去 monogram 色块改书脊线」 |
+| B-5 | 章节行选中=底色块（`background: rgba(79,142,247,.1)` 派生 10%） | 选中=`background:transparent` + `box-shadow:inset 2px 0 0 0 accent`（左 2px 竖线）+ 文字主色；行高 28px | §2.2「去底色块，只留左 2px 竖线」 |
+| B-6 | 书卡 hover=`border-color + background: var(--nv-surface-hover)` | hover **只提边框**（`border-color` + `border-left-color`），无底色变化/无位移/无光晕 | §2.2「hover 只提 border 无位移无光晕」+ §7.3 |
+| B-7 | `.nv-bar-ctl` `border-radius:8px` 字面量 | `border-radius:var(--nv-r-md,8px)`（值等价，令牌化） | 阶段 2 令牌硬条件（DR1：10 个未消费令牌必须落地或删除） |
+| B-8 | （无） | 新增 smoke「**未消费尺度令牌 = 0**」：26 个 `--nv-{fs,sp,r,ctl,lh}-*` 定义每个至少 1 处 `:root` 外消费者 | DR1 硬条件（未消费即删除）+ 本批全部落地 |
+| B-9 | （无） | 新增 `--nv-measure:34em` 令牌；`.nv-content` / `.nv-edwrap` 均 `max-width:var(--nv-measure)` 居中；`.nv-edwrap` 显式 `font-size:var(--nv-fs-body)` 使 `34em` 按 15px 解析（否则按 16px=544px 偏大） | §2.2「阅读宽度 34em ≈ 510px」 |
+| B-10 | （无） | 删除全部 `@keyframes` / `animation:` / `infinite`（`keyframes=0 ∧ animation:=0 ∧ infinite=0`）；busy 态改静态点 + 文案 | §2.2「动效：仅 150ms；删循环动画」 |
+
+**headless Edge 量算基线（2026-10-21；规则从 `lib/client.js` 抽取，harness 见下）**
+
+| 目标 | 期望 | 实测 |
+|---|---|---|
+| `.nv-rail` 宽 | 44px | **44** |
+| 正文容器宽（`--nv-measure` @15px） | ≈510px | **510** |
+| 编辑区容器宽 | ≈510px | **510** |
+| `.nv-chrow` 行高 | 28px | **28** |
+| `.nv-cinput` 高度 | 32px（`ctl-md`，border-box） | **32** |
+
+复现：从 `lib/client.js` 抽取 `:root` + 目标规则 → 最小 HTML → `msedge --headless=new --dump-dom` → `getBoundingClientRect()`。
+（注意：`.nv-content` 的 `font-size` 在源码内是 `TYPO.body` 拼接串，harness 内以 15px 固定等效值代替。）
+
+---
+
+## 8. 阶段 2 双审返工（CR1 P1/P2 + DR1 P2）处置记录（2026-10-21）
+
+> 依据：`REVIEW-UX-061-P2-CR1`（NEEDS_CHANGE / 2）· `REVIEW-UX-061-P2-DR1`（APPROVED_WITH_NOTES / 0，附 P2-1/P2-2 设计风险）。
+> 原则：**返工不删守卫**——每个修复都配了自动断言，且都用 headless 复测证明「实际渲染值」而非仅字符串。
+
+| # | 问题（审查编号） | 修复 | 机检断言 / 复测 |
+|---|---|---|---|
+| R-1 | **章节行字号丢失**（CR1 P1-1）：删内联 `fontSize:'12px'` 后无替代 ⇒ UA 默认 13.3333px | `.nv-chrow` 增 `font:inherit;font-size:var(--nv-fs-base)`（=12px，与 HEAD 一致） | **smoke P2 检查内已加** `.nv-chrow{box-sizing:border-box;height:28px` + `font:inherit;font-size:var(--nv-fs-base)` 断言（CR2 R-1 措辞已与事实对齐）+ headless 复测 `chrowFont=12px` |
+| R-2 | **`.nv-content p` 段距被覆盖**（CR1 P1-2）：旧 `.75em` 规则与新增规则同特异性、后者覆盖 ⇒ 实测 0/20px，旧断言恒绿 | 合并为**唯一**规则 `margin:1em 0`（§2.2 段距 1em）；旧断言改为对生效规则精确断言 | headless 复测 `paraMarginTop/Bottom=15px`；新增「同选择器不得重复定义」负断言 |
+| R-3 | **rail 状态纯图标化过度**（DR1 P2-1）：未绑定/失效/不可用靠 tooltip；busy 无可见文案 | rail 增 `.nv-rail-status` **常驻竖排状态文字**（未绑定/会话失效/会话不可用/运行中/空闲；busy → i18n `railBusy`＝处理中/Working） | smoke「rail 常驻状态文字 + `t('railBusy')` 在位」+ headless `railStatus` 非空 |
+| R-4 | **rail 按钮焦点环缺失**（DR1 P2-2） | `.nv-rail .nv-wfctl-btn:focus-visible, .nv-rail .nv-wfctl-btn2:focus-visible` 复用设计系统双环（2px bg + 4px accent 60%） | smoke 规则在位断言；UX-053 双环计数 4→**5**（rail 为第 5 个消费者） |
+| R-5 | **B-9/B-10 无 smoke 断言**（CR1 P2-1） | 新增「B-9 阅读宽度令牌」与「B-10 循环动画全零」两条静态断言 | smoke（`--nv-measure` 定义+两处消费；`@keyframes`/`animation:`/`infinite` 全零） |
+| R-6 | **几何脚本未接 CI**（CR1 P2-2） | `scripts/verify-visual-geometry.mjs` 加 `--strict`/`CI` 严格模式（缺 Edge = 失败）；`.github/workflows/ci.yml` 的 windows job `install-ps-parse` 增步执行 `--strict` | CI 真跑；本地无 Edge 仍可 exit 3 跳过（README/本节注明） |
+| R-7 | **迁移表缺披露**（CR1 P2-3） | 披露：数据面板表格 **13→13.5**（`--nv-fs-card`，设计文档与契约 revisions 同步订正）、`.nv-dcard-title` 12→13.5、`.nv-stage-pill` 13→13.5；rail 状态文字**保持可见**（见 R-3，未退化为纯图标） | 三方（设计文档/契约 revisions/迁移表）已一致 |
+| R-8 | **重复/冲突 CSS**（CR1 P2-4）：`.nv-chrow{`×2 / `[data-sel=true]`×2（旧 accent 10% 底色靠顺序覆盖）/ `.nv-ccard-name{`×2 | 删除旧规则（transition 并入唯一规则；`.nv-ccard-name` 由基类 `TYPO.cardTitle` 承担 17px），保留单一定义 | smoke 负断言：四类选择器各恰好 1 次 + 旧 accent 10% 选中底色串不得存在 |
+| R-9 | **契约 revisions 事实失准**（CR1 P2-5）：+123/−68 实为 +126/−71；「24 条」实为 20 条 | 契约条目改为实测值（终态 +138/−75 净 +63；20 条行引用） | `git diff --numstat` + `git diff -U0` face 行计数 |
+| R-10 | **P3 杂项** | 删 `compactCard` 死变量 / `data-wf-status` 死属性；未消费令牌断言口径改为**排除 `:root` 定义行**（更严）；smoke 重复注释清理 | smoke 全绿 + 手工 grep |
+
+**headless 复测（返工后终态）**：`{"rail":{"w":44},"measure":{"w":510},"edwrap":{"w":510},"chrow":{"h":28},"cinput":{"h":32},"chrowFont":"12px","paraMarginTop":"15px","paraMarginBottom":"15px","railStatus":"运行中"}`。
+**CI 口径**：windows runner 执行 `node scripts/verify-visual-geometry.mjs --strict`（缺 Edge 即失败）；本地无 Edge 时该脚本 exit 3 跳过，属**已知可选**，不替代 CI 门禁。
+
+### 8.1 DR2 P1 返工（rail 降级态长句撑爆 rail）与设计口径披露
+
+| # | 项 | 处置 | 证据 |
+|---|---|---|---|
+| S-1 | **rail 降级态长句撑爆 rail**（DR2 P1，唯一阻塞）：`sessionsMissing` 中文 39 字/英文 88 字符经竖排约 542px/880px > rail 194px ⇒ 3 个操作按钮被挤出 | 新增 **rail 专用短标签 `railStatus*`（6 态 × zh/en）**：空闲/运行中/处理中/未绑定/会话失效/服务不可用（英 Idle/Running/Working/Unbound/Stale/Degraded）；**可见文字只允许走 `railStatus*`**，长句保留 `title`/`aria-label` | smoke 新增检查：`railStatus*` 6 键 × 2 locale 成对、zh≤6 字 / en≤14 字符、rail 状态区不得引用长句键；**注入证明**：把 `railStatusDegraded` 改成 39 字长句 ⇒ smoke 转红（见下） |
+| S-2 | 任何未预期长文案的兜底 | `.nv-rail-status` 增 `max-height:120px;overflow:hidden` | headless 最坏态（服务不可用 5 字）：状态标签高度 ≤120 且 3 个按钮均完全可见（几何脚本新增断言） |
+| S-3 | **rail 错误色口径**（披露） | rail 状态 `data-tone=err` 使用**文本档 `--nv-err-text`**（非 `--nv-err`）——与 §7.5「文本用 muted/err-text 档」一致 | 迁移表本节披露；代码 `.nv-rail-status[data-tone=err]{color:var(--nv-err-text)}` |
+| S-4 | **短标签进 rail、长句进 title/aria**（披露） | 机制：`.nv-rail-status` 可见文字 = `railStatus*`；完整语义（如「会话不可用」的处置说明）仍在 `title`/`aria-label`（= `statusText`） | 迁移表 + 设计文档 §2.2 已同步 |
+| S-5 | rail 标签档位（CR2 P3 → **DR3 终裁**） | **rail 状态标签 `--nv-rail-status` = `--nv-fs-base`（12px）**——DR3 明确不接受 11px 例外（与 A 迭代「11px 中文可读性下限」矛盾）；**caption 例外仅限阶段徽标 `.nv-rail-stage`**（导航型元信息）；已在设计文档 §2.2 字号条与本表登记 | 设计文档 §2.2 + 本节；headless `statusFont=12px`、`statusRect.h≈87px ≤120` |
+
+**注入证明（S-1，真实注入 → 红 → 还原 → 绿）**：把 `railStatusDegraded: '服务不可用'` 临时改为 39 字长句 ⇒ `node test/smoke.mjs` 报 `FAIL … ux061 rail status labels`；还原后 **314 passed / 0 failed**。
+**键长实测表（字符数）**：空闲 2 / 运行中 3 / 处理中 3 / 未绑定 3 / 会话失效 4 / 服务不可用 5；Idle 4 / Running 7 / Working 7 / Unbound 7 / Stale 5 / Degraded 8。
+
+**CR3/DR3 终审收尾（2026-10-21）**
+- **审计数字终态**：契约阶段 2 revisions 改为 `+155/−75（净 +80，终态实测）`（`git diff --numstat`）。
+- **守卫收紧**：rail 状态段改为「段内全部 `t('…')` 调用 ⊆ 6 键白名单」+ i18n 键扫描正则支持 `["']` 双形态——换名字的长键 / 双引号第 7 键都会转红（注入证明见回报）。
+- **rail 可达性**：`.nv-rail{overflow-y:auto;min-height:0}`——面板被拖到最小高度（120px）时按钮可滚动可达；geometry 新增「最小面板 120」断言（按钮 `visible || scrollable`）。
+- **状态标签档位**：`--nv-rail-status` 由 caption(11px) → **base(12px)**（DR3 裁决）；stage 徽标保留 caption。
+- **P3**：`running`（工作流在跑）/`busy`（操作在途、防连点）语义已写入设计文档 §7.1。

@@ -421,6 +421,11 @@ jobs:
             throw "install.ps1 在 Windows PowerShell 5.1 下 ParserError $($errors.Count) 条"
           }
           Write-Host 'OK: install.ps1 在 Windows PowerShell 5.1 下 0 ParserError，且 UTF-8 BOM 在位'
+      # UX-061 阶段 2（方向 B）：几何基线门禁——静态 smoke 只能证明「规则写了」，
+      # 证明不了「渲染出 44px rail / 510px measure / 28px 行高 / 12px 章节行字号 / 32px 输入框 / 1em 段距」。
+      # windows runner 自带 Edge；--strict 让「缺浏览器的静默跳过」在 CI 上变成失败。
+      - name: 方向 B 视觉几何基线（headless Edge，严格模式）
+        run: node scripts/verify-visual-geometry.mjs --strict
       - name: PowerShell 7 解析 install.ps1（对照，不允许回归）
         shell: pwsh
         run: |

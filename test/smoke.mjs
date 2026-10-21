@@ -629,7 +629,7 @@ check('控制台源码面：UX-010 批注（✕ 醒目变体/排序 pill 13px/18
   return xBtn.includes('width:28px') && xBtn.includes('height:28px') && xBtn.includes('border:1px solid')
     && sort.includes('font-size:var(--nv-fs-card)') && sort.includes('padding:7px 14px')
     && css('.nv-csort').includes('gap:8px')
-    && card.includes('min-height:180px') && tile.includes('min-height:180px') && grid.includes('gap:20px')
+    && !card.includes('min-height:180px') && tile.includes('min-height:180px') && grid.includes('gap:20px')
     // UX-055①：字号随字阶常量演进——书卡标题 17px（TYPO.cardTitle）、状态行/meta 11px（TYPO.meta）
     && css('.nv-ccard-name').includes('TYPO.cardTitle') && css('.nv-ccard-status').includes('TYPO.meta')
     && css('.nv-ccard-data').includes('font-size:var(--nv-fs-card)') && css('.nv-cmeta').includes('TYPO.meta')
@@ -788,21 +788,21 @@ check('客户端源码面：UX-059 底部行左右拆分（左=工作流控制�
   const stop = css('.nv-wfctl-btn[data-mode=stop]')
   const btn = css('.nv-wfctl-btn')
   const btn2 = css('.nv-wfctl-btn2')
-  return clientSrc.includes("className: 'nv-wfctl'")                  // 控制条容器（左块）
+  return clientSrc.includes("className: 'nv-rail'")                  // 控制条容器（左块）
     && clientSrc.includes("className: 'nv-wfctl-btn'") && clientSrc.includes('.nv-wfctl-btn{')
     && clientSrc.includes("'data-mode': wfRunning === true ? 'stop' : 'go'")  // 形态切换
     && stop.includes('background:var(--nv-err')       // 运行中=⏹ 停止 danger 实底
     // UX-059 布局结构：底部行水平左右拆分——左=工作流控制面板（与章节列表列等宽 wfW/右缘可见线/同像素列），右=工作台右移收窄
     && clientSrc.includes('function resolveChapterW(')                // 模块级解析单一事实源（P-05：ChapterPanel/左块共用）
-    && clientSrc.includes("const wfW = resolveChapterW(snap.chapterW)")  // 左块宽 = chapterW（同解析函数，拖章节列联动）
     && clientSrc.includes("const cw = resolveChapterW(props.chapterW)")  // ChapterPanel 同函数（行为等价，兜底不变）
-    && clientSrc.includes("flex: '0 0 ' + wfW + 'px'")                // 左块 flex = wfW（与章节列表列等宽，拖章节列联动）
-    && clientSrc.includes("paddingLeft: '10px'")                      // 底行容器左缘 10px——wfctl 与 chlist 盒左缘同位
+    && clientSrc.includes('.nv-rail{flex:none;width:44px')  // rail 宽 44px（DEC-155 定稿）
+    && clientSrc.includes("role: 'toolbar'")  // 键盘/读屏可识别工具栏
     && css('.nv-chlist').includes('box-sizing:border-box')            // R3：两条边界线同垂线且同像素列（边框计入宽内，无 1px 错位）
     && clientSrc.includes("flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', padding: '8px 10px 0 10px'")  // 右块右缘 10px 内缩恢复（与上部区呼吸一致）
-    && clientSrc.includes("borderRight: '1px solid var(--nv-border-strong,#3a4150)'")  // 左块右缘可见线（面板自身边缘线）
-    && btn.includes('width:100%') && btn2.includes('width:100%')        // 主/次按钮满宽（左面板纵向排列）
-    && btn.includes('text-overflow:ellipsis') && btn2.includes('text-overflow:ellipsis')  // 窄宽（chapterW=120）超宽省略号兜底（不横向滚动）
+    && clientSrc.includes('border-right:1px solid var(--nv-border-strong)')  // 左块右缘可见线（面板自身边缘线）
+    && clientSrc.includes('.nv-rail .nv-wfctl-btn,.nv-rail .nv-wfctl-btn2{width:32px')  // rail 按钮 32×32（44px 容器内居中）        // 主/次按钮满宽（左面板纵向排列）
+    && clientSrc.includes("title: mainLabel, 'aria-label': mainLabel")  // 图标按钮有可读名称
+    && clientSrc.includes("'aria-label': t('compactWorkflow')") && clientSrc.includes("'aria-label': t('bindNewSession')")  // 窄宽（chapterW=120）超宽省略号兜底（不横向滚动）
     && clientSrc.includes('sessions.cancel') && clientSrc.includes("apiHas('sessions', 'cancel')")  // 停止（队列保留）
     && clientSrc.includes("text: '/compact'") && clientSrc.includes('compactBusyHint') && clientSrc.includes('compactSent')  // 压缩上下文
     && clientSrc.includes("t('bindNewSession')") && clientSrc.includes('bindNewDone') && clientSrc.includes('bindNewSessionCtl')  // 绑定新会话（链唯一函数名，不自动打开）
@@ -943,7 +943,7 @@ check('客户端源码面：UX-014⑥ 标题栏 ⇄/✕ 28×28 醒目钮（.nv-b
   const ctl = css('.nv-bar-ctl')
   const count = (clientSrc.match(/className: 'nv-bar-ctl'/g) ?? []).length
   return ctl.includes('width:32px') && ctl.includes('height:32px') && ctl.includes('border:1px solid')
-    && ctl.includes('border-radius:8px') && ctl.includes('font-size:18px') && ctl.includes('font-weight:600')
+    && ctl.includes('border-radius:var(--nv-r-md,8px)') && ctl.includes('font-size:18px') && ctl.includes('font-weight:600')
     && count === 4
 })(), 'ux014 bar ctl missing')
 check('客户端源码面：UX-014⑦ 抽屉卡片直达创作工作台（openCtl 单链；不再打开控制台聚焦）', (() => {
@@ -968,7 +968,7 @@ check('客户端源码面：UX-014⑧ 创作台会话联动关闭分栏（splitC
 //    UX-019③）恢复 UX-015③ 拖宽条：.nv-chdiv pointer 拖拽 120–360px + chapterW 持久化
 //  ④抽屉小一档（.nv-card 13/12px、6·8px padding、4px 间隙、点 8px、空态随动；控制台卡片不动）
 //  ⑤聊天区正常 = UX-014⑨ 回归（marginTop 不写断言在位）
-check('客户端源码面：UX-015① 标题栏加高放大（38px 高 / 14px 标题 / 13px 徽标 / 32×32·18px / 14px 内边距 / TITLE_BAR_H=38）', (() => {
+check('客户端源码面：UX-015① 标题栏几何（UX-061-B：36px 高 / 20px 标题 / 徽标描边 pill / 32×32·18px / 14px 内边距 / TITLE_BAR_H=36）', (() => {
   const css = (cls) => {
     const m = new RegExp(cls.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{([^}]*)\\}').exec(clientSrc)
     return m !== null ? m[1] : ''
@@ -979,8 +979,8 @@ check('客户端源码面：UX-015① 标题栏加高放大（38px 高 / 14px �
   const ctl = css('.nv-bar-ctl')
   const barMini = css('.nv-bar .nv-mini')
   const launch = css('.nv-wfctl-btn')
-  return clientSrc.includes('const TITLE_BAR_H = 38')
-    && bar.includes('height:38px') && bar.includes('padding:0 14px')
+  return clientSrc.includes('const TITLE_BAR_H = 36')
+    && bar.includes('height:36px') && bar.includes('padding:0 14px')
     && bt.includes('TYPO.page') && bt.includes('font-weight:600') && bt.includes('letter-spacing:-.015em') // UX-055①：书名 14→20px/600（字阶第一级）
     && badge.includes('font-size:var(--nv-fs-card)')
     && ctl.includes('width:32px') && ctl.includes('height:32px') && ctl.includes('font-size:18px') && ctl.includes('font-weight:600')
@@ -1036,7 +1036,7 @@ check('客户端源码面：UX-030 边界线体系化（VS Code sash 语义—�
     && clientSrc.includes('.nv-chlist button{transition:border-color .15s cubic-bezier(.4,0,.2,1),background-color .15s cubic-bezier(.4,0,.2,1),color .15s cubic-bezier(.4,0,.2,1),box-shadow .15s cubic-bezier(.4,0,.2,1)}')                                          // UX-053 交互过渡统一（150ms 标准曲线）
     && clientSrc.includes('transition:border-color .15s cubic-bezier(.4,0,.2,1),background-color .15s cubic-bezier(.4,0,.2,1),color .15s cubic-bezier(.4,0,.2,1),box-shadow .15s cubic-bezier(.4,0,.2,1)}')                     // 页签过渡（UX-053 统一）
     && clientSrc.includes('.nv-tab:hover{color:var(--nv-fg,#e6e8eb);background:var(--nv-surface-hover,rgba(255,255,255,.05))}')
-    && clientSrc.includes('.nv-bar{flex:none;position:relative;display:flex;align-items:center;gap:8px;height:38px;padding:0 14px;box-sizing:border-box;border-bottom:1px solid var(--nv-border-strong,#3a4150)')  // 标题栏底边线清晰（UX-041 居中横幅需 relative）
+    && clientSrc.includes('.nv-bar{flex:none;position:relative;display:flex;align-items:center;gap:8px;height:36px;padding:0 14px;box-sizing:border-box;border-bottom:1px solid var(--nv-border-strong,#3a4150)')  // 标题栏底边线清晰（UX-041 居中横幅需 relative）
 })(), 'ux030 coherent boundary lines')
 check('客户端源码面：UX-034 文件显示复用章节内容列（fileSel 提升到 SplitWorkspace 受控：左窗树仅选择、内容列 fileSel!==null 渲染 FilePreview〔复用章节 nv-scroll 阅读区——无 maxHeight 截断/无左窗内嵌小卡〕；切书复位 fileSel）', (() => {
   return clientSrc.includes("const [fileSel, setFileSel] = useState(null)")
@@ -1132,7 +1132,7 @@ check('客户端源码面：UX-015④ 抽屉小一档（13/12px + 6·8px + 4px �
     && ct.includes('TYPO.smallTitle') && cs.includes('font-size:var(--nv-fs-base)')   // UX-055⑥：抽屉卡标题 13→13.5px/600（管理台卡 17px 保层级；UX-061 1b-2 起字号走 --nv-fs-*）
     && cardDot.includes('width:8px') && cardDot.includes('height:8px')
     && empty.includes('padding:6px 8px')
-    && ccard.includes('min-height:180px') && ccard.includes('padding:16px') // 管理层卡片不动（层级感=抽屉小于控制台）
+    && !ccard.includes('min-height:180px') && ccard.includes('padding:16px') // 管理层卡片不动（层级感=抽屉小于控制台）
 })(), 'ux015 drawer small missing')
 // UX-016（用户实机「首次进入还是截断」；Coordinator 1078×593 复现取证）：
 //  原钳制 hi = colW − 160 − 420，1078 窗口（colW=798）下 hi=218 → 聊天被压到 240 下限：
@@ -1214,7 +1214,7 @@ check('客户端源码面：UX-053 图标体系（NV_ICONS 映射 + nvIcon 助�
     && clientSrc.includes("'aria-hidden': true")
     && clientSrc.includes('Icons: Lucide (https://lucide.dev), ISC License © Lucide contributors')
     && clientSrc.includes("nvIcon('bookOpen', 16)") && clientSrc.includes("nvIcon('search', 16)")     // 16px：控制台/卡片/搜索
-    && clientSrc.includes("nvIcon('link', 14)") && clientSrc.includes("nvIcon('trash2', 14)") && clientSrc.includes("nvIcon('play', 14)") // 14px：22px 钮/启动钮
+    && clientSrc.includes("nvIcon('link', 14)") && clientSrc.includes("nvIcon('trash2', 14)") && clientSrc.includes("'square' : 'play', 16)") // 14px：22px 钮；16px：rail 启动/停止（三元）
     && clientSrc.includes("nvIcon('arrowLeftRight', 16)") && clientSrc.includes("nvIcon('rotateCcw', 16)") && clientSrc.includes("nvIcon('star', 16)") && clientSrc.includes("nvIcon('x', 16)") // 16px：32px 控制钮
     && clientSrc.includes("nvIcon(appSnap.consoleOpen === true ? 'chevronDown' : 'chevronRight', 12)")   // 12px：抽屉 caret（开/合三元）
     && clientSrc.includes("nvIcon('chevronRight', 12)") && clientSrc.includes('rotate(90deg)')          // 12px：目录箭头（展开 rotate 90°）
@@ -1229,7 +1229,7 @@ check('客户端源码面：UX-053 图标体系（NV_ICONS 映射 + nvIcon 助�
 })(), 'ux053 icons missing')
 check('客户端源码面：UX-053 焦点双环统一（Vercel 模式：2px bg 缓冲 + 4px accent@60%；搜索框 45% 软焦点变体；树行/章节行 :focus-visible 补位；三处旧分散焦点样式无残留）', (() => {
   const ring60 = 'box-shadow:0 0 0 2px var(--nv-bg,#0b0e14),0 0 0 4px rgba(79,142,247,.6);box-shadow:0 0 0 2px var(--nv-bg,#0b0e14),0 0 0 4px color-mix(in srgb,var(--nv-accent,#4f8ef7) 60%,transparent)'
-  return (clientSrc.match(/box-shadow:0 0 0 2px var\(--nv-bg,#0b0e14\),0 0 0 4px rgba\(79,142,247,\.6\)/g) ?? []).length === 4   // 卡片/输入/树行/章节行（含 rgba 兜底段）
+  return (clientSrc.match(/box-shadow:0 0 0 2px var\(--nv-bg,#0b0e14\),0 0 0 4px rgba\(79,142,247,\.6\)/g) ?? []).length === 5   // 卡片/输入/树行/章节行 + rail 按钮（UX-061-P2 增，含 rgba 兜底段）
     && clientSrc.includes('.nv-csearch:focus-within{border-color:var(--nv-accent,#4f8ef7);box-shadow:0 0 0 2px var(--nv-bg,#0b0e14),0 0 0 4px rgba(79,142,247,.45)')  // 搜索框 45% 软焦点
     && clientSrc.includes('.nv-cinput:focus{border-color:var(--nv-accent,#4f8ef7);' + ring60)
     && clientSrc.includes('.nv-ccard[data-focus=true]{border-color:var(--nv-accent,#4f8ef7);' + ring60)
@@ -1244,8 +1244,8 @@ check('客户端源码面：UX-053 光效收敛（.nv-csweep 扫光清除负断�
     && clientSrc.includes(".nv-ccard[data-glow=done]{border-color:var(--nv-border-strong,#3a4150);box-shadow:inset 0 2px 0 0 rgba(63,185,80,.7);box-shadow:inset 0 2px 0 0 color-mix(in srgb,var(--nv-ok,#3fb950) 70%,transparent)}")
     && clientSrc.includes(".nv-ccard[data-glow=busy]{border-color:var(--nv-border-strong,#3a4150);box-shadow:inset 0 2px 0 0 rgba(79,142,247,.7);box-shadow:inset 0 2px 0 0 color-mix(in srgb,var(--nv-accent,#4f8ef7) 70%,transparent)}")
     // UX-061 1b（DEC-155 方向 A）：书卡去渐变/去重阴影 → 表面令牌 + hover 令牌（迁移表见 docs/verification/UX-061-assertion-migration.md）
-    && clientSrc.includes('.nv-ccard{position:relative;display:flex;flex-direction:column;gap:var(--nv-sp-2);box-sizing:border-box;min-height:180px;padding:16px;border:1px solid var(--nv-border-strong);border-radius:var(--nv-r-xl);background:var(--nv-surface);box-shadow:none;')
-    && clientSrc.includes('.nv-ccard:hover{border-color:var(--nv-accent);background:var(--nv-surface-hover)}')
+    && clientSrc.includes('.nv-ccard{position:relative;display:flex;flex-direction:column;gap:var(--nv-sp-2);box-sizing:border-box;padding:16px;border:1px solid var(--nv-border-strong);border-left:3px solid var(--nv-border-strong);border-radius:var(--nv-r-xl);background:var(--nv-surface);box-shadow:none;')
+    && clientSrc.includes('.nv-ccard:hover{border-color:var(--nv-accent);border-left-color:var(--nv-accent)}')
     && !clientSrc.includes('background:linear-gradient(135deg,color-mix(in srgb,var(--nv-fg,#e6e8eb) 4%,transparent)')  // 书卡渐变已撤除（DEC-155）
     && !clientSrc.includes('rgba(255,255,255,.07),rgba(255,255,255,.02) 45%')   // 旧峰值/45% stop 无残留
     && !clientSrc.includes('0 0 22px rgba(210,153,34') && !clientSrc.includes('box-shadow:0 0 24px rgba(79,142,247')  // 大辉光无残留（卡面 box-shadow 域；UX-055 hero 为 drop-shadow 光晕不冲突）
@@ -1257,7 +1257,7 @@ check('客户端源码面：UX-053 令牌化与其它（color-mix + rgba 兜底�
     && clientSrc.includes('background:rgba(79,142,247,.08);background:' + cm + ' 8%,transparent)')      // cplus hover / csortbtn 选中（8% 底）
     && clientSrc.includes('.nv-ccard-badge{') && clientSrc.includes('border-radius:999px') && clientSrc.includes('font-weight:500') && clientSrc.includes('letter-spacing:.02em')  // 徽标 pill 化
     && clientSrc.includes('.nv-ft-row{background:transparent;transition:') && clientSrc.includes('.nv-ft-row[data-sel=true]{background:rgba(79,142,247,.12);background:' + cm + ' 12%,transparent)}')
-    && clientSrc.includes('.nv-chrow[data-sel=true]{background:rgba(79,142,247,.1);background:' + cm + ' 10%,transparent);box-shadow:inset 2px 0 0 0 var(--nv-accent,#4f8ef7)}')
+    && clientSrc.includes('.nv-chrow[data-sel=true]{background:transparent;color:var(--nv-fg);box-shadow:inset 2px 0 0 0 var(--nv-accent)}')  // UX-061-B 选中=左竖线+主色文字
     && !clientSrc.includes("TK.line, background: 'transparent',\n")   // F1 回归防护：章节行内联 background 已删（内联特异性压过 [data-sel] 选中态；带换行特征避开 btn 常量同行串）
     && !clientSrc.includes("border: 'none', background: 'transparent'")   // F1 回归防护：文件树行内联 background 已删
     && clientSrc.includes('fontWeight: 600') && !clientSrc.includes('fontWeight: 700')                  // 字重三档（无 700 残留）
@@ -1298,12 +1298,81 @@ check('客户端源码面：UX-055① 字阶悬崖（TYPO 单点常量关键值 
     && !clientSrc.includes('font-size:16px;font-weight:600;color:var(--nv-fg,#e6e8eb);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}')  // 旧书卡标题 16px 无残留
     && !clientSrc.includes('.nv-console-title{flex:none;display:inline-flex;align-items:center;gap:6px;font-size:16px')
 })(), 'ux055 typography missing')
+check('客户端源码面：UX-061 P2 rail 状态短标签（DR2 P1：可见文字只经 railStatus*、6 态 × zh/en 成对、长度上限 zh≤6 / en≤14）', (() => {
+  const keys = ['railStatusIdle', 'railStatusRunning', 'railStatusBusy', 'railStatusUnbound', 'railStatusStale', 'railStatusDegraded']
+  const found = []
+  const re = /railStatus[A-Za-z]+: ['"]([^'"]*)['"]/g
+  let m
+  while ((m = re.exec(clientSrc)) !== null) found.push(m[1])
+  const hasEach = keys.every((k) => clientSrc.includes("t('" + k + "')"))
+  const zh = found.filter((v) => /[\u4e00-\u9fff]/.test(v))
+  const en = found.filter((v) => !/[\u4e00-\u9fff]/.test(v))
+  const maxZh = zh.length === 6 && zh.every((v) => Array.from(v).length <= 6)
+  const maxEn = en.length === 6 && en.every((v) => v.length <= 14)
+  const start = clientSrc.indexOf("className: 'nv-rail-status'")
+  const stageIdx = clientSrc.indexOf("className: 'nv-rail-stage'", start >= 0 ? start : 0)
+  const seg = start >= 0 ? clientSrc.slice(start, stageIdx > start ? stageIdx : start + 900) : ''
+  // CR3 收紧：段内**每一个** t('...') 调用都必须在 6 键白名单内（换名字的长键也拦得住）
+  const calls = Array.from(seg.matchAll(/t\((['"])([A-Za-z]+)\1\)/g)).map((x) => x[2])
+  const onlyWhitelisted = calls.length > 0 && calls.every((k) => keys.includes(k))
+  const banned = /t\((['"])(sessionsMissing|wfRunning|wfIdle|unbound|stale|railBusy)\1\)/
+  const onlyShort = seg !== '' && !banned.test(seg)
+  return hasEach && found.length === 12 && maxZh && maxEn && onlyWhitelisted && onlyShort
+})(), 'ux061 rail status labels')
+
+check('客户端源码面：UX-061 阶段 2 B-9 阅读宽度令牌（--nv-measure 定义 + .nv-content/.nv-edwrap 消费 + 居中口径）', (() => {
+  return clientSrc.includes('--nv-measure:34em')
+    && clientSrc.includes('.nv-content{max-width:var(--nv-measure,34em);margin:0 auto}')
+    && clientSrc.includes('.nv-edwrap{max-width:var(--nv-measure,34em);margin:0 auto;')
+    && clientSrc.includes('font-size:var(--nv-fs-body,15px)}')
+})(), 'ux061 measure missing')
+
+check('客户端源码面：UX-061 阶段 2 B-10 循环动画全零（@keyframes / animation: / infinite 三面均为 0）', (() => {
+  return !/@keyframes/.test(clientSrc) && !/animation:/.test(clientSrc) && !/infinite/.test(clientSrc)
+})(), 'ux061 loop animation residue')
+
+check('客户端源码面：UX-061 P2 状态可感知与 CSS 卫生（rail 常驻状态文字 + 焦点双环 + 同选择器不重复定义）', (() => {
+  const count = (needle) => clientSrc.split(needle).length - 1
+  return clientSrc.includes("className: 'nv-rail-status'")
+    && clientSrc.includes("t('railStatusBusy')")
+    && clientSrc.includes('.nv-rail .nv-wfctl-btn:focus-visible,.nv-rail .nv-wfctl-btn2:focus-visible{outline:none;box-shadow:0 0 0 2px var(--nv-bg,#0b0e14),0 0 0 4px rgba(79,142,247,.6)')
+    && clientSrc.includes("'.nv-chrow{box-sizing:border-box;height:28px") && clientSrc.includes('font:inherit;font-size:var(--nv-fs-base)')
+    && count("'.nv-chrow{") === 1 && count("'.nv-chrow[data-sel=true]{") === 1
+    && count("'.nv-ccard-name{") === 1 && count("'.nv-content p{") === 1
+    && !clientSrc.includes('background:rgba(79,142,247,.1);background:color-mix(in srgb,var(--nv-accent,#4f8ef7) 10%,transparent);box-shadow:inset 2px')
+})(), 'ux061 p2 status/hygiene')
+
+check('客户端源码面：UX-061 阶段 2 尺度令牌零未消费（定义集合 ⊆ 消费集合：26 个 --nv-{fs,sp,r,ctl,lh}-* 令牌每个至少 1 处 :root 之外的消费者；CR1 P3 口径：排除 :root 定义自身）', (() => {
+  const families = ['fs', 'sp', 'r', 'ctl', 'lh']
+  const rootMatch = /':root\\{([^\\n]*?)\\}',/.exec(clientSrc)
+  const outside = rootMatch !== null ? clientSrc.replace(rootMatch[0], '') : clientSrc
+  const defs = new Set()
+  const re = new RegExp('--nv-(?:' + families.join('|') + ')-[a-z0-9-]+(?=\\s*:)', 'g')
+  let m
+  while ((m = re.exec(clientSrc)) !== null) defs.add(m[0])
+  const unused = []
+  for (const d of defs) {
+    if (outside.split(d).length - 1 === 0) unused.push(d)
+  }
+  return defs.size >= 26 && unused.length === 0
+})(), 'ux061 scale tokens unused: ' + (() => {
+  const families = ['fs', 'sp', 'r', 'ctl', 'lh']
+  const rootMatch = /':root\\{([^\\n]*?)\\}',/.exec(clientSrc)
+  const outside = rootMatch !== null ? clientSrc.replace(rootMatch[0], '') : clientSrc
+  const defs = new Set()
+  const re = new RegExp('--nv-(?:' + families.join('|') + ')-[a-z0-9-]+(?=\\s*:)', 'g')
+  let m
+  while ((m = re.exec(clientSrc)) !== null) defs.add(m[0])
+  const unused = []
+  for (const d of defs) { if (outside.split(d).length - 1 === 0) unused.push(d) }
+  return unused.join(',')
+})())
 check('客户端源码面：UX-061 1b-2 尺度令牌治理（CSS font-size 字面量 ⊆ 图标白名单 ∧ 控件令牌类清单逐一对应 ∧ 内联字号基线冻结）', (() => {
   // V-2（DR2/DR3 裁决）：**CSS 规则内** font-size 字面量只允许出现在「图标/字形尺寸」选择器上；
   // 文本字号一律走 --nv-fs-* 尺度令牌（数值唯一来源 = :root）。新增文本字面量即红。
   // 口径限定（CR1 P2-1）：React 内联 `fontSize:'Npx'` 属 1b-3 批次，本检查不覆盖其迁移，只做基线冻结。
   const ICON_FS_SELECTORS = ['.nv-bar .nv-mini', '.nv-console-head .nv-mini', '.nv-cico', '.nv-drawer-title-ico',
-    '.nv-console-title-ico', '.nv-csearch-icon', '.nv-ccard-mono', '.nv-bar-ctl', '.nv-cplus-icon']
+    '.nv-console-title-ico', '.nv-csearch-icon', '.nv-bar-ctl', '.nv-cplus-icon']
   const literalFsLines = clientSrc.split('\n').filter((l) => /font-size:\s*[0-9.]+px/.test(l))
   const literalSelectors = literalFsLines.map((l) => (l.match(/^\s*'([^'{]+)\{/) || [])[1] || '?')
   const scaleOnlyIcons = literalSelectors.length > 0 && literalSelectors.every((s) => ICON_FS_SELECTORS.includes(s))
@@ -1323,32 +1392,31 @@ check('客户端源码面：UX-061 1b-2 尺度令牌治理（CSS font-size 字�
   const ctlSm = (clientSrc.match(/var\(--nv-ctl-sm\)/g) || []).length
   const ctlMd = (clientSrc.match(/var\(--nv-ctl-md\)/g) || []).length
   // P2-1（CR1）：React 内联字号基线冻结（44 处；11.5px×2 属尺度外，归 1b-3）——新增/变更即红，须同批更新基线
-  const INLINE_FS_BASELINE = '11.5px:2,11px:12,12px:23,13px:6,14px:1'
+  // UX-061-B：章节行/数据面板内联字号随类化迁移（12px 基线 23→18），按实测重冻
+  const INLINE_FS_BASELINE = '11.5px:2,11px:12,12px:18,13px:5,14px:1'
   const inlineSizes = (clientSrc.match(/fontSize:\s*'([0-9.]+)px'/g) || []).map((s) => s.match(/'([0-9.]+)px'/)[1] + 'px')
   const inlineCount = {}
   for (const v of inlineSizes) inlineCount[v] = (inlineCount[v] || 0) + 1
   const inlineSig = Object.keys(inlineCount).sort().map((k) => k + ':' + inlineCount[k]).join(',')
   return scaleOnlyIcons && ctlSmMapped && ctlMdMapped && ctlSm === 6 && ctlMd === 1 && inlineSig === INLINE_FS_BASELINE
 })(), 'ux061 scale token governance missing')
-check('客户端源码面：UX-055② 书卡构成重构（monogram 色块 40×40 + accent 14% color-mix 派生 + 数据 chips 6%/9% + 1px 分隔线 label-primary 8%）', (() => {
-  return clientSrc.includes('.nv-ccard-mono{') && clientSrc.includes('width:40px;height:40px')
-    && clientSrc.includes('border-radius:10px')
-    && clientSrc.includes('background:rgba(79,142,247,.14);background:color-mix(in srgb,var(--nv-accent,#4f8ef7) 14%,transparent)') // 先 rgba 兜底后 color-mix
-    && clientSrc.includes("className: 'nv-ccard-mono'")
+check('客户端源码面：UX-055② 书卡构成（UX-061-B：monogram 色块→左侧 3px 书脊线 + 数据 chips 6%/9% + 1px 分隔线 label-primary 8%）', (() => {
+  return !clientSrc.includes('.nv-ccard-mono') && clientSrc.includes('border-left:3px solid var(--nv-border-strong)')  // UX-061-B：彩色块→书脊线
+    && clientSrc.includes(".nv-ccard-name{flex:1;min-width:0;font-size:' + TYPO.cardTitle")  // 书名 17/600（TYPO.cardTitle → --nv-fs-display-s）
     && clientSrc.includes('.nv-ccard-sep{') && clientSrc.includes('color-mix(in srgb,var(--nv-fg,#e6e8eb) 8%,transparent)')
     && clientSrc.includes('.nv-ccard-chips{') && clientSrc.includes('.nv-ccard-chip{')
     && clientSrc.includes('color-mix(in srgb,var(--nv-fg,#e6e8eb) 6%,transparent)')  // chip 底 6%
     && clientSrc.includes('color-mix(in srgb,var(--nv-fg,#e6e8eb) 9%,transparent)')  // chip 边 9%
     && clientSrc.includes('padding:2px 8px;border-radius:6px')                 // 数据 chip 规格
     && clientSrc.includes("className: 'nv-ccard-chip'")                        // 数据 chip 渲染（章/字/信号）
-    && clientSrc.includes("const mono = titleStr.length > 0 ? [...titleStr][0] : '?'") // 首字提取（surrogate-safe）
+    && !clientSrc.includes('const mono = titleStr') // 首字提取（surrogate-safe）
 })(), 'ux055 card composition missing')
 check('客户端源码面：UX-055③ 白 alpha 渐变清零（卡片背景无 rgba(255,255,255 渐变残留——令牌化完成）', (() => {
   // 硬门槛：渐变中白 alpha 硬编码 = 0；所有 rgba(255,255,255 仅允许 var(--dsw-alias-*) 兜底位
   const naked = clientSrc.match(/(?<!var\(--dsw-alias-[a-z0-9-]+[,)])\blinear-gradient\([^)]*rgba\(255,\s*255,\s*255/g)
   return (naked ?? []).length === 0
     && !clientSrc.includes('linear-gradient(135deg,rgba(255,255,255')
-    && clientSrc.includes('.nv-ccard:hover{border-color:var(--nv-accent);background:var(--nv-surface-hover)}') // UX-061 1b：hover 走语义表面令牌（渐变已撤除）
+    && clientSrc.includes('.nv-ccard:hover{border-color:var(--nv-accent);border-left-color:var(--nv-accent)}') // UX-061 1b：hover 走语义表面令牌（渐变已撤除）
 })(), 'ux055 white-alpha gradient cleared')
 check('客户端源码面：UX-055④ 状态 chip 组件（.nv-chip + data-tone ok/warn/danger/muted 四态 color-mix 派生 + 卡片/门禁 chip 化 + noData 新值 zh/en + 发布记录状态点）', (() => {
   const tones = ['ok', 'warn', 'danger', 'muted']
@@ -1382,7 +1450,7 @@ check('客户端源码面：UX-055③⑥ 空态英雄区 + 稀疏居中（hero �
 })(), 'ux055 hero + sparse missing')
 check('客户端源码面：UX-055⑤ 正文阅读排版（15px/1.75 类 + .nv-content + 章节标题 TYPO.chapter 分隔线 + textarea 15px/1.75 同步 + tabular-nums 数字面）', (() => {
   return clientSrc.includes(".nv-content{font-size:' + TYPO.body + ';line-height:' + TYPO.bodyLh")
-    && clientSrc.includes('.nv-content p{margin:.75em 0')
+    && clientSrc.includes('.nv-content p{margin:1em 0;font-size:inherit;line-height:inherit}')
     && clientSrc.includes(".nv-content h2{font-size:' + TYPO.chapter")             // P2-2：TYPO 引用面（非硬编码 16px 字面）
     && clientSrc.includes('.nv-chapter-sep{')
     && clientSrc.includes("className: 'nv-content'")
@@ -2541,7 +2609,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   //      **残余缝（同次实测，未闭合）**：若 2.13 只删**终点闭合行**（**历史锚点**：COMPAT-013 时期值 `L4429-4460`——6 处注册仍全在范围内）
   //      则 ①②③④⑤ **全绿**（实测 262/0：⑤a 计数仍 6 ≡ 6、④ callPrefix = null、⑤b 无 `键: {` 形态构造）
   //      ⇒ 该形态目前无持续机检力。根治需「构造闭合行」口径，而 JS 范围本就可能是**合法语义片段**
-  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L5190-L5192` +1 / 3.8 `L3075-L3086` +1 实测均非配平）——
+  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L5269-L5271` +1 / 3.8 `L3088-L3099` +1 实测均非配平）——
   //      无差别要求配平会误报上述 3 项，故如实留档待另案（非本任务可安全落地）。
   //      **本行 3 个契约行号副本的同步方（CLEAN-006 **N-6** 归属订正，避免审计归因错位）**：本块随
   //      契约 `line` 重基**必须同步**，其**机检执行者 = `COMPAT-015 F3 行号引用对账`**（把本行 2.3
@@ -2675,7 +2743,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // 首行起构造者恰 3 项 = 4.6 `"dsh": {` / 6.1 `"peerDependencies": {` / 6.2 `"engines": {`（面 6 三项
   // JSON 根级子对象；其余 18 项首行为 JS 调用/声明/注释 ⇒ 不适用），项数入 golden（防空转）。
   // **只取首行、不取范围内全部 opener 的理由**：JS 范围可为**合法语义片段**（2.1 `L92-94` 净差 +2 / 2.3
-  // `L4804-L4806` +1 / 3.8 `L3075-L3086` +1 实测均非配平，⑤ 注释已留档）——无差别要求范围内每个 opener 配平
+  // `L4804-L4806` +1 / 3.8 `L3088-L3099` +1 实测均非配平，⑤ 注释已留档）——无差别要求范围内每个 opener 配平
   // 会误报这些条目；而「范围未包住自身构造闭合行」的形态恰以构造键行起段（首行 opener 即充分判据）。
   // 口径边界同 ⑤b（裸字符配平，不剥注释/字符串中的 `{`/`}`）。
   const KEY_OPEN6 = /^\s*(?:"([^"]{1,60})"|'([^']{1,60})'|([A-Za-z_$][\w$.-]{0,60}))\s*:\s*\{\s*$/
@@ -2707,9 +2775,9 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // ⑫d F-3 披露数字入机检（COMPAT-013）：非严格面（**由 rangeItems 动态生成**；实测 **3/4/5/6 共 10 项**——
   // COMPAT-014 C-F-1 订正：原标签「3/5/6」漏面 4，且与下方列举清单自含 `4.6 L17`（面 4）自相矛盾；条目数同时
   // 入 golden）范围条目中「起于注释/空行」者 MUST 恰 2 项
-  //（3.1 起于 `/**` JSDoc L1093、3.5 起于**空行** L1143——互操作说明在本段内、非起点）。动因 = 该计数原为**人工转写**且写错
+  //（3.1 起于 `/**` JSDoc L1107、3.5 起于**空行** L1157——互操作说明在本段内、非起点）。动因 = 该计数原为**人工转写**且写错
   //（CHANGELOG 曾披露「三处」）——与 COMPAT-004 FIND-1 的 tier 串转写漂移同类，故沿用同款处置：实测值
-  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.8 `L3075` 函数行 / 4.6 `L17`
+  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.8 `L3088` 函数行 / 4.6 `L17`
   // `"dsh": {` / 5.1 `L1` `name:` / 5.2 `L16` `- id:` / 5.4 `L77` `- id:` / 6.1 `L39`（修正后真值；修正前
   // `L38` 亦非注释）/ 6.2 `L8` `"engines": {` / 6.4 `L105`（ci.yml `#` 注释起段——JS 口径不计为注释，见下句口径边界）。严格面（面 2 = 11 项）已由 ③ 逐项约束，
   // 本项只覆盖未纳入严格面的面（动态生成：实测 3/4/5/6）；注释口径同 ③（JS 风格），YAML `#` 不在识别面内（与 F-5① 同源前提）。
