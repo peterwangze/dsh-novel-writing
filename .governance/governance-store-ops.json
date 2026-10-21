@@ -307,6 +307,55 @@
       "released_files": [
         ".governance/review-UX-061-R3.md"
       ]
+    },
+    "op-bb6bf62450264916bc3b47d4adfb6381": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-061",
+      "input_fingerprint": "d680bad45f4d9dd206f0fdcb91edaaa2d4a437e1f5580c1df48d80305735c437",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-bb6bf62450264916bc3b47d4adfb6381",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-10-21T08:11:26",
+      "updated_at": "2026-10-21T08:11:26",
+      "released_files": [
+        "README.md",
+        "docs/verification/UX-061-assertion-migration.md",
+        "lib/client.js",
+        "lib/host-contract.mjs",
+        "test/smoke.mjs"
+      ]
+    },
+    "op-5c0b3cf00d1f424a8df48b2217c06092": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-061",
+      "input_fingerprint": "d680bad45f4d9dd206f0fdcb91edaaa2d4a437e1f5580c1df48d80305735c437",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-5c0b3cf00d1f424a8df48b2217c06092",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-10-21T08:14:32",
+      "updated_at": "2026-10-21T08:14:32",
+      "released_files": [
+        ".governance/review-UX-061-1B-CR1.md",
+        ".governance/review-UX-061-1B-DR1.md"
+      ]
     }
   }
 }
