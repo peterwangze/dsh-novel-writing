@@ -192,6 +192,77 @@
       "released_files": [
         ".governance/review-BUG-011-R3.md"
       ]
+    },
+    "op-66fe504a74ab48a18f903607740557ce": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-061",
+      "input_fingerprint": "d680bad45f4d9dd206f0fdcb91edaaa2d4a437e1f5580c1df48d80305735c437",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-66fe504a74ab48a18f903607740557ce",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-10-21T07:53:42",
+      "updated_at": "2026-10-21T07:53:42",
+      "released_files": [
+        "README.md",
+        "lib/client.js",
+        "lib/host-contract.mjs",
+        "test/smoke.mjs"
+      ]
+    },
+    "op-3a60343e0ce0449487b165d86554ffdd": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-061",
+      "input_fingerprint": "d680bad45f4d9dd206f0fdcb91edaaa2d4a437e1f5580c1df48d80305735c437",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-3a60343e0ce0449487b165d86554ffdd",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-10-21T07:57:54",
+      "updated_at": "2026-10-21T07:57:54",
+      "released_files": [
+        ".governance/review-UX-061-R1.md"
+      ]
+    },
+    "op-b6cc856dcc704ac18deecf2eaec32af0": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-061",
+      "input_fingerprint": "d680bad45f4d9dd206f0fdcb91edaaa2d4a437e1f5580c1df48d80305735c437",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-b6cc856dcc704ac18deecf2eaec32af0",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-10-21T07:59:16",
+      "updated_at": "2026-10-21T07:59:16",
+      "released_files": [
+        "lib/client.js",
+        "lib/host-contract.mjs",
+        "test/smoke.mjs"
+      ]
     }
   }
 }
