@@ -30,6 +30,8 @@
 | 12 | `.nv-home` 段内 font-size ⊆ {display,stat,reading,ui,base} 5 令牌 | 修改面字号契约（v3 §1D） |
 | 13 | 抽屉 420 / 唤出条 48 / `.nv-home` max-width 880 / CTA 高 36（静态注入量算） | v3 §2 机检 1 |
 | 14 | 抽屉容器 z-index 920 且 `900 < 920 < 950`（源码断言三值共存） | v3 §1A |
+| 15 | 全仓唯一精确串 `font-size:var(--nv-fs-body,15px)}`（`test/smoke.mjs:1327`，DR3 N-1 核实） | 精确串改 `font-size:var(--nv-fs-reading,16px)}`（textarea 内联随第③步换绑，DR3 N-1 选 (a)） | 规格 v3 §1C（N-1 裁决） | 正文编辑态字号改动 | ⏳ |
+| 16 | edwrap/编辑态字号·行高绑定断言（`test/smoke.mjs:1458` 附近，随 (a) 一并核对） | `.nv-edwrap` + textarea 内联统一 reading 16 / 1.9；阅读↔编辑无跳变 | 规格 v3 §1C（N-1 裁决） | 同上 | ⏳ |
 
 ## D. 禁改清单（改=越界，Review 直接 FAIL）
 
