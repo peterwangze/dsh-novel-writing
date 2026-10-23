@@ -40,6 +40,59 @@ const rootMatch = /':root\{([^\n]*?)\}',/.exec(clientSrc)
 if (rootMatch === null) throw new Error('root token block not found')
 const rootCss = ':root{' + rootMatch[1] + '}'
 
+// ── UX-063 P0-a 第①步：全屏工作台 + 对话抽屉几何（规格 docs/design/UX-063-redesign-spec.md §1A/§3）──
+// 口径：常量与 CSS 规则一律**从 lib/client.js 源码抽取**（不复制实现）。
+// UX-063 返工（REVIEW-UX-063-P0A-DR1 P1-2 / CR1 P2）：原实现把正文列注入为 left:0、且两个矩形都由
+// **同一个让位公式**生成 ⇒ `drawerLeft − textRight === 24` 是构造恒等式（自证），真实左偏移被忽略。
+// 现口径：①正文列按**真实左偏移 11px** 注入（`.nv-split` border 1 + 上部区内联 `padding:'10px 10px 0'`
+// 的 10；rail 44 属底部工作台 midFooter，不在上部内容区——DR1 §2.1 代码事实）；
+// ②新增**正交判据**（drawer ∩ text = ∅；handle ∩ text = ∅ 且仅在 colW ≥ DRAWER_HANDLE_MIN_COLW 渲染）；
+// ③「公式余量」与「实测余量」分别输出（P3-3：公式余量 24 ≠ 实测余量 13，不得混称）。
+const u63num = (re, what) => {
+  const m = re.exec(clientSrc)
+  if (m === null) throw new Error('ux063 source missing: ' + what)
+  return Number(m[1])
+}
+const U63 = { drawerW: 0, edgeW: 0, zDrawer: 0, textMax: 0, railW: 0, gutter: 0, handleMin: 0 }
+let U63_RULES = []
+let u63Err = null
+try {
+  U63.drawerW = u63num(/const DRAWER_W = (\d+)/, 'DRAWER_W = 420')
+  U63.edgeW = u63num(/const DRAWER_EDGE_W = (\d+)/, 'DRAWER_EDGE_W = 48')
+  U63.zDrawer = u63num(/const DRAWER_Z = (\d+)/, 'DRAWER_Z = 920')
+  U63.textMax = u63num(/const DRAWER_TEXT_MAX = (\d+)/, 'DRAWER_TEXT_MAX = 544')
+  U63.railW = u63num(/const DRAWER_RAIL_W = (\d+)/, 'DRAWER_RAIL_W = 44')
+  U63.gutter = u63num(/const DRAWER_GUTTER = (\d+)/, 'DRAWER_GUTTER = 24')
+  U63.handleMin = u63num(/const DRAWER_HANDLE_MIN_COLW = (\d+)/, 'DRAWER_HANDLE_MIN_COLW = 1046')
+  U63_RULES = [
+    rule('.nv-drawer-edge', 'position:fixed'),
+    rule('.nv-drawer-edge-ico', 'transform:rotate(180deg)'),
+    rule('.nv-split', 'z-index:900'),
+    rule('.nv-console', 'z-index:950'),
+  ]
+} catch (e) {
+  u63Err = e.message
+}
+if (u63Err !== null) {
+  console.log('[verify-visual-geometry] FAIL: ux063 抽屉/全屏源面缺失（' + u63Err + '）——先实现再量算')
+  process.exit(1)
+}
+const U63_TEXT_LEFT = 11 // 真实左偏移（见上）
+const U63_COLS = [1400, 1086, 1046, 1000, 956, 800] // 覆盖验收视口 + 手柄阈值两侧 + 窄档
+const u63TextW = (colW) => Math.max(0, Math.min(U63.textMax, colW - U63.railW - (U63.drawerW - U63.railW) - U63.gutter))
+const u63HandleLeft = (colW) => colW - U63.drawerW - U63.edgeW
+const u63HandleRendered = (colW) => colW >= U63.handleMin
+const u63StageHtml = U63_COLS.map((colW) => {
+  const tw = u63TextW(colW)
+  const handle = u63HandleRendered(colW)
+    ? '<div data-role="handle" style="position:absolute;left:' + u63HandleLeft(colW) + 'px;top:0;width:' + U63.edgeW + 'px;height:120px;background:#3a4150"></div>'
+    : ''
+  return '<div data-colw="' + colW + '" style="position:relative;width:' + colW + 'px;height:120px;margin:0 0 8px 0">'
+    + '<div data-role="text" style="position:absolute;left:' + U63_TEXT_LEFT + 'px;top:0;width:' + tw + 'px;height:120px;background:#1b2433"></div>'
+    + '<div data-role="drawer" style="position:absolute;left:' + (colW - U63.drawerW) + 'px;top:0;width:' + U63.drawerW + 'px;height:120px;background:#2b3a55"></div>'
+    + handle + '</div>'
+}).join('\n')
+
 const rules = [
   rule('.nv-rail', 'width:44px'),
   rule('.nv-rail .nv-wfctl-btn,.nv-rail .nv-wfctl-btn2'),
@@ -48,6 +101,7 @@ const rules = [
   rule('.nv-edwrap textarea', 'width:100%'),
   rule('.nv-chrow', 'height:28px'),
   rule('.nv-cinput', 'min-height:var(--nv-ctl-md)'),
+  ...U63_RULES,
 ]
 
 const html = `<!doctype html><html><head><meta charset="utf-8"><style>
@@ -77,6 +131,12 @@ ${rules.join('\n')}
 <div class="nv-content" id="content"><p id="para">中文正文测试段落，用于测量阅读宽度与段距。</p></div>
 <button class="nv-chrow" id="chrow">第1章 测试</button>
 <input class="nv-cinput" id="cinput" value="x">
+<!-- UX-063 P0-a 探针：唤出条（48）/ 抽屉 z（920）/ 三值共存锚点 / 真值表四档正文列 -->
+<div class="nv-drawer-edge" id="u63edge" style="left:0;top:0;width:${U63.edgeW}px;height:600px"></div>
+<div id="u63zdrawer" style="z-index:${U63.zDrawer}"></div>
+<div class="nv-split" id="u63zsplit"></div>
+<div class="nv-console" id="u63zconsole"></div>
+${u63StageHtml}
 <script>
 window.addEventListener('load', function () {
   const r = (el) => { const b = el.getBoundingClientRect(); return { w: Math.round(b.width), h: Math.round(b.height) } }
@@ -109,6 +169,23 @@ window.addEventListener('load', function () {
       const rb = document.getElementById('rail').getBoundingClientRect()
       return { h: Math.round(bb.height), visible: bb.height > 0 && bb.bottom <= rb.bottom + 1 && bb.top >= rb.top - 1 }
     }),
+    u63: {
+      drawer: r(document.querySelector('[data-role="drawer"]')),
+      edge: r(document.getElementById('u63edge')),
+      zSplit: cs(document.getElementById('u63zsplit')).zIndex,
+      zDrawer: cs(document.getElementById('u63zdrawer')).zIndex,
+      zConsole: cs(document.getElementById('u63zconsole')).zIndex,
+      cols: ${JSON.stringify(U63_COLS)}.map((c) => {
+        const box = document.querySelector('[data-colw="' + c + '"]')
+        const base = box.getBoundingClientRect().left
+        const rel = (b) => ({ l: Math.round(b.left - base), r: Math.round(b.right - base), w: Math.round(b.width) })
+        const t = rel(box.querySelector('[data-role="text"]').getBoundingClientRect())
+        const d = rel(box.querySelector('[data-role="drawer"]').getBoundingClientRect())
+        const h = box.querySelector('[data-role="handle"]')
+        const hr = h === null ? null : rel(h.getBoundingClientRect())
+        return { c, text: t, drawer: d, handle: hr }
+      }),
+    },
   }
   document.body.setAttribute('data-measure', JSON.stringify(out))
 })
@@ -153,6 +230,24 @@ try {
     railButtonsStayVisible: data.buttons.length === 3 && data.buttons.every((b) => b.visible),
     minPanel120Scrollable: data.railMin.clientH > 60 && data.railMin.clientH <= 120 && data.railMin.canScroll === true,
     minPanelButtonsReachable: data.railMin.btns.length === 3 && data.railMin.btns.every((b) => b.reachable),
+    // UX-063 P0-a：抽屉 420 / 唤出条 48 / z 三值共存 / 让位公式 / **正交判据**（DR1 P1-2）
+    u63Drawer420: data.u63.drawer.w === 420,
+    u63Edge48: data.u63.edge.w === 48,
+    u63ZCoexist: data.u63.zSplit === '900' && data.u63.zDrawer === '920' && data.u63.zConsole === '950',
+    u63TextCol: data.u63.cols.length === U63_COLS.length
+      // ① 正文列宽 = 让位公式（逐档）
+      && data.u63.cols.every((x) => x.text.w === u63TextW(x.c))
+      // ② 正交：正文列 ∩ 抽屉 = ∅（**实测矩形**，不共用公式）
+      && data.u63.cols.every((x) => x.drawer.l - x.text.r >= 0)
+      // ③ 手柄渲染档（colW ≥ DRAWER_HANDLE_MIN_COLW）：手柄 ∩ 正文 = ∅；非渲染档：手柄**不存在**
+      && data.u63.cols.filter((x) => u63HandleRendered(x.c)).every((x) => x.handle !== null && x.handle.l - x.text.r >= 0)
+      && data.u63.cols.filter((x) => !u63HandleRendered(x.c)).every((x) => x.handle === null)
+      // ④ 验收档值（544 仅在 colW ≥ 1046 成立；窄档按公式如实收窄）
+      && (data.u63.cols.find((x) => x.c === 1400) ?? { text: {} }).text.w === 544
+      && (data.u63.cols.find((x) => x.c === 1086) ?? { text: {} }).text.w === 544
+      && (data.u63.cols.find((x) => x.c === 1046) ?? { text: {} }).text.w === 544
+      && (data.u63.cols.find((x) => x.c === 956) ?? { text: {} }).text.w === 512
+      && (data.u63.cols.find((x) => x.c === 800) ?? { text: {} }).text.w === 356,
   }
   console.log('[verify-visual-geometry] MEASURE ' + JSON.stringify(data))
   const failed = Object.entries(checks).filter(([, v]) => !v).map(([k]) => k)
@@ -160,7 +255,20 @@ try {
     console.log('[verify-visual-geometry] FAIL: ' + failed.join(', '))
     process.exit(1)
   }
-  console.log('[verify-visual-geometry] OK: rail 44 / measure 510 / edwrap 510 / chrow 28+12px / cinput 32 / para 1em / rail-status visible 12px (worst-case capped, 3 buttons visible, min-panel 120 scrollable)')
+  // 公式余量 = §3 公式自述的呼吸间距常量（24，含 44 预留与正文左缘的旧假设）；
+  // 实测余量 = 真实矩形边界差（真实左偏移 11 ⇒ 逐档实测 13~425）。两者分别输出，不得混称（DR1 P3-3）。
+  const U63_FORMULA_RESERVE = U63.gutter
+  const u63Rows = data.u63.cols.map((x) => ({
+    c: x.c,
+    textW: x.text.w,
+    measuredMargin: x.drawer.l - x.text.r,
+    handleMargin: x.handle === null ? null : x.handle.l - x.text.r,
+  }))
+  console.log('[verify-visual-geometry] OK: rail 44 / measure 510 / edwrap 510 / chrow 28+12px / cinput 32 / para 1em / rail-status visible 12px (worst-case capped, 3 buttons visible, min-panel 120 scrollable) / ux063 drawer 420 + edge 48 + z 900<920<950'
+    + ' / text-col ' + u63Rows.map((x) => x.c + '→' + x.textW).join(',')
+    + ' / formula reserve ' + U63_FORMULA_RESERVE + ' vs measured margin '
+    + u63Rows.map((x) => x.measuredMargin).join(',')
+    + ' / handle >= ' + U63.handleMin + ': ' + u63Rows.filter((x) => x.handleMargin !== null).map((x) => x.c + '@' + x.handleMargin).join(','))
   process.exit(0)
 } finally {
   try { fs.unlinkSync(tmp) } catch { /* ignore */ }

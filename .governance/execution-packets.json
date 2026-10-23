@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-09-16T09:53:02",
+  "generated_at": "2026-10-22T19:00:44",
   "packets": {
     "REL-007": {
       "task_id": "REL-007",
@@ -109,6 +109,514 @@
           "reversibility": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
           "validation": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。",
           "rollback": "已在 REL-007 交付物中给出可核验证据（见 docs/release/ 与 .governance/evidence-log.md）。"
+        },
+        "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
+      },
+      "allowed_change_scope": [
+        "Only change files required by this task row: open",
+        "Keep unrelated refactors, release version bumps, and fixture sync out of this task unless listed in the task scope."
+      ],
+      "required_evidence": [
+        "evidence-log entry with 事实依据, 目标对齐, 用户影响, and 结构化事实 JSON",
+        "validation commands with exit_code and concise output summary",
+        "independent review evidence or explicit degraded review evidence that does not claim full separation"
+      ],
+      "next_commands": [
+        "python -m unittest skills/software-project-governance/infra/tests/test_verify_workflow.py -v",
+        "python skills/software-project-governance/infra/verify_workflow.py check-governance --fail-on-issues"
+      ],
+      "done_definition": [
+        "open",
+        "Code Reviewer or matching Reviewer has APPROVED the product-code change.",
+        "Commit and push are completed for this single task."
+      ],
+      "source": "plan-tracker.md##当前活跃事项"
+    },
+    "UX-061": {
+      "task_id": "UX-061",
+      "priority": "P1",
+      "status": "⛔ **用户目检判定不通过（2026-10-22）**：「管理工作台和小说工作台的呈现感受并没有大的提升」。诚实归因：1a/1b/1b-2/阶段 2 交付的多数是**基础设施与合规修复**（6 幽灵令牌 × 138 调用点、对比度、输入框盒模型、字数行宽、可达性、几何机检）与**小幅视觉修订**（rail 44px、书脊线、字号 ±0.5~1px），没有改变**信息架构、页面骨架与任务流**，因此感知提升有限。代码面成果保留（真实缺陷已修：字阶塌陷 13.33px、输入框 44/50px、段落断言恒绿、降级态长句挤掉按钮等），但 **UX-061 不得标记为验收通过**；后续演进转 **UX-063**（用户点名）。审查链 19 份报告机录；产品 commit 1a `3ad4c9b` / 1b `4a86ab7` / 1b-2 `0974d62` / 阶段 2 `2da8d6a`。遗留：1b-3 内联字号 44→0（并入 UX-063 首步）。triage = change-triage/UX-061.json",
+      "goal": "UX-061 **工作台 UI 美术重设计（视觉呈现提升）**（用户 2026-10-20 直接要求）：在 UX-053 统一设计语言（DEC-019）既有基座上重做视觉呈现——信息层级 / 留白与栅格 / 字体尺度 / 色彩与对比 / 图标与状态语义 / 空态与载入骨架一致性；流程 = 架构师产出设计方向提案（2~3 方向 + 开源参考系统，P-08 不造轮子）→ 用户定方向（关键决策）→ Developer 实现 → Design Reviewer + Code Reviewer 双审；范围限工作台（管理台 + 创作台）视觉层，不改业务逻辑；DEC-019 基线延续或显式替换 MUST 落决策记录",
+      "product_success_contract": {
+        "user": "使用工作台的中文小说作者",
+        "job_to_be_done": "在同一工作台内完成选书、写作与发布，视觉层级清晰不迷失",
+        "non_goals": [
+          "不改变业务逻辑与数据契约",
+          "不做 P0-b 三栏结构改造"
+        ],
+        "success_metrics": [
+          "用户在并排截图上可指出层级与排版差异",
+          "scripts/verify-visual-geometry.mjs 量算断言通过"
+        ],
+        "competitive_baseline": "VS Code / Linear 等成熟工作台的信息层级实践（docs/research/UX-053-visual-design-research.md）",
+        "done_definition": [
+          "代码面交付并通过 Design + Code 双审",
+          "用户目检确认感知提升；未通过则不得标记验收"
+        ]
+      },
+      "acceptance_contract": {
+        "scenario": "工作台视觉呈现明显优于改造前",
+        "command": "node --check lib/client.js && node test/smoke.mjs && node scripts/verify-visual-geometry.mjs",
+        "expected_output": "node --check 0 错；smoke 0 failed；geometry 全绿",
+        "last_run": {
+          "status": "planned",
+          "exit_code": null,
+          "summary": "本轮未执行（任务待启动）：验收命令与判据已定义，启动后首跑即回填真实 exit_code"
+        },
+        "demo_evidence": "docs/verification/ 下对应验收文档（启动后创建并登记）"
+      },
+      "quality_budget": {
+        "dimensions": {
+          "performance": {
+            "threshold": "不引入可感知卡顿或额外网络请求",
+            "validation": "node --check lib/client.js && node test/smoke.mjs",
+            "status": "planned",
+            "evidence": "待任务启动后回填",
+            "exception": ""
+          },
+          "reliability": {
+            "threshold": "改动面守卫绿且可独立回退",
+            "validation": "node --check lib/client.js && node test/smoke.mjs",
+            "status": "planned",
+            "evidence": "待任务启动后回填",
+            "exception": ""
+          },
+          "security": {
+            "threshold": "零新增外部依赖、零宿主源码改动",
+            "validation": "node --check lib/client.js && node test/smoke.mjs",
+            "status": "planned",
+            "evidence": "待任务启动后回填",
+            "exception": ""
+          },
+          "accessibility": {
+            "threshold": "键盘可达与焦点不穿透",
+            "validation": "node --check lib/client.js && node test/smoke.mjs",
+            "status": "planned",
+            "evidence": "待任务启动后回填",
+            "exception": ""
+          },
+          "ux": {
+            "threshold": "用户可感知的界面改进",
+            "validation": "node --check lib/client.js && node test/smoke.mjs",
+            "status": "planned",
+            "evidence": "待任务启动后回填",
+            "exception": ""
+          },
+          "maintainability": {
+            "threshold": "收口到单一事实源并留机检断言",
+            "validation": "node --check lib/client.js && node test/smoke.mjs",
+            "status": "planned",
+            "evidence": "待任务启动后回填",
+            "exception": ""
+          }
+        }
+      },
+      "vertical_slice": {
+        "user_visible_slice": "用户打开工作台即可看到层级分明的排版与状态语义，选书/写作/发布路径不迷失",
+        "demo_path": "CDP 双视口截图 + node scripts/verify-visual-geometry.mjs 量算",
+        "scope_guard": "仅 lib/client.js 视觉层与 test/smoke.mjs / scripts/verify-visual-geometry.mjs 断言面",
+        "rollback_plan": "按阶段 commit 逐个 revert",
+        "status": "planned",
+        "evidence": "待任务启动后登记"
+      },
+      "interruption_policy": {
+        "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
+        "critical_triggers": [
+          "Ask the user when product intent is unclear.",
+          "Ask the user when acceptance standard or done criteria are unclear.",
+          "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions."
+        ],
+        "auto_execute": [
+          "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible.",
+          "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied."
+        ],
+        "assumption_record": {
+          "assumption": "按 plan-tracker 已登记范围推进，不扩张到相邻批次",
+          "basis": "plan-tracker 当前活跃事项行 + change-triage 记录",
+          "reversibility": "单 commit 可回退",
+          "validation": "node --check lib/client.js && node test/smoke.mjs",
+          "rollback": "git revert 该 commit"
+        },
+        "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
+      },
+      "allowed_change_scope": [
+        "Only change files required by this task row: open",
+        "Keep unrelated refactors, release version bumps, and fixture sync out of this task unless listed in the task scope."
+      ],
+      "required_evidence": [
+        "evidence-log entry with 事实依据, 目标对齐, 用户影响, and 结构化事实 JSON",
+        "validation commands with exit_code and concise output summary",
+        "independent review evidence or explicit degraded review evidence that does not claim full separation"
+      ],
+      "next_commands": [
+        "python -m unittest skills/software-project-governance/infra/tests/test_verify_workflow.py -v",
+        "python skills/software-project-governance/infra/verify_workflow.py check-governance --fail-on-issues"
+      ],
+      "done_definition": [
+        "open",
+        "Code Reviewer or matching Reviewer has APPROVED the product-code change.",
+        "Commit and push are completed for this single task."
+      ],
+      "source": "plan-tracker.md##当前活跃事项"
+    },
+    "UX-062": {
+      "task_id": "UX-062",
+      "priority": "P1",
+      "status": "⏳ 待执行（依赖 UX-061；范围含 DEC-155③ 拆入的骨架屏 + ⌘K 命令面板；triage = change-triage/UX-062.json）",
+      "goal": "UX-062 **工作台易用性演进（信息架构与交互效率）**（用户 2026-10-20 直接要求：美术重设计之后演进而提升易用性）：核心路径（选书 → 看进度 → 写作/修订 → 发布 → 数据）步数与认知负荷下降、状态可见性、错误可恢复、快捷操作与键盘可达、轮询与长任务反馈；产出 = IA/交互方案 + 实现 + Design/Code 双审",
+      "product_success_contract": {
+        "user": "使用工作台的中文小说作者",
+        "job_to_be_done": "核心路径（选书→看进度→写作→发布→数据）步数与认知负荷下降，错误可恢复",
+        "non_goals": [
+          "不重做服务端 API 与轮询契约",
+          "不含 UX-063 已承接的视觉重做范围"
+        ],
+        "success_metrics": [
+          "用户完成核心任务所需点击步数下降",
+          "smoke 新增交互断言通过且键盘可达"
+        ],
+        "competitive_baseline": "成熟写作产品的任务流效率（docs/research/UX-063-writing-app-layouts.md 参考面）",
+        "done_definition": [
+          "IA/交互方案经 Design Reviewer 通过",
+          "实现经 Code Reviewer 通过且用户复检"
+        ]
+      },
+      "acceptance_contract": {
+        "scenario": "核心任务流步数下降、状态可见、错误可恢复",
+        "command": "node --check lib/client.js && node test/smoke.mjs",
+        "expected_output": "node --check 0 错；smoke 0 failed；新增交互断言在案",
+        "last_run": {
+          "status": "planned",
+          "exit_code": null,
+          "summary": "本轮未执行（任务待启动）：验收命令与判据已定义，启动后首跑即回填真实 exit_code"
+        },
+        "demo_evidence": "docs/verification/ 下对应验收文档（启动后创建并登记）"
+      },
+      "quality_budget": {
+        "dimensions": {
+          "performance": {
+            "threshold": "不引入可感知卡顿或额外网络请求",
+            "validation": "node --check lib/client.js && node test/smoke.mjs",
+            "status": "planned",
+            "evidence": "待任务启动后回填",
+            "exception": ""
+          },
+          "reliability": {
+            "threshold": "改动面守卫绿且可独立回退",
+            "validation": "node --check lib/client.js && node test/smoke.mjs",
+            "status": "planned",
+            "evidence": "待任务启动后回填",
+            "exception": ""
+          },
+          "security": {
+            "threshold": "零新增外部依赖、零宿主源码改动",
+            "validation": "node --check lib/client.js && node test/smoke.mjs",
+            "status": "planned",
+            "evidence": "待任务启动后回填",
+            "exception": ""
+          },
+          "accessibility": {
+            "threshold": "键盘可达与焦点不穿透",
+            "validation": "node --check lib/client.js && node test/smoke.mjs",
+            "status": "planned",
+            "evidence": "待任务启动后回填",
+            "exception": ""
+          },
+          "ux": {
+            "threshold": "用户可感知的界面改进",
+            "validation": "node --check lib/client.js && node test/smoke.mjs",
+            "status": "planned",
+            "evidence": "待任务启动后回填",
+            "exception": ""
+          },
+          "maintainability": {
+            "threshold": "收口到单一事实源并留机检断言",
+            "validation": "node --check lib/client.js && node test/smoke.mjs",
+            "status": "planned",
+            "evidence": "待任务启动后回填",
+            "exception": ""
+          }
+        }
+      },
+      "vertical_slice": {
+        "user_visible_slice": "用户完成选书→看进度→写作→发布→数据的核心路径步数下降且状态可见",
+        "demo_path": "node test/smoke.mjs 交互断言 + CDP 步数测量截图",
+        "scope_guard": "仅 lib/client.js 交互层与 lib/index.js 只读数据面 + 断言面",
+        "rollback_plan": "按交互单元分 commit，逐个 revert",
+        "status": "planned",
+        "evidence": "待任务启动后登记"
+      },
+      "interruption_policy": {
+        "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
+        "critical_triggers": [
+          "Ask the user when product intent is unclear.",
+          "Ask the user when acceptance standard or done criteria are unclear.",
+          "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions."
+        ],
+        "auto_execute": [
+          "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible.",
+          "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied."
+        ],
+        "assumption_record": {
+          "assumption": "按 plan-tracker 已登记范围推进，不扩张到相邻批次",
+          "basis": "plan-tracker 当前活跃事项行 + change-triage 记录",
+          "reversibility": "单 commit 可回退",
+          "validation": "node --check lib/client.js && node test/smoke.mjs",
+          "rollback": "git revert 该 commit"
+        },
+        "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
+      },
+      "allowed_change_scope": [
+        "Only change files required by this task row: open",
+        "Keep unrelated refactors, release version bumps, and fixture sync out of this task unless listed in the task scope."
+      ],
+      "required_evidence": [
+        "evidence-log entry with 事实依据, 目标对齐, 用户影响, and 结构化事实 JSON",
+        "validation commands with exit_code and concise output summary",
+        "independent review evidence or explicit degraded review evidence that does not claim full separation"
+      ],
+      "next_commands": [
+        "python -m unittest skills/software-project-governance/infra/tests/test_verify_workflow.py -v",
+        "python skills/software-project-governance/infra/verify_workflow.py check-governance --fail-on-issues"
+      ],
+      "done_definition": [
+        "open",
+        "Code Reviewer or matching Reviewer has APPROVED the product-code change.",
+        "Commit and push are completed for this single task."
+      ],
+      "source": "plan-tracker.md##当前活跃事项"
+    },
+    "UX-063": {
+      "task_id": "UX-063",
+      "priority": "P1",
+      "status": "🔄 **规格 v3 通过设计评审（DR3 APPROVED_WITH_NOTES/0，DR2 §七 8/8 PASS，commit 5391012）→ P0-a 实现 started（三步小批）**。N-1 已裁决选(a)：textarea 内联随第③步统一 reading 16/1.9（迁移表补 #15/#16）；N-2 §3 表注边界已修。**第①步进行中**（Developer）：全屏（findConversationRoot 探测 + resize 重算）+ 420 抽屉（z 920 + 48 唤出条 + localStorage）+ 让位（收 240+160 保 rail 让 376；colW<956 降级提示）+ 五路径 restoreViewArea + host-contract 3.3 登记 + 迁移表 #11/#13/#14 先红后绿。第②步=任务流首页（overview+detail 双源、紧凑换书、待办点击目标、CTA 36）；第③步=正文排版+字号（reading 16/1.9 + 缩进 2em 段距 0.8em + N-1(a)）。三步全绿 → Coordinator CDP 实测（双视口三截图 + 零遮挡 + 焦点穿透 N-3）登记迁移表 §E → 并排截图交用户目检（≥5 处差异硬闸门）。措辞纪律（N-4）：只能说「P0-a 已交付」；三栏/检查器/rail 退役属 P0-b 未开工。triage = change-triage/UX-063.json、DEC-156。",
+      "goal": "UX-063 **工作台视觉与易用性再演进**（用户 2026-10-22 目检判定 A+B 感知提升不足后点名）：按「人的使用习惯」重做——①信息架构按写作任务流（选书→看进度→写作/修订→自检→发布→数据）重排，减少切换与迷路；②视觉识别建立明确层级（排版尺度/留白节奏/分区标题/状态语义），要肉眼可见的变化而非 ±1px 微调；③核心任务步数下降（一键续写、发布前检查、批量操作、快捷键）；④保留 A+B 已修的真实缺陷修复与守卫。流程：先取真机截图 + 任务流审计（事实基线）→ 结构化改版方案（含可见前后对照）→ 用户确认 → Developer 实现 → Code+Design 双审 → 用户复检",
+      "product_success_contract": {
+        "user": "使用本插件的中文小说作者（在 DSH 宿主工作台中管理书目与写作）",
+        "job_to_be_done": "打开工作台一次点击就知道今天写哪一章；进入写作后正文以约 34 汉字/行的舒适宽度阅读，且随时能与 AI 对话而不丢正文",
+        "non_goals": [
+          "P0-b 结构改造（三栏结构、检查器分段、资料抽屉、rail 退役、全局字号≤5 迁移）不在本批",
+          "P1 功能项与服务端面（断更预警、发布向导、数据看板重做、API 与轮询契约）不在本批"
+        ],
+        "success_metrics": [
+          "用户在并排截图上无需解释即可指出 ≥5 处结构差异（首页/写作/抽屉开 三对）",
+          "CDP 脚本实测 colW ≥1400@1680、文本列 544±2、抽屉开态零遮挡（colW≥956），全部断言通过"
+        ],
+        "competitive_baseline": "VS Code 面板与 sash 语义、Obsidian/Notion 的 34em 正文 measure 与首行缩进实践（调研 docs/research/UX-063-writing-app-layouts.md）",
+        "done_definition": [
+          "三步（①全屏+抽屉 ②任务流首页 ③正文排版+字号）各自守卫绿且可独立回退",
+          "Design Reviewer 与 Code Reviewer 独立审查通过（unresolved_blockers=0），并经用户目检 ≥5 处差异"
+        ]
+      },
+      "acceptance_contract": {
+        "scenario": "打开工作台默认进入任务流首页；正文约 34 汉字/行；右缘 48px 唤出条可拉出 420px 对话抽屉且不遮挡正文",
+        "command": "node --check lib/client.js && node test/smoke.mjs && node scripts/verify-visual-geometry.mjs",
+        "expected_output": "node --check 0 错；smoke 全绿 0 failed（断言计数随迁移表同步）；geometry 全绿（measure 544、段落 0.8em/2em、抽屉 420/唤出条 48/CTA 36）",
+        "last_run": {
+          "status": "PASS",
+          "exit_code": 0,
+          "summary": "改动前基线（HEAD 70223f3）实跑：node --check 0 错；smoke 314 passed / 0 failed；geometry OK（measure 510、para 1em 属旧口径）——P0-a 交付后须重跑并登记新口径"
+        },
+        "demo_evidence": "docs/verification/UX-063-assertion-migration.md §E（双视口三截图与测值，实现完成后由 Coordinator 登记）"
+      },
+      "quality_budget": {
+        "dimensions": {
+          "performance": {
+            "threshold": "工作台首屏与正文渲染不新增网络请求，2s 轮询契约不变",
+            "validation": "node test/smoke.mjs + git diff 审阅（轮询相关行零改动）",
+            "status": "PASS",
+            "evidence": "基线 smoke 314 passed / 0 failed（HEAD 70223f3）",
+            "exception": ""
+          },
+          "reliability": {
+            "threshold": "三步各自守卫绿且单 commit 可回退；restoreViewArea 五路径还原逐属性一致",
+            "validation": "node test/smoke.mjs; node scripts/verify-visual-geometry.mjs",
+            "status": "PASS",
+            "evidence": "基线两套守卫全绿（smoke 314/0、geometry OK）",
+            "exception": ""
+          },
+          "security": {
+            "threshold": "零新增外部依赖、零宿主源码改动、不新增文件系统写路径",
+            "validation": "git diff 审阅 + node --check lib/client.js",
+            "status": "PASS",
+            "evidence": "基线：本批规划改动仅插件自身元素与契约/断言面",
+            "exception": ""
+          },
+          "accessibility": {
+            "threshold": "唤出条/抽屉带 aria-label 与 title；抽屉打开时焦点不穿透背景",
+            "validation": "smoke 断言 + CDP 焦点检查",
+            "status": "planned",
+            "evidence": "待第①步实现后补齐（迁移表 #13/#14）",
+            "exception": ""
+          },
+          "ux": {
+            "threshold": "并排截图可指出 ≥5 处结构差异；正文 ≥34 汉字/行",
+            "validation": "CDP 双视口三截图 + geometry 量算",
+            "status": "planned",
+            "evidence": "待三步全绿后由 Coordinator 实测登记 §E",
+            "exception": ""
+          },
+          "maintainability": {
+            "threshold": "host-contract item 3.3 登记 position/zIndex/boxShadow 与唤出条 DOM，smoke 双向对账",
+            "validation": "node test/smoke.mjs（契约对账断言）",
+            "status": "planned",
+            "evidence": "待第①步随实现补登记（迁移表 #11）",
+            "exception": ""
+          }
+        }
+      },
+      "vertical_slice": {
+        "user_visible_slice": "用户打开工作台即占满可用宽度，正文不再被压缩到 15 汉字/行；右缘唤出条可拉出对话抽屉且不遮挡正文",
+        "demo_path": "CDP 双视口（1680×1050 / 1440×900）三截图 + node scripts/verify-visual-geometry.mjs 量算",
+        "scope_guard": "仅 lib/client.js（全屏/抽屉/restoreViewArea）+ lib/host-contract.mjs item 3.3 + test/smoke.mjs + scripts/verify-visual-geometry.mjs + README；不含服务端 lib/index.js、安装脚本与 API 面",
+        "rollback_plan": "第①步单 commit 整体 git revert；localStorage 抽屉开关键独立前缀，清除即回默认收起",
+        "status": "planned",
+        "evidence": "待实现后登记：迁移表 §E 测值 + smoke/geometry 输出"
+      },
+      "interruption_policy": {
+        "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
+        "critical_triggers": [
+          "Ask the user when product intent is unclear.",
+          "Ask the user when acceptance standard or done criteria are unclear.",
+          "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions."
+        ],
+        "auto_execute": [
+          "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible.",
+          "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied."
+        ],
+        "assumption_record": {
+          "assumption": "对话抽屉默认收起、常驻 48px 唤出条；打开时自动收起文件树 240 + 章节列 160（保留 44px rail）",
+          "basis": "规格 v3 §1A 与 DR2 附录 A（z-index 900/920/950 层序已核实可行）",
+          "reversibility": "localStorage 键可清除、单 commit 可回退，不影响宿主对话组件本体",
+          "validation": "CDP 三截图 + smoke 断言（抽屉 420 / 唤出条 48 / z-index 三值共存）",
+          "rollback": "git revert 该 commit 并清除 localStorage 中的抽屉开关键"
+        },
+        "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
+      },
+      "allowed_change_scope": [
+        "仅改：lib/client.js、lib/host-contract.mjs、test/smoke.mjs、scripts/verify-visual-geometry.mjs、docs/verification/UX-063-assertion-migration.md、README.md",
+        "禁改：lib/index.js、lib/host-boundary.js、install 脚本、package.json、cordis.patch.yml、rail/页签/文件树结构"
+      ],
+      "required_evidence": [
+        "evidence-log entry with 事实依据, 目标对齐, 用户影响, and 结构化事实 JSON",
+        "validation commands with exit_code and concise output summary",
+        "independent review evidence or explicit degraded review evidence that does not claim full separation"
+      ],
+      "next_commands": [
+        "python -m unittest skills/software-project-governance/infra/tests/test_verify_workflow.py -v",
+        "python skills/software-project-governance/infra/verify_workflow.py check-governance --fail-on-issues"
+      ],
+      "done_definition": [
+        "三步各自交付并守卫绿，迁移表对应行标记 [已迁移] 并附 commit",
+        "Design Reviewer 与 Code Reviewer 独立审查通过（unresolved_blockers=0）",
+        "CDP 证据登记迁移表 §E + 用户目检并排截图 ≥5 处差异"
+      ],
+      "source": "plan-tracker.md##当前活跃事项"
+    },
+    "CLEAN-013": {
+      "task_id": "CLEAN-013",
+      "priority": "P1",
+      "status": "⏳ 待执行（triage = change-triage/CLEAN-013.json；RISK-013 防复发面：守卫不可复跑等于没守卫）",
+      "goal": "CLEAN-013 **隔离矩阵可审计化**（REVIEW-BUG-011-R3 P2-22/P2-23 + P3-25）：矩阵脚本入仓（四态 decl/legacy/unknown/非法值可复跑）、`DSH_HOME` 必须 `%TEMP%` 前缀守卫**加负例**、CreationTime/哈希证据固化入 evidence、CI 断言 PS major=5",
+      "product_success_contract": {
+        "user": "插件维护者与 CI 使用者",
+        "job_to_be_done": "隔离矩阵可复跑、守卫可被独立审计，避免真实环境误写复发",
+        "non_goals": [
+          "不改变插件运行时行为与安装语义（仅测试与看护面）",
+          "不新增生产依赖或外部服务调用"
+        ],
+        "success_metrics": [
+          "维护者可见：一条命令复跑隔离矩阵即得到四态结论（decl/legacy/unknown/非法值）",
+          "负例脚本执行即以非零退出码失败，证明 DSH_HOME 前缀守卫具备判别力"
+        ],
+        "competitive_baseline": "REVIEW-BUG-011-R3 P2-22/P2-23 的可审计性要求",
+        "done_definition": [
+          "矩阵脚本与证据入仓，Code Reviewer 通过",
+          "守卫负例机检在案且 CI 断言 PS major=5"
+        ]
+      },
+      "acceptance_contract": {
+        "scenario": "维护者一条命令复跑隔离矩阵并得到四态结论",
+        "command": "node scripts/verify-install-matrix.mjs --dry-run && python skills/software-project-governance/infra/verify_workflow.py check-governance --summary-only",
+        "expected_output": "矩阵四态全部 PASS 且负例按预期失败；检查命令可用",
+        "last_run": {
+          "status": "planned",
+          "exit_code": null,
+          "summary": "本轮未执行（任务待启动）：验收命令与判据已定义，启动后首跑即回填真实 exit_code"
+        },
+        "demo_evidence": "docs/verification/ 下对应验收文档（启动后创建并登记）"
+      },
+      "quality_budget": {
+        "dimensions": {
+          "performance": {
+            "threshold": "不引入可感知卡顿或额外网络请求",
+            "validation": "node scripts/verify-install-matrix.mjs --dry-run",
+            "status": "planned",
+            "evidence": "待任务启动后回填",
+            "exception": ""
+          },
+          "reliability": {
+            "threshold": "改动面守卫绿且可独立回退",
+            "validation": "node scripts/verify-install-matrix.mjs --dry-run",
+            "status": "planned",
+            "evidence": "待任务启动后回填",
+            "exception": ""
+          },
+          "security": {
+            "threshold": "零新增外部依赖、零宿主源码改动",
+            "validation": "node scripts/verify-install-matrix.mjs --dry-run",
+            "status": "planned",
+            "evidence": "待任务启动后回填",
+            "exception": ""
+          },
+          "accessibility": {
+            "threshold": "键盘可达与焦点不穿透",
+            "validation": "node scripts/verify-install-matrix.mjs --dry-run",
+            "status": "planned",
+            "evidence": "待任务启动后回填",
+            "exception": ""
+          },
+          "ux": {
+            "threshold": "用户可感知的界面改进",
+            "validation": "node scripts/verify-install-matrix.mjs --dry-run",
+            "status": "planned",
+            "evidence": "待任务启动后回填",
+            "exception": ""
+          },
+          "maintainability": {
+            "threshold": "收口到单一事实源并留机检断言",
+            "validation": "node scripts/verify-install-matrix.mjs --dry-run",
+            "status": "planned",
+            "evidence": "待任务启动后回填",
+            "exception": ""
+          }
+        }
+      },
+      "vertical_slice": {
+        "user_visible_slice": "维护者运行一条命令即可看到隔离矩阵四态结论，无需手工复现环境",
+        "demo_path": "node scripts/verify-install-matrix.mjs --dry-run 输出四态报告",
+        "scope_guard": "仅新增 scripts 下矩阵脚本、CI 断言行与 docs/verification 证据文档",
+        "rollback_plan": "删除新增脚本与 CI 行即可回退，无运行时影响",
+        "status": "planned",
+        "evidence": "待任务启动后登记"
+      },
+      "interruption_policy": {
+        "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
+        "critical_triggers": [
+          "Ask the user when product intent is unclear.",
+          "Ask the user when acceptance standard or done criteria are unclear.",
+          "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions."
+        ],
+        "auto_execute": [
+          "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible.",
+          "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied."
+        ],
+        "assumption_record": {
+          "assumption": "按 plan-tracker 已登记范围推进，不扩张到相邻批次",
+          "basis": "plan-tracker 当前活跃事项行 + change-triage 记录",
+          "reversibility": "单 commit 可回退",
+          "validation": "node scripts/verify-install-matrix.mjs --dry-run",
+          "rollback": "git revert 该 commit"
         },
         "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
       },

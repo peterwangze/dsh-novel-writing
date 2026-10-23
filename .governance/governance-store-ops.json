@@ -754,6 +754,50 @@
         "scripts/verify-visual-geometry.mjs",
         "test/smoke.mjs"
       ]
+    },
+    "op-0f640f53c53041e6875abdf84d3ef665": {
+      "schema_version": 1,
+      "command": "decision-append",
+      "task_id": "",
+      "input_fingerprint": "4375540d647671e8aa11a83811b6e342b839c9a7a2ce3bd42472bd3ef17c358b",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-0f640f53c53041e6875abdf84d3ef665",
+        "code": "ok",
+        "new_revision": 40591,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-10-23T07:49:52",
+      "updated_at": "2026-10-23T07:49:52",
+      "authority": {
+        "state": "MD_ACTIVE",
+        "epoch": 0,
+        "generation": 0,
+        "backend": "md"
+      }
+    },
+    "op-4da910902c3041c8a1271146adf6ce42": {
+      "schema_version": 1,
+      "command": "evidence-append",
+      "task_id": "UX-063",
+      "input_fingerprint": "00da4aba209cdcbedebc33785cfe81d7accedf7942fa6ebf6dbce436214b0e25",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-4da910902c3041c8a1271146adf6ce42",
+        "code": "ok",
+        "new_revision": 409009,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-10-23T08:06:56",
+      "updated_at": "2026-10-23T08:06:56"
     }
   }
 }
