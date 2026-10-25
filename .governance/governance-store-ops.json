@@ -798,6 +798,25 @@
       "baseline_effects": null,
       "recorded_at": "2026-10-23T08:06:56",
       "updated_at": "2026-10-23T08:06:56"
+    },
+    "op-bd57835bfdea4e9a89256019eb15ce96": {
+      "schema_version": 1,
+      "command": "evidence-append",
+      "task_id": "GOV-004",
+      "input_fingerprint": "c0bcf14622d2059c3b8947f6d7eb939ba87b74881e7e5f2be46c2ddae2cc75ff",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-bd57835bfdea4e9a89256019eb15ce96",
+        "code": "ok",
+        "new_revision": 411117,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-10-25T13:19:17",
+      "updated_at": "2026-10-25T13:19:17"
     }
   }
 }

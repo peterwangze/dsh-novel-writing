@@ -1,6 +1,6 @@
 ## Governance Bootstrap（强制 — 每次会话第一动作）
 
-> @bootstrap-version: 0.98.0（模板最低引导版本——低于 SKILL frontmatter active_version 即陈旧，先升级本段再继续）
+> @bootstrap-version: 0.99.0（模板最低引导版本——低于 SKILL frontmatter active_version 即陈旧，先升级本段再继续）
 >
 > 契约 v2（FEAT-041/DEC-218）：触发器行内 + 明细按需——「§Bx」= `skills/software-project-governance/SKILL.md`「Bootstrap 规程明细」小节（skill 层按需加载，迁移零丢失）；本模板规则不依赖 skill 加载。
 

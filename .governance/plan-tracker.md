@@ -7,7 +7,7 @@
 - **Profile**: standard — 项目已有 CI + 发布实践（11 commits / 3 tags / CHANGELOG / ci.yml），standard 的证据与 Gate 强度与之匹配
 - **触发模式**: always-on
 - **操作权限模式**: maximum-autonomy
-- **工作流版本**: 0.98.0
+- **工作流版本**: 0.99.0
 - **当前阶段**: development（开发实现，6/11）
 - **接入方式**: 中途接入（2026-08-22，用户确认阶段=开发）
 - **项目目标**: DSH（DeepSeek Harness）自动化小说写作发布流水线插件——把 claude-writing-workflow 的端到端创作质量体系迁移为 agent 预设，用宿主插件补齐项目管理、可视化工作台、多平台发布配置与数据闭环；门禁从「靠 AI 自觉」升级为「代码强制」
