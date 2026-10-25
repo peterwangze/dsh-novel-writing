@@ -77,7 +77,21 @@ if (u63Err !== null) {
   console.log('[verify-visual-geometry] FAIL: ux063 抽屉/全屏源面缺失（' + u63Err + '）——先实现再量算')
   process.exit(1)
 }
-const U63_TEXT_LEFT = 11 // 真实左偏移（见上）
+// UX-063 第③步（DR2(第②步) P3-1）：正文列左偏移**不再硬编码**——从源码抽取 `.nv-split` border 与
+// 上部区内联 `padding:'10px …'`，二者之和即真实偏移（当前 1 + 10 = 11）。任一侧改动 ⇒ 自动跟随并触发断言。
+const U63_SPLIT_BORDER = Number((/\.nv-split\{[^}]*border:(\d+)px/.exec(clientSrc) ?? [])[1])
+const U63_UPPER_PAD = Number((/padding: '(\d+)px \d+px 0'/.exec(clientSrc) ?? [])[1])
+if (!Number.isFinite(U63_SPLIT_BORDER) || !Number.isFinite(U63_UPPER_PAD)) {
+  console.log('[verify-visual-geometry] FAIL: 正文列左偏移来源缺失（.nv-split border / 上部区 padding）')
+  process.exit(1)
+}
+const U63_TEXT_LEFT = U63_SPLIT_BORDER + U63_UPPER_PAD // 真实左偏移（当前 1 + 10 = 11）
+// UX-063 第③步（DR2(第②步) P3-2）：提示行高度常量与 CSS 实测绑定，防「常量漂移无信号」。
+const DRAWER_HINT_H_SRC = Number((/const DRAWER_HINT_H = (\d+)/.exec(clientSrc) ?? [])[1])
+if (!Number.isFinite(DRAWER_HINT_H_SRC)) {
+  console.log('[verify-visual-geometry] FAIL: DRAWER_HINT_H 常量缺失')
+  process.exit(1)
+}
 const U63_COLS = [1400, 1086, 1046, 1000, 956, 800] // 覆盖验收视口 + 手柄阈值两侧 + 窄档
 const u63TextW = (colW) => Math.max(0, Math.min(U63.textMax, colW - U63.railW - (U63.drawerW - U63.railW) - U63.gutter))
 const u63HandleLeft = (colW) => colW - U63.drawerW - U63.edgeW
@@ -97,10 +111,21 @@ const rules = [
   rule('.nv-rail', 'width:44px'),
   rule('.nv-rail .nv-wfctl-btn,.nv-rail .nv-wfctl-btn2'),
   rule('.nv-rail-status', 'writing-mode'),
-  rule('.nv-edwrap', 'max-width:var(--nv-measure'),
+  rule('.nv-edwrap', 'max-width:'),
   rule('.nv-edwrap textarea', 'width:100%'),
   rule('.nv-chrow', 'height:28px'),
   rule('.nv-cinput', 'min-height:var(--nv-ctl-md)'),
+  // UX-063 P0-a③：正文/编辑区规则**直接从源码抽取**（不再镜像硬编码）——字号 reading 令牌、
+  // 行高 1.9、中文排版（首行缩进 2em + 段距 .8em）。镜像自证已在第①步 DR1 P1-2 被否决。
+  // 抽取口径：只要目标是**该选择器的同一规则**（mustHave 取宽口径），取值是否合规由断言判定——
+  // 这样「值被改坏」会得到**具名断言失败**而不是抽取期抛错（判别信号更准，仍 fail-closed）。
+  rule('.nv-content', 'font-size:var(--nv-fs-reading'),
+  rule('.nv-content', 'max-width:var(--nv-measure'),
+  rule('.nv-content p', 'margin:0 0 .8em'),
+  // DR1 P1-1：标题层级（h2 20 / h3 17 > 正文 16）——同样从源码抽取后实测 computed
+  rule('.nv-content h2', 'font-size:'),
+  rule('.nv-content h3', 'font-size:'),
+  rule('.nv-drawer-hint', 'line-height:16px'),
   // UX-063 P0-a②：任务流首页容器上限 880 / 主 CTA 高 36（源码抽取 → 静态注入实测）
   rule('.nv-home', 'max-width:880px'),
   rule('.nv-home-cta', 'height:36px'),
@@ -110,8 +135,6 @@ const rules = [
 const html = `<!doctype html><html><head><meta charset="utf-8"><style>
 ${rootCss}
 ${rules.join('\n')}
-.nv-content{font-size:15px;max-width:var(--nv-measure,34em);margin:0 auto}
-.nv-content p{margin:1em 0}
 </style></head><body>
 <div class="nv-rail" id="rail">
   <span class="nv-rail-status" id="railStatus">服务不可用</span>
@@ -130,8 +153,8 @@ ${rules.join('\n')}
     <button class="nv-wfctl-btn2"></button>
   </div>
 </div>
-<div class="nv-edwrap"><textarea id="ta" style="min-height:420px"></textarea></div>
-<div class="nv-content" id="content"><p id="para">中文正文测试段落，用于测量阅读宽度与段距。</p></div>
+<div class="nv-edwrap"><textarea id="ta" style="min-height:420px;padding:12px;border:1px solid #2a2f3a"></textarea></div>
+<div class="nv-content" id="content"><h2 id="h2">第1章 测试章标题</h2><h3 id="h3">小节标题</h3><p id="para">中文正文测试段落，用于测量阅读宽度与段距。</p></div>
 <button class="nv-chrow" id="chrow">第1章 测试</button>
 <input class="nv-cinput" id="cinput" value="x">
 <!-- UX-063 P0-a②：首页 880 上限 + 主 CTA 36（1200 容器内测实际收敛宽度） -->
@@ -141,6 +164,8 @@ ${rules.join('\n')}
 <div id="u63zdrawer" style="z-index:${U63.zDrawer}"></div>
 <div class="nv-split" id="u63zsplit"></div>
 <div class="nv-console" id="u63zconsole"></div>
+<!-- UX-063③：窄窗提示行（常量 DRAWER_HINT_H 与 CSS 实测高度绑定，防常量漂移无信号） -->
+<div class="nv-drawer-hint" id="u63hint">视口较窄，建议全屏（抽屉可能遮挡部分内容）</div>
 ${u63StageHtml}
 <script>
 window.addEventListener('load', function () {
@@ -155,6 +180,22 @@ window.addEventListener('load', function () {
     cinput: r(document.getElementById('cinput')),
     home: r(document.getElementById('home')),
     homeCta: r(document.getElementById('homeCta')),
+    contentFont: cs(document.getElementById('content')).fontSize,
+    contentLineHeight: cs(document.getElementById('content')).lineHeight,
+    // DR1 P1-1：标题层级实测（h2 > h3 > 正文）
+    h2Font: cs(document.getElementById('h2')).fontSize,
+    h3Font: cs(document.getElementById('h3')).fontSize,
+    // DR1 P2-1：**文本内容宽**（clientWidth − 左右内边距；元素宽含 padding 会假绿）
+    contentTextW: (() => {
+      const el = document.getElementById('content'); const s = cs(el)
+      return Math.round(el.clientWidth - parseFloat(s.paddingLeft) - parseFloat(s.paddingRight))
+    })(),
+    taTextW: (() => {
+      const el = document.getElementById('ta'); const s = cs(el)
+      return Math.round(el.clientWidth - parseFloat(s.paddingLeft) - parseFloat(s.paddingRight))
+    })(),
+    paraTextIndent: cs(para).textIndent,
+    hint: r(document.getElementById('u63hint')),
     chrowFont: cs(document.getElementById('chrow')).fontSize,
     paraMarginTop: cs(para).marginTop,
     paraMarginBottom: cs(para).marginBottom,
@@ -225,15 +266,27 @@ try {
   const data = JSON.parse(m[1].replace(/&quot;/g, '"'))
   const checks = {
     rail44: data.rail.w === 44,
-    measure510: data.measure.w >= 500 && data.measure.w <= 520,
-    edwrap510: data.edwrap.w >= 500 && data.edwrap.w <= 520,
+    // UX-063③：正文 34em @16px = 544（区间 [512,576]）；编辑区元素宽与**文本内容宽**双判据
+    measure544: data.measure.w >= 512 && data.measure.w <= 576,
+    // CR1 F-1：下界由 500 提到 512（原下界过松：若编辑区字号回退 15px，34em=510 仍会落在区间内假绿）
+    edwrapBox544: data.edwrap.w >= 512 && data.edwrap.w <= 576,
+    // DR1 P2-1：阅读↔编辑**文本内容宽**一致（544±2）——防元素宽含内边距导致的假绿
+    taTextW544: Math.abs(data.taTextW - 544) <= 2,
+    contentTextW544: Math.abs(data.contentTextW - 544) <= 2,
+    contentFont16: data.contentFont === '16px',
+    contentLh19: Math.abs(parseFloat(data.contentLineHeight) - 30.4) <= 0.6,
+    // DR1 P1-1：h2(20) > h3(17) > 正文(16)——标题不得低于正文字号
+    headingScale: data.h2Font === '20px' && data.h3Font === '17px' && data.contentFont === '16px',
+    paraIndent2em: data.paraTextIndent === '32px',
+    para08em: Math.abs(parseFloat(data.paraMarginBottom) - 12.8) <= 0.3,
+    u63TextLeftSrc: U63_TEXT_LEFT === 11,
+    u63HintH: Math.abs(data.hint.h - DRAWER_HINT_H_SRC) <= 2,
     chrow28: data.chrow.h === 28,
     chrowFont12: data.chrowFont === '12px',
     cinput32: data.cinput.h === 32,
     // UX-063 P0-a②：首页容器 880 上限 / 主 CTA 36（静态注入量算，非公式复算）
     u63Home880: data.home.w === 880,
     u63Cta36: data.homeCta.h === 36,
-    para1em: data.paraMarginTop === '15px' && data.paraMarginBottom === '15px',
     railStatusVisible: data.railStatus.length > 0,
     statusFont12: data.statusFont === '12px',
     worstCaseStatusCapped: data.statusRect.h > 0 && data.statusRect.h <= 120,
@@ -274,7 +327,13 @@ try {
     measuredMargin: x.drawer.l - x.text.r,
     handleMargin: x.handle === null ? null : x.handle.l - x.text.r,
   }))
-  console.log('[verify-visual-geometry] OK: rail 44 / measure 510 / edwrap 510 / chrow 28+12px / cinput 32 / para 1em / rail-status visible 12px (worst-case capped, 3 buttons visible, min-panel 120 scrollable) / ux063 drawer 420 + edge 48 + z 900<920<950'
+  console.log('[verify-visual-geometry] OK: rail 44 / measure ' + data.measure.w + ' (34em@16px, 断言 [512,576]) / edwrap ' + data.edwrap.w
+    + ' / 正文文本宽 ' + data.contentTextW + '·编辑文本宽 ' + data.taTextW + '（±2 一致性）'
+    + ' / 标题 h2 ' + data.h2Font + ' > h3 ' + data.h3Font + ' > 正文 ' + data.contentFont
+    + ' / 正文 ' + data.contentFont + '·lh ' + data.contentLineHeight + ' / 段落 首行缩进 ' + data.paraTextIndent + '·段距 ' + data.paraMarginBottom
+    + ' / chrow 28+12px / cinput 32 / rail-status visible 12px (worst-case capped, 3 buttons visible, min-panel 120 scrollable)'
+    + ' / hint 行高 ' + data.hint.h + 'px vs 常量 ' + DRAWER_HINT_H_SRC
+    + ' / ux063 drawer 420 + edge 48 + z 900<920<950'
     + ' / text-col ' + u63Rows.map((x) => x.c + '→' + x.textW).join(',')
     + ' / formula reserve ' + U63_FORMULA_RESERVE + ' vs measured margin '
     + u63Rows.map((x) => x.measuredMargin).join(',')

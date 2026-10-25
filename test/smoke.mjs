@@ -1028,7 +1028,7 @@ check('客户端源码面：UX-030 边界线体系化（VS Code sash 语义—�
     && clientSrc.includes('.nv-left{flex:none;min-height:0;display:flex;flex-direction:column;overflow:hidden;padding:8px;box-sizing:border-box;border-right:1px solid var(--nv-border-strong,#3a4150)}')   // 树窗右缘=自身边线（UX-036 纵向分栏容器）
     && clientSrc.includes('background:var(--nv-surface,rgba(255,255,255,.02));border-right:1px solid var(--nv-border-strong,#3a4150)}')                       // 章节列右缘=自身边线
     && clientSrc.includes('.nv-split{position:fixed;display:flex;flex-direction:column;box-sizing:border-box;border:1px solid var(--nv-border-strong,#3a4150);border-radius:0;')  // 外框全边线（直角）
-    && clientSrc.includes("left: (x + contentW - 4) + 'px'")                                                         // 抽屉态聊天命中区整体外移（避开宿主抽屉 z 920 与开启态手柄）
+    && clientSrc.includes("left: (x + contentW) + 'px'")                                                         // 抽屉态聊天命中区对齐抽屉左缘（第③步 P3-7：不再 −4，避免与开启态手柄 4px 重叠）
     && !clientSrc.includes('.nv-vdiv:hover{border') && !clientSrc.includes('.nv-chdiv:hover{border') && !clientSrc.includes('.nv-chatdiv:hover{border')  // 无 hover 线残留
     && clientSrc.includes('.nv-vdiv:hover,.nv-vdiv:active{box-shadow:inset 1px 0 0 0 var(--nv-accent,#4f8ef7)}')   // UX-033 选中高亮
     && clientSrc.includes('.nv-chdiv:hover,.nv-chdiv:active{box-shadow:inset 1px 0 0 0 var(--nv-accent,#4f8ef7)}')
@@ -1269,7 +1269,7 @@ check('客户端源码面：UX-063 P0-a① 让位（收文件树/章节列 + 正
     && clientSrc.includes("snap.drawerOpen === true && colW < DRAWER_HANDLE_MIN_COLW ? t('drawerNarrowHint')")
     && clientSrc.includes("drawerNarrowHint: '视口较窄，建议全屏（按 Esc 收起对话）'")
     && clientSrc.includes("drawerNarrowHint: 'Narrow viewport — full screen recommended (press Esc to hide the conversation)'")
-    && clientSrc.includes("drawerTinyHint: '视口过窄，建议全屏'")
+    && clientSrc.includes("drawerTinyHint: '视口过窄，建议全屏（按 Esc 关闭对话）'")   // 第③步：<740 档手柄隐藏 ⇒ 提示必须给 Esc 出口（DR2(第②步) P2-1）
     && clientSrc.includes("className: 'nv-drawer-hint'")
     && !clientSrc.includes("snap.drawerOpen === true && colW < 956 ? t('drawerNarrowHint')")
 })(), 'ux063 yield/hint missing')
@@ -1421,14 +1421,17 @@ check('UX-063 P0-a② 返工 WYSIWYG：detail 未就绪一律禁用（不猜章�
   return blk !== '' && enterB !== '' && applyB !== ''
     // 动作面：未就绪禁用 + 不猜章号 + 提示「数据未就绪」
     && (blk.match(/disabled: homeNextNum === null/g) ?? []).length >= 2
-    && blk.includes("homeNextNum === null ? t('homeDataLoading') : t('homeContinueCta', homeNextNum)")
+    && blk.includes("(homeDetailFailed === true ? t('homeDataFailed') : t('homeDataLoading'))")
+    // 第③步：失败态与加载中文案二分 + 分支级重试入口（DR2(第②步) P2-4/P2-5）
+    && blk.includes("className: 'nv-home-sub nv-home-retry', onClick: retryHome")
+    && blk.includes("homeDetailFailed === true ? t('homeRecentFailed') : t('homeRecentLoading')")
+    && clientSrc.includes('const homeDetailFailed = poll.data !== null && novels.length > 0 && homeCurrentId !== null && homeDetail === null')
     && blk.includes("if (homeNextNum !== null) enterWriting({ workflow: 'continue', chapter: homeNextNum })")
     // 未知态：待办 — / 最近章节加载中（不是 0 / 「尚无章节」）
     && blk.includes("const unpublishedText = todoUnknown ? '—' : String(homeTodo.unpublished)")
     && blk.includes("const gateText = todoUnknown ? '—' : String(homeTodo.gateFails)")
     && blk.includes('homeRecent === null')
     && blk.includes("t('homeRecentLoading')")
-    // 章数展示口径与动作口径分离（注释 + 派生函数）
     && clientSrc.includes('function deriveHomeChapterTotal(detail, novel) {')
     // 意图通道：同步投递 + novelId 绑定 + 跨书拒绝 + 失败路径清理
     && enterB.includes('const full = { ...(intent ?? {}), novelId: homeCurrentId }')
@@ -1442,6 +1445,42 @@ check('UX-063 P0-a② 返工 WYSIWYG：detail 未就绪一律禁用（不猜章�
     && clientSrc.includes("orderedNovels.map((n) => el('button', {")
     && clientSrc.includes("onClick: () => { setBookMenu(false); store.set({ selected: n.id }) }")
 })(), 'ux063 WYSIWYG mismatch')
+// ── UX-063 P0-a 第③步：正文可读性（规格 §1C；迁移表 A 段 #1~#6 / C 段 #15/#16）──
+check('客户端源码面：UX-063 P0-a③ 正文可读性（reading 16 + 行高 1.9 + measure 34em + 中文排版 2em/0.8em + 编辑态同源 + 存量令牌冻结）', (() => {
+  return clientSrc.includes('--nv-fs-reading:16px') && clientSrc.includes('--nv-fs-ui:13px')
+    && clientSrc.includes('--nv-measure:34em')
+    // 规则**以字面量存在**（geometry 用 rule() 直接抽取并真量 DOM，不做镜像硬编码）
+    && clientSrc.includes('.nv-content{font-size:var(--nv-fs-reading,16px);line-height:1.9;color:var(--nv-fg,#e6e8eb)}')
+    && clientSrc.includes('.nv-content p{text-indent:2em;margin:0 0 .8em;font-size:inherit;line-height:inherit}')
+    && clientSrc.includes('.nv-edwrap{max-width:calc(var(--nv-measure,34em) + 26px);margin:0 auto;font-size:var(--nv-fs-reading,16px);line-height:1.9}')
+    && clientSrc.includes("fontSize: 'var(--nv-fs-reading,16px)', lineHeight: 1.9")   // 编辑态同源（N-1 裁决 (a)）
+    // DR1 P1-1 标题层级：h2 用存量 display(20) / h3 用存量 display-s(17)，均 > 正文 16（不新增字号档、不改令牌值）
+    && clientSrc.includes('.nv-content h2{font-size:var(--nv-fs-display);')
+    && clientSrc.includes('.nv-content h3{font-size:var(--nv-fs-display-s);')
+    // DR1 P2-1：geometry 静态注入需与组件内联样式同构（内边距/边框漂移则文本宽判据失真，故钉住来源）
+    && clientSrc.includes("minHeight: '420px', padding: '12px'")
+    // 存量令牌白名单冻结（D-3 收口：本步只改正文两件事）
+    && clientSrc.includes('--nv-fs-body:15px') && clientSrc.includes('--nv-fs-card:13.5px')
+    && clientSrc.includes('--nv-fs-caption:11px') && clientSrc.includes('--nv-fs-display-s:17px')
+    && clientSrc.includes('--nv-fs-hero:28px') && clientSrc.includes('--nv-fs-base:12px')
+    // 旧 1em 段距口径零残留（迁移表 #1/#2）
+    && !clientSrc.includes('.nv-content p{margin:1em 0')
+})(), 'ux063 reading typography missing')
+check('客户端源码面：UX-063 P0-a① 恢复五路径调用级具名——syncAnchor 内「旧节点还原」单独可判（删该调用必红）', (() => {
+  const body = fnBody('syncAnchor() {')
+  return body !== ''
+    && body.includes('if (this.viewArea !== null && this.viewArea.isConnected && this.viewArea !== viewArea) this.restoreViewArea()')
+    // 同函数内还有「快照新节点」调用：旧还原 + 新快照成对，缺一即红
+    && body.includes('this.snapshotViewArea(viewArea)')
+})(), 'ux063 syncAnchor restore call missing')
+check('数据分支结构：UX-063 P0-a② 四区齐备 + CTA 文案取 homeContinueCta(homeNextNum) + 失败态重试仅失败时渲染', (() => {
+  const i = clientSrc.indexOf('const homeBody = () => {')
+  const blk = i < 0 ? '' : clientSrc.slice(i, i + 12000)
+  return blk !== ''
+    && (blk.match(/className: 'nv-home-sec/g) ?? []).length >= 4     // 四区
+    && blk.includes("t('homeContinueCta', homeNextNum)")              // CTA 文案 = 章号同源
+    && blk.includes("homeDetailFailed === true\n                ? el('button', { type: 'button', className: 'nv-home-sub nv-home-retry'")  // 失败态才有重试
+})(), 'ux063 home data-branch structure missing')
 
 check('客户端源码面：UX-063 P0-a① 恢复保证五路径逐条具名（open / syncAnchor / closeDrawer / close / setBook）', (() => {
   const openB = fnBody('open(novelId) {')
@@ -1580,7 +1619,9 @@ check('客户端源码面：UX-055① 字阶悬崖（TYPO 单点常量关键值 
     && clientSrc.includes('TYPO.page')        // 页面标题（管理台标题/创作台书名 20px）
     && clientSrc.includes('TYPO.cardTitle')   // 书卡标题 17px
     && clientSrc.includes('TYPO.stat')        // 统计数字 18px + tabular-nums
-    && clientSrc.includes('TYPO.body') && clientSrc.includes('TYPO.bodyLh')   // 正文 15px/1.75
+    && clientSrc.includes("body: 'var(--nv-fs-body)'") && clientSrc.includes("bodyLh: 'var(--nv-lh-reading)'")   // 常量保留（存量令牌白名单）
+    // UX-063 第③步迁移：正文区改走 `--nv-fs-reading`（16/1.9）⇒ TYPO.body/bodyLh **不再被正文消费**
+    && !clientSrc.includes('TYPO.body') && !clientSrc.includes('TYPO.bodyLh')
     && clientSrc.includes('TYPO.meta')        // meta 11px
     && clientSrc.includes('TYPO.empty')       // 空态 28px
     && clientSrc.includes('fontVariantNumeric: \'tabular-nums\'')             // 统计数字/正文标题 tabular
@@ -1612,8 +1653,8 @@ check('客户端源码面：UX-061 P2 rail 状态短标签（DR2 P1：可见文�
 check('客户端源码面：UX-061 阶段 2 B-9 阅读宽度令牌（--nv-measure 定义 + .nv-content/.nv-edwrap 消费 + 居中口径）', (() => {
   return clientSrc.includes('--nv-measure:34em')
     && clientSrc.includes('.nv-content{max-width:var(--nv-measure,34em);margin:0 auto}')
-    && clientSrc.includes('.nv-edwrap{max-width:var(--nv-measure,34em);margin:0 auto;')
-    && clientSrc.includes('font-size:var(--nv-fs-body,15px)}')
+    && clientSrc.includes('.nv-edwrap{max-width:calc(var(--nv-measure,34em) + 26px);margin:0 auto;')
+    && clientSrc.includes('font-size:var(--nv-fs-reading,16px);line-height:1.9}')   // 第③步：编辑区与阅读区同源 reading 16/1.9
 })(), 'ux061 measure missing')
 
 check('客户端源码面：UX-061 阶段 2 B-10 循环动画全零（@keyframes / animation: / infinite 三面均为 0）', (() => {
@@ -1737,14 +1778,15 @@ check('客户端源码面：UX-055③⑥ 空态英雄区 + 稀疏居中（hero �
     && clientSrc.includes('.nv-cplus-icon{font-size:20px')                                        // ＋图标 20px muted
     && clientSrc.includes('.nv-cplus:hover{background:rgba(230,232,235,.04);background:color-mix(in srgb,var(--nv-fg,#e6e8eb) 4%,transparent)') // hover 4% 底
 })(), 'ux055 hero + sparse missing')
-check('客户端源码面：UX-055⑤ 正文阅读排版（15px/1.75 类 + .nv-content + 章节标题 TYPO.chapter 分隔线 + textarea 15px/1.75 同步 + tabular-nums 数字面）', (() => {
-  return clientSrc.includes(".nv-content{font-size:' + TYPO.body + ';line-height:' + TYPO.bodyLh")
-    && clientSrc.includes('.nv-content p{margin:1em 0;font-size:inherit;line-height:inherit}')
-    && clientSrc.includes(".nv-content h2{font-size:' + TYPO.chapter")             // P2-2：TYPO 引用面（非硬编码 16px 字面）
+check('客户端源码面：UX-055⑤ 正文阅读排版（第③步迁移：reading 16/1.9 + 中文首行缩进 2em / 段距 .8em + 章节标题 TYPO.chapter 分隔线 + textarea 同源 reading + tabular-nums 数字面）', (() => {
+  return clientSrc.includes('.nv-content{font-size:var(--nv-fs-reading,16px);line-height:1.9')
+    // 第③步（规格 §1C）：中文排版 = 首行缩进 2em + 段距 .8em（0.8em@16 = 12.8px）
+    && clientSrc.includes('.nv-content p{text-indent:2em;margin:0 0 .8em;font-size:inherit;line-height:inherit}')
+    && clientSrc.includes(".nv-content h2{font-size:var(--nv-fs-display);")             // 第③步 DR1 P1-1：章标题用存量 display 20（> 正文 16）
     && clientSrc.includes('.nv-chapter-sep{')
     && clientSrc.includes("className: 'nv-content'")
     && clientSrc.includes('fontSize: TYPO.chapter')                    // 阅读区章节标题 16px/600 + tabular
-    && clientSrc.includes('fontSize: TYPO.body, lineHeight: TYPO.bodyLh')  // textarea 同步 15px/1.75
+    && clientSrc.includes("fontSize: 'var(--nv-fs-reading,16px)', lineHeight: 1.9")  // textarea 同步 reading 16/1.9（DR3 N-1 裁决 (a)）
     && clientSrc.includes("'.nv-chip{flex:none;display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;box-sizing:border-box;font-size:' + TYPO.meta") // P2-1：.nv-chip 11px→TYPO.meta 引用面
 })(), 'ux055 body typography missing')
 check('客户端源码面：UX-055⑥ 细节统一（抽屉小卡 13.5px / 当前阶段行 accent 8% 底+左缘条 / 排序 pill 选中 600 / 数据/表格 tabular-nums / mono 首字块渲染）', (() => {
@@ -2920,7 +2962,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   //      **残余缝（同次实测，未闭合）**：若 2.13 只删**终点闭合行**（**历史锚点**：COMPAT-013 时期值 `L4429-4460`——6 处注册仍全在范围内）
   //      则 ①②③④⑤ **全绿**（实测 262/0：⑤a 计数仍 6 ≡ 6、④ callPrefix = null、⑤b 无 `键: {` 形态构造）
   //      ⇒ 该形态目前无持续机检力。根治需「构造闭合行」口径，而 JS 范围本就可能是**合法语义片段**
-  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L5929` +1 / 3.8 `L3411-L3425` +1 实测均非配平）——
+  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L5954` +1 / 3.8 `L3418-L3429` +1 实测均非配平）——
   //      无差别要求配平会误报上述 3 项，故如实留档待另案（非本任务可安全落地）。
   //      **本行 3 个契约行号副本的同步方（CLEAN-006 **N-6** 归属订正，避免审计归因错位）**：本块随
   //      契约 `line` 重基**必须同步**，其**机检执行者 = `COMPAT-015 F3 行号引用对账`**（把本行 2.3
@@ -3074,7 +3116,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // 首行起构造者恰 3 项 = 4.6 `"dsh": {` / 6.1 `"peerDependencies": {` / 6.2 `"engines": {`（面 6 三项
   // JSON 根级子对象；其余 18 项首行为 JS 调用/声明/注释 ⇒ 不适用），项数入 golden（防空转）。
   // **只取首行、不取范围内全部 opener 的理由**：JS 范围可为**合法语义片段**（2.1 `L92-94` 净差 +2 / 2.3
-  // `L5526-L5528` +1 / 3.8 `L3411-L3425` +1 实测均非配平，⑤ 注释已留档）——无差别要求范围内每个 opener 配平
+  // `L5526-L5528` +1 / 3.8 `L3418-L3432` +1 实测均非配平，⑤ 注释已留档）——无差别要求范围内每个 opener 配平
   // 会误报这些条目；而「范围未包住自身构造闭合行」的形态恰以构造键行起段（首行 opener 即充分判据）。
   // 口径边界同 ⑤b（裸字符配平，不剥注释/字符串中的 `{`/`}`）。
   const KEY_OPEN6 = /^\s*(?:"([^"]{1,60})"|'([^']{1,60})'|([A-Za-z_$][\w$.-]{0,60}))\s*:\s*\{\s*$/
@@ -3106,9 +3148,9 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // ⑫d F-3 披露数字入机检（COMPAT-013）：非严格面（**由 rangeItems 动态生成**；实测 **3/4/5/6 共 10 项**——
   // COMPAT-014 C-F-1 订正：原标签「3/5/6」漏面 4，且与下方列举清单自含 `4.6 L17`（面 4）自相矛盾；条目数同时
   // 入 golden）范围条目中「起于注释/空行」者 MUST 恰 2 项
-  //（3.1 起于 `/**` JSDoc L1273、3.8 起于 `/**` JSDoc L3411——互操作说明在本段内、非起点）。动因 = 该计数原为**人工转写**且写错
+  //（3.1 起于 `/**` JSDoc L1278、3.8 起于 `/**` JSDoc L3418——互操作说明在本段内、非起点）。动因 = 该计数原为**人工转写**且写错
   //（CHANGELOG 曾披露「三处」）——与 COMPAT-004 FIND-1 的 tier 串转写漂移同类，故沿用同款处置：实测值
-  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.5 `L1348` `try {` / 4.6 `L17`
+  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.5 `L1353` `try {` / 4.6 `L17`
   // `"dsh": {` / 5.1 `L1` `name:` / 5.2 `L16` `- id:` / 5.4 `L77` `- id:` / 6.1 `L39`（修正后真值；修正前
   // `L38` 亦非注释）/ 6.2 `L8` `"engines": {` / 6.4 `L105`（ci.yml `#` 注释起段——JS 口径不计为注释，见下句口径边界）。严格面（面 2 = 11 项）已由 ③ 逐项约束，
   // 本项只覆盖未纳入严格面的面（动态生成：实测 3/4/5/6）；注释口径同 ③（JS 风格），YAML `#` 不在识别面内（与 F-5① 同源前提）。

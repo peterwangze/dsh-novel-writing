@@ -861,6 +861,25 @@
       "baseline_effects": null,
       "recorded_at": "2026-10-25T16:47:50",
       "updated_at": "2026-10-25T16:47:50"
+    },
+    "op-6ccd711d4e964e7fa7b4a7c6897b79c7": {
+      "schema_version": 1,
+      "command": "evidence-append",
+      "task_id": "UX-063",
+      "input_fingerprint": "c9527c089099f62064f076390eae5aec0d69d61432f33428bcdd8c3b71762fd3",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-6ccd711d4e964e7fa7b4a7c6897b79c7",
+        "code": "ok",
+        "new_revision": 418509,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-10-25T21:13:42",
+      "updated_at": "2026-10-25T21:13:42"
     }
   }
 }

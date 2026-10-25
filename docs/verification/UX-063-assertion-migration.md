@@ -6,12 +6,12 @@
 
 | # | 旧判据（坐标=事实） | 新判据 | 依据 | 触发条件 | 状态 |
 |---|---|---|---|---|---|
-| 1 | 正文段距 `1em`：`scripts/verify-visual-geometry.mjs:57`（注入 `.nv-content p{margin:1em 0}`）、`:149`（`paraMarginTop==='15px'`）、`:163`（输出 `para 1em`） | 注入改为 `margin:0 0 0.8em;text-indent:2em`；断言 `paraMarginBottom ≈ 12.8px`（0.8em@16）+ `textIndent` 存在 | 规格 v3 §1C | `.nv-content p` 样式改动 | ⏳ |
-| 2 | 段落样式源码断言：`test/smoke.mjs:1453`（`.nv-content p{margin:1em 0;font-size:inherit;line-height:inherit}` 精确串） | 精确串改为 `.nv-content p{text-indent:2em;margin:0 0 .8em;font-size:inherit;line-height:inherit}`（以实现实际写法为准，断言与源码逐字一致） | 规格 v3 §1C | 同上 | ⏳ |
-| 3 | 令牌字面量断言：`test/smoke.mjs:1290`（`--nv-fs-display:20px` / `--nv-fs-base:12px` / `--nv-fs-stat:18px` / `--nv-fs-chapter:16px` 等） | **保留全部存量字面量**（白名单冻结：15/13.5/11/17/28 不得变值）；**新增** `--nv-fs-reading:16px`、`--nv-fs-ui:13px` 两条字面量断言 | 规格 v3 §1D（D-3） | `:root` 令牌段改动 | ⏳ |
-| 4 | 正文绑定：`lib/client.js:5171`（`'.nv-content{font-size:' + TYPO.body`）；smoke 中 `.nv-content ↔ TYPO.body` 绑定断言 | L5171 改 `font-size:var(--nv-fs-reading)`；绑定断言改 `.nv-content ↔ --nv-fs-reading`；`TYPO.body`（`--nv-fs-body:15px`）**保留**，其余 6 个消费点不动 | 规格 v3 §1C/§1D | 正文/编辑区字号改动 | ⏳ |
-| 5 | 行高：`.nv-content` 现随 `TYPO.bodyLh`（`--nv-lh-reading` 语境 1.75，DR2 附录 A） | `.nv-content`/`.nv-edwrap` 行高 1.9（改令牌值或独立规则，**只影响正文/编辑区**）；geometry 若有行高断言同步 | 规格 v3 §1C | 正文行高改动 | ⏳ |
-| 6 | measure 几何断言：`verify-visual-geometry.mjs` `measure 510` | `measure 544`（16×34；断言区间 [512,576]） | 规格 v3 §1C / DR1 B-02 | 正文 16px 生效后 | ⏳ |
+| 1 | 正文段距 `1em`：`scripts/verify-visual-geometry.mjs:57`（注入 `.nv-content p{margin:1em 0}`）、`:149`（`paraMarginTop==='15px'`）、`:163`（输出 `para 1em`） | 注入改为 `margin:0 0 0.8em;text-indent:2em`；断言 `paraMarginBottom ≈ 12.8px`（0.8em@16）+ `textIndent` 存在 | 规格 v3 §1C | `.nv-content p` 样式改动 | **[已迁移]** 注入改 `margin:0 0 .8em;text-indent:2em`；geometry 实测 `paraMarginBottom=12.8px` + `textIndent=32px`（`rule()` 直接抽真实规则，非镜像）（commit 由 Coordinator 填写） |
+| 2 | 段落样式源码断言：`test/smoke.mjs:1453`（`.nv-content p{margin:1em 0;font-size:inherit;line-height:inherit}` 精确串） | 精确串改为 `.nv-content p{text-indent:2em;margin:0 0 .8em;font-size:inherit;line-height:inherit}`（以实现实际写法为准，断言与源码逐字一致） | 规格 v3 §1C | 同上 | **[已迁移]** 精确串改为 `.nv-content p{text-indent:2em;margin:0 0 .8em;font-size:inherit;line-height:inherit}`（smoke UX-055⑤ 同源断言）（commit 由 Coordinator 填写） |
+| 3 | 令牌字面量断言：`test/smoke.mjs:1290`（`--nv-fs-display:20px` / `--nv-fs-base:12px` / `--nv-fs-stat:18px` / `--nv-fs-chapter:16px` 等） | **保留全部存量字面量**（白名单冻结：15/13.5/11/17/28 不得变值）；**新增** `--nv-fs-reading:16px`、`--nv-fs-ui:13px` 两条字面量断言 | 规格 v3 §1D（D-3） | `:root` 令牌段改动 | **[已迁移]** 新增 `--nv-fs-reading:16px` / `--nv-fs-ui:13px` 字面量断言（smoke UX-063③）；存量 15/13.5/11/17/28/12 全部冻结并逐条断言（commit 由 Coordinator 填写） |
+| 4 | 正文绑定：`lib/client.js:5171`（`'.nv-content{font-size:' + TYPO.body`）；smoke 中 `.nv-content ↔ TYPO.body` 绑定断言 | L5171 改 `font-size:var(--nv-fs-reading)`；绑定断言改 `.nv-content ↔ --nv-fs-reading`；`TYPO.body`（`--nv-fs-body:15px`）**保留**，其余 6 个消费点不动 | 规格 v3 §1C/§1D | 正文/编辑区字号改动 | **[已迁移]** `.nv-content` 改 `font-size:var(--nv-fs-reading,16px)`；smoke UX-055① 增负断言 `!clientSrc.includes("TYPO.body")`（正文区不再消费旧令牌）（commit 由 Coordinator 填写） |
+| 5 | 行高：`.nv-content` 现随 `TYPO.bodyLh`（`--nv-lh-reading` 语境 1.75，DR2 附录 A） | `.nv-content`/`.nv-edwrap` 行高 1.9（改令牌值或独立规则，**只影响正文/编辑区**）；geometry 若有行高断言同步 | 规格 v3 §1C | 正文行高改动 | **[已迁移]** `.nv-content` / `.nv-edwrap` / textarea 内联三处统一 `line-height:1.9`（geometry 实测 computed `30.4px`）（commit 由 Coordinator 填写） |
+| 6 | measure 几何断言：`verify-visual-geometry.mjs` `measure 510` | `measure 544`（16×34；断言区间 [512,576]） | 规格 v3 §1C / DR1 B-02 | 正文 16px 生效后 | **[已迁移]** geometry 实测 `measure=544`（断言区间 [512,576]）；edwrap 同源 544（commit 由 Coordinator 填写） |
 
 ## B. 核对项（预期不变绿；若红=实现越界）
 
@@ -30,8 +30,8 @@
 | 12 | `.nv-home` 段内 font-size ⊆ {display,stat,reading,ui,base} 5 令牌 | 修改面字号契约（v3 §1D） | 第②步首页改造触发 | ⏳（第②步） |
 | 13 | 抽屉 420 / 唤出条 48 / `.nv-home` max-width 880 / CTA 高 36（静态注入量算） | v3 §2 机检 1 | 抽屉/唤出条已实现 | **[已迁移 · 第①步部分]** 抽屉 420 / 唤出条 48 / 正文列六档 1400·1086·1046→544、1000→544、956→512、800→356 已入 `scripts/verify-visual-geometry.mjs`：正文列按**真实左偏移 11**（`.nv-split` border 1 + 上部区 padding 10；rail 属底部工作台）注入，断言 = ①让位公式逐档 ②`drawer ∩ text = ∅`（实测矩形）③手柄渲染档（colW ≥ 1046）`handle ∩ text = ∅` ④非渲染档**手柄不存在** ⑤公式预留 24 与实测余量（425/111/71/25/13/13）**分别输出**（DR1 P1-1/P1-2、P3-3）；**`.nv-home` max-width 880 / CTA 36 属第②步（首页改造），本步未实现、未断言**（commit 由 Coordinator 填写） |
 | 14 | 抽屉容器 z-index 920 且 `900 < 920 < 950`（源码断言三值共存） | v3 §1A | 抽屉分层实现触发 | **[已迁移]** smoke UX-063 ② 断言 `zSplit 900 < zDrawer 920 < zConsole 950`（源码三值提取 + 静态序关系）+ geometry 注入实测 `zSplit=900 / zDrawer=920 / zConsole=950`（commit 由 Coordinator 填写） |
-| 15 | 全仓唯一精确串 `font-size:var(--nv-fs-body,15px)}`（`test/smoke.mjs:1327`，DR3 N-1 核实） | 精确串改 `font-size:var(--nv-fs-reading,16px)}`（textarea 内联随第③步换绑，DR3 N-1 选 (a)） | 规格 v3 §1C（N-1 裁决） | ⏳（第③步） |
-| 16 | edwrap/编辑态字号·行高绑定断言（`test/smoke.mjs:1458` 附近，随 (a) 一并核对） | `.nv-edwrap` + textarea 内联统一 reading 16 / 1.9；阅读↔编辑无跳变 | 规格 v3 §1C（N-1 裁决） | ⏳（第③步） |
+| 15 | 全仓唯一精确串 `font-size:var(--nv-fs-body,15px)}`（`test/smoke.mjs:1327`，DR3 N-1 核实） | 精确串改 `font-size:var(--nv-fs-reading,16px)}`（textarea 内联随第③步换绑，DR3 N-1 选 (a)） | 规格 v3 §1C（N-1 裁决） | **[已迁移]** textarea 内联改 `fontSize: 'var(--nv-fs-reading,16px)', lineHeight: 1.9`；smoke UX-055⑤ 精确串同步（commit 由 Coordinator 填写） |
+| 16 | edwrap/编辑态字号·行高绑定断言（`test/smoke.mjs:1458` 附近，随 (a) 一并核对） | `.nv-edwrap` + textarea 内联统一 reading 16 / 1.9；阅读↔编辑无跳变 | 规格 v3 §1C（N-1 裁决） | **[已迁移]** `.nv-edwrap` 改 `font-size:var(--nv-fs-reading,16px);line-height:1.9`；smoke UX-061 B-9 精确串同步（编辑态与阅读区同源，无跳变）（commit 由 Coordinator 填写） |
 
 ## D. 禁改清单（改=越界，Review 直接 FAIL）
 
@@ -178,3 +178,46 @@
 | 26 | **首页纯派生用例**（`#region home-model` 区段提取 + `new Function` 真跑）：章号 null/1/39/稀疏 10；待办 null 与计数/首失败章；最近 null 与倒序 5 条；章数展示口径 detail→overview；意图同书 true / 跨书 false / 空 false | smoke `ux063 home model cases failed` | CR1 P1-1 加重项 / DR1 P2-1 |
 | 27 | **意图通道结构**：`enterWriting` 同步投递 `homeIntentSink(full)` + `novelId` 绑定 + 失败清 `pendingHomeIntent`；`applyHomeIntent` 经 `homeIntentConsumable`；旧 `[snap.active, selectedId]` 消费 effect 零命中 | smoke `ux063 WYSIWYG mismatch` | CR1 P1-2 |
 | 28 | **加载/空/未就绪三态分离**（渲染树）：默认 mock（poll.data=null）⇒ `.nv-home-loading`=1、`.nv-home-empty`=0、CTA=0、重试入口 ≥1 | smoke `ux063 home default entry mismatch` | DR1 P1-1 / CR1 P2-1 |
+
+
+## J. 第③步（正文可读性）迁移与新增（2026-10-25）
+
+> 依据：规格 §1C + DR3 N-1 裁决 (a) + 首批审查备注（DR2(第①步) P2-1/P3-1/P3-2/P3-7、DR2(第②步) P2-4/P2-5、CR2(第①步) P2-1）。
+
+| # | 事项 | 落点 | 判据 / 证据 |
+|---|---|---|---|
+| J1 | 正文 16px + 行高 1.9（三处同源） | `.nv-content` / `.nv-edwrap` / textarea 内联 | geometry 实测 `contentFont=16px` / `lineHeight=30.4px` / `edwrap=544`（**返工后遗：元素宽 570、文本内容宽 544 —— 见 K2**） |
+| J2 | 中文排版（首行缩进 2em + 段距 .8em） | `.nv-content p{text-indent:2em;margin:0 0 .8em}` | geometry 实测 `textIndent=32px` / `marginBottom=12.8px`；`para1em` 判据已按 CR1 F-2 去重（见 K4） |据改 12.8px |
+| J3 | 规则改字面量 + 源码抽取（反镜像自证） | `lib/client.js` `.nv-content` 两条规则；`scripts/verify-visual-geometry.mjs` `rule()` | 变异 M1/M2 必红（34em→31em / .8em→1em） |
+| J4 | 失败态与加载中文案二分 + 分支级重试 | `homeDetailFailed` + `.nv-home-retry` + `homeDataFailed` / `homeRecentFailed`（zh/en 成对） | smoke `ux063 WYSIWYG mismatch` 增三条子断言；变异 M5 必红 |
+| J5 | `<740` 提示补 Esc 出口 | `drawerTinyHint`（zh/en） | smoke `ux063 yield/hint missing` 精确串更新 |
+| J6 | 拖线与开启态手柄 4px 重叠消除 | `lib/client.js` chatdiv `left: (x + contentW)`（原 −4） | smoke UX-030 断言同步为 `(x + contentW)` |
+| J7 | 正文左偏移不硬编码 | geometry：`U63_SPLIT_BORDER + U63_UPPER_PAD` 从源码抽取 | `u63TextLeftSrc`（=11）断言在位 |
+| J8 | `DRAWER_HINT_H` 与 CSS 实测绑定 | geometry：注入 `.nv-drawer-hint` 实测高度 vs 常量 | `u63HintH`（实测 23 ≡ 常量 23） |
+| J9 | syncAnchor「旧节点还原」调用级具名 | smoke `ux063 syncAnchor restore call missing` | 变异 M4（删该调用）必红 |
+| J10 | 数据分支结构断言（四区 + CTA 同源 + 失败态才有重试） | smoke `ux063 home data-branch structure missing` | **⚠ 仍为源码结构级**：数据态**渲染树**断言受 mock `usePoll` 无 seed 能力所限未落地（如实披露，不作「已覆盖」） |
+| J11 | 契约面 21 项重基 + 3.6 第二段改指 RO/MO 观测块 | `lib/host-contract.mjs` | `verify-contract-anchors` 79 段 FAIL=0；smoke F5d/F5d′/F1/F3 全绿 |
+
+**变异判别力（就地变异 + sha256 还原，restore_ok=True）**：M1 `34em→31em` → geometry 红（measure544/edwrap544）｜M2 段落 `.8em→1em` → geometry 红（para08em/para1em）｜M3 textarea 回 15/1.75 → smoke 红（331/3）｜M4 删 syncAnchor 旧节点还原 → smoke 红（332/2）｜M5 删失败态重试 → smoke 红（331/3）。
+
+**证据边界（不得越界声称）**：真机 CDP 仍不可得（宿主 0.2.1-rc.2 闭包缺 `dsh-app-boot`，归 COMPAT-018）⇒ 全部判定为静态/注入实测/渲染树；阅读区行宽 544 已由 geometry 注入实测，但**真实宿主渲染下的 34 汉字/行**仍待真机复验。
+
+## K. 第③步返工（DR1 P1-1/P2-1 + CR1 F-1~F-4，2026-10-25）
+
+> 依据：`REVIEW-UX-063-S3-DR1`（NEEDS_CHANGE/1：P1-1 标题层级反转、P2-1 阅读/编辑文本宽不一致）+ `REVIEW-UX-063-S3-CR1`（APPROVED_WITH_NOTES/0：F-1~F-4）。
+
+| # | 事项 | 落点 | 判据 / 证据 |
+|---|---|---|---|
+| K1 | **标题层级修复（DR1 P1-1 裁决 A）**：正文 16 ⇒ `h2` 用存量 `--nv-fs-display`(20)、`h3` 用存量 `--nv-fs-display-s`(17)，序关系 **h2 > h3 > 正文**；**不新增字号档、不改任何令牌值** | `.nv-content h2` / `.nv-content h3` | geometry 实测 `headingScale`（h2 20px / h3 17px / body 16px）；变异 M1（h3→body）/ M3（h2→body）**必红** |
+| K2 | **阅读↔编辑文本内容宽一致（DR1 P2-1）**：`.nv-edwrap` 去 padding，`max-width = calc(measure + 26px)`（26 = 2×(textarea 内边距 12 + 边框 1)）⇒ 文本内容宽 ≡ 544 | `.nv-edwrap` 规则 + textarea 内联（不变） | geometry `contentTextW`=544 / `taTextW`=544（±2）；**原判据假绿披露**：旧 `edwrap544` 量的是 textarea **元素外框宽**（含内边距），文本实宽仅 ~518，故此前「edwrap 544」不能证明不跳行 |
+| K3 | **CR1 F-1**：`edwrap` 判定下界 `500 → 512`（与 `measure544` 同口径；上界仍 576），防止「编辑区字号回退 15px ⇒ 34em=510 仍落区间」的假绿 | `scripts/verify-visual-geometry.mjs` `edwrapBox544` | 变异 M5（`--nv-edwrap` 字号 16→15）**必红**（`taTextW544`） |
+| K4 | **CR1 F-2**：删除与 `para08em` 完全重复的 `para1em` 判据（名称陈旧 + 同判据双份 ⇒ 红态难定位），保留单一有效判据 | 同上 | geometry 判据集只保留 `para08em`（覆盖未降：缩进由 `paraIndent2em` 独立覆盖） |
+| K5 | **CR1 F-3**：i18n 两键缩进 4→8 空格（zh/en 各 2 行），与相邻键对齐；**键值与语义零改动** | `lib/client.js` `homeDataFailed` / `homeRecentFailed` | 纯卫生项；smoke i18n 成对断言仍绿 |
+| K6 | **CR1 F-4**：契约 3.8 终点越界 ⇒ 收至真实代码闭合行 **`L3418-L3429`**（原 `L3432` 为 `function openConsole` 首行）。**偏离父指令说明**：父指令建议的 3431 是 JSDoc 注释行，会自身违反 F5d 的「边界非注释」判据，故取 3429 | `lib/host-contract.mjs` item 3.8 | `verify-contract-anchors` 79 段 FAIL=0 |
+| K7 | **P3-1（前轮备注）**：`TYPO.bodyLh` 行内标注 **legacy**（阅读/编辑区已硬编码 1.9，勿再作单一事实源）；令牌值未改 | `lib/client.js` TYPO 定义行 | 源码实读；`--nv-lh-reading:1.75` 冻结值零改动 |
+| K8 | **P3-2（前轮备注）**：补登记第②步「字数/章数/动作章号三口径标注」与「同一轮询快照不混排」 | 第②步代码注释 + 本表 K 段 | 前轮 J 段缺行已在 K8 补齐 |
+| K9 | 契约行号重基（本步 +3 行） | `lib/host-contract.mjs` 2.3 / 2.12 / 2.13 | 2.3 `L5951→L5954`、2.12 `L5981-L5988→L5984-L5991`、2.13 `L6018-L6050→L6021-L6053`；smoke 注释副本同步；anchors 79/0 |
+
+**返工轮变异判别力（就地变异 + sha256 还原，restore_ok=True）**：M1 h3→`--nv-fs-body` → geometry 红（**headingScale**）｜M2 去 `+26px` → 红（**taTextW544**）｜M3 h2→15px → 红（**headingScale**）｜M4 删 `text-indent:2em` → 红（**paraIndent2em**）｜M5 `.nv-edwrap` 字号回 15px → 红（**taTextW544**）。五条均为**具名断言失败**（非抽取期抛错）。
+
+**证据边界（续）**：`contentTextW` / `taTextW` 与 `headingScale` 均为**注入页实测 computed/几何**，非源码字符串直查；真机 CDP 仍不可得 ⇒ 真实宿主下「阅读↔编辑不跳行」与「34 汉字/行」仍待真机复验。
