@@ -101,6 +101,9 @@ const rules = [
   rule('.nv-edwrap textarea', 'width:100%'),
   rule('.nv-chrow', 'height:28px'),
   rule('.nv-cinput', 'min-height:var(--nv-ctl-md)'),
+  // UX-063 P0-a②：任务流首页容器上限 880 / 主 CTA 高 36（源码抽取 → 静态注入实测）
+  rule('.nv-home', 'max-width:880px'),
+  rule('.nv-home-cta', 'height:36px'),
   ...U63_RULES,
 ]
 
@@ -131,6 +134,8 @@ ${rules.join('\n')}
 <div class="nv-content" id="content"><p id="para">中文正文测试段落，用于测量阅读宽度与段距。</p></div>
 <button class="nv-chrow" id="chrow">第1章 测试</button>
 <input class="nv-cinput" id="cinput" value="x">
+<!-- UX-063 P0-a②：首页 880 上限 + 主 CTA 36（1200 容器内测实际收敛宽度） -->
+<div style="width:1200px"><div class="nv-home" id="home"><button class="nv-home-cta" id="homeCta"><span class="nv-home-cta-text">继续写第 1 章</span></button></div></div>
 <!-- UX-063 P0-a 探针：唤出条（48）/ 抽屉 z（920）/ 三值共存锚点 / 真值表四档正文列 -->
 <div class="nv-drawer-edge" id="u63edge" style="left:0;top:0;width:${U63.edgeW}px;height:600px"></div>
 <div id="u63zdrawer" style="z-index:${U63.zDrawer}"></div>
@@ -148,6 +153,8 @@ window.addEventListener('load', function () {
     edwrap: r(document.getElementById('ta')),
     chrow: r(document.getElementById('chrow')),
     cinput: r(document.getElementById('cinput')),
+    home: r(document.getElementById('home')),
+    homeCta: r(document.getElementById('homeCta')),
     chrowFont: cs(document.getElementById('chrow')).fontSize,
     paraMarginTop: cs(para).marginTop,
     paraMarginBottom: cs(para).marginBottom,
@@ -223,6 +230,9 @@ try {
     chrow28: data.chrow.h === 28,
     chrowFont12: data.chrowFont === '12px',
     cinput32: data.cinput.h === 32,
+    // UX-063 P0-a②：首页容器 880 上限 / 主 CTA 36（静态注入量算，非公式复算）
+    u63Home880: data.home.w === 880,
+    u63Cta36: data.homeCta.h === 36,
     para1em: data.paraMarginTop === '15px' && data.paraMarginBottom === '15px',
     railStatusVisible: data.railStatus.length > 0,
     statusFont12: data.statusFont === '12px',

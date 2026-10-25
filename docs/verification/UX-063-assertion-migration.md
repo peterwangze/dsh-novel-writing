@@ -80,3 +80,101 @@
 | **返工轮 GREEN** | `node scripts/verify-visual-geometry.mjs` | `text-col 1400→544,1086→544,1046→544,1000→544,956→512,800→356 / formula reserve 24 vs measured margin 425,111,71,25,13,13 / handle ≥ 1046: 1400@377,1086@63,1046@23`（exit 0） |
 | **返工轮 GREEN** | `node --check lib/client.js` / `lib/host-contract.mjs` / `test/smoke.mjs` / `scripts/verify-visual-geometry.mjs` | 0 errors（exit 0） |
 | **返工轮 变异判别力（每条「变异 ⇒ 必红」实测）** | 就地变异 + 哈希还原（restore match=true） | `S1` close() 去 restoreViewArea ⇒ 红（`ux063 restore path missing`）（5 fail）· `S2` setBook 判据反转 ⇒ 红（同断言，2 fail）· `S3` applyDrawer 去 background 写 ⇒ 红（`ux063 property sets missing`，5 fail）· `S4` 手柄阈值 1046→1200 ⇒ 红（`ux063 fullscreen/drawer shell missing`，2 fail）· `S5` 去 Esc 先关抽屉 ⇒ 红（`ux063 esc priority missing`，4 fail）· `S6` resetSplit 去强制右缘 ⇒ 红（`ux063 resetSplit/setChatSide drift`，5 fail）· `S7` bodyH 去 hintH ⇒ 红（`ux063 contentTop single source missing`，3 fail）· `G1` 去手柄渲染门 ⇒ 红（`ux063 handle gating/geometry missing`，2 fail）· `G2` DRAWER_W 420→480 ⇒ geometry 红（`u63Drawer420, u63TextCol`）· `G3` DRAWER_TEXT_MAX 544→500 ⇒ geometry 红（`u63TextCol`） |
+
+## G. 第②步（任务流首页）迁移与新增
+
+| # | 判据（新） | 落点 | 状态 |
+|---|---|---|---|
+| 12 | `.nv-home` 段内 `font-size` **只允许 5 档令牌**（display 20 / stat 18 / reading 16 / ui 13 / base 12），无字面量 | smoke `ux063 home font-scale violation` | **[已迁移]**（步骤③ 接管正文/编辑区消费方） |
+| 13 | `.nv-home` max-width **880** / 主 CTA 高 **36**（静态注入量算，非公式复算） | geometry `u63Home880` / `u63Cta36`（实测 home.w=880、cta.h=36） | **[已迁移·第②步部分]**（CTA 唯一主按钮见 #19） |
+| 17 | 默认入口 = 首页（`.nv-home` 渲染；`.nv-cgrid` / `.nv-cfoot` 不在首页）；二级页可直入 `initialView:'books'` | smoke `ux063 home default entry mismatch` | 新增 |
+| 18 | 首页四区结构（当前书卡 / 今天写什么 / 待办 / 最近章节） | smoke `ux063 home sections missing` | 新增 |
+| 19 | 主 CTA 唯一（`className: 'nv-home-cta'` 计数 = 1）+ 次按钮 `.nv-home-sub` 存在 | smoke `ux063 home sections missing` | 新增 |
+| 20 | 待办点击目标：请求 → `{tab:'requests'}`；发布 → `{tab:'publish'}`；门禁 → 首个失败章 `homeGateFails[0].num`，无失败章 `disabled` | smoke `ux063 home sections missing` | 新增 |
+| 21 | 最近章节 = `chapters` 按 num 倒序取 **5** 条 | smoke `ux063 home sections missing` | 新增 |
+| 22 | 紧凑换书：顶栏书名下拉（`nv-homebook-btn` + `nv-bookmenu` + `role=option`）+ 全部书籍/返回首页往返 | smoke `ux063 compact book switcher missing` | 新增 |
+| 23 | ~~首页 → 创作台意图单次消费（tab/chapter/newChapter）+ 新建章「保存即创建」~~ → **已由返工轮 #23~#25 取代**（用户 2026-10-25 裁决：新建章 = 触发工作流，不建空章节文件） | 旧断言 `ux063 home intent/new-chapter missing` 已删除；新判据见下 | 返工轮 H1~H4 |
+
+### 连带迁移（第②步）
+
+| # | 既有断言（原口径） | 现口径 | 原因 |
+|---|---|---|---|
+| F9 | 控制台树断言（`con.render({})` 期望底部搜索行 + 空主体） | 原断言改走 **`con.render({ initialView: 'books' })`**（二级页语义不变）；**新增**首页默认入口渲染断言（`con.render({})` → `.nv-home` 1 / `.nv-cgrid` 0 / `.nv-cfoot` 0） | 默认入口改为首页；为保证原断言强度不降级，控制台注册**透传 `props.initialView`**（宿主不传 ⇒ 默认首页），避免把树级断言退化为源码字符串 |
+| F10 | `lib/host-contract.mjs` 面 2/3 `line` 字段 | 按**内容锚定**重基 24 项 / 59 段（`git show HEAD` 旧行文本在现文件唯一命中）；2.3 边界取声明行本体 `L5811-L5813`、2.13 取首个 inject→末个 register 收尾 `L5878-L5910`、3.4 四段 `L1018-L1030 / L5322 / L5409-L5410 / L5445`；另订正 6 处 smoke 注释内陈旧行号副本 | 本步在 `lib/client.js` 插入 +284 行（5664→5948）⇒ 全部 client 锚点整体漂移；`verify-contract-anchors.mjs` 79 段 FAIL=0 复验 |
+| F11 | 字号令牌集 | 新增 `--nv-fs-reading:16px` / `--nv-fs-ui:13px`（`:root` 单点），本步仅 `.nv-home` 消费；**正文/编辑区消费方仍属第③步**（`--nv-fs-body` 15 保持） | §1D「修改面允许字号集 = 5 档」；提前落地令牌避免 `.nv-home` 用字面量违规 |
+| F12 | 规格 §1B 显式移出本批 | **未实现（如实登记）**：断更/存稿预警、首页数据信号入口（P1）；本步不声称覆盖 | 防静默丢失 |
+
+### G.1 判别力证据（真跑留档）
+
+> **如实披露**：本步断言与实现同批落地，**未留「实现前基线 RED」快照**；判别力以变异实测为准（每条「变异 ⇒ 必红」+ 哈希还原校验 restore=true）。
+
+| 变异 | 命令 | 结果 |
+|---|---|---|
+| M1 `.nv-home-cta{height:36px` → `30px` | `node scripts/verify-visual-geometry.mjs` | **红**（exit 1，`u63Cta36` 失败） |
+| M2 `.nv-home{...max-width:880px` → `720px` | 同上 | **红**（exit 1，`u63Home880` 失败） |
+| M3 删 `disabled: homeGateFails.length === 0` | `node test/smoke.mjs` | **红**（exit 1，`ux063 home sections missing`） |
+| M4 删 `if (typeof it.tab === 'string') setTab(it.tab)` | 同上 | **红**（exit 1，`ux063 home intent/new-chapter missing`） |
+
+### H. 返工轮（用户 2026-10-25 裁决：新建章 = 触发工作流；CTA 所见即所得）
+
+| # | 变更 | 判据 / 证据 |
+|---|---|---|
+| H1 | **「新建章」= 触发 AI 工作流生章**，不再在客户端建空章节文件；编辑面（`newOpen/newDraft/newNotice/saveNewChapter/closeNewChapter` + `.nv-newch*` 样式 + 4 个 i18n 键）整体移除 | smoke #24 负断言；既有编辑保存通道 `POST /api/chapter`（写作视图内 `active.num`）保留并断言 |
+| H2 | **CTA 所见即所得**：按钮文案 `继续写第 N 章` 与实际发送指令同源（`launchMsgOf` 同一 `launchOpts.chapter`），点击即经 `launchWorkflow({mode:'continue',chapter}) → promptLaunch → sessions.prompt` 真触发；N = `max(现存章号)+1` | smoke #23 + #25；`launchWorkflow` 新增 `allowStop` 参数——首页发起不抢停运行中的轮次（rail 主按钮 `launchWorkflow(null,true)` 仍承担停止） |
+| H3 | **失败可见 / 状态可见**：未绑定 → `bindFirstHint` + 弹绑定面板；失效 → `bindStaleHint` + 重绑；降级 → `sessionsMissing`；失败 → `promptFailPrefix`；运行中 → `wfRunning`；成功 → `launchSentPrefix + msg`（消息内含第 N 章） | 复用既有三态文案与 rail 状态（零新增发送逻辑，P-08） |
+| H4 | **口径统一**：`homeChapterTotal` = detail 章数（未就绪回退 overview.totalChapters），卡片/待办/最近章节同源 | smoke #25 |
+| H5 | **契约行号重基（返工轮）**：**行号权威源 = 契约 `items[].line` 本身 + `verify-contract-anchors.mjs` 机检**——迁移表不再复制整张行号表（重复维护必然漂移：本行原记 2.3 `L5783` / 3.7 `L1057·L1059·L1167·L1109` / 3.8 `L3335-L3349` 等，均已过时）。**微收口轮抽核生效值（2026-10-25，实现 6067 行）**：2.3 `L5929`、3.7 `L1130 / L1132 / L1240 / L1182`、3.8 `L3411-L3425`、3.3 五段 `L1511-L1525 / L1576-L1585 / L1529-L1546 / L1552-L1568 / L5123-L5135` | `verify-contract-anchors.mjs` **79 段 FAIL=0**（WARN 24 为启发式提示，需人读）；smoke 范围抽核 bad=[] |
+| H6 | **golden 显式更新**：`GOLDEN_RANGE_ITEMS` 23→**22**、`GOLDEN_RANGE_STRICT_ITEMS` 12→**11**（2.3 由三行范围收敛为单行，微收口后为 `L5929`）；`GOLDEN_RANGE_COMMENT_START` 保持 2（3.1 / 3.8 起点经重基后仍为 JSDoc 注释起段） | 契约注释「扩面/删项须显式改 golden」；断言消息实读值为准 |
+| H7 | **README 计数**：329 → **331**（+3 新断言 −1 旧断言）；A-F9 自校 `declared ≡ passed+1` 绿 | `node test/smoke.mjs` → **331 passed / 0 failed** |
+
+### H.1 返工轮判别力（真跑留档，就地变异 + 哈希还原）
+
+| 变异 | 结果 |
+|---|---|
+| M1 指令丢章号（`：继续写第 ${num} 章` → `：继续写作`） | **红**（`ux063 home workflow trigger missing`） |
+| M2 新建章退回不触发工作流（`{workflow:'new'}` → `{chapter}`） | **红**（同断言） |
+| M3 重建空章节文件通道（注入 `saveNewChapter`） | **红**（`ux063 new-chapter editor still present`） |
+| M4 CTA 章号 off-by-one（`homeNextNum = homeMaxNum`） | **红**（`ux063 WYSIWYG mismatch`） |
+
+> 还原校验：四次变异后 `lib/client.js` sha256 与变异前一致（restore match = true）。**真机 CDP 仍不可得**（宿主 0.2.1-rc.2 缺 `dsh-app-boot`）⇒ 行为面为源码/渲染树断言，**未经真机验证**。
+
+### H.2 新断言表（返工轮落地，取代旧 #23）
+
+| # | 断言 | 机检名 | 来源 |
+|---|---|---|---|
+| 23' | 首页 CTA / 新建章 = **真触发工作流**：CTA `enterWriting({ workflow:'continue', chapter: homeNextNum })`、新建章 `{ workflow:'new', chapter: homeNextNum }`；`launchMsgOf` 产出「继续写第 N 章」/「请新建并撰写第 N 章」；`promptLaunch` 透传 `launchOpts` | smoke `ux063 home workflow trigger missing` | 返工轮（用户裁决） |
+| 24 | **新建章编辑面已移除**（负断言：`saveNewChapter`/`closeNewChapter`/`newChapterNum`/`newDraft`/`nv-newch`/`homeNewChapter*` 零命中；既有章节编辑保存通道 `POST /api/chapter`（`active.num`）保留并断言） | smoke `ux063 new-chapter editor still present` | 返工轮（不建空章节文件） |
+| 25 | **WYSIWYG 一致性**：`homeNextNum = max(章号)+1` / 章数单一口径 `homeChapterTotal`（detail 优先、未就绪回退 overview）/ 待办取自 detail / 最近 5 章 / 换书集合 = `orderedNovels` | smoke `ux063 WYSIWYG mismatch` | 返工轮（展示值 = 真值） |
+
+
+### I. 复审返工（`REVIEW-UX-063-S2-DR1` P1-1 + `REVIEW-UX-063-S2-CR1` P1-1/P1-2）
+
+| # | 变更 | 判据 / 证据 |
+|---|---|---|
+| I1 | **detail 未就绪 ≠ 无章节**（DR1 P1-1 / CR1 P1-1）：判定式 = `homeNextNum === null`（`deriveHomeNextNum(detail)` 未就绪返回 `null`，等价于「该书 detail 未到手」；原 `homeDataReady` 变量已在微收口轮删除，语义由本判定式承载）；CTA 与「新建章」`disabled: homeNextNum === null` + 文案「数据加载中…」+ `title=homeDataStale`；待办未知显示 `—`（不是 0）；最近章节未就绪显示加载态（不是「尚无章节」）；**三态分离** `homeLoading`（首轮未回）/ `homeEmpty`（已回 0 本）/ 有书四区——加载中不得渲染「无书目」假空态 | smoke `ux063 home default entry mismatch`（加载态 .nv-home-loading=1 / .nv-home-empty=0 / CTA=0）+ `ux063 WYSIWYG mismatch` |
+| I2 | **章号派生提为纯函数**：`deriveHomeNextNum(detail)` = detail 未就绪 → `null`（未知，禁止猜测）；空章节 → 1；有章 → `max(章号)+1`（稀疏章号按 max，不是 count）。**否决** CR1 建议的 `overview.totalChapters+1` 回退——计数 ≠ 最大章号，稀疏章节会推出不存在的章号 | smoke `ux063 home model cases failed`（null/undefined/空/38 章/稀疏 1·5·9/非数字 num） |
+| I3 | **意图通道可靠化**（CR1 P1-2）：模块级 `homeIntentSink`（SplitWorkspace 挂载期注册的同步消费）+ `pendingHomeIntent`（未挂载兜底）；`enterWriting` **同步投递**（同书二次点击也生效）+ 意图带 `novelId`；`applyHomeIntent` 经 `homeIntentConsumable` 校验，**跨书一律丢弃**；打开失败/不匹配路径清 `pendingHomeIntent`；旧消费 effect（依赖 `[snap.active, selectedId]`、同书不重跑）**退役** | smoke `ux063 WYSIWYG mismatch`（含 `!clientSrc.includes('}, [snap.active, selectedId])')` 与投递/校验/清理三处结构断言）+ `ux063 home model cases failed`（跨书 false / 同书 true / 空 intent false） |
+| I4 | **未知态文案**：`homeDataLoading` / `homeDataStale` / `homeRetry` / `homeRecentLoading` / `wfBusyHint`（zh/en 成对）；`homeStageChip` 接入阶段 chip（原零引用键）；`launchWorkflow` 忙碌时给 `wfBusyHint` 提示（原静默 return） | smoke i18n 成对断言 + `ux063 WYSIWYG mismatch` |
+| I5 | **契约行号重基（本轮）**：行号权威源 = 契约 `items[].line`；本轮实现累计 **5921 → 6067 行**（含微收口轮删死变量 `homeDataReady` −1）。**微收口轮变更项（生效值）**：2.3 `L5929`、2.12 `L5959-L5966`、2.13 `L5996-L6028`、3.3 五段 `L1511-L1525 / L1576-L1585 / L1529-L1546 / L1552-L1568 / L5123-L5135`、3.4（四段，机械 −1）、3.6 `L1404-L1428 / L3859-L3865`（**段 2 起点为空行属既有问题**，待下轮改指 SplitWorkspace RO/MO 观测块 `L3796-L3824`）。其余条目以契约为准（迁移表不再复制整表）。 | `node scripts/verify-contract-anchors.mjs` → **79 段 FAIL=0**（WARN 24 启发式需人读）；smoke F5d/F5d′ 范围抽核 bad=[]；smoke 注释 `<item> L<n>` 副本同步 |
+| I6 | **断言记账**：旧 #25 的「实现字面量绑定」判据（`const homeNextNum = homeMaxNum + 1` 等）**删除并重写为**纯函数用例 + 行为/结构判据；并新增 #29 单行型 line 守卫（见 I8）。净计数 = **331**（README 331 ≡ 实测 331） | README 计数 + A-F9 自校 `declared ≡ passed+1`（331 ≡ 331） |
+| I8 | **单行型 line 机检**（CR1 P2-2）：新增 smoke `F5d′`——6 条单行形态条目（1.1/1.2/2.2/2.3/2.4/5.6）的声明行 MUST 命中该条 symbol 候选，golden 6；原 F5c 只抽每面 1 项、F5d 只覆盖范围型 ⇒ 单行写错零信号（本轮 3.7 四键曾整体 −2 全错） | smoke `COMPAT-012 N2 F5d′`（变异：2.3 `L5930`→`L5931` ⇒ **必红**） |
+| I7 | **陈旧注释订正**：`enterWriting` 头部原描述「`{ newChapter: n }` 打开编辑面」改为当前语义（`{ workflow: 'continue'|'new', chapter }`） | 源码实读 |
+
+### I.1 返工判别力（真跑留档：就地变异 + sha256 还原校验 restore=true）
+
+| 变异 | 结果 |
+|---|---|
+| M1 detail 未就绪仍放行（`disabled: homeNextNum === null` → `disabled: false`） | **红**（`ux063 WYSIWYG mismatch`） |
+| M2 意图跨书不校验（`homeIntentConsumable(...)` 守卫 → `if (false)`） | **红**（`ux063 home model cases failed`） |
+| M3 CTA 章号 off-by-one（`return max + 1` → `return max`） | **红**（`ux063 WYSIWYG mismatch`） |
+| M4 未知态显示 0（`todoUnknown ? '—'` → `'0'`） | **红**（`ux063 WYSIWYG mismatch`） |
+
+> 本轮为**返工轮**，未保留「实现前 RED」快照（如实披露）；判别力以变异实测为准。**真机 CDP 仍不可得**（宿主 0.2.1-rc.2 缺 `dsh-app-boot`，归 COMPAT-018）⇒ 行为面为源码/渲染树/纯函数断言，**未经真机验证**。
+
+### I.2 新断言表（返工轮）
+
+| # | 断言 | 机检名 | 来源 |
+|---|---|---|---|
+| 26 | **首页纯派生用例**（`#region home-model` 区段提取 + `new Function` 真跑）：章号 null/1/39/稀疏 10；待办 null 与计数/首失败章；最近 null 与倒序 5 条；章数展示口径 detail→overview；意图同书 true / 跨书 false / 空 false | smoke `ux063 home model cases failed` | CR1 P1-1 加重项 / DR1 P2-1 |
+| 27 | **意图通道结构**：`enterWriting` 同步投递 `homeIntentSink(full)` + `novelId` 绑定 + 失败清 `pendingHomeIntent`；`applyHomeIntent` 经 `homeIntentConsumable`；旧 `[snap.active, selectedId]` 消费 effect 零命中 | smoke `ux063 WYSIWYG mismatch` | CR1 P1-2 |
+| 28 | **加载/空/未就绪三态分离**（渲染树）：默认 mock（poll.data=null）⇒ `.nv-home-loading`=1、`.nv-home-empty`=0、CTA=0、重试入口 ≥1 | smoke `ux063 home default entry mismatch` | DR1 P1-1 / CR1 P2-1 |

@@ -168,7 +168,7 @@ curl -fsSL https://raw.githubusercontent.com/peterwangze/dsh-novel-writing/main/
 ```sh
 node --check lib/index.js && node --check lib/tools.js && node --check lib/client.js
 node test/validate-preset.mjs   # 预设挂载级校验（loader 同源解析 + 逐行模块解析 + **第 4 段：预设行 × 已装宿主 Config schema**〔preset-schema-face，三态；`--require-schema-plane` 把 NOT_RUN 变失败〕）
-node test/smoke.mjs             # 宿主逻辑 + 挂载契约 324 项断言（状态/门禁/审计/发布/信号/注册面/BUG-004 适配层与联动守卫/BUG-009 会话镜像 hook 响应性/CLEAN-007 D-1·F2·F3·F4·F6·F9；CLEAN-006 N-3 扩面：WorkspaceDialog 自挂 Esc effect 的早退顺序入 F6 同一判据；CLEAN-006 F1：useSyncExternalStore 读面 + 4 条 React 契约断言（含通道直取/回调转发/有界重渲染）；BUG-011 P0-2：settingsFormsUpdate await/catch 回归（拒绝不逃逸为 unhandledRejection）；UX-061 1b-2：尺度令牌治理（font-size 字面量 ⊆ 图标白名单 ∧ --nv-ctl-* 真实消费 ≥3/≥1）；UX-063 P0-a①：全屏工作台 + 对话抽屉（420/48/z 三值共存/让位公式/五路径还原/契约 3.3 双向对账）；计数由 smoke 末条断言机检 ≡ 本行 ⇒ 改断言数须同 commit 改本行）
+node test/smoke.mjs             # 宿主逻辑 + 挂载契约 331 项断言（状态/门禁/审计/发布/信号/注册面/BUG-004 适配层与联动守卫/BUG-009 会话镜像 hook 响应性/CLEAN-007 D-1·F2·F3·F4·F6·F9；CLEAN-006 N-3 扩面：WorkspaceDialog 自挂 Esc effect 的早退顺序入 F6 同一判据；CLEAN-006 F1：useSyncExternalStore 读面 + 4 条 React 契约断言（含通道直取/回调转发/有界重渲染）；BUG-011 P0-2：settingsFormsUpdate await/catch 回归（拒绝不逃逸为 unhandledRejection）；UX-061 1b-2：尺度令牌治理（font-size 字面量 ⊆ 图标白名单 ∧ --nv-ctl-* 真实消费 ≥3/≥1）；UX-063 P0-a①：全屏工作台 + 对话抽屉（420/48/z 三值共存/让位公式/五路径还原/契约 3.3 双向对账）；计数由 smoke 末条断言机检 ≡ 本行 ⇒ 改断言数须同 commit 改本行）
 
 # 方向 B 视觉几何基线（headless Edge；本地无 Edge 可跳过，CI 必须真跑）
 node scripts/verify-visual-geometry.mjs --strict

@@ -564,7 +564,8 @@ check('控制台树：底部搜索行 + 加载中主体留白（无 hero/无空�
   if (headBtn === null || typeof headBtn.props.onClick !== 'function') return false
   headBtn.props.onClick() // toggleConsole → store.set({consoleOpen:true})
   // 2) 渲染控制台取树（open 态全量输出；mock usePoll 初始 data=null = 加载中态）
-  const root = con.render({})
+  // UX-063 P0-a②：默认入口已改为首页 → 本断言显式走「全部书籍」二级页（initialView）
+  const root = con.render({ initialView: 'books' })
   if (root === null || typeof root !== 'object') return false
   const clsCount = {}
   const texts = []
@@ -754,7 +755,7 @@ check('客户端源码面：CLEAN-007 F3+F4+F9（closeCreate 关窗即复位 dir
     && (clientSrc.match(/\(s\) => \(boundId !== null && s\.byId !== null/g) ?? []).length === 1 // F4 叶选择形态
     && !clientSrc.includes('? s.byId : {}')                                             // F4 负断言：不再返回整张 byId
     && !clientSrc.includes('forceNew')                                                  // F9 负断言：死参零残留
-    && clientSrc.includes('function launchMsgOf(novels, id, title)')
+    && clientSrc.includes('function launchMsgOf(novels, id, title, launchOpts)')
 })(), 'clean007 f3/f4/f9 missing')
 check('客户端源码面：CLEAN-007 F2 创建链单点收口（launcher.createSessionFor 单一实现 + 两消费点共用；两处内联副本已删）', (() => {
   const defs = (clientSrc.match(/async createSessionFor\(novel, opts\)/g) ?? []).length
@@ -776,7 +777,7 @@ check('客户端源码面：UX-059 工作流控制条（标题栏 ▶ 启动钮�
     && clientSrc.includes("t('startWorkflow')") && clientSrc.includes("t('continueWorkflow')")
     && clientSrc.includes("t('stopWorkflow')")
     && clientSrc.includes('bindFirstHint') && clientSrc.includes('setWfBusy')
-    && clientSrc.includes('launcher.promptLaunch(sid, current, novels)')
+    && clientSrc.includes('launcher.promptLaunch(sid, current, novels, opt)')
     && clientSrc.includes('.nv-bar-note')                       // 三态提示条（ok/err/info）保留
     && !clientSrc.includes("className: 'nv-bar-launch'")        // 标题栏启动钮已删除（迁移负断言）
 })(), 'ux059 wf ctl missing')
@@ -849,7 +850,7 @@ check('客户端源码面：UX-013 卡片两钮（➤ 启动钮退役：onLaunch
     && clientSrc.includes("className: 'nv-cico'")
     && clientSrc.includes("title: st === 'stale' ? t('bindStaleHint') : t('bindBtn')")
     && clientSrc.includes("className: 'nv-cico nv-cico-del'")
-    && clientSrc.includes("launcher.promptLaunch(sid, current, novels)") // promptLaunch 保留（创作台工作流控制条 ▶）
+    && clientSrc.includes("launcher.promptLaunch(sid, current, novels, opt)") // promptLaunch 保留（创作台工作流控制条 ▶）
     && clientSrc.includes("t('autoBindDone'")
 })(), 'ux013 card buttons missing')
 check('客户端源码面：UX-013 首次开卡自动链（workspaceId/cwd → create → 预设 → bind → open；无 prompt）', (() => {
@@ -1290,6 +1291,158 @@ check('客户端源码面：UX-063 P0-a① 抽屉态 Esc 优先只关抽屉（�
   return blk !== '' && a >= 0 && b > a
     && blk.includes('if (novelSplit.drawerOpen === true) { novelSplit.closeDrawer(); return }')
 })(), 'ux063 esc priority missing')
+
+// ── UX-063 P0-a 第②步：任务流首页（规格 §1B；迁移表 #12/#13/#17+）──
+check('控制台树：UX-063 P0-a② 默认入口 = 任务流首页（加载态不与空态混淆；网格/搜索行不在首页）', (() => {
+  const dr = slotRegs.find((r) => r.id === 'novel-drawer')
+  const con = slotRegs.find((r) => r.id === 'nv-console')
+  if (dr === undefined || con === undefined) return false
+  let headBtn = null
+  const findHead = (n) => {
+    if (n === null || n === undefined || typeof n !== 'object') return
+    if (Array.isArray(n)) { for (const c of n) findHead(c); return }
+    if (n.props !== undefined && n.props.className === 'nv-drawer-head') { headBtn = n; return }
+    if (Array.isArray(n.children)) for (const c of n.children) findHead(c)
+  }
+  findHead(dr.render({ wide: true }))
+  if (headBtn === null || typeof headBtn.props.onClick !== 'function') return false
+  // 控制台开关是 toggle：先读当前渲染，未开则点一次（幂等，不依赖前序断言残留态）
+  let root = con.render({})
+  if (root === null || typeof root !== 'object') { headBtn.props.onClick(); root = con.render({}) }
+  if (root === null || typeof root !== 'object') return false
+  const clsCount = {}
+  const walk = (n) => {
+    if (n === null || n === undefined) return
+    if (typeof n !== 'object') return
+    if (Array.isArray(n)) { for (const c of n) walk(c); return }
+    const cn = n.props !== undefined && typeof n.props.className === 'string' ? n.props.className : ''
+    if (cn !== '') for (const part of cn.split(/\s+/)) if (part !== '') clsCount[part] = (clsCount[part] ?? 0) + 1
+    if (Array.isArray(n.children)) for (const c of n.children) walk(c)
+  }
+  walk(root)
+  // 返工（REVIEW-UX-063-S2-DR1 P1-1 / CR1 P2-1）：mock 初始 poll.data=null = **加载中**，
+  // 必须渲染加载态（.nv-home-loading + 重试），**不得**渲染「无书目」假空态，也不得渲染可点的 CTA。
+  return (clsCount['nv-home'] ?? 0) === 1
+    && (clsCount['nv-home-loading'] ?? 0) === 1
+    && (clsCount['nv-home-empty'] ?? 0) === 0
+    && (clsCount['nv-home-cta'] ?? 0) === 0
+    && (clsCount['nv-home-sub'] ?? 0) >= 1          // 加载态提供「重试」入口
+    && (clsCount['nv-cgrid'] ?? 0) === 0             // 网格退到二级页
+    && (clsCount['nv-cfoot'] ?? 0) === 0             // 搜索行仅二级页
+    && clientSrc.includes("props.initialView === 'books' ? 'books' : 'home'")
+    && clientSrc.includes('const homeLoading = poll.data === null')
+    && clientSrc.includes('const homeEmpty = poll.data !== null && novels.length === 0')
+})(), 'ux063 home default entry mismatch')
+check('客户端源码面：UX-063 P0-a② 首页四区（当前书 / 今天写什么 / 待办 / 最近章节）+ 唯一主 CTA', (() => {
+  const i = clientSrc.indexOf('const homeBody = () => {')
+  const blk = i < 0 ? '' : clientSrc.slice(i, i + 9000)
+  return blk !== ''
+    && blk.includes('nv-home-sec nv-home-book') && blk.includes('nv-home-sec nv-home-today')
+    && blk.includes('nv-home-sec nv-home-todo') && blk.includes('nv-home-sec nv-home-recent')
+    && blk.includes('nv-home-book-title') && blk.includes('nv-home-chip') && blk.includes('nv-home-stat')
+    && blk.includes('nv-home-cta') && blk.includes('nv-home-sub') && blk.includes('homeContinueCta')
+    && blk.includes("'data-kind': 'requests'") && blk.includes("'data-kind': 'publish'") && blk.includes("'data-kind': 'gate'")
+    && blk.includes('const gateDisabled = todoUnknown === true || homeTodo.gateFails === 0')  // 未就绪/无失败章 ⇒ 置灰
+    && blk.includes('homeTodo.gateFirstNum')                                                  // 门禁项 → 首个失败章
+    && blk.includes("enterWriting({ tab: 'requests' })") && blk.includes("enterWriting({ tab: 'publish' })")
+    && blk.includes('homeRecent.map')
+    && (blk.match(/className: 'nv-home-cta'/g) ?? []).length === 1  // 唯一主按钮
+})(), 'ux063 home sections missing')
+check('UX-063 P0-a② 首页纯派生用例（#region home-model 区段提取后真跑：章号 / 待办 / 最近 / 章数 / 意图可消费）', (() => {
+  const a = clientSrc.indexOf('// #region home-model')
+  const b = clientSrc.indexOf('// #endregion home-model')
+  if (a < 0 || b <= a) return false
+  let HM = null
+  try {
+    HM = new Function(clientSrc.slice(a, b) + '\nreturn { deriveHomeNextNum, deriveHomeTodo, deriveHomeRecent, deriveHomeChapterTotal, homeIntentConsumable }')()
+  } catch { return false }
+  if (HM === null) return false
+  const c38 = { chapters: [{ num: 1 }, { num: 38 }] }
+  const sparse = { chapters: [{ num: 1 }, { num: 5 }, { num: 9 }] }
+  const emptyCh = { chapters: [] }
+  const mixed = { chapters: [{ num: 2, published: false, gate: { passed: false } }, { num: 7, published: true, gate: { passed: true } }, { num: null }] }
+  const recent = { chapters: [{ num: 3 }, { num: 9 }, { num: 1 }, { num: 8 }, { num: 2 }, { num: 7 }] }
+  const todo = HM.deriveHomeTodo(mixed)
+  const rec = HM.deriveHomeRecent(recent, 5)
+  return HM.deriveHomeNextNum(null) === null                       // 未就绪 ⇒ 未知（禁止猜 1）
+    && HM.deriveHomeNextNum(undefined) === null
+    && HM.deriveHomeNextNum(emptyCh) === 1                          // 真空章节 ⇒ 第 1 章
+    && HM.deriveHomeNextNum(c38) === 39                             // max+1（不是 count+1）
+    && HM.deriveHomeNextNum(sparse) === 10                          // 稀疏章号：max(9)+1，count+1 会错
+    && HM.deriveHomeNextNum(mixed) === 8                            // 非数字 num 忽略
+    && HM.deriveHomeTodo(null) === null                             // 未就绪 ⇒ 未知（UI 显示 —）
+    && todo.unpublished === 2 && todo.gateFails === 1 && todo.gateFirstNum === 2
+    && HM.deriveHomeRecent(null) === null
+    && rec.length === 5 && rec[0].num === 9 && rec[4].num === 2     // 倒序取 5 条
+    && HM.deriveHomeChapterTotal(null, { totalChapters: 38 }) === 38  // 展示口径回退 overview
+    && HM.deriveHomeChapterTotal(emptyCh, { totalChapters: 38 }) === 0
+    && HM.deriveHomeChapterTotal(c38, { totalChapters: 38 }) === 2
+    && HM.homeIntentConsumable({ novelId: 'a' }, 'a') === true
+    && HM.homeIntentConsumable({ novelId: 'a' }, 'b') === false     // 跨书不得消费
+    && HM.homeIntentConsumable(null, 'a') === false
+    && HM.homeIntentConsumable({}, 'a') === false
+})(), 'ux063 home model cases failed')
+check('客户端源码面：UX-063 P0-a② 返工（用户 2026-10-25）首页 CTA / 新建章 = 真触发工作流，指令含第 N 章', (() => {
+  const i = clientSrc.indexOf('const homeBody = () => {')
+  const blk = i < 0 ? '' : clientSrc.slice(i, i + 9000)
+  const msgB = fnBody('function launchMsgOf(novels, id, title, launchOpts) {')
+  const promptB = fnBody('async promptLaunch(sessionId, novel, novels, launchOpts) {')
+  const launchB = fnBody('const launchWorkflow = async (launchOpts, allowStop) => {')
+  return blk !== '' && msgB !== '' && promptB !== '' && launchB !== ''
+    && blk.includes("enterWriting({ workflow: 'continue', chapter: homeNextNum })")
+    && blk.includes("enterWriting({ workflow: 'new', chapter: homeNextNum })")
+    && !blk.includes('newChapter:')                                   // 编辑面入口已从首页移除
+    && msgB.includes("opt.mode === 'new'") && msgB.includes('请新建并撰写第 ${num} 章')
+    && msgB.includes("opt.mode === 'continue'") && msgB.includes('继续写第 ${num} 章')
+    && msgB.includes('if (num === null) return base')                  // 无 opts 保持历史指令
+    && promptB.includes('launchMsgOf(novels, novel.id, novel.title, launchOpts ?? null)')
+    && launchB.includes('launcher.promptLaunch(sid, current, novels, opt)')
+    && launchB.includes('allowStop !== true')                          // 首页发起不抢停运行中的轮次
+    && clientSrc.includes('onClick: () => launchWorkflow(null, true)')  // rail 主按钮仍承担停止
+    && clientSrc.includes('launchWorkflow({ mode: wf.mode, chapter: wf.chapter }, false)')
+})(), 'ux063 home workflow trigger missing')
+check('客户端源码面：UX-063 P0-a② 返工：客户端「新建章编辑面」已移除（不建空章节文件）', (() => {
+  return !clientSrc.includes('saveNewChapter')
+    && !clientSrc.includes('closeNewChapter')
+    && !clientSrc.includes('newChapterNum')
+    && !clientSrc.includes('newDraft')
+    && !clientSrc.includes('nv-newch')
+    && !clientSrc.includes('homeNewChapterSave')
+    && !clientSrc.includes('homeNewChapterHint')
+    && !clientSrc.includes('homeNewChapterEmpty')
+    // 既有「章节编辑保存」主通道必须保留（写作视图内编辑 → POST /api/chapter）
+    && clientSrc.includes("apiJson('/novel-writing/api/chapter', { novel: props.novelId, chapter: active.num, content: draft, force })")
+})(), 'ux063 new-chapter editor still present')
+check('UX-063 P0-a② 返工 WYSIWYG：detail 未就绪一律禁用（不猜章号）/ 未知值显示 — / 意图同书同步投递且不跨书', (() => {
+  const i = clientSrc.indexOf('const homeBody = () => {')
+  const blk = i < 0 ? '' : clientSrc.slice(i, i + 9000)
+  const enterB = fnBody('const enterWriting = (intent) => {')
+  const applyB = fnBody('const applyHomeIntent = (it) => {')
+  return blk !== '' && enterB !== '' && applyB !== ''
+    // 动作面：未就绪禁用 + 不猜章号 + 提示「数据未就绪」
+    && (blk.match(/disabled: homeNextNum === null/g) ?? []).length >= 2
+    && blk.includes("homeNextNum === null ? t('homeDataLoading') : t('homeContinueCta', homeNextNum)")
+    && blk.includes("if (homeNextNum !== null) enterWriting({ workflow: 'continue', chapter: homeNextNum })")
+    // 未知态：待办 — / 最近章节加载中（不是 0 / 「尚无章节」）
+    && blk.includes("const unpublishedText = todoUnknown ? '—' : String(homeTodo.unpublished)")
+    && blk.includes("const gateText = todoUnknown ? '—' : String(homeTodo.gateFails)")
+    && blk.includes('homeRecent === null')
+    && blk.includes("t('homeRecentLoading')")
+    // 章数展示口径与动作口径分离（注释 + 派生函数）
+    && clientSrc.includes('function deriveHomeChapterTotal(detail, novel) {')
+    // 意图通道：同步投递 + novelId 绑定 + 跨书拒绝 + 失败路径清理
+    && enterB.includes('const full = { ...(intent ?? {}), novelId: homeCurrentId }')
+    && enterB.includes('homeIntentSink(full)')
+    && enterB.includes('pendingHomeIntent = null')
+    && applyB.includes('homeIntentConsumable(it,')
+    && clientSrc.includes('function homeIntentConsumable(intent, novelId) {')
+    // 旧「effect 依赖 [snap.active, selectedId]」消费面已退役（同书二次点击不再静默失效）
+    && !clientSrc.includes('}, [snap.active, selectedId])')
+    // 换书集合 = 书目集合
+    && clientSrc.includes("orderedNovels.map((n) => el('button', {")
+    && clientSrc.includes("onClick: () => { setBookMenu(false); store.set({ selected: n.id }) }")
+})(), 'ux063 WYSIWYG mismatch')
+
 check('客户端源码面：UX-063 P0-a① 恢复保证五路径逐条具名（open / syncAnchor / closeDrawer / close / setBook）', (() => {
   const openB = fnBody('open(novelId) {')
   const syncB = fnBody('syncAnchor() {')
@@ -2767,7 +2920,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   //      **残余缝（同次实测，未闭合）**：若 2.13 只删**终点闭合行**（**历史锚点**：COMPAT-013 时期值 `L4429-4460`——6 处注册仍全在范围内）
   //      则 ①②③④⑤ **全绿**（实测 262/0：⑤a 计数仍 6 ≡ 6、④ callPrefix = null、⑤b 无 `键: {` 形态构造）
   //      ⇒ 该形态目前无持续机检力。根治需「构造闭合行」口径，而 JS 范围本就可能是**合法语义片段**
-  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L5526-L5528` +1 / 3.8 `L3276-L3290` +1 实测均非配平）——
+  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L5929` +1 / 3.8 `L3411-L3425` +1 实测均非配平）——
   //      无差别要求配平会误报上述 3 项，故如实留档待另案（非本任务可安全落地）。
   //      **本行 3 个契约行号副本的同步方（CLEAN-006 **N-6** 归属订正，避免审计归因错位）**：本块随
   //      契约 `line` 重基**必须同步**，其**机检执行者 = `COMPAT-015 F3 行号引用对账`**（把本行 2.3
@@ -2776,12 +2929,12 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // R1 承继偏移（2.12 −6 / 2.13 −7）在修复前正是 ①③④ 三项的失败用例，修复后全绿（见 CHANGELOG COMPAT-012）。
   //   ⑤ 范围**完整覆盖**所声明构造（COMPAT-013 F-1 新增，两子句，实现见下方 ⑫c）——见 ⑫c 处的口径论证。
   const RANGE_STRICT_FACES = [2]
-  const GOLDEN_RANGE_ITEMS = 23
+  const GOLDEN_RANGE_ITEMS = 22
   // COMPAT-013 F-5②：严格面条目数提为 golden——原守卫 `rangeStrict.length > 0` 允许严格面退化到 1 项仍绿
-  // （golden 只锁了总范围条目 21 项）。面 2 实测 11 项（13 项中 **2.2**〔`L97` 单行号形态〕与 **2.4**〔多段〕非单段
-  // 范围形态——COMPAT-014 C-F-2 订正：原注释写「2.3/2.4」，而 2.3 `L5493-L5495` 命中 RANGE_LINE 属**单段范围**条目），
-  // RANGE_STRICT_FACES 的覆盖面即 11 ⇒ 与 GOLDEN_RANGE_ITEMS 同款漂移探测约定（brittle-by-design，扩面/删项须显式改 golden）。
-  const GOLDEN_RANGE_STRICT_ITEMS = 12
+  // （golden 只锁了总范围条目 21 项）。面 2 实测 10 项（14 项中 **2.2**〔`L97` 单行号形态〕、**2.3**〔UX-063 返工后
+  // 收敛为单行 `L5783`——原三行范围随 A3 收敛退役，按 brittle-by-design 约定显式改 golden〕、**2.4**〔多段〕非单段
+  // 范围形态），RANGE_STRICT_FACES 的覆盖面即 10 ⇒ 与 GOLDEN_RANGE_ITEMS 同款漂移探测约定（brittle-by-design，扩面/删项须显式改 golden）。
+  const GOLDEN_RANGE_STRICT_ITEMS = 11
   const RANGE_LINE = /^L(\d+)-L?(\d+)$/
   const lineIsComment = (l) => l.trim() === '' || /^(\/\/|\/\*|\*)/.test(l.trim())
   const callPrefix = (l) => {
@@ -2815,6 +2968,26 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
     rangeItems.length === GOLDEN_RANGE_ITEMS && rangeStrict.length === GOLDEN_RANGE_STRICT_ITEMS && rangeBad.length === 0,
     'rangeItems=' + rangeItems.length + '(golden ' + GOLDEN_RANGE_ITEMS + ') rangeStrict=' + rangeStrict.length + '(golden ' + GOLDEN_RANGE_STRICT_ITEMS + ') bad=' + JSON.stringify(rangeBad))
   console.log('  info COMPAT-012 N2 F5d 覆盖: 范围型 ' + rangeItems.length + '/' + hc.items.length + ' 项（面分布 ' + [...new Set(rangeItems.map((it) => it.face))].join(',') + '）；严格面 ' + RANGE_STRICT_FACES.join(',') + ' = ' + rangeStrict.map((it) => it.item).join(','))
+
+  // UX-063 返工（REVIEW-UX-063-S2-CR1 P2-2）：**单行型 line 机检**——原 F5c 只抽每面 1 项、
+  //   F5d 只覆盖范围型，单行条目写错时零信号（本轮 3.7 四键曾因手改整体 −2 而全错）。
+  //   判据：声明行的源码内容 MUST 命中该条 symbol 的候选 token（候选口径同 F5c，排除通用词）。
+  const singleItems = hc.items.filter((it) => it.line !== null && /^L\d+$/.test(it.line))
+  const singleBad = []
+  for (const it of singleItems) {
+    const files = filesOf(it)
+    if (files.length === 0) { singleBad.push(it.item + ':无 file'); continue }
+    const linesOfFile = readFileSync(new URL('../' + files[0], import.meta.url), 'utf8').split('\n')
+    const ln = Number(/^L(\d+)$/.exec(it.line)[1])
+    const srcLine = linesOfFile[ln - 1] ?? ''
+    const cands = symbolCandidates(it.symbol)
+    if (cands.length === 0) { singleBad.push(it.item + ':无候选'); continue }
+    if (!cands.some((c) => srcLine.toLowerCase().includes(c.tok.toLowerCase()))) singleBad.push(it.item + ':L' + ln + ' 未命中构造')
+  }
+  check('COMPAT-012 N2 F5d′ 单行型 line 机检：每条声明行命中该条 symbol 候选（' + singleItems.length + ' 项 / golden 6）',
+    singleItems.length === 6 && singleBad.length === 0,
+    'singles=' + singleItems.length + ' bad=' + JSON.stringify(singleBad))
+
 
   // ⑫c F5d 判据⑤「范围完整覆盖所声明构造」（COMPAT-013 F-1，收口 COMPAT-012-R1 F-1）：② 只要求「范围**内**
   // 至少一个候选命中」——范围**起点含无关前导行 / 终点漏构造闭合行**对它零信号（现存实例 = 契约 6.1 旧值
@@ -2901,7 +3074,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // 首行起构造者恰 3 项 = 4.6 `"dsh": {` / 6.1 `"peerDependencies": {` / 6.2 `"engines": {`（面 6 三项
   // JSON 根级子对象；其余 18 项首行为 JS 调用/声明/注释 ⇒ 不适用），项数入 golden（防空转）。
   // **只取首行、不取范围内全部 opener 的理由**：JS 范围可为**合法语义片段**（2.1 `L92-94` 净差 +2 / 2.3
-  // `L5526-L5528` +1 / 3.8 `L3276-L3290` +1 实测均非配平，⑤ 注释已留档）——无差别要求范围内每个 opener 配平
+  // `L5526-L5528` +1 / 3.8 `L3411-L3425` +1 实测均非配平，⑤ 注释已留档）——无差别要求范围内每个 opener 配平
   // 会误报这些条目；而「范围未包住自身构造闭合行」的形态恰以构造键行起段（首行 opener 即充分判据）。
   // 口径边界同 ⑤b（裸字符配平，不剥注释/字符串中的 `{`/`}`）。
   const KEY_OPEN6 = /^\s*(?:"([^"]{1,60})"|'([^']{1,60})'|([A-Za-z_$][\w$.-]{0,60}))\s*:\s*\{\s*$/
@@ -2933,9 +3106,9 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // ⑫d F-3 披露数字入机检（COMPAT-013）：非严格面（**由 rangeItems 动态生成**；实测 **3/4/5/6 共 10 项**——
   // COMPAT-014 C-F-1 订正：原标签「3/5/6」漏面 4，且与下方列举清单自含 `4.6 L17`（面 4）自相矛盾；条目数同时
   // 入 golden）范围条目中「起于注释/空行」者 MUST 恰 2 项
-  //（3.1 起于 `/**` JSDoc L1160、3.8 起于 `/**` JSDoc L3276——互操作说明在本段内、非起点）。动因 = 该计数原为**人工转写**且写错
+  //（3.1 起于 `/**` JSDoc L1273、3.8 起于 `/**` JSDoc L3411——互操作说明在本段内、非起点）。动因 = 该计数原为**人工转写**且写错
   //（CHANGELOG 曾披露「三处」）——与 COMPAT-004 FIND-1 的 tier 串转写漂移同类，故沿用同款处置：实测值
-  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.5 `L1236` `try {` / 4.6 `L17`
+  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.5 `L1348` `try {` / 4.6 `L17`
   // `"dsh": {` / 5.1 `L1` `name:` / 5.2 `L16` `- id:` / 5.4 `L77` `- id:` / 6.1 `L39`（修正后真值；修正前
   // `L38` 亦非注释）/ 6.2 `L8` `"engines": {` / 6.4 `L105`（ci.yml `#` 注释起段——JS 口径不计为注释，见下句口径边界）。严格面（面 2 = 11 项）已由 ③ 逐项约束，
   // 本项只覆盖未纳入严格面的面（动态生成：实测 3/4/5/6）；注释口径同 ③（JS 风格），YAML `#` 不在识别面内（与 F-5① 同源前提）。
