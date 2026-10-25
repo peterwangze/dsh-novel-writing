@@ -1,37 +1,38 @@
-# 会话快照 — 2026-10-23（UX-063 P0-a 第①步交付 + 治理健康债清偿）
+# 会话快照 — 2026-10-25（治理升级 0.99.0 + UX-063 第②步交付）
 
-**session_date**: 2026-10-23
-**工作流版本**: 0.98.0（Scenario F；always-on × maximum-autonomy；behavior modern）
-**会话标识**: dsh-writing-workflow-20261023-ux063-p0a-step1
-**HEAD**: `UX-063: P0-a 第①步交付…`（22 文件，含 4 份审查报告与 4 条机录 REVIEW 行）
-**上一会话**: 2026-10-22 UX-063 规格 v3 评审通过后中断（该步零代码落盘、锁过期）
+**session_date**: 2026-10-25
+**工作流版本**: **0.99.0**（本轮由 0.98.0 升级；Scenario C A~E 完成）
+**会话标识**: dsh-writing-workflow-20261025-ux063-p0a-step2
+**HEAD**: `UX-063: P0-a 第②步交付（任务流首页 + 用户两条裁决落地）`
+**上一会话**: 2026-10-23 第①步交付（EVD-139）后，第②步首个 Developer 子代理 3h 空转被中止、零代码落盘
 
-## 一、本轮结论（EVD-139）
+## 一、本轮结论
 
-1. **UX-063 P0-a 第①步已交付**：全屏工作台（`.nv-split` 左缘=g.left、宽=colW）+ 420px 对话抽屉（48px 唤出条、z920、localStorage `dsh.novel.drawer.v1`）+ 开启态手柄门 `colW≥1046`（窄带不渲染、Esc 优先关抽屉、提示含 Esc 出口）+ 让位（收文件树 240/章节列 160，正文列 `min(544, colW−44−376−24)`）+ 五路径 `restoreViewArea`（15 属性单点、5 调用点）+ `host-contract` item 3.3（覆盖 `applyDrawer` 五写）/ 3.7 锚点（1017/1019/1069/1127 逐行吻合）。
-2. **门禁**：`node --check` ×4 = 0；`smoke` **324/0**；`geometry` OK（真实左偏移 11 + 抽屉∩正文 / 手柄∩正文正交判据 + 六档）；`anchors` 79 段 FAIL=0；`contrast` 0 项 <4.5；`validate-preset` PASSED。
-3. **审查链**：R4 DR1 NEEDS_CHANGE/2 → 返工 → **R6 DR2 APPROVED_WITH_NOTES/0**；R5 CR1 NEEDS_CHANGE/1 → 返工 → **R7 CR2 APPROVED_WITH_NOTES/0**。变异判别力 M1/M2/M3/M5 必红，M4 揭示 `syncAnchor` 调用级断言缺口（转第②步首批）。
-4. **治理健康**：check-governance **73 → 30 issues**（锁清零、18c 执行包补齐、16/17 证据字段回填、18/18b 结构化事实补齐、EVD-137 表格错列修复）。
+### 1) 治理升级 0.98.0 → 0.99.0（EVD-140，commit `5400814`）
+A 入口 bootstrap 段替换（`sync_entry_projection --write` → `[PASS] synchronized`）；B plan-tracker 9 节核验；C hooks 三件存活；C-2 `cleanup --dry-run` = 无冗余文件；D `工作流版本` → 0.99.0；E `archive --auto --dry-run` 跳过（已发布版本解析 0 < 2，RISK-002 同族上游缺陷，如实登记不迁移）。复核 = scenario F / migration up_to_date。
 
-## 二、关键事实与裁决（DEC-157）
+### 2) UX-063 P0-a 第②步：任务流首页（EVD-141，commit `370a100`）
+- 默认入口 `.nv-home`；书卡网格降为「全部书籍」二级页（原代码保留）
+- 四区：当前书卡 / 今天写什么（唯一主 CTA 36px）/ 待办三项（点击直达、无失败章置灰）/ 最近 5 章；紧凑换书（listbox，1 次点击）；字号只用 5 档令牌
+- **用户 2026-10-25 两条裁决**：①「新建章」= 触发 AI 工作流生章（编辑面整体移除，零空章节文件路径）；②「继续写第 N 章」**所见即所得**（发送指令含第 N 章，N = max+1，与文案同源）
+- **DEC-158**：动作口径**禁止用 `overview.totalChapters` 计数推章号**（计数 ≠ 最大章号，稀疏章节会推出已存在章号）⇒ detail 未就绪时 CTA/新建章**禁用** + 加载态/真空态分离 + 待办显示 `—`；`homeChapterTotal` 的 overview 回退**仅用于展示**
+- 意图通道：`homeIntentSink` 同步投递 + `novelId` 绑定 + 跨书丢弃 + 失败清理（旧 `[snap.active, selectedId]` effect 退役）
+- 门禁：`node --check` ×4 = 0；smoke **331/0**；geometry OK（home 880 / CTA 36 / u63 六档不回退）；anchors **79 段 FAIL=0**；contrast 0 项 <4.5；validate-preset PASSED；变异判别力 M1~M6 全红
+- 审查链：`R8` DR1 NEEDS_CHANGE/1 + `R9` CR1 NEEDS_CHANGE/2 → 返工 → **`R10` DR2 / `R11` CR2 = APPROVED_WITH_NOTES/0**；微收口轮修契约 3.3 段端点（`L1576-L1585` / `L5123-L5135`）、行数账（**6067**）、死变量 `homeDataReady`、陈旧注释
 
-- **几何裁决**：开发者「左侧 chrome 58px ⇒ 抽屉遮挡 34px」的推断**作废**——44px rail 渲染点在底部工作台 `midFooter`（`client.js:4497 ⊂ 4485`），上部正文区真实左偏移 = **11px**（`.nv-split` border 1 + padding 10）⇒ **抽屉本体零遮挡成立**（988 档实测余量 13px），规格 §3 真值表不修订。
-- **真实缺陷**是自加的开启态手柄：`colW<1046` 时覆盖正文右缘（1280×800 → 23px、1268/1236 → 35px）——已修（手柄门 + Esc 优先级 + 提示阈值）。
-- **规格 v3.1（§8）**：6 条事实回填（`restoreViewArea` 为新实现、手柄门 1046、真实偏移 11、740–956 实测无遮挡 / 真实遮挡仅 `colW<591`、抽屉态可见面、公式预留 vs 实测余量口径）。
-- **措辞边界（重要）**：第①步独立可感知差异仅 **3~4 处**（全宽 / 对话→抽屉 / 行宽 236→**510** / 窄窗提示），**不足 ≥5 硬闸门** ⇒ 只能称「P0-a 第①步已交付」，**不得**称「P0-a 已交付 / 视觉验收通过」，**不得**提前请用户目检（否则重演 UX-061「变化不大」）。544 行宽要等第③步（16px reading）。
+## 二、跨会话待办（按优先级）
 
-## 三、跨会话待办（按优先级）
+1. **UX-063 第③步（本任务最后一步）**：正文 `--nv-fs-reading` 16 / `line-height 1.9` + 中文排版（`p{text-indent:2em;margin:0 0 .8em}`）+ textarea 内联随 N-1(a) 统一 reading；迁移表 #15/#16 与既有 `measure 510→544` 断言。**首批并入 8 项遗留**：DR2（第②步）P2-4 detail 失败态无重试入口（最高优先）/ P2-5 禁用标签把「失败」说成「加载中」/ P2-1 有数据态渲染树断言 / P2-3 字数与章数两源标注；DR2（第①步）P2-1 <740 提示补 Esc / P3-1·P3-2 硬编码 11/23 补守卫 / P3-7 拖线与手柄 4px 热区；CR2（第①步）P2-1 `syncAnchor` 旧节点还原调用级断言。
+2. **UX-062**（P1，user-named，分析器 top pick）——需与 UX-063 串行（共用 `lib/client.js`）。
+3. **CLEAN-013**（P1，machine-signal）——隔离矩阵可审计化；RISK-013 缓解引用项。
+4. **真机 CDP 通道**（归 COMPAT-018）：宿主 **0.2.1-rc.2** 闭包无 `dsh-app-boot` ⇒ 两个 CDP 探针 boot 即 `ERR_MODULE_NOT_FOUND`；UX-063 第①②步的**交互面均未经真机验证**，措辞必须保持「已交付（待真机复验）」，并排截图 ≥5 差异闸门留到第③步合并后。
+5. 既有债：Check 30（UX-061/UX-063 复审轮从 R1 起编号、缺 R0——历史约定漂移；新任务首轮应从 R0 记）、Check 36（RISK-002/013 缓解引用未完成任务）、Check 37（G8 vs G6/G7，DEC-029 留痕）、Check 18e/18f/18g 对未交付任务的生命周期闸门（随交付翻绿）。
 
-1. **UX-063 第②步（任务流首页：`.nv-home` 880 / CTA 36 / 双源 overview+detail / 紧凑换书 / 待办点击目标）**——首批并入本步审查备注 7 项：CR2 P2-1（`syncAnchor` 旧节点还原调用级断言）、P2-2（单行 item `line` 机检 + F4 措辞改「守卫现状」）、P3-1（行数账 5658→5664、契约 +224→+257）、P3-2（3.3 第 4 段越界 7 行进 `toggleDrawer`）；DR2 P2-1（<740 提示补 Esc）、P3-1/P3-2（硬编码 11/23 守卫）、P3-7（拖线与手柄 4px 热区）。第③步 = 正文 16/1.9 + 中文排版 + N-1(a)。
-2. **UX-062**（P1，user-named）——优先级分析 top pick；范围含骨架屏 + ⌘K。
-3. **CLEAN-013**（P1，machine-signal）——隔离矩阵可审计化；同时是 RISK-013 缓解引用项。
-4. **真机 CDP 通道修复**（归 COMPAT-018）：宿主 **0.2.1-rc.2** 的 `@deepseek-ai` 闭包**已无 `dsh-app-boot`**，`probe-nv-bar-geometry.mjs` / `probe-nv-ux012.mjs` boot 即 `ERR_MODULE_NOT_FOUND` ⇒ 迁移表 §E 真机证据与跨子树 z-order 均不可得（**不得**称「已验证」）。
-5. 既有债：Check 30（UX-061/UX-063 复审轮缺 R0——历史编号从 R1 起的约定漂移；后续任务首轮应从 R0 记）、Check 36（RISK-002/013 缓解引用未完成任务）、Check 37（G8 vs G6/G7，DEC-029 留痕）、Check 18e/18f/18g 对未交付任务的生命周期闸门（随各自交付翻绿）。
+## 三、方法论事实（下轮直接复用，勿重踩）
 
-## 四、环境与方法事实（下轮复用）
-
-- 治理健康检查 `Check 5` 的「G5 条件通过无纠正任务」为**上游误报**：判据只解析 `## 样例跟踪表` 段（本仓用 `## 当前活跃事项`）⇒ `task_rows` 恒空；已挂 SYSGAP-001。
-- 证据行若含**未转义 `|`**（如 `||` 运算符）会破坏列对齐 → 表现为「证据位置为空」类假故障；修复 = 转义为 `\|\|`。
-- `plan-tracker` 状态单元格**行首标记决定机器分类**：`✅` = 已完成（会从候选池消失）、`🔄` = 在途；跨步交付的任务 MUST 用 `🔄` 并写明「第 N 步已交付，后续未开工」。
-- 审查报告走 `review-record`（机录 + sha256 钉住 + `next_round`/`revisit_required` 义务链）；`NEEDS_CHANGE` 自动登记复审义务，复审通过即 `cleared`。
-- 变异测试（判别力）一律在 `%TEMP%` 副本执行；就地变异必须哈希还原并复跑门禁。
+- **`Measure-Object -Line` 不计空行** ⇒ 行数会偏小（本例 5841 vs 真实 6067）。行数口径统一用 `readFileSync(...).split('\n').length - 1`（与 git diff 行号一致），或 `(Get-Content -Encoding UTF8).Count`。
+- **迁移表不要复制契约行号全表**：重复维护必然漂移（H5/I5 两行已实证过时）。权威源 = 契约 `items[].line` + `verify-contract-anchors.mjs`；迁移表只记「本轮抽核生效值」。
+- **契约段端点必须落真实代码行**：起止落在空行或下一函数起始行会被 CR 判为越界（本轮 3.3 第 4/5 段即如此）。`3.6` 段 2 起点为空行属**既有**问题，待下轮改指 SplitWorkspace RO/MO 观测块 `L3796-L3824`。
+- **断言禁止以源码字面量冻结实现**：`smoke:1396` 曾把缺陷写死（修缺陷必红）⇒ 已改「`#region` 提取 + 真跑纯函数用例」；纯函数测试须能证明「区段缺失/提取失败 ⇒ 红」。
+- **意图/异步消费类改动必须验「默认路径」**：本轮 CR1 抓到「分栏已开且同书」时首页动作全静默（这正是默认路径），并会残留意图跨书误触发。
+- 变异测试一律 `%TEMP%` 副本；就地变异必须 sha256 还原并复跑门禁。
