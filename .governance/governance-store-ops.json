@@ -1261,6 +1261,31 @@
         "docs/evidence/COMPAT-018/probe-host-real-run.md",
         "scripts/probe-host.mjs"
       ]
+    },
+    "op-62ba346cabcd4d959b83b852560fa891": {
+      "schema_version": 1,
+      "command": "decision-append",
+      "task_id": "",
+      "input_fingerprint": "20417a0acf903f0407b312287c4000637e5acccc00034f38f28da32a51ef7700",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-62ba346cabcd4d959b83b852560fa891",
+        "code": "ok",
+        "new_revision": 44976,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-08T07:44:12",
+      "updated_at": "2026-11-08T07:44:12",
+      "authority": {
+        "state": "MD_ACTIVE",
+        "epoch": 0,
+        "generation": 0,
+        "backend": "md"
+      }
     }
   }
 }

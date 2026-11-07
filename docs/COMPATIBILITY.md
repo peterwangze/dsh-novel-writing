@@ -512,7 +512,7 @@ node scripts/preflight-preset-rows.mjs --generation unknown --strict
 ### 12.3 明确不在本任务范围
 
 - 重写 DSH 宿主 loader / preset registry；
-- 运行期动态注册 provider（`COMPAT-022`）；
+- 运行期动态注册 provider（`COMPAT-022`）——**已决策不实施（DEC-161，2026-11-08 用户确认）**：静态预设行 + COMPAT-023 全依赖面看护（宿主新版本检出日精确报红）+ 已验证热修路径（COMPAT-020 约 2 小时）足够；运行时自适应将新增一类运行期耦合面，复杂度收益比不占优。重评触发条件：宿主正式版发布时预设面再断且热修成本显著上升；
 - 0.2.0/0.2.1 上凭空补出 `list_agents`；
 - UI 标题截断的视觉修复（独立问题）；
 - 发布号 bump / Release Gate 决策。
