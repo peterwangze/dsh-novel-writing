@@ -1,43 +1,44 @@
-# 会话快照 — 2026-10-25（治理升级 0.99.0 + UX-063 P0-a 三步代码面完成）
+# 会话快照 — 2026-11-07（COMPAT-020 预设热修闭环 + COMPAT-021 设计基线）
 
-**session_date**: 2026-10-25
-**工作流版本**: **0.99.0**（本轮由 0.98.0 升级；Scenario C A~E 完成）
-**会话标识**: dsh-writing-workflow-20261025-ux063-p0a
-**HEAD**: UX-063 第③步交付（P0-a 三步代码面完成）
-**上一会话**: 2026-10-23 第①步交付（EVD-139）；第②步首个 Developer 子代理 3h 空转被中止、零代码落盘
+**session_date**: 2026-11-07
+**工作流版本**: 0.99.0
+**会话标识**: dsh-writing-workflow-20261107-compat020-hotfix
+**HEAD**: `c5442e1`（COMPAT-021 设计基线）← `444d18f`（COMPAT-020 热修）；已 push origin/main
+**上一会话**: 2026-10-25（治理升级 0.99.0 + UX-063 P0-a 三步代码面完成，EVD-142）
 
 ## 一、本轮结论
 
-### 1) 治理升级 0.98.0 → 0.99.0（EVD-140，commit `5400814`）
-A 入口 bootstrap 段替换（`[PASS] synchronized`）；B 9 节核验；C hooks 三件存活；C-2 `cleanup --dry-run` 无冗余；D `工作流版本` → 0.99.0；E 归档跳过（已发布版本解析 0<2，RISK-002 同族）。复核 = scenario F / up_to_date。
+### 1) COMPAT-020：dsh 0.2.2-rc.1 预设「加载失败」热修 — **committed**（commit `444d18f`，EVD-143，DEC-159）
+- **根因**（0.2.2 闭包只读实测）：`@deepseek-ai/dsh-tool-subagent-control` exports 移除 `./list-agents`，`list_agents` 并入主包（`registerListAgents`）；静态 `cordis.patch.yml` 仍声明该行 ⇒ `ERR_PACKAGE_PATH_NOT_EXPORTED` ⇒ 整棵预设 `agentPresets.register` broken。
+- **修复**（方向性双源）：0.2.x patch 删行 / 0.1.x `agent.cordis.yml` 保留；`GENERATION_DROPPED` 披露类 + dual 四条硬不变量（patch 0 行 / yml 恰 1 行 / config 空 / 主包行在场）+ smoke 负向对照④（塞回 legacy 行 = 原故障形态必红）。
+- **评审链**：R1 NEEDS_CHANGE（P2×4：host-contract revisions 数、README 过度声称+缺 0.2.1 行、5.2 行段漏 dsh-tool-web、no-profile 跳过面陈述不实）→ Developer 返工 → **R2 APPROVED_WITH_NOTES（P0/P1/P2=0/0/0）**。
+- **验证**：smoke 334/0；validate-preset PASS；anchors FAIL=0/WARN24；schema-face findings=0（checked 37 + unverified 22 = 59，dropped 是 unverified 子集）；**0.2.2 与 0.2.1 隔离实例 `agentPresets.list()` novel-writing 无 broken**（docs/evidence/COMPAT-020/）。
+- **如实披露**：0.2.0/0.2.1 独立 `list_agents` 不可用（静态 patch 无法按版本分流）；README 矩阵 0.2.2 只背书预设加载面、0.2.1 新行、0.2.0 降「部分支持」。
+- 状态机：dev→review→approved→completed→committed（receipts 见 plan-tracker.md.ops.jsonl）；锁已释放。
 
-### 2) UX-063 P0-a 第②步：任务流首页（EVD-141，commit `370a100`）
-默认 `.nv-home` + 四区 + 唯一主 CTA 36 + 双源 + 紧凑换书 + 全部书籍二级页；**用户两条裁决**（新建章=触发 AI 工作流生章、CTA 所见即所得）；**DEC-158**（禁止用计数推章号，detail 未就绪即禁用）；意图通道 `homeIntentSink` 同步投递 + novelId 绑定。审查 R8/R9 → R10/R11 = AWN/0。
-
-### 3) UX-063 P0-a 第③步：正文可读性（**EVD-142**，三步代码面完成）
-- 正文/编辑区三处同源 `--nv-fs-reading` 16px + `line-height 1.9`；`--nv-measure:34em` ⇒ **544px**（原 236 挤压、上一步 510）
-- 中文排版 `p{text-indent:2em;margin:0 0 .8em}`（标题不缩进）
-- **标题层级修正**：h2 `--nv-fs-display`(20) / h3 `--nv-fs-display-s`(17) / 正文 16 —— 修掉「h3 小于正文」的自造回归（DR1 一手取证：真实书稿 200 篇中 162 篇含 `## `）
-- **阅读↔编辑文本宽一致**：`.nv-edwrap{max-width:calc(measure+26px)}` ⇒ 文本内容宽 544 ≡ 544（旧判据量元素外框、假绿，已在 K2 披露）
-- 9 项审查遗留收口 8 项；唯一未落地 = 「有数据态渲染树断言」（mock `usePoll` 无 seed，J10 如实标注）
-- 门禁：`node --check` ×4 = 0；smoke **334/0**；geometry OK（measure/text 544、h2 20 > h3 17 > 16、lh 30.4、缩进 32、段距 12.8）；anchors 79 段 FAIL=0；contrast 0；preset PASSED
-- 审查链：`R12` DR1 NEEDS_CHANGE/1 → 返工 → **`R14` DR2 / `R15` CR2 = AWN/0**；`R13` CR1 = AWN/0
+### 2) COMPAT-021：兼容性架构**设计基线**已交付（commit `c5442e1`，docs/COMPATIBILITY.md，537 行）
+- 宿主依赖分层 L0-L4（组合加载/预设注册=硬边界；工具/客户端=软边界可降级；安装/环境只读）。
+- 代际矩阵 legacy-0.1 / decl-0.2.0 / 0.2.1 / 0.2.2+ / **unknown fail-closed**。
+- 行级预检契约：`scripts/preflight-preset-rows.mjs`（--fixture/--json/--explain，退出码 0/1/2/3，NOT_RUN≠PASS）+ `test/fixtures/host-generations/` 五代际 fixture（含 negative-missing-export）。
+- 风险 RISK-C1~C8；**C3 = declarationPlane 全局安装通道可能掩盖 profile 代际差异**（与 R2 P3 note 同源，实施时必须修）。
+- 边界：不做运行时预设注册重写（**COMPAT-022 另立决策**）；不 bump 版本。
+- 两个 Architect 子代理空转被中止，设计文档由 Coordinator 直接撰写（设计文档非产品码）。
 
 ## 二、跨会话待办（按优先级）
 
-1. **UX-063 待最终验收（任务仍未完成，状态 🔄）**：三步代码面已完成，但 **①真机 CDP 复验不可得**（宿主 0.2.1-rc.2 闭包缺 `dsh-app-boot`，归 COMPAT-018）⇒ 真实宿主下 34 汉字/行、阅读↔编辑不跳行、交互面**均未验证**；**②并排截图 ≥5 处差异的目检硬闸门未执行**。解锁路径：用户在真实 DSH 重启后目检（插件经 junction 加载，重启即生效），或先修 CDP 探针 boot 面。
-2. **工具面 2 项 P3（CR2 新发现，后续批次）**：①`verify-visual-geometry.mjs` 的 `rule()` 取首个命中 ⇒ 加「命中数 ≤1」断言或改取最后一条；②`verify-contract-anchors.mjs` 对**错误单行 `line` 静默丢段**（`2.3 L5954→L5955` ⇒ 79→78 段仍 exit 0，仅靠 smoke 兜住）⇒ 解析失败即 FAIL + 段数恒 79 断言。
-3. **UX-062**（P1，user-named，分析器 top pick）——与 UX-063 同文件，需串行。
-4. **CLEAN-013**（P1，machine-signal）——隔离矩阵可审计化；RISK-013 缓解引用项；不碰 `lib/client.js`，可并行。
-5. **P0-b（UX-063 规格 §4 显式移出）**：三栏结构 / 检查器分段 / 资料抽屉 / rail 退役 / 全局字号 ≤5 迁移 —— 未开工，需用户确认是否纳入下一批。
-6. 既有债：Check 30（UX-061/UX-063 复审轮从 R1 起编号、缺 R0——历史约定漂移；新任务首轮应从 R0 记）、Check 36（RISK-002/013）、Check 37（G8 vs G6/G7，DEC-029）、Check 28c 跨根误报（SYSGAP-001）、Check 18e/18f/18g 生命周期闸门（随各自交付翻绿）。
+1. **COMPAT-021 实施**（P1，pending→dev）：manifest + projection + preflight 脚本 + fixtures + 契约/测试接线 + 证据 `docs/evidence/COMPAT-021/`；执行包已就绪（acceptance = `node scripts/preflight-preset-rows.mjs`）。**必须含 C3 修复**（平面判定绑定 profile，mixedPlane WARN）。
+2. **COMPAT-022 立项**（运行时自适应预设 provider）：需关键决策批准；接口草案见设计文档 §5.4。
+3. **COMPAT-018 收口前复核**：0.2.1/0.2.2 闭包均含 `dsh-app-boot`（0.2.1 探针已 boot），旧「缺 dsh-app-boot」结论已证伪，改述后才能关。
+4. 既有债（勿伪装 PASS）：18e/18f UX-061、UX-062、CLEAN-013 acceptance/quality 未跑；UX-063 真机验收仍缺（UX-062 与 UX-063 同文件需串行）。
+5. 桌面端生效：用户需重启 DSH 桌面端加载新 bundle patch（junction/安装通道以用户实际安装方式为准），预设红字应消失；标题截断「小...」是独立 CSS/label 问题，未在本轮处理。
 
 ## 三、方法论事实（下轮直接复用，勿重踩）
 
-- **`Measure-Object -Line` 不计空行**（本例得 5841，真实 6067）⇒ 行数用 `readFileSync(...).split('\n').length - 1`。
-- **迁移表不要复制契约行号全表**（必漂移）：权威源 = 契约 `items[].line` + anchors 机检；迁移表只记「本轮抽核生效值」。
-- **契约段端点必须落真实代码行**：空行/下一函数首行/JSDoc 行都会被判越界。注意「我给的修正值也可能是错的」——本轮 CR1 建议 3431、我转述后 Developer 实读证明 3429 才对（3431 是 JSDoc），DR/CR2 均已采信 Developer。
-- **断言禁止以源码字面量冻结实现**；geometry 必须**真读源码规则**并量「文本内容宽」这类真实量（元素外框会假绿）。
-- **几何量算的反镜像验证法**：改源码值（字号/段距/令牌）看 geometry 是否跟着红；若仍绿即为镜像。
-- **意图/异步消费类改动必须验默认路径**（本轮 CR1 抓到「分栏已开且同书」时首页动作全静默）。
-- 变异测试一律 `%TEMP%` 副本；就地变异必须 sha256 还原并复跑门禁。
+- **task-row-update 状态机**：approved→**completed**→committed（无 approved→committed 直达）；refs 格式 `kind=value`（等号），evidence-append 的 refs 用 `kind:value`（冒号）。
+- **`*.log` 被 .gitignore L8 全局忽略**：证据日志需 `git add -f`（本轮 4 个 probe log 已强制入库）。
+- **`locks-release`**（非 agent-locks-release）；残留空 `.governance/plan-tracker.md.lock` 可安全删除。
+- **evidence-append** description 必须含「目标对齐：」且其后 ≥30 字；10 个单元格全非空。
+- 子代理空转模式：Developer/Architect 长时无产出 → interrupt + 重派或 Coordinator 兜底（设计/证据文档允许 Coordinator 写，产品码不允许）。
+- 探针 home = `%TEMP%\dsh-O6knv8\dsh-compat-probe`（非 `%TEMP%\dsh-compat-probe`）；端口 3080/3081；桌面 PID 1784/19316/19332 勿杀。
+- `Measure-Object -Line` 不计空行；行数用 `(Get-Content).Count` 或 split 计数。
+- 探针 stdout 含 web auth token，入库前必须替换 `<redacted>`。
