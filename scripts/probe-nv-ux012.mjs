@@ -70,12 +70,13 @@ const sha256 = (t) => createHash('sha256').update(t).digest('hex')
 const clientSrcNow = () => readFileSync(CLIENT_SRC, 'utf8')
 
 function parseArgs(argv) {
-  const opts = { out: join(tmpdir(), 'ux012-probe'), keep: false, help: false, falsifiability: false }
+  const opts = { out: join(tmpdir(), 'ux012-probe'), keep: false, help: false, falsifiability: false, dsh: null }
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i]
     if (a === '--out') opts.out = argv[++i]
     else if (a === '--keep') opts.keep = true
     else if (a === '--falsifiability') opts.falsifiability = true
+    else if (a === '--dsh') opts.dsh = String(argv[++i] ?? '')
     else if (a === '--help' || a === '-h') opts.help = true
     else { console.error('用法错误：未知参数 ' + a); process.exit(2) }
   }
@@ -598,20 +599,36 @@ function assertionLedgerSelfTest() {
   return { cases, pass, expectedFalseCases: cases.filter((c) => c.expectTypes.length > 0).length }
 }
 
-// ── 隔离实例引导（子进程自举；口径照 scripts/probe-nv-bar-geometry.mjs / CLEAN-004 探针）──
-async function bootChild(root, home, planeNodeModules, port) {
-  if (!(home !== root && home.startsWith(root + sep))) { console.error('BOOT-ERR 隔离失败：DSH_HOME 不在隔离根内 → ' + home); process.exit(2) }
-  if (home === join(process.env.USERPROFILE ?? '', '.dsh')) { console.error('BOOT-ERR 真实路径泄漏：DSH_HOME 指向真实用户目录'); process.exit(2) }
-  process.env.DSH_HOME = home
+// ── 隔离实例引导（COMPAT-023 boot 修复）────────────────────────────────────────
+// 旧模式（0.2.0 时代）：`node <self> --boot` 子进程 import 宿主平面 `dsh-app-boot` + `dsh/lib/profile-boot-*.js`
+// shim 自举 runProfile——0.2.1 起宿主闭包不再装 `dsh-app-boot` ⇒ boot 即 ERR_MODULE_NOT_FOUND（归
+// COMPAT-018/023，UX-063 S2 起全部真机探针被此阻塞）。
+// 新模式（COMPAT-020 / BUG-011 / BUG-012 三轮验证）：**官方 CLI + DSH_HOME 重定向**——parent 侧装配
+// profile（junction 插件 + bundles 声明），spawn `dsh.cmd --profile <name> --no-open --port <port>`；
+// 宿主平面由 CLI 自带闭包提供（profile **不**挂 @deepseek-ai junction——验证模式的实测形态）；token 从
+// stdout `dsh web: http://127.0.0.1:<port>/?token=` 行捕获（入库前 `<redacted>`）。
+const DESKTOP_CLI = 'D:\\app\\dsh\\resources\\runtime\\cli\\bin\\dsh.cmd' // 桌面运行时 CLI（本机验证通道；--dsh / NV_PROBE_DSH 可覆盖）
+
+function resolveHostCli(explicit) {
+  if (typeof explicit === 'string' && explicit !== '') {
+    return existsSync(explicit) ? { cmd: explicit, source: '--dsh 参数' } : null
+  }
+  if (typeof process.env.NV_PROBE_DSH === 'string' && process.env.NV_PROBE_DSH !== '') {
+    return existsSync(process.env.NV_PROBE_DSH) ? { cmd: process.env.NV_PROBE_DSH, source: 'env NV_PROBE_DSH' } : null
+  }
+  if (existsSync(DESKTOP_CLI)) return { cmd: DESKTOP_CLI, source: '桌面运行时 CLI（默认；0.2.2-rc.1）' }
+  return { cmd: 'dsh', source: 'PATH 上的 dsh（npm-global；Windows 下经 shell 解析）' }
+}
+
+/** profile 装配（parent 侧）：junction 插件 + bundles 声明 + 空 patch（cordis.yml/cordis.patch.yml=[]）。 */
+function prepareIsolatedProfile(root, home) {
+  if (!(home !== root && home.startsWith(root + sep))) { console.error('BOOT-ERR 隔离失败：DSH_HOME 不在隔离根内 → ' + home); return false }
+  if (home === join(process.env.USERPROFILE ?? '', '.dsh')) { console.error('BOOT-ERR 真实路径泄漏：DSH_HOME 指向真实用户目录'); return false }
   const profileDir = join(home, 'profiles', PROFILE_NAME)
   const nm = join(profileDir, 'node_modules')
   mkdirSync(nm, { recursive: true })
-  const link = (target, path) => {
-    const r = spawnSync('cmd', ['/c', 'mklink', '/J', path, target], { stdio: 'ignore' })
-    if (r.status !== 0 && !existsSync(path)) { console.error('BOOT-ERR junction: ' + path); process.exit(2) }
-  }
-  link(planeNodeModules, join(nm, '@deepseek-ai'))
-  link(REPO_ROOT, join(nm, 'dsh-novel-writing'))
+  const r = spawnSync('cmd', ['/c', 'mklink', '/J', join(nm, 'dsh-novel-writing'), REPO_ROOT], { stdio: 'ignore' })
+  if (r.status !== 0 && !existsSync(join(nm, 'dsh-novel-writing'))) { console.error('BOOT-ERR junction: ' + join(nm, 'dsh-novel-writing')); return false }
   writeFileSync(join(profileDir, 'package.json'), JSON.stringify({
     name: 'dsh-profile-' + PROFILE_NAME,
     private: true,
@@ -620,29 +637,24 @@ async function bootChild(root, home, planeNodeModules, port) {
   }, null, 2) + '\n')
   writeFileSync(join(profileDir, 'cordis.yml'), '[]\n')
   writeFileSync(join(profileDir, 'cordis.patch.yml'), '[]\n')
+  return true
+}
 
-  const appBoot = await import(pathToFileURL(join(planeNodeModules, 'dsh-app-boot', 'lib', 'index.js')).href)
-  const lib = join(planeNodeModules, 'dsh', 'lib')
-  const shim = readdirSync(lib).filter((f) => /^profile-boot-.*\.js$/.test(f)).find((f) => readFileSync(join(lib, f), 'utf8').includes('export { runProfile }'))
-  if (shim === undefined) { console.error('BOOT-ERR 宿主 launcher shim 缺失（宿主布局变更需同步探针）'); process.exit(2) }
-  const runProfile = (await import(pathToFileURL(join(lib, shim)).href)).runProfile
-  const booted = await runProfile({
-    environment: appBoot.loadLayeredEnv('dsh'),
-    profile: PROFILE_NAME,
-    fromDefaultProfile: undefined,
-    patchFiles: [],
-    args: ['--no-open', '--port', String(port)],
-  })
-  console.log('BOOT-READY pid=' + process.pid)
-  const stop = () => { try { booted.shutdown.shutdown(0).then(() => process.exit(0), () => process.exit(0)) } catch { process.exit(0) } }
-  process.on('SIGTERM', stop)
-  process.on('message', (m) => { if (m === 'stop') stop() })
-  setInterval(() => {}, 1 << 30)
+/** spawn 官方 CLI（Windows 的 .cmd 必须 shell 通道）；stdio 同旧模式（token 捕获走 stdout data 事件）。 */
+function spawnHostCli(cmd, args, env) {
+  return spawn(cmd, args, { env, stdio: ['ignore', 'pipe', 'pipe'], shell: process.platform === 'win32' })
 }
-if (process.argv[2] === '--boot') {
-  await bootChild(process.argv[3], process.argv[4], process.argv[5], Number(process.argv[6]))
-  await new Promise(() => {})
+
+/** 只杀**自启**进程树：taskkill /T /F 按本探针 spawn 的 PID 收口（cmd 包装器 → node 子树）——绝不按端口/进程名扫杀非本探针进程（StartTime 纪律的实现形态：PID 唯一性先于时间判定）。 */
+function killTree(child) {
+  if (child === null || child.pid === undefined || child.exitCode !== null) return
+  if (process.platform === 'win32') {
+    try { spawnSync('taskkill', ['/T', '/F', '/PID', String(child.pid)], { stdio: 'ignore' }) } catch { try { child.kill('SIGKILL') } catch { /* ignore */ } }
+  } else {
+    try { child.kill('SIGKILL') } catch { /* ignore */ }
+  }
 }
+
 
 // ── 极简 CDP 客户端（Node 内置 WebSocket）──
 class Cdp {
@@ -676,6 +688,8 @@ class Cdp {
 }
 
 function resolvePlane() {
+  // COMPAT-023：本函数保留为**信息面**（报告宿主代际语境）——boot 已不再依赖宿主平面 junction
+  // （新 boot = 官方 CLI 自带闭包）；返回 null 不再构成环境错误。
   const home = (process.env.DSH_HOME ?? '').trim() !== '' ? process.env.DSH_HOME : join(process.env.USERPROFILE ?? process.env.HOME ?? '', '.dsh')
   for (const pd of [join(home, 'profiles', 'web'), join(home, 'profiles')]) {
     if (!existsSync(pd)) continue
@@ -772,6 +786,7 @@ function readI18n() {
     bindNewSession: pick('bindNewSession'),
     dialogTitle: pick('dialogTitle'), // BUG-010：工作区对话框的可访问名（与同族绑定面板 `.nv-modal` 区分）
     bindNewDonePrefix: pickFn('bindNewDone').split('${')[0], // 「已为本书绑定新会话 」前缀（id 由探针拼接核对）
+    homeAllBooks: pick('homeAllBooks'), // COMPAT-023：UX-063 起控制台默认 view='home'——网格在「全部书籍」视图
   }
 }
 
@@ -855,8 +870,9 @@ async function main() {
     return rep.allPass === true && led.ok === true && self.pass === true && rtSelf.pass === true ? 0 : 1
   }
 
-  const plane = resolvePlane()
-  if (plane === null) { console.error('[probe] 环境错误：宿主平面不可达（未找到可解析 @deepseek-ai/dsh 的 profile 平面）'); return 2 }
+  const hostCli = resolveHostCli(opts.dsh)
+  if (hostCli === null) { console.error('[probe] 环境错误：指定的宿主 CLI 不可达（--dsh / NV_PROBE_DSH）'); return 2 }
+  const plane = resolvePlane() // 信息面（不再构成环境错误——boot 不依赖平面 junction）
   const browser = findBrowser()
   if (browser === null) { console.error('[probe] 环境错误：未找到 Chromium 内核浏览器（Edge/Chrome）'); return 2 }
 
@@ -891,7 +907,8 @@ async function main() {
 
   console.log('[probe] UX-012 隔离实例探针（环境变量重定向至临时目录；真实 $DSH_HOME 只读）')
   console.log('  临时根 = ' + root + '（containment 校验全真）')
-  console.log('  宿主平面（只读 junction）= ' + plane.nodeModules)
+  console.log('  宿主 CLI = ' + hostCli.cmd + '（来源 ' + hostCli.source + '；boot 模式 = COMPAT-023 官方 CLI + DSH_HOME 隔离）')
+  console.log('  宿主平面（信息面）= ' + (plane === null ? '本机 DSH_HOME 无可解析平面（不影响 boot）' : plane.nodeModules))
   console.log('  浏览器 = ' + String(browser))
 
   const appPort = await freePort()
@@ -909,7 +926,7 @@ async function main() {
 
   const report = {
     tool: 'probe-nv-ux012', task: 'CLEAN-007（F7）', head: null, headDirty: null, startedAt: new Date().toISOString(),
-    isolation: { root, dshHome: dirs.home, plane: plane.nodeModules, browser, containment, realEnvBefore: realBefore, env: { DSH_HOME: childEnv.DSH_HOME, USERPROFILE: childEnv.USERPROFILE, HOME: childEnv.HOME, APPDATA: childEnv.APPDATA, LOCALAPPDATA: childEnv.LOCALAPPDATA, TEMP: childEnv.TEMP } },
+    isolation: { root, dshHome: dirs.home, hostCli, plane: plane === null ? null : plane.nodeModules, browser, containment, realEnvBefore: realBefore, env: { DSH_HOME: childEnv.DSH_HOME, USERPROFILE: childEnv.USERPROFILE, HOME: childEnv.HOME, APPDATA: childEnv.APPDATA, LOCALAPPDATA: childEnv.LOCALAPPDATA, TEMP: childEnv.TEMP } },
     i18n, fixture: { novels: NOVELS.map((n) => n.id), staleBinding: { 'nn-stale-bound': STALE_SESSION_ID }, workspace: fixtureWs },
     assertions: [], facts: {}, pageLog: [], envErrors: [], falsifiability: null, realEnvAfter: null, cleanup: null, ok: false,
   }
@@ -937,7 +954,7 @@ async function main() {
   const stopAll = async () => {
     try { if (cdp !== null) cdp.ws.close() } catch { /* ignore */ }
     try { if (edge !== null && edge.exitCode === null) edge.kill() } catch { /* ignore */ }
-    try { if (boot !== null && boot.exitCode === null) boot.kill() } catch { /* ignore */ }
+    killTree(boot) // 只杀自启进程树（taskkill /T /F 按本探针 spawn 的 PID；绝不扫杀他人进程）
     await sleep(900)
     if (boot !== null && boot.exitCode === null) { try { boot.kill('SIGKILL') } catch { /* ignore */ } }
     if (edge !== null && edge.exitCode === null) { try { edge.kill('SIGKILL') } catch { /* ignore */ } }
@@ -953,8 +970,14 @@ async function main() {
       report.headDirty = String(st.stdout ?? '').trim() !== ''
     } catch { /* git 不可用 */ }
 
-    // ── 1) 隔离实例 ────────────────────────────────────────────────────────
-    boot = spawn(process.execPath, [fileURLToPath(import.meta.url), '--boot', root, dirs.home, plane.nodeModules, String(appPort)], { env: childEnv, stdio: ['ignore', 'pipe', 'pipe'] })
+    // ── 1) 隔离实例（COMPAT-023 boot：官方 CLI + DSH_HOME 隔离；profile 由 parent 装配）──
+    if (prepareIsolatedProfile(root, dirs.home) !== true) {
+      report.envErrors.push('隔离 profile 装配失败（junction/package.json）')
+      console.error('[probe] 环境错误：隔离 profile 装配失败')
+      await stopAll()
+      return 2
+    }
+    boot = spawnHostCli(hostCli.cmd, ['--profile', PROFILE_NAME, '--no-open', '--port', String(appPort)], childEnv)
     let appUrl = null
     boot.stdout.on('data', (b) => {
       const t = String(b)
@@ -978,11 +1001,13 @@ async function main() {
     console.log('  隔离实例就绪（' + String(lastErr) + '）')
 
     // ── 2) 无头浏览器 + CDP ────────────────────────────────────────────────
+    // 浏览器环境 = 系统 env 原样（COMPAT-023 实测订正：重定向 APPDATA/LOCALAPPDATA 会让当前 Edge
+    // 启动即退〔`Unable to get local app data path`〕，CDP 端口不开；隔离边界 = --user-data-dir 落临时根）。
     edge = spawn(browser, [
       '--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check', '--disable-extensions',
       '--disable-features=Translate,MediaRouter', '--remote-debugging-port=' + cdpPort,
       '--user-data-dir=' + dirs.edge, '--window-size=' + VIEWPORT.width + ',' + VIEWPORT.height, appUrl,
-    ], { env: { ...process.env, USERPROFILE: dirs.userprofile, HOME: dirs.userprofile, APPDATA: dirs.appdata, LOCALAPPDATA: dirs.localappdata }, stdio: ['ignore', 'pipe', 'pipe'] })
+    ], { stdio: ['ignore', 'pipe', 'pipe'] })
     edge.stderr.on('data', (b) => pageLog.push('edge ' + String(b).trim().slice(0, 200)))
     let target = null
     const deadline = Date.now() + 60000
@@ -1084,7 +1109,33 @@ async function main() {
     })()`)
 
     // ── 3) 页面就绪 ────────────────────────────────────────────────────────
-    await cdp.evaluate("(() => { const b = [...document.querySelectorAll('button')].find((x) => (x.textContent || '').trim() === '继续'); if (b !== undefined) b.click(); return true })()")
+    // 首跑门处置（COMPAT-023 实测订正）：宿主首跑有「预览版说明/开始使用」对话框 + `_mask_` 遮罩，
+    // 多轮且可能连续出现（单次「继续」点击不够）；遮罩在场时一切点击被拦截（BUG-012 阶段 A 误诊根源）。
+    // 关不掉 ⇒ envErrors + exit 2（环境门 ≠ 产品缺陷，不冒充断言失败/不渲染成 PASS）。
+    const GATE_BTN_RE = '/^(继续|开始使用|开始|知道了|关闭|跳过|continue|start|got it|close|skip|dismiss)$/i'
+    const dismissFirstRunGates = async () => {
+      await sleep(2000) // 宿主 bootstrap 期对话框可能迟到（COMPAT-023 实测 +4s 内出现）——先等一拍再开始轮询
+      for (let i = 0; i < 6; i += 1) {
+        const state = await cdp.evaluate(`(() => {
+          const dlg = document.querySelector('[role=dialog]')
+          const gateBtn = dlg === null ? undefined : [...dlg.querySelectorAll('button')].find((b) => ${GATE_BTN_RE}.test((b.getAttribute('aria-label') ?? '').trim()) || ${GATE_BTN_RE}.test((b.textContent ?? '').trim()))
+          return { hasDialog: dlg !== null, gateBtn: gateBtn !== undefined, mask: document.querySelector('[class*="_mask_"]') !== null }
+        })()`)
+        if (state.mask !== true && state.hasDialog !== true) return { dismissed: true, rounds: i }
+        if (state.gateBtn === true) {
+          await cdp.evaluate(`(() => { const dlg = document.querySelector('[role=dialog]'); const b = [...dlg.querySelectorAll('button')].find((x) => ${GATE_BTN_RE}.test((x.getAttribute('aria-label') ?? '').trim()) || ${GATE_BTN_RE}.test((x.textContent ?? '').trim())); if (b !== undefined) b.click(); return true })()`)
+        }
+        await sleep(1500)
+      }
+      return { dismissed: false, rounds: 6 }
+    }
+    const gate = await dismissFirstRunGates()
+    report.facts.firstRunGate = gate
+    if (gate.dismissed !== true) {
+      report.envErrors.push('首跑门（引导对话框/登录遮罩）关不掉——点击无法送达（环境门，非产品缺陷）')
+      console.error('[probe] 环境错误：首跑门关不掉（见 report.facts.firstRunGate）')
+      return 2
+    }
     const drawerReady = await waitFor("document.querySelector('.nv-drawer') !== null", 90000, '.nv-drawer')
     if (!drawerReady) {
       const diag = await cdp.evaluate("({ href: location.href, body: (document.body ? document.body.innerText : '').slice(0, 300) })").catch(() => null)
@@ -1092,13 +1143,20 @@ async function main() {
       console.error('[probe] 环境错误：.nv-drawer 未出现')
       return 2
     }
-    await cdp.evaluate("(() => { const b = [...document.querySelectorAll('button')].find((x) => (x.textContent || '').trim() === '继续'); if (b !== undefined) b.click(); return true })()")
     await sleep(800)
     const haveCards = await waitFor("document.querySelectorAll('.nv-drawer .nv-card').length >= 5", 45000, '抽屉书目卡')
 
     // ── 4) 打开控制台（后续模态/创建链场景的宿主环境）──────────────────────
     await clickSel('.nv-drawer-head')
     const consoleOpened = await waitFor("document.querySelector('.nv-console') !== null", 15000, '.nv-console 打开')
+    // COMPAT-023 环境前置（非断言语义变化）：UX-063 起控制台默认视图 = 任务流首页（view='home'），
+    // 书目网格（.nv-cgrid/.nv-cplus）在「全部书籍」视图——旧「开控制台即网格」的时代前提已失真。
+    // 首页四区随 overview 轮询异步渲染（homeLoading 态无按钮）⇒ 先等按钮在场再点（竞态防呆）。
+    if (consoleOpened === true) {
+      const navExpr = `[...document.querySelectorAll('.nv-home-sub, .nv-cbtn')].some((x) => (x.textContent || '').trim() === ${JSON.stringify(i18n.homeAllBooks)})`
+      await waitFor(navExpr, 15000, '「全部书籍」入口')
+      await cdp.evaluate(`(() => { const b = [...document.querySelectorAll('.nv-home-sub, .nv-cbtn')].find((x) => (x.textContent || '').trim() === ${JSON.stringify(i18n.homeAllBooks)}); if (b !== undefined) { b.click(); return true } return false })()`)
+    }
     const gridReady = await waitFor("document.querySelectorAll('.nv-cgrid .nv-ccard').length >= 5", 20000, '卡片网格就绪')
     A(/*@assert*/  'UX012-A0-console-ready', '准备', '抽屉渲染书目卡 → 控制台打开 → 卡片网格就绪（行为场景前置）',
       haveCards === true && consoleOpened === true && gridReady === true, { haveCards, consoleOpened, gridReady })

@@ -1,0 +1,605 @@
+{
+  "client": {
+    "crossSection": {
+      "SettingsForms": [
+        {
+          "file": "lib/index.js",
+          "line": null,
+          "package": "dsh-settings",
+          "snippet": "entry export face contains \"SettingsForms\""
+        }
+      ],
+      "SettingsProvider": [],
+      "mainSessionId": [
+        {
+          "file": "lib/client.js",
+          "line": 866,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "mainSessionId(list) {⏎\t\t\treturn Object.values(list.byId).find((session) => (session.retainedBy.mainView ?? 0) > 0)?.id;⏎\t\t}⏎\t\t/**⏎\t\t* Directory display label: b"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 1028,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "mainSessionId(list);⏎\t\t\tconst groups = [];⏎\t\t\tconst accounted = /* @__PURE__ */ new Set();⏎\t\t\tfor (const workspace of workspaces) {⏎\t\t\t\tconst members = [];⏎\t\t\t\t"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 1095,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "mainSessionId(list);⏎\t\t\tconst currentGroup = current === void 0 ? void 0 : owningGroupKey(workspaces, current);⏎\t\t\tconst groups = [];⏎\t\t\tfor (const g of groupBy"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 1131,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "mainSessionId(list);⏎\t\t\treturn list.ids.filter((id) => {⏎\t\t\t\tconst s = list.byId[id];⏎\t\t\t\treturn s !== void 0 && sessionVisible(s, current, archived, archivedFi"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 1149,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "mainSessionId(list);⏎\t\t\treturn sectionMembers(sessionIds.flatMap((id) => {⏎\t\t\t\tconst session = list.byId[id];⏎\t\t\t\treturn session !== void 0 && sessionVisible(se"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 1176,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "mainSessionId(list);⏎\t\t\tconst workspaceBySession = /* @__PURE__ */ new Map();⏎\t\t\tfor (const workspace of workspaces) for (const sessionId of workspace.sessionId"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 3543,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "mainSessionId = Object.values(list.byId).find((session) => (session.retainedBy.mainView ?? 0) > 0)?.id;⏎\t\t\tconst currentBlank = mainSessionId !== void 0 && list"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 3544,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "mainSessionId !== void 0 && list.byId[mainSessionId]?.blank === true ? mainSessionId : void 0;⏎\t\t\tconst ungroupedMemberIds = (0, react.useMemo)(() => {⏎\t\t\t\tcons"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 3544,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "mainSessionId]?.blank === true ? mainSessionId : void 0;⏎\t\t\tconst ungroupedMemberIds = (0, react.useMemo)(() => {⏎\t\t\t\tconst accounted = new Set(workspaces.flatM"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 3544,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "mainSessionId : void 0;⏎\t\t\tconst ungroupedMemberIds = (0, react.useMemo)(() => {⏎\t\t\t\tconst accounted = new Set(workspaces.flatMap((workspace) => workspace.sessi"
+        }
+      ],
+      "openSession": [
+        {
+          "file": "lib/client.js",
+          "line": 1494,
+          "package": "dsh-cordis-client-runner",
+          "snippet": "openSession(target: SessionTarget): void\",⏎\t\t\t\t\t\tdescription: \"Select a Session and show its Conversation as one UI navigation action.\",⏎\t\t\t\t\t\tparameters: [{⏎\t\t"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 1470,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "openSession(target) {⏎\t\t\t\tthis.replaceMain(target, this.lifetime.signal, \"reveal\");⏎\t\t\t}⏎\t\t\topenWorkspace(workspaceId, beforeOpen, options = {}) {⏎\t\t\t\treturn th"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 5063,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "openSession = (sessionId) => {⏎\t\t\t\tuiWorkspace.openSession(sessionId);⏎\t\t\t};⏎\t\t\tconst pinnedSet = derive(workspaces.list, (snapshot) => new Set(snapshot.pinnedS"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 5064,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "openSession(sessionId);⏎\t\t\t};⏎\t\t\tconst pinnedSet = derive(workspaces.list, (snapshot) => new Set(snapshot.pinnedSessionIds));⏎\t\t\tconst archivedSet = derive(work"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 5172,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "openSession(sessionId);⏎\t\t\t\t}⏎\t\t\t});⏎\t\t\tconst rowToastInjected = () => ({⏎\t\t\t\thooks: { toast: rowToast },⏎\t\t\t\tdismissToast: () => {⏎\t\t\t\t\trowToast.set(null);⏎\t\t\t"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 5185,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "openSession,⏎\t\t\t\tsearchSessions,⏎\t\t\t\tsearchResultLimit: sessions.searchResultLimit,⏎\t\t\t\trequestSessionRename,⏎\t\t\t\tnotifyArchivedNotOpenable: () => {⏎\t\t\t\t\tnotify"
+        }
+      ],
+      "retainedBy": [
+        {
+          "file": "lib/client.js",
+          "line": 60,
+          "package": "dsh-client-ui-layout",
+          "snippet": "retainedBy.mainView ?? 0) > 0)?.id;⏎\t\t\t\treturn !showSessionTitle || current === void 0 ? void 0 : state.byId[current]?.title;⏎\t\t\t});⏎\t\t\t(0, react.useEffect)(() "
+        },
+        {
+          "file": "lib/client.js",
+          "line": 2198,
+          "package": "dsh-cordis-client-runner",
+          "snippet": "retainedBy: Readonly<Partial<Record<SessionReferenceSource, number>>>;\\n}\"⏎\t\t\t},⏎\t\t\t{⏎\t\t\t\tname: \"SessionRetainOptions\",⏎\t\t\t\tdeclaration: \"export interface Sessi"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 89,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "retainedBy.mainView ?? 0) > 0);⏎\t\t\tconst addReason = () => ctx.slots.entries(\"sidebar.workspaces.directoryFlow\").length === 0 ? t(\"shortcut.noPicker\") : control"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 867,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "retainedBy.mainView ?? 0) > 0)?.id;⏎\t\t}⏎\t\t/**⏎\t\t* Directory display label: basename of the path (both separators accepted).⏎\t\t* Ungrouped-bucket fallback for su"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 3027,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "retainedBy.mainView ?? 0) > 0)?.id;⏎\t\t\tconst revealGroup = revealSessionId === void 0 || !workspaceReady ? void 0 : owningGroupKey(workspaces, revealSessionId);"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 3367,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "retainedBy.mainView ?? 0) > 0)?.id;⏎\t\t\tconst commitDrag = (activeDrag, over) => {⏎\t\t\t\tif (dropCommitted.current) return;⏎\t\t\t\tdropCommitted.current = true;⏎\t\t\t\ts"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 3462,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "retainedBy.mainView ?? 0) > 0)?.id;⏎\t\t\treturn (0, react_jsx_runtime.jsxs)(\"div\", {⏎\t\t\t\tclassName: clsx(WorkspaceBrowser_module_css_default.treeBody, WorkspaceBr"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 3543,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "retainedBy.mainView ?? 0) > 0)?.id;⏎\t\t\tconst currentBlank = mainSessionId !== void 0 && list.byId[mainSessionId]?.blank === true ? mainSessionId : void 0;⏎\t\t\tco"
+        }
+      ],
+      "sessions.open": []
+    },
+    "domAnchors": {
+      "overlayContainer": [
+        {
+          "file": "lib/client.js",
+          "line": 351,
+          "package": "dsh-client-ui-layout",
+          "snippet": "data-shell-overlay\": true,⏎\t\t\t\t\t\tchildren: overlays⏎\t\t\t\t\t}),⏎\t\t\t\t\tleadingMounted && (0, react_jsx_runtime.jsx)(\"div\", {⏎\t\t\t\t\t\tclassName: AppFrame_module_css_def"
+        }
+      ],
+      "phaseRoot": [],
+      "slotHost": [
+        {
+          "file": "lib/client.js",
+          "line": 643,
+          "package": "dsh-client-ui-renderer",
+          "snippet": "data-slot-error\": this.props.slotKey });⏎\t\t\t\treturn this.props.children;⏎\t\t\t}⏎\t\t};⏎\t\t/** Contain one Factory occurrence without retiring the shared definition. "
+        },
+        {
+          "file": "lib/client.js",
+          "line": 1124,
+          "package": "dsh-client-ui-renderer",
+          "snippet": "data-slot\": slotKey,⏎\t\t\t\tstyle: ANCHOR_STYLE,⏎\t\t\t\tchildren: spec === void 0 ? null : renderOutletContent(host, slotKey, ownerProps, opts, scopeBinding, spec)⏎\t\t"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 1172,
+          "package": "dsh-client-ui-renderer",
+          "snippet": "data-slot-error\": slotKey });⏎\t\t\tif (spec.kind === \"single\") {⏎\t\t\t\tconst entry = host.entriesOfSlot(slotKey)[0];⏎\t\t\t\tif (!entry) return entries.length > 0 ? dea"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 1221,
+          "package": "dsh-client-ui-renderer",
+          "snippet": "data-slot-error\": slotKey }, `x${item.id ?? i}`)) });⏎\t\t}⏎\t\t/** Render a chain election while preserving the overlay fallback's tree position. */⏎\t\tfunction ren"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 1239,
+          "package": "dsh-client-ui-renderer",
+          "snippet": "data-slot-error\": \"root\" });⏎\t\t\t\tthrow new SlotAssemblyError(\"renderSlot('root') before any 'root' registration (boot order)\");⏎\t\t\t}⏎\t\t\treturn (0, react_jsx_run"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 1243,
+          "package": "dsh-client-ui-renderer",
+          "snippet": "data-slot\": \"root\",⏎\t\t\t\tstyle: ANCHOR_STYLE,⏎\t\t\t\tchildren: (0, react_jsx_runtime.jsx)(SlotErrorBoundary, {⏎\t\t\t\t\tslotKey: \"root\",⏎\t\t\t\t\tonEntryError: (error) => {"
+        }
+      ]
+    },
+    "packages": {
+      "dsh-client-modules": {
+        "scannedFiles": [
+          "lib/client.js",
+          "lib/index.js"
+        ],
+        "version": "0.2.1-rc.2"
+      },
+      "dsh-client-ui-layout": {
+        "scannedFiles": [
+          "lib/client.js",
+          "lib/index.js"
+        ],
+        "version": "0.2.1-rc.2"
+      },
+      "dsh-client-ui-renderer": {
+        "scannedFiles": [
+          "lib/client.js",
+          "lib/index.js"
+        ],
+        "version": "0.2.1-rc.2"
+      },
+      "dsh-client-ui-workspace": {
+        "scannedFiles": [
+          "lib/client.js",
+          "lib/index.js"
+        ],
+        "version": "0.2.1-rc.2"
+      },
+      "dsh-cordis-client-runner": {
+        "scannedFiles": [
+          "lib/client.js",
+          "lib/index.js"
+        ],
+        "version": "0.2.1-rc.2"
+      }
+    },
+    "slots": {
+      "settings.section": {
+        "entryName": [
+          {
+            "file": "lib/client.js",
+            "form": "entry-name",
+            "line": 5342,
+            "package": "dsh-cordis-client-runner",
+            "snippet": "name: 'settings.section', id: 'my-entry', order: 100, label: 'My entry' },\\n      () => React.createElement('div', null, 'hello'),\\n    ))\\n  },\\n}\",⏎\t\t\t\tsource"
+          }
+        ],
+        "injectDoc": [
+          {
+            "file": "lib/client.js",
+            "form": "slots.inject",
+            "line": 5342,
+            "package": "dsh-cordis-client-runner",
+            "snippet": "slots.inject('settings.section', () => ctx.slots.register(\\n      { name: 'settings.section', id: 'my-entry', order: 100, label: 'My entry' },\\n      () => Reac"
+          }
+        ],
+        "registration": [
+          {
+            "file": "lib/client.js",
+            "form": "key-field",
+            "line": 5292,
+            "package": "dsh-cordis-client-runner",
+            "snippet": "key: \"settings.section\",⏎\t\t\t\tkind: \"list\",⏎\t\t\t\tscope: \"root\",⏎\t\t\t\tsummary: \"One settings page per list entry.\",⏎\t\t\t\tdoc: \"One settings page per list entry. Regi"
+          }
+        ],
+        "renderSlot": []
+      },
+      "shell.overlay": {
+        "entryName": [
+          {
+            "file": "lib/client.js",
+            "form": "entry-name",
+            "line": 5489,
+            "package": "dsh-cordis-client-runner",
+            "snippet": "name: 'shell.overlay', id: 'my-entry', order: 100, label: 'My entry' },\\n      () => React.createElement('div', null, 'hello'),\\n    ))\\n  },\\n}\",⏎\t\t\t\tsource: \""
+          },
+          {
+            "file": "lib/client.js",
+            "form": "entry-name",
+            "line": 5307,
+            "package": "dsh-client-ui-workspace",
+            "snippet": "name: \"shell.overlay\",⏎\t\t\t\t\tid: \"workspace.session-rename\",⏎\t\t\t\t\tlocale: NS,⏎\t\t\t\t\tinject: renameDialogInjected⏎\t\t\t\t}, SessionRenameDialog);⏎\t\t\t\tyield ctx.slots."
+          },
+          {
+            "file": "lib/client.js",
+            "form": "entry-name",
+            "line": 5313,
+            "package": "dsh-client-ui-workspace",
+            "snippet": "name: \"shell.overlay\",⏎\t\t\t\t\tid: \"workspace.session-archive\",⏎\t\t\t\t\tlocale: NS,⏎\t\t\t\t\tinject: archiveConfirmInjected⏎\t\t\t\t}, SessionArchiveConfirmDialog);⏎\t\t\t\tyield"
+          },
+          {
+            "file": "lib/client.js",
+            "form": "entry-name",
+            "line": 5319,
+            "package": "dsh-client-ui-workspace",
+            "snippet": "name: \"shell.overlay\",⏎\t\t\t\t\tid: \"workspace.row-toast\",⏎\t\t\t\t\tinject: rowToastInjected,⏎\t\t\t\t\tchildren: { \"workspace.toast\": {⏎\t\t\t\t\t\tkind: \"keyed\",⏎\t\t\t\t\t\tscope: \"r"
+          }
+        ],
+        "injectDoc": [
+          {
+            "file": "lib/client.js",
+            "form": "slots.inject",
+            "line": 5489,
+            "package": "dsh-cordis-client-runner",
+            "snippet": "slots.inject('shell.overlay', () => ctx.slots.register(\\n      { name: 'shell.overlay', id: 'my-entry', order: 100, label: 'My entry' },\\n      () => React.crea"
+          },
+          {
+            "file": "lib/client.js",
+            "form": "slots.inject",
+            "line": 5305,
+            "package": "dsh-client-ui-workspace",
+            "snippet": "slots.inject(\"shell.overlay\", function* () {⏎\t\t\t\tyield ctx.slots.register({⏎\t\t\t\t\tname: \"shell.overlay\",⏎\t\t\t\t\tid: \"workspace.session-rename\",⏎\t\t\t\t\tlocale: NS,⏎\t\t"
+          }
+        ],
+        "registration": [
+          {
+            "file": "lib/client.js",
+            "form": "object-key",
+            "line": 643,
+            "package": "dsh-client-ui-layout",
+            "snippet": "\"shell.overlay\": {⏎\t\t\t\t\t\t\tkind: \"list\",⏎\t\t\t\t\t\t\tscope: \"root\"⏎\t\t\t\t\t\t},⏎\t\t\t\t\t\t\"shell.leading\": {⏎\t\t\t\t\t\t\tkind: \"single\",⏎\t\t\t\t\t\t\tscope: \"root\"⏎\t\t\t\t\t\t}⏎\t\t\t\t\t},⏎\t\t\t\t\t"
+          },
+          {
+            "file": "lib/client.js",
+            "form": "key-field",
+            "line": 5433,
+            "package": "dsh-cordis-client-runner",
+            "snippet": "key: \"shell.overlay\",⏎\t\t\t\tkind: \"list\",⏎\t\t\t\tscope: \"root\",⏎\t\t\t\tsummary: \"Frame-wide floating layer, above every column and outside their scroll containers.\",⏎\t\t"
+          }
+        ],
+        "renderSlot": [
+          {
+            "file": "lib/client.js",
+            "form": "renderSlot",
+            "line": 313,
+            "package": "dsh-client-ui-layout",
+            "snippet": "renderSlot(\"shell.overlay\", {}), [renderSlot]);⏎\t\t\tconst leading = (0, react.useMemo)(() => renderSlot(\"shell.leading\", {}), [renderSlot]);⏎\t\t\tconst leadingMoun"
+          }
+        ]
+      },
+      "sidebar.footer.action": {
+        "entryName": [
+          {
+            "file": "lib/client.js",
+            "form": "entry-name",
+            "line": 5696,
+            "package": "dsh-cordis-client-runner",
+            "snippet": "name: 'sidebar.footer.action', id: 'my-entry', order: 100, label: 'My entry' },\\n      () => React.createElement('div', null, 'hello'),\\n    ))\\n  },\\n}\",⏎\t\t\t\ts"
+          }
+        ],
+        "injectDoc": [
+          {
+            "file": "lib/client.js",
+            "form": "slots.inject",
+            "line": 5696,
+            "package": "dsh-cordis-client-runner",
+            "snippet": "slots.inject('sidebar.footer.action', () => ctx.slots.register(\\n      { name: 'sidebar.footer.action', id: 'my-entry', order: 100, label: 'My entry' },\\n      "
+          }
+        ],
+        "registration": [
+          {
+            "file": "lib/client.js",
+            "form": "key-field",
+            "line": 5652,
+            "package": "dsh-cordis-client-runner",
+            "snippet": "key: \"sidebar.footer.action\",⏎\t\t\t\tkind: \"list\",⏎\t\t\t\tscope: \"root\",⏎\t\t\t\tsummary: \"Optional actions beside Settings at the sidebar foot.\",⏎\t\t\t\tdoc: \"Optional acti"
+          }
+        ],
+        "renderSlot": []
+      }
+    }
+  },
+  "closurePins": {
+    "cordis": {
+      "collectedVersion": "4.0.5",
+      "pin": "~4.0.5",
+      "via": "npm-view-resolve"
+    },
+    "dsh-api-gateway": {
+      "collectedVersion": "0.2.1-rc.2",
+      "pin": "0.2.1-rc.2",
+      "via": "generation-version"
+    },
+    "dsh-client-connection": {
+      "collectedVersion": "0.2.1-rc.2",
+      "pin": "0.2.1-rc.2",
+      "via": "generation-version"
+    },
+    "dsh-client-modules": {
+      "collectedVersion": "0.2.1-rc.2",
+      "pin": "0.2.1-rc.2",
+      "via": "generation-version"
+    },
+    "dsh-client-ui-layout": {
+      "collectedVersion": "0.2.1-rc.2",
+      "pin": "0.2.1-rc.2",
+      "via": "generation-version"
+    },
+    "dsh-client-ui-renderer": {
+      "collectedVersion": "0.2.1-rc.2",
+      "pin": "0.2.1-rc.2",
+      "via": "generation-version"
+    },
+    "dsh-client-ui-workspace": {
+      "collectedVersion": "0.2.1-rc.2",
+      "pin": "0.2.1-rc.2",
+      "via": "generation-version"
+    },
+    "dsh-cordis-client-runner": {
+      "collectedVersion": "0.2.1-rc.2",
+      "pin": "0.2.1-rc.2",
+      "via": "dsh-exact-pin"
+    },
+    "dsh-home-paths": {
+      "collectedVersion": "0.2.1-rc.2",
+      "pin": "0.2.1-rc.2",
+      "via": "dsh-exact-pin"
+    },
+    "dsh-settings": {
+      "collectedVersion": "0.2.1-rc.2",
+      "pin": "0.2.1-rc.2",
+      "via": "generation-version"
+    },
+    "dsh-tools": {
+      "collectedVersion": "0.2.1-rc.2",
+      "pin": "0.2.1-rc.2",
+      "via": "generation-version"
+    },
+    "schemastery": {
+      "collectedVersion": "3.18.5",
+      "pin": "~3.18.5",
+      "via": "npm-view-resolve"
+    }
+  },
+  "collectedAt": "2026-11-07",
+  "errors": [],
+  "generation": "decl-0.2.1",
+  "hostVersion": "0.2.1-rc.2",
+  "schemaVersion": 1,
+  "server": {
+    "cordis": {
+      "entry": "lib/index.js",
+      "exports": [
+        "Context",
+        "CordisError",
+        "DisposableList",
+        "EventsService",
+        "Fiber",
+        "Inject",
+        "Logger",
+        "LoggerService",
+        "RegistryService",
+        "Service",
+        "ValidationError",
+        "buildOuterStack",
+        "c16",
+        "c256",
+        "composeError",
+        "createCallable",
+        "defaultFormatters",
+        "getPropertyDescriptor",
+        "getTraceable",
+        "isBailed",
+        "isConstructor",
+        "isObject",
+        "joinPrototype",
+        "resolveConfig",
+        "symbols",
+        "withProps"
+      ],
+      "version": "4.0.5"
+    },
+    "dsh-api-gateway": {
+      "entry": "lib/index.js",
+      "exports": [
+        "TypertGatewayError",
+        "TypertGatewayService",
+        "default"
+      ],
+      "version": "0.2.1-rc.2"
+    },
+    "dsh-client-connection": {
+      "entry": "lib/index.js",
+      "exports": [
+        "API_PATH",
+        "CONNECT_PATH",
+        "Config",
+        "HostConnectionService",
+        "Peer",
+        "RpcId",
+        "apply",
+        "clientRequestSchema",
+        "inject",
+        "name",
+        "rpcErrorSchema",
+        "rpcIdSchema",
+        "rpcMessageSchema",
+        "rpcResultSchema",
+        "serverResponseSchema",
+        "transportError"
+      ],
+      "version": "0.2.1-rc.2"
+    },
+    "dsh-client-modules": {
+      "entry": "lib/index.js",
+      "exports": [
+        "ClientModuleRegistry",
+        "bootInjections",
+        "default",
+        "orderByModuleGraph",
+        "stripClientSuffix"
+      ],
+      "version": "0.2.1-rc.2"
+    },
+    "dsh-home-paths": {
+      "entry": "lib/index.js",
+      "exports": [
+        "AGENTS_HOME_DIR_NAME",
+        "AGENTS_HOME_ENV",
+        "DEFAULT_AGENTS_HOME_DISPLAY",
+        "DEFAULT_DSH_HOME_DISPLAY",
+        "DSH_HOME_DIR_NAME",
+        "DSH_HOME_ENV",
+        "agentsHomeDisplay",
+        "canonicalizeWatchPath",
+        "defaultAgentsHome",
+        "defaultDshHome",
+        "dshCachePath",
+        "dshHomeDisplay",
+        "dshHomePath",
+        "expandHomePath",
+        "resolveAgentsHome",
+        "resolveDshHome"
+      ],
+      "version": "0.2.1-rc.2"
+    },
+    "dsh-settings": {
+      "entry": "lib/index.js",
+      "exports": [
+        "SettingsConflictError",
+        "SettingsForms",
+        "default",
+        "redactSecrets"
+      ],
+      "version": "0.2.1-rc.2"
+    },
+    "dsh-tools": {
+      "entry": "lib/index.js",
+      "exports": [
+        "CodeRunFailedError",
+        "JsonSchemaError",
+        "RUN_CODE_NAME",
+        "TOOL_ABORTED",
+        "TOOL_ABORTED_BEFORE_DISPATCH",
+        "TOOL_RUNTIME_SCHEDULER",
+        "ToolArgsError",
+        "ToolNotFoundError",
+        "ToolOutputError",
+        "ToolRuntime",
+        "assertObjectJsonSchema",
+        "assertSupportedJsonSchema",
+        "default",
+        "defineContentToolFixture",
+        "defineTool",
+        "jsonSchemaToPy",
+        "jsonSchemaToTs",
+        "parameterSchemaSpecToJsonSchema",
+        "renderToolsSdk",
+        "renderToolsSdkPy",
+        "validateArgs",
+        "validateJsonSchemaValue",
+        "valueSchemaSpecToJsonSchema"
+      ],
+      "version": "0.2.1-rc.2"
+    },
+    "schemastery": {
+      "entry": "lib/index.cjs",
+      "exports": [
+        "default"
+      ],
+      "version": "3.18.5"
+    }
+  },
+  "slotNames": [
+    "shell.overlay",
+    "sidebar.footer.action",
+    "settings.section"
+  ],
+  "source": "npm-tarball-scan",
+  "sourceNote": "npm view（只读元数据）+ npm pack（只读下载）+ tar 解包扫描；不 install、不执行包内代码。npm tarball = 桌面实装事实源（BUG-012 阶段 A 实证）。"
+}

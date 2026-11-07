@@ -903,89 +903,87 @@
     "COMPAT-023": {
       "task_id": "COMPAT-023",
       "priority": "P1",
-      "status": "⏳ 范围升级已批准（2026-11-07，DEC-160）；排期 = BUG-012 修复验收后立即实施（用户确认）；执行包已建",
+      "status": "✅committed：surfaceEvidence 5代×6面 30 格 + preflight --surfaces 三态语义 + UI 探针三件修复 + smoke 342 + README 口径硬化 + L3 升关键面；R1 AWN（P2×3）→ F1 立项 CLEAN-014 / F2+F3 返工 → R2 APPROVED 0/0/0",
       "goal": "COMPAT-023 **全量看护补面——全依赖面看护（用户 2026-11-07 质询驱动并经 AskUserQuestion 批准范围升级：「不应该全量看护的吗」+「系统性分析优化没起到效果」）**：把看护面从 COMPAT-021 的「预设行单格」扩展到**契约 52 项宿主耦合六面逐面接入消费方存在性检查**——①面 2/3（客户端 API/槽位/DOM 约定）：宿主 web 资源 + client 包的字面量消费证据扫描（shell.overlay / sidebar.footer.action / settings.section 等），按代际入 generation manifest，某代宿主资源消失即红（BUG-012 这类断裂在宿主版本检出日即抓）②面 1（服务端 API）：宿主闭包 exports/接口存在性逐项检查（COMPAT-020 子路径断裂教训通用化）③面 4/6（安装机制/版本环境）：安装锚点与代际探测断言④面 5（预设行）已有（COMPAT-021）⑤修复仓内 UI 探针脚本 boot（0.2.1 起坏，用 2026-11-07 验证模式重写）+ UI 挂载断言入常规命令集⑥验收口径硬化：README「已实测」必须挂探针证据，无证据一律「未验证」⑦设计修正：工作台 UI 面从 L3「可降级」升为关键面（其看护优先级等同预设面）",
       "product_success_contract": {
-        "user": "TO_BE_DEFINED: impacted persona for COMPAT-023 **全量看护补面——全依赖面看护（用户 2026-11-07 质询驱动并经 AskUserQuestion 批准范围升级：「不应该全量看护的吗」+「系统性分析优化没起到效果」）**：把看护面从 COMPAT-021 的「预设行单格」扩展到**契约 52 项宿主耦合六面逐面接入消费方存在性检查**——①面 2/3（客户端 API/槽位/DOM 约定）：宿主 web 资源 + client 包的字面量消费证据扫描（shell.overlay / sidebar.footer.action / settings.section 等），按代际入 generation manifest，某代宿主资源消失即红（BUG-012 这类断裂在宿主版本检出日即抓）②面 1（服务端 API）：宿主闭包 exports/接口存在性逐项检查（COMPAT-020 子路径断裂教训通用化）③面 4/6（安装机制/版本环境）：安装锚点与代际探测断言④面 5（预设行）已有（COMPAT-021）⑤修复仓内 UI 探针脚本 boot（0.2.1 起坏，用 2026-11-07 验证模式重写）+ UI 挂载断言入常规命令集⑥验收口径硬化：README「已实测」必须挂探针证据，无证据一律「未验证」⑦设计修正：工作台 UI 面从 L3「可降级」升为关键面（其看护优先级等同预设面）",
-        "job_to_be_done": "TO_BE_DEFINED: user job and desired outcome for COMPAT-023 **全量看护补面——全依赖面看护（用户 2026-11-07 质询驱动并经 AskUserQuestion 批准范围升级：「不应该全量看护的吗」+「系统性分析优化没起到效果」）**：把看护面从 COMPAT-021 的「预设行单格」扩展到**契约 52 项宿主耦合六面逐面接入消费方存在性检查**——①面 2/3（客户端 API/槽位/DOM 约定）：宿主 web 资源 + client 包的字面量消费证据扫描（shell.overlay / sidebar.footer.action / settings.section 等），按代际入 generation manifest，某代宿主资源消失即红（BUG-012 这类断裂在宿主版本检出日即抓）②面 1（服务端 API）：宿主闭包 exports/接口存在性逐项检查（COMPAT-020 子路径断裂教训通用化）③面 4/6（安装机制/版本环境）：安装锚点与代际探测断言④面 5（预设行）已有（COMPAT-021）⑤修复仓内 UI 探针脚本 boot（0.2.1 起坏，用 2026-11-07 验证模式重写）+ UI 挂载断言入常规命令集⑥验收口径硬化：README「已实测」必须挂探针证据，无证据一律「未验证」⑦设计修正：工作台 UI 面从 L3「可降级」升为关键面（其看护优先级等同预设面）",
+        "user": "使用 DSH 宿主任意代际的小说作者（宿主升级后插件功能存活）。",
+        "job_to_be_done": "宿主版本更替时，插件依赖面的断裂在检出日由看护网红灯暴露，而不是由作者使用时先用出来。",
         "non_goals": [
-          "TO_BE_DEFINED: explicit non-goal that protects the task from scope drift.",
-          "TO_BE_DEFINED: explicit non-goal that prevents process evidence from replacing product value."
+          "不改业务逻辑（lib/client.js、lib/index.js、lib/tools.js、cordis.patch.yml 零改动）。",
+          "不实现运行时自适应预设提供器（COMPAT-022 另行决策）。",
+          "bar-geometry C5 判据刷新（已移交 CLEAN-014）。"
         ],
         "success_metrics": [
-          "TO_BE_DEFINED: user-visible outcome or acceptance scenario for this task.",
-          "TO_BE_DEFINED: runnable E2E, test, or command that proves the outcome."
+          "manifest surfaceEvidence 30 格：面1-3 verified（tarball 实测）、面4-6 fixture-record、unknown fail-closed。",
+          "preflight --surfaces 三态：pristine exit0（24/6/0/0）、缓存缺 12SKIP≠PASS、篡改 exit1 精确报格。",
+          "UI 探针三件可复跑：workbench-mount 6/6、ux012 27/27、bar-geometry 7/8（C5 裁决 A 立项）。"
         ],
-        "competitive_baseline": "TO_BE_DEFINED: mature-team or competing-product baseline this task must match.",
+        "competitive_baseline": "无同类插件具备跨五代宿主的消费方证据看护；本仓 COMPAT-021 预设行机制推广至六面为自有范式延伸。",
         "done_definition": [
-          "TO_BE_DEFINED: product success evidence is recorded with concrete facts.",
-          "TO_BE_DEFINED: independent review confirms the user outcome is not replaced by process completion."
+          "R1 证据真实性抽查 10 格独立对拍（含 npm pack 只读 2 包）。",
+          "R2 APPROVED 0/0/0（F1/F2/F3 全闭）。",
+          "门禁全绿：smoke 342/0、pf test 16、validate PASS、anchors 79 段 FAIL=0、--surfaces exit 0。"
         ]
       },
       "acceptance_contract": {
-        "scenario": "TO_BE_DEFINED: user-visible acceptance scenario for COMPAT-023 **全量看护补面——全依赖面看护（用户 2026-11-07 质询驱动并经 AskUserQuestion 批准范围升级：「不应该全量看护的吗」+「系统性分析优化没起到效果」）**：把看护面从 COMPAT-021 的「预设行单格」扩展到**契约 52 项宿主耦合六面逐面接入消费方存在性检查**——①面 2/3（客户端 API/槽位/DOM 约定）：宿主 web 资源 + client 包的字面量消费证据扫描（shell.overlay / sidebar.footer.action / settings.section 等），按代际入 generation manifest，某代宿主资源消失即红（BUG-012 这类断裂在宿主版本检出日即抓）②面 1（服务端 API）：宿主闭包 exports/接口存在性逐项检查（COMPAT-020 子路径断裂教训通用化）③面 4/6（安装机制/版本环境）：安装锚点与代际探测断言④面 5（预设行）已有（COMPAT-021）⑤修复仓内 UI 探针脚本 boot（0.2.1 起坏，用 2026-11-07 验证模式重写）+ UI 挂载断言入常规命令集⑥验收口径硬化：README「已实测」必须挂探针证据，无证据一律「未验证」⑦设计修正：工作台 UI 面从 L3「可降级」升为关键面（其看护优先级等同预设面）",
-        "command": "TO_BE_DEFINED: runnable E2E, smoke, unit, or validation command",
-        "expected_output": "TO_BE_DEFINED: concrete pass output, assertion, or observable demo result",
+        "scenario": "宿主新版本发布 → 采集脚本刷新证据 → preflight --surfaces 对该代际逐面校验：任何被消费的槽位/API/安装锚点在宿主资源中消失 ⇒ 精确红（SURFACE_EVIDENCE_MISMATCH）；证据缺失 ⇒ SKIP/WARN 非绿（fail-closed）。",
+        "command": "node scripts/preflight-preset-rows.mjs --surfaces",
+        "expected_output": "[nv-compat] 汇总：total 30 | pass 24 | warn 6（unknown，非绿） | skip 0（缓存缺失 ≠ PASS） | fail 0；exit 0（pristine）。篡改/缺缓存/strict 三态见 test/preflight-preset-rows.test.mjs ⑥组。",
         "last_run": {
-          "status": "TO_BE_DEFINED",
-          "exit_code": null,
-          "summary": "TO_BE_DEFINED: last run output summary with evidence location"
+          "status": "PASS",
+          "exit_code": 0,
+          "summary": "2026-11-07 Coordinator 独立复跑：--surfaces exit 0（24/6/0/0）；smoke 342/0；pf test 16；validate-preset PASS；anchors 79 段 FAIL=0；R1/R2 复审者独立复跑同绿（含 fail-closed 三态与 npm pack 对拍）。"
         },
-        "demo_evidence": "TO_BE_DEFINED: demo, CLI output, or artifact proving the scenario"
+        "demo_evidence": "docs/evidence/COMPAT-023/implementation.md + workbench-mount-report.json + 三截图 + test/fixtures/host-generations/*/surfaces/surfaces.json"
       },
       "quality_budget": {
         "dimensions": {
           "performance": {
-            "threshold": "TO_BE_DEFINED: minimum acceptable performance threshold for COMPAT-023 **全量看护补面——全依赖面看护（用户 2026-11-07 质询驱动并经 AskUserQuestion 批准范围升级：「不应该全量看护的吗」+「系统性分析优化没起到效果」）**：把看护面从 COMPAT-021 的「预设行单格」扩展到**契约 52 项宿主耦合六面逐面接入消费方存在性检查**——①面 2/3（客户端 API/槽位/DOM 约定）：宿主 web 资源 + client 包的字面量消费证据扫描（shell.overlay / sidebar.footer.action / settings.section 等），按代际入 generation manifest，某代宿主资源消失即红（BUG-012 这类断裂在宿主版本检出日即抓）②面 1（服务端 API）：宿主闭包 exports/接口存在性逐项检查（COMPAT-020 子路径断裂教训通用化）③面 4/6（安装机制/版本环境）：安装锚点与代际探测断言④面 5（预设行）已有（COMPAT-021）⑤修复仓内 UI 探针脚本 boot（0.2.1 起坏，用 2026-11-07 验证模式重写）+ UI 挂载断言入常规命令集⑥验收口径硬化：README「已实测」必须挂探针证据，无证据一律「未验证」⑦设计修正：工作台 UI 面从 L3「可降级」升为关键面（其看护优先级等同预设面）",
-            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for performance",
-            "status": "TO_BE_DEFINED",
-            "evidence": "TO_BE_DEFINED: latest performance result or planned evidence location",
-            "exception": ""
+            "threshold": "预检/采集为离线工具面，不进运行时；探针可重复运行（boot < 60s）。",
+            "validation": "preflight --surfaces 真跑 + 探针真跑",
+            "status": "PASS",
+            "evidence": "docs/evidence/COMPAT-023/implementation.md"
           },
           "reliability": {
-            "threshold": "TO_BE_DEFINED: minimum acceptable reliability threshold for COMPAT-023 **全量看护补面——全依赖面看护（用户 2026-11-07 质询驱动并经 AskUserQuestion 批准范围升级：「不应该全量看护的吗」+「系统性分析优化没起到效果」）**：把看护面从 COMPAT-021 的「预设行单格」扩展到**契约 52 项宿主耦合六面逐面接入消费方存在性检查**——①面 2/3（客户端 API/槽位/DOM 约定）：宿主 web 资源 + client 包的字面量消费证据扫描（shell.overlay / sidebar.footer.action / settings.section 等），按代际入 generation manifest，某代宿主资源消失即红（BUG-012 这类断裂在宿主版本检出日即抓）②面 1（服务端 API）：宿主闭包 exports/接口存在性逐项检查（COMPAT-020 子路径断裂教训通用化）③面 4/6（安装机制/版本环境）：安装锚点与代际探测断言④面 5（预设行）已有（COMPAT-021）⑤修复仓内 UI 探针脚本 boot（0.2.1 起坏，用 2026-11-07 验证模式重写）+ UI 挂载断言入常规命令集⑥验收口径硬化：README「已实测」必须挂探针证据，无证据一律「未验证」⑦设计修正：工作台 UI 面从 L3「可降级」升为关键面（其看护优先级等同预设面）",
-            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for reliability",
-            "status": "TO_BE_DEFINED",
-            "evidence": "TO_BE_DEFINED: latest reliability result or planned evidence location",
-            "exception": ""
+            "threshold": "fail-closed 三态（unknown WARN 非绿 / 缓存缺 SKIP≠PASS / 篡改 exit1）——无默认绿路径。",
+            "validation": "test ⑥组 4 断言 spawn 真跑三态 + R1 独立复现",
+            "status": "PASS",
+            "evidence": "docs/review/COMPAT-023-R1.md（fail-closed 三态独立复现）"
           },
           "security": {
-            "threshold": "TO_BE_DEFINED: minimum acceptable security threshold for COMPAT-023 **全量看护补面——全依赖面看护（用户 2026-11-07 质询驱动并经 AskUserQuestion 批准范围升级：「不应该全量看护的吗」+「系统性分析优化没起到效果」）**：把看护面从 COMPAT-021 的「预设行单格」扩展到**契约 52 项宿主耦合六面逐面接入消费方存在性检查**——①面 2/3（客户端 API/槽位/DOM 约定）：宿主 web 资源 + client 包的字面量消费证据扫描（shell.overlay / sidebar.footer.action / settings.section 等），按代际入 generation manifest，某代宿主资源消失即红（BUG-012 这类断裂在宿主版本检出日即抓）②面 1（服务端 API）：宿主闭包 exports/接口存在性逐项检查（COMPAT-020 子路径断裂教训通用化）③面 4/6（安装机制/版本环境）：安装锚点与代际探测断言④面 5（预设行）已有（COMPAT-021）⑤修复仓内 UI 探针脚本 boot（0.2.1 起坏，用 2026-11-07 验证模式重写）+ UI 挂载断言入常规命令集⑥验收口径硬化：README「已实测」必须挂探针证据，无证据一律「未验证」⑦设计修正：工作台 UI 面从 L3「可降级」升为关键面（其看护优先级等同预设面）",
-            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for security",
-            "status": "TO_BE_DEFINED",
-            "evidence": "TO_BE_DEFINED: latest security result or planned evidence location",
-            "exception": ""
+            "threshold": "宿主包只读（npm view/pack，绝不 install/execute）；探针隔离 DSH_HOME 零写入真实环境。",
+            "validation": "workbench-mount 收尾指纹前后一致（R1 核验）",
+            "status": "PASS",
+            "evidence": "docs/review/COMPAT-023-R1.md（隔离指纹 + token 脱敏核验）"
           },
           "accessibility": {
-            "threshold": "TO_BE_DEFINED: minimum acceptable accessibility threshold for COMPAT-023 **全量看护补面——全依赖面看护（用户 2026-11-07 质询驱动并经 AskUserQuestion 批准范围升级：「不应该全量看护的吗」+「系统性分析优化没起到效果」）**：把看护面从 COMPAT-021 的「预设行单格」扩展到**契约 52 项宿主耦合六面逐面接入消费方存在性检查**——①面 2/3（客户端 API/槽位/DOM 约定）：宿主 web 资源 + client 包的字面量消费证据扫描（shell.overlay / sidebar.footer.action / settings.section 等），按代际入 generation manifest，某代宿主资源消失即红（BUG-012 这类断裂在宿主版本检出日即抓）②面 1（服务端 API）：宿主闭包 exports/接口存在性逐项检查（COMPAT-020 子路径断裂教训通用化）③面 4/6（安装机制/版本环境）：安装锚点与代际探测断言④面 5（预设行）已有（COMPAT-021）⑤修复仓内 UI 探针脚本 boot（0.2.1 起坏，用 2026-11-07 验证模式重写）+ UI 挂载断言入常规命令集⑥验收口径硬化：README「已实测」必须挂探针证据，无证据一律「未验证」⑦设计修正：工作台 UI 面从 L3「可降级」升为关键面（其看护优先级等同预设面）",
-            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for accessibility",
-            "status": "TO_BE_DEFINED",
-            "evidence": "TO_BE_DEFINED: latest accessibility result or planned evidence location",
-            "exception": ""
+            "threshold": "纯工具/看护面，无用户交互面变化。",
+            "validation": "git diff 无 UI 改动",
+            "status": "EXEMPT",
+            "evidence": "git diff（零业务/UI 代码改动）",
+            "exception": "看护工具层任务。"
           },
           "ux": {
-            "threshold": "TO_BE_DEFINED: minimum acceptable ux threshold for COMPAT-023 **全量看护补面——全依赖面看护（用户 2026-11-07 质询驱动并经 AskUserQuestion 批准范围升级：「不应该全量看护的吗」+「系统性分析优化没起到效果」）**：把看护面从 COMPAT-021 的「预设行单格」扩展到**契约 52 项宿主耦合六面逐面接入消费方存在性检查**——①面 2/3（客户端 API/槽位/DOM 约定）：宿主 web 资源 + client 包的字面量消费证据扫描（shell.overlay / sidebar.footer.action / settings.section 等），按代际入 generation manifest，某代宿主资源消失即红（BUG-012 这类断裂在宿主版本检出日即抓）②面 1（服务端 API）：宿主闭包 exports/接口存在性逐项检查（COMPAT-020 子路径断裂教训通用化）③面 4/6（安装机制/版本环境）：安装锚点与代际探测断言④面 5（预设行）已有（COMPAT-021）⑤修复仓内 UI 探针脚本 boot（0.2.1 起坏，用 2026-11-07 验证模式重写）+ UI 挂载断言入常规命令集⑥验收口径硬化：README「已实测」必须挂探针证据，无证据一律「未验证」⑦设计修正：工作台 UI 面从 L3「可降级」升为关键面（其看护优先级等同预设面）",
-            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for ux",
-            "status": "TO_BE_DEFINED",
-            "evidence": "TO_BE_DEFINED: latest ux result or planned evidence location",
-            "exception": ""
+            "threshold": "间接：宿主升级后插件断裂由看护网先暴露，用户不再当第一个发现者。",
+            "validation": "BUG-012 类场景演练（篡改 shell.overlay 证据 ⇒ exit 1 精确报格）",
+            "status": "PASS",
+            "evidence": "docs/review/COMPAT-023-R1.md（篡改负例独立复现）"
           },
           "maintainability": {
-            "threshold": "TO_BE_DEFINED: minimum acceptable maintainability threshold for COMPAT-023 **全量看护补面——全依赖面看护（用户 2026-11-07 质询驱动并经 AskUserQuestion 批准范围升级：「不应该全量看护的吗」+「系统性分析优化没起到效果」）**：把看护面从 COMPAT-021 的「预设行单格」扩展到**契约 52 项宿主耦合六面逐面接入消费方存在性检查**——①面 2/3（客户端 API/槽位/DOM 约定）：宿主 web 资源 + client 包的字面量消费证据扫描（shell.overlay / sidebar.footer.action / settings.section 等），按代际入 generation manifest，某代宿主资源消失即红（BUG-012 这类断裂在宿主版本检出日即抓）②面 1（服务端 API）：宿主闭包 exports/接口存在性逐项检查（COMPAT-020 子路径断裂教训通用化）③面 4/6（安装机制/版本环境）：安装锚点与代际探测断言④面 5（预设行）已有（COMPAT-021）⑤修复仓内 UI 探针脚本 boot（0.2.1 起坏，用 2026-11-07 验证模式重写）+ UI 挂载断言入常规命令集⑥验收口径硬化：README「已实测」必须挂探针证据，无证据一律「未验证」⑦设计修正：工作台 UI 面从 L3「可降级」升为关键面（其看护优先级等同预设面）",
-            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for maintainability",
-            "status": "TO_BE_DEFINED",
-            "evidence": "TO_BE_DEFINED: latest maintainability result or planned evidence location",
-            "exception": ""
+            "threshold": "manifest 纯数据单一事实源；采集脚本可再生成；证据缓存进 fixtures 可离线 CI。",
+            "validation": "smoke manifest 对账断言 + README 管线三命令",
+            "status": "PASS",
+            "evidence": "docs/COMPATIBILITY.md §7.5 + test/smoke.mjs +6"
           }
         }
       },
       "vertical_slice": {
-        "user_visible_slice": "TO_BE_DEFINED: smallest user-visible slice for COMPAT-023 **全量看护补面——全依赖面看护（用户 2026-11-07 质询驱动并经 AskUserQuestion 批准范围升级：「不应该全量看护的吗」+「系统性分析优化没起到效果」）**：把看护面从 COMPAT-021 的「预设行单格」扩展到**契约 52 项宿主耦合六面逐面接入消费方存在性检查**——①面 2/3（客户端 API/槽位/DOM 约定）：宿主 web 资源 + client 包的字面量消费证据扫描（shell.overlay / sidebar.footer.action / settings.section 等），按代际入 generation manifest，某代宿主资源消失即红（BUG-012 这类断裂在宿主版本检出日即抓）②面 1（服务端 API）：宿主闭包 exports/接口存在性逐项检查（COMPAT-020 子路径断裂教训通用化）③面 4/6（安装机制/版本环境）：安装锚点与代际探测断言④面 5（预设行）已有（COMPAT-021）⑤修复仓内 UI 探针脚本 boot（0.2.1 起坏，用 2026-11-07 验证模式重写）+ UI 挂载断言入常规命令集⑥验收口径硬化：README「已实测」必须挂探针证据，无证据一律「未验证」⑦设计修正：工作台 UI 面从 L3「可降级」升为关键面（其看护优先级等同预设面）",
-        "demo_path": "TO_BE_DEFINED: runnable demo, smoke test, URL, screenshot, or command proving the slice",
-        "scope_guard": "TO_BE_DEFINED: files and behavior in scope for this slice only (open)",
-        "rollback_plan": "TO_BE_DEFINED: how to revert or disable the slice if validation fails",
-        "status": "TO_BE_DEFINED",
-        "evidence": "TO_BE_DEFINED: latest demo proof or planned evidence location"
+        "user_visible_slice": "宿主升级后跑一条命令即可知道「插件在该代际哪些面活着/哪些面证据缺失」——而不是等用户点开才发现工作台没了。",
+        "demo_path": "node scripts/preflight-preset-rows.mjs --surfaces → 30 格矩阵；篡改演示见 test ⑥组（exit 1 精确报 shell.overlay 格）",
+        "scope_guard": "仅 host-compat/、scripts/、test/、docs/、README；业务代码与宿主交互零改动。",
+        "rollback_plan": "移除 --surfaces 分支与 surfaceEvidence 数据即回退到 COMPAT-021 预设行单格看护；smoke 计数回落 342→336，README 同步。",
+        "status": "PASS",
+        "evidence": "docs/evidence/COMPAT-023/implementation.md + R1/R2 复审报告。"
       },
       "interruption_policy": {
         "mode": "critical-only: default execute routine reversible work and record assumptions when needed",

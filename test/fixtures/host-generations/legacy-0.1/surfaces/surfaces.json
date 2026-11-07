@@ -1,0 +1,479 @@
+{
+  "client": {
+    "crossSection": {
+      "SettingsForms": [],
+      "SettingsProvider": [
+        {
+          "file": "lib/index.js",
+          "line": null,
+          "package": "dsh-settings",
+          "snippet": "entry export face contains \"SettingsProvider\""
+        }
+      ],
+      "mainSessionId": [],
+      "openSession": [
+        {
+          "file": "lib/client.js",
+          "line": 1452,
+          "package": "dsh-cordis-client-runner",
+          "snippet": "openSession(sessionId: SessionId): void\",⏎\t\t\t\t\t\tdescription: \"Select a Session and show its Conversation as one UI navigation action.\",⏎\t\t\t\t\t\tparameters: [{⏎\t\t\t"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 61,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "openSession(sessionId) {⏎\t\t\t\tthis.sessions.open(sessionId);⏎\t\t\t\tthis.ctx.layout.selectPanel(null);⏎\t\t\t}⏎\t\t\tasync openWorkspace(workspaceId, beforeOpen) {⏎\t\t\t\tco"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 71,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "openSession(sessionId);⏎\t\t\t}⏎\t\t\tasync forkSession(sessionId) {⏎\t\t\t\tconst navigation = AbortSignal.any([this.ctx.layout.beginNavigation(), this.lifetime.signal])"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 79,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "openSession(childId);⏎\t\t\t}⏎\t\t\tstartSession(workspaceId) {⏎\t\t\t\tconst workspace = this.workspaces.list.getSnapshot();⏎\t\t\t\tconst sessions = this.sessions.list.getS"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 2750,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "openSession = (sessionId) => {⏎\t\t\t\tuiWorkspace.openSession(sessionId);⏎\t\t\t};⏎\t\t\tconst browserInjected = () => ({⏎\t\t\t\tstartSession: (workspaceId) => {⏎\t\t\t\t\tuiWor"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 2751,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "openSession(sessionId);⏎\t\t\t};⏎\t\t\tconst browserInjected = () => ({⏎\t\t\t\tstartSession: (workspaceId) => {⏎\t\t\t\t\tuiWorkspace.startSession(workspaceId);⏎\t\t\t\t},⏎\t\t\t\top"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 2757,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "openSession,⏎\t\t\t\tsearchSessions,⏎\t\t\t\tsearchResultLimit: sessions.searchResultLimit,⏎\t\t\t\trenameSession: async (sessionId, title) => {⏎\t\t\t\t\tconst session = sessio"
+        }
+      ],
+      "retainedBy": [],
+      "sessions.open": [
+        {
+          "file": "lib/client.js",
+          "line": 62,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "sessions.open(sessionId);⏎\t\t\t\tthis.ctx.layout.selectPanel(null);⏎\t\t\t}⏎\t\t\tasync openWorkspace(workspaceId, beforeOpen) {⏎\t\t\t\tconst navigation = AbortSignal.any(["
+        },
+        {
+          "file": "lib/client.js",
+          "line": 136,
+          "package": "dsh-client-ui-workspace",
+          "snippet": "sessions.open(sessionId);⏎\t\t\t\t\t\tinitial = \"done\";⏎\t\t\t\t\t}, (reason) => {⏎\t\t\t\t\t\tif (this.lifetime.signal.aborted) return;⏎\t\t\t\t\t\tinitial = \"waiting\";⏎\t\t\t\t\t\tconsole"
+        }
+      ]
+    },
+    "domAnchors": {
+      "overlayContainer": [
+        {
+          "file": "lib/client.js",
+          "line": 303,
+          "package": "dsh-client-ui-layout",
+          "snippet": "data-shell-overlay\": true,⏎\t\t\t\t\t\tchildren: overlays⏎\t\t\t\t\t}),⏎\t\t\t\t\t!sidebarCollapsed && (0, react_jsx_runtime.jsx)(DragHandle, {⏎\t\t\t\t\t\tside: \"sidebar\",⏎\t\t\t\t\t\tlef"
+        }
+      ],
+      "phaseRoot": [],
+      "slotHost": [
+        {
+          "file": "lib/client.js",
+          "line": 530,
+          "package": "dsh-client-ui-renderer",
+          "snippet": "data-slot-error\": this.props.slotKey });⏎\t\t\t\treturn this.props.children;⏎\t\t\t}⏎\t\t};⏎\t\tconst rootStandardCache = /* @__PURE__ */ new WeakMap();⏎\t\tconst sessionSta"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 773,
+          "package": "dsh-client-ui-renderer",
+          "snippet": "data-slot\": slotKey,⏎\t\t\t\tstyle: ANCHOR_STYLE,⏎\t\t\t\tchildren: renderOutletContent(host, slotKey, ownerProps, opts, useScopeBinding())⏎\t\t\t});⏎\t\t}⏎\t\t/** Kind dispat"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 820,
+          "package": "dsh-client-ui-renderer",
+          "snippet": "data-slot-error\": slotKey });⏎\t\t\tif (spec.kind === \"single\") {⏎\t\t\t\tconst entry = host.entriesOfSlot(slotKey)[0];⏎\t\t\t\tif (!entry) return entries.length > 0 ? dea"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 869,
+          "package": "dsh-client-ui-renderer",
+          "snippet": "data-slot-error\": slotKey }, `x${item.id ?? i}`)) });⏎\t\t}⏎\t\t/** Render a chain election while preserving the overlay fallback's tree position. */⏎\t\tfunction ren"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 887,
+          "package": "dsh-client-ui-renderer",
+          "snippet": "data-slot-error\": \"root\" });⏎\t\t\t\tthrow new SlotAssemblyError(\"renderSlot('root') before any 'root' registration (boot order)\");⏎\t\t\t}⏎\t\t\treturn (0, react_jsx_run"
+        },
+        {
+          "file": "lib/client.js",
+          "line": 891,
+          "package": "dsh-client-ui-renderer",
+          "snippet": "data-slot\": \"root\",⏎\t\t\t\tstyle: ANCHOR_STYLE,⏎\t\t\t\tchildren: (0, react_jsx_runtime.jsx)(SlotErrorBoundary, {⏎\t\t\t\t\tslotKey: \"root\",⏎\t\t\t\t\tonEntryError: (error) => {"
+        }
+      ]
+    },
+    "packages": {
+      "dsh-client-modules": {
+        "scannedFiles": [
+          "lib/client.js",
+          "lib/index.js",
+          "lib/invariant.js"
+        ],
+        "version": "0.1.5-rc.2"
+      },
+      "dsh-client-ui-layout": {
+        "scannedFiles": [
+          "lib/client.js",
+          "lib/index.js"
+        ],
+        "version": "0.1.5-rc.2"
+      },
+      "dsh-client-ui-renderer": {
+        "scannedFiles": [
+          "lib/client.js",
+          "lib/index.js",
+          "lib/invariant.js"
+        ],
+        "version": "0.1.5-rc.2"
+      },
+      "dsh-client-ui-workspace": {
+        "scannedFiles": [
+          "lib/client.js",
+          "lib/index.js"
+        ],
+        "version": "0.1.5-rc.2"
+      },
+      "dsh-cordis-client-runner": {
+        "scannedFiles": [
+          "lib/client.js",
+          "lib/index.js"
+        ],
+        "version": "0.1.5-rc.2"
+      }
+    },
+    "slots": {
+      "settings.section": {
+        "entryName": [
+          {
+            "file": "lib/client.js",
+            "form": "entry-name",
+            "line": 3918,
+            "package": "dsh-cordis-client-runner",
+            "snippet": "name: 'settings.section', id: 'my-entry', order: 100, label: 'My entry' },\\n      () => React.createElement('div', null, 'hello'),\\n    ))\\n  },\\n}\",⏎\t\t\t\tsource"
+          }
+        ],
+        "injectDoc": [
+          {
+            "file": "lib/client.js",
+            "form": "slots.inject",
+            "line": 3918,
+            "package": "dsh-cordis-client-runner",
+            "snippet": "slots.inject('settings.section', () => ctx.slots.register(\\n      { name: 'settings.section', id: 'my-entry', order: 100, label: 'My entry' },\\n      () => Reac"
+          }
+        ],
+        "registration": [
+          {
+            "file": "lib/client.js",
+            "form": "key-field",
+            "line": 3872,
+            "package": "dsh-cordis-client-runner",
+            "snippet": "key: \"settings.section\",⏎\t\t\t\tkind: \"list\",⏎\t\t\t\tscope: \"root\",⏎\t\t\t\tsummary: \"One settings page per list entry.\",⏎\t\t\t\tdoc: \"One settings page per list entry. Regi"
+          }
+        ],
+        "renderSlot": []
+      },
+      "shell.overlay": {
+        "entryName": [
+          {
+            "file": "lib/client.js",
+            "form": "entry-name",
+            "line": 3989,
+            "package": "dsh-cordis-client-runner",
+            "snippet": "name: 'shell.overlay', id: 'my-entry', order: 100, label: 'My entry' },\\n      () => React.createElement('div', null, 'hello'),\\n    ))\\n  },\\n}\",⏎\t\t\t\tsource: \""
+          }
+        ],
+        "injectDoc": [
+          {
+            "file": "lib/client.js",
+            "form": "slots.inject",
+            "line": 3989,
+            "package": "dsh-cordis-client-runner",
+            "snippet": "slots.inject('shell.overlay', () => ctx.slots.register(\\n      { name: 'shell.overlay', id: 'my-entry', order: 100, label: 'My entry' },\\n      () => React.crea"
+          }
+        ],
+        "registration": [
+          {
+            "file": "lib/client.js",
+            "form": "object-key",
+            "line": 540,
+            "package": "dsh-client-ui-layout",
+            "snippet": "\"shell.overlay\": {⏎\t\t\t\t\t\t\tkind: \"list\",⏎\t\t\t\t\t\t\tscope: \"root\"⏎\t\t\t\t\t\t}⏎\t\t\t\t\t},⏎\t\t\t\t\tstore⏎\t\t\t\t}, AppFrame);⏎\t\t\t\tconst disposePanels = ctx.slots.subscribe(\"main\", "
+          },
+          {
+            "file": "lib/client.js",
+            "form": "key-field",
+            "line": 3948,
+            "package": "dsh-cordis-client-runner",
+            "snippet": "key: \"shell.overlay\",⏎\t\t\t\tkind: \"list\",⏎\t\t\t\tscope: \"root\",⏎\t\t\t\tsummary: \"Frame-wide floating layer, above every column and outside their scroll containers.\",⏎\t\t"
+          }
+        ],
+        "renderSlot": [
+          {
+            "file": "lib/client.js",
+            "form": "renderSlot",
+            "line": 276,
+            "package": "dsh-client-ui-layout",
+            "snippet": "renderSlot(\"shell.overlay\", {}), [renderSlot]);⏎\t\t\treturn (0, react_jsx_runtime.jsxs)(\"div\", {⏎\t\t\t\tref: frameRef,⏎\t\t\t\tclassName: AppFrame_module_css_default.fra"
+          }
+        ]
+      },
+      "sidebar.footer.action": {
+        "entryName": [
+          {
+            "file": "lib/client.js",
+            "form": "entry-name",
+            "line": 4112,
+            "package": "dsh-cordis-client-runner",
+            "snippet": "name: 'sidebar.footer.action', id: 'my-entry', order: 100, label: 'My entry' },\\n      () => React.createElement('div', null, 'hello'),\\n    ))\\n  },\\n}\",⏎\t\t\t\ts"
+          }
+        ],
+        "injectDoc": [
+          {
+            "file": "lib/client.js",
+            "form": "slots.inject",
+            "line": 4112,
+            "package": "dsh-cordis-client-runner",
+            "snippet": "slots.inject('sidebar.footer.action', () => ctx.slots.register(\\n      { name: 'sidebar.footer.action', id: 'my-entry', order: 100, label: 'My entry' },\\n      "
+          }
+        ],
+        "registration": [
+          {
+            "file": "lib/client.js",
+            "form": "key-field",
+            "line": 4071,
+            "package": "dsh-cordis-client-runner",
+            "snippet": "key: \"sidebar.footer.action\",⏎\t\t\t\tkind: \"list\",⏎\t\t\t\tscope: \"root\",⏎\t\t\t\tsummary: \"Optional actions beside Settings at the sidebar foot.\",⏎\t\t\t\tdoc: \"Optional acti"
+          }
+        ],
+        "renderSlot": []
+      }
+    }
+  },
+  "closurePins": {
+    "cordis": {
+      "collectedVersion": "4.0.2",
+      "pin": "^4.0.2",
+      "via": "npm-view-resolve"
+    },
+    "dsh-api-gateway": {
+      "collectedVersion": "0.1.5-rc.2",
+      "pin": "0.1.5-rc.2",
+      "via": "generation-version"
+    },
+    "dsh-client-connection": {
+      "collectedVersion": "0.1.5-rc.2",
+      "pin": "0.1.5-rc.2",
+      "via": "generation-version"
+    },
+    "dsh-client-modules": {
+      "collectedVersion": "0.1.5-rc.2",
+      "pin": "0.1.5-rc.2",
+      "via": "generation-version"
+    },
+    "dsh-client-ui-layout": {
+      "collectedVersion": "0.1.5-rc.2",
+      "pin": "0.1.5-rc.2",
+      "via": "generation-version"
+    },
+    "dsh-client-ui-renderer": {
+      "collectedVersion": "0.1.5-rc.2",
+      "pin": "0.1.5-rc.2",
+      "via": "generation-version"
+    },
+    "dsh-client-ui-workspace": {
+      "collectedVersion": "0.1.5-rc.2",
+      "pin": "0.1.5-rc.2",
+      "via": "generation-version"
+    },
+    "dsh-cordis-client-runner": {
+      "collectedVersion": "0.1.5-rc.2",
+      "pin": "^0.1.5-rc.2",
+      "via": "npm-view-resolve"
+    },
+    "dsh-home-paths": {
+      "collectedVersion": "0.1.5-rc.2",
+      "pin": "^0.1.5-rc.2",
+      "via": "npm-view-resolve"
+    },
+    "dsh-settings": {
+      "collectedVersion": "0.1.5-rc.2",
+      "pin": "0.1.5-rc.2",
+      "via": "generation-version"
+    },
+    "dsh-tools": {
+      "collectedVersion": "0.1.5-rc.2",
+      "pin": "0.1.5-rc.2",
+      "via": "generation-version"
+    },
+    "schemastery": {
+      "collectedVersion": "3.18.2",
+      "pin": "^3.18.2",
+      "via": "npm-view-resolve"
+    }
+  },
+  "collectedAt": "2026-11-07",
+  "errors": [],
+  "generation": "legacy-0.1",
+  "hostVersion": "0.1.5-rc.2",
+  "schemaVersion": 1,
+  "server": {
+    "cordis": {
+      "entry": "lib/index.js",
+      "exports": [
+        "Context",
+        "CordisError",
+        "DisposableList",
+        "EventsService",
+        "Fiber",
+        "Inject",
+        "Logger",
+        "LoggerService",
+        "RegistryService",
+        "Service",
+        "ValidationError",
+        "buildOuterStack",
+        "c16",
+        "c256",
+        "composeError",
+        "createCallable",
+        "defaultFormatters",
+        "getPropertyDescriptor",
+        "getTraceable",
+        "isBailed",
+        "isConstructor",
+        "isObject",
+        "joinPrototype",
+        "resolveConfig",
+        "symbols",
+        "withProps"
+      ],
+      "version": "4.0.2"
+    },
+    "dsh-api-gateway": {
+      "entry": "lib/index.js",
+      "exports": [
+        "TypertGatewayError",
+        "TypertGatewayService",
+        "default"
+      ],
+      "version": "0.1.5-rc.2"
+    },
+    "dsh-client-connection": {
+      "entry": "lib/index.js",
+      "exports": [
+        "API_PATH",
+        "Config",
+        "HostConnectionService",
+        "RpcId",
+        "apply",
+        "clientRequestSchema",
+        "inject",
+        "name",
+        "rpcErrorSchema",
+        "rpcIdSchema",
+        "rpcMessageSchema",
+        "rpcResultSchema",
+        "serverResponseSchema",
+        "transportError"
+      ],
+      "version": "0.1.5-rc.2"
+    },
+    "dsh-client-modules": {
+      "entry": "lib/index.js",
+      "exports": [
+        "ClientModuleRegistry",
+        "bootInjections",
+        "default",
+        "orderByModuleGraph",
+        "stripClientSuffix"
+      ],
+      "version": "0.1.5-rc.2"
+    },
+    "dsh-home-paths": {
+      "entry": "lib/index.js",
+      "exports": [
+        "DEFAULT_DSH_HOME_DISPLAY",
+        "DSH_HOME_DIR_NAME",
+        "DSH_HOME_ENV",
+        "canonicalizeWatchPath",
+        "defaultDshHome",
+        "dshHomeDisplay",
+        "dshHomePath",
+        "expandHomePath",
+        "resolveDshHome"
+      ],
+      "version": "0.1.5-rc.2"
+    },
+    "dsh-settings": {
+      "entry": "lib/index.js",
+      "exports": [
+        "SettingsConflictError",
+        "SettingsProvider",
+        "default",
+        "redactSecrets"
+      ],
+      "version": "0.1.5-rc.2"
+    },
+    "dsh-tools": {
+      "entry": "lib/index.js",
+      "exports": [
+        "CodeRunFailedError",
+        "JsonSchemaError",
+        "RUN_CODE_NAME",
+        "TOOL_ABORTED",
+        "TOOL_ABORTED_BEFORE_DISPATCH",
+        "TOOL_RUNTIME_SCHEDULER",
+        "ToolArgsError",
+        "ToolNotFoundError",
+        "ToolOutputError",
+        "ToolRuntime",
+        "assertObjectJsonSchema",
+        "assertSupportedJsonSchema",
+        "default",
+        "defineContentToolFixture",
+        "defineTool",
+        "jsonSchemaToPy",
+        "jsonSchemaToTs",
+        "parameterSchemaSpecToJsonSchema",
+        "renderToolsSdk",
+        "renderToolsSdkPy",
+        "validateArgs",
+        "validateJsonSchemaValue",
+        "valueSchemaSpecToJsonSchema"
+      ],
+      "version": "0.1.5-rc.2"
+    },
+    "schemastery": {
+      "entry": "lib/index.cjs",
+      "exports": [
+        "default"
+      ],
+      "version": "3.18.2"
+    }
+  },
+  "slotNames": [
+    "shell.overlay",
+    "sidebar.footer.action",
+    "settings.section"
+  ],
+  "source": "npm-tarball-scan",
+  "sourceNote": "npm view（只读元数据）+ npm pack（只读下载）+ tar 解包扫描；不 install、不执行包内代码。npm tarball = 桌面实装事实源（BUG-012 阶段 A 实证）。"
+}

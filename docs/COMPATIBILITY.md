@@ -74,13 +74,13 @@
 | L0 组合/加载 | profile、bundle patch、YAML 方言、插件入口 | `cordis`、`js-yaml`、loader schema | 插件根本无法加载 | 必需；最小化直接引用；由宿主 loader 负责 |
 | L1 预设注册 | 预设声明、`agentPresets` 服务、声明行 schema | `@deepseek-ai/dsh-agent-preset`、`agentPresets.register` | 预设不可见/显示失败 | 必需；行级预检 + 代际清单 |
 | L2 工具/服务 | 子代理、工作流、Ralph、待办、Web、ask-user 等 | `dsh-tool-subagent-control`、`dsh-tool-workflow`、`dsh-tool-ralph`、`dsh-tool-todo`、`dsh-tool-web`、`dsh-tool-ask-user` | 部分能力缺失；核心写作仍可进行 | 可降级；能力探测 + 可选行 + 明确诊断 |
-| L3 客户端/UI | slots、connection、locale、会话/工作区 API、DOM/CSS 令牌 | `lib/client.js`、`lib/host-boundary.js` | 界面缺失或降级 | 可降级；单点适配 + 契约登记 |
+| L3 客户端/UI | slots、connection、locale、会话/工作区 API、DOM/CSS 令牌 | `lib/client.js`、`lib/host-boundary.js` | **分面**：工作台挂载面（shell.overlay 槽消费 → 控制台/分栏）缺失 = 核心写作价值整体丢失；其余（locale 等）缺失 = 界面局部降级 | **工作台挂载面 = 关键面**（COMPAT-023 订正：BUG-012 实证槽位条目崩溃会被宿主 `SlotErrorBoundary` 整体卸载 ⇒「可降级」定级失实——降级后用户无工作台可用）；其余面可降级：单点适配 + 契约登记 |
 | L4 安装/环境 | 安装根、闭包布局、profile 目录、版本号 | `resolveDshHome`、`npm root -g`、profile | 预检/迁移不可用 | 只读探测；不修改宿主 |
 
 设计原则：
 
 - **L0/L1 是硬边界**，必须显式、可诊断、fail-closed；
-- **L2/L3 是软边界**，优先通过 `ctx.get`/capability probe 降级，不以硬 `inject` 制造启动失败；
+- **L2 是软边界**，优先通过 `ctx.get`/capability probe 降级，不以硬 `inject` 制造启动失败；**L3 分面**（COMPAT-023 订正，BUG-012 教训）：工作台挂载面（shell.overlay 槽消费链）为**关键面**——槽位条目崩溃会被宿主 `SlotErrorBoundary` 整体卸载（用户「点小说工作台不出现」即此形态），看护优先级等同预设面（`preflight --surfaces` 面 2 对契约槽位做逐代对账，缺证据即 `SURFACE_COVERAGE_GAP` FAIL）；L3 其余面（locale 等）仍为软边界降级；
 - **L4 只读**，不在运行时改写宿主安装或 profile；
 - 任何新增/修改的宿主耦合字面量或符号，必须按 P-10 登记到 `lib/host-contract.mjs`，并在 `test/smoke.mjs` 做双向对账。
 
@@ -234,19 +234,20 @@ export interface PresetProvider {
 
 ## 6. 代际矩阵
 
-| 代际 | 宿主特征 | 预设行策略 | `list_agents` | 预设加载 | 证据等级 |
-|---|---|---|---|---|---|
-| legacy-0.1（`0.1.2-rc.1` ~ `0.1.5-rc.2`） | 无 `dsh-agent-preset` 声明代；`.agent-presets` 目录机制 | 使用 `agent.cordis.yml`；保留 legacy 子路径行 | 独立子路径可用 | 完整支持（既有 BUG-006/007 证据） | 隔离实例 + fixture |
-| decl-0.2.0 | 声明代；有 `./list-agents` 子路径；主包未注册 `list_agents` | patch 不含 legacy 行 | **不可用**（主包未注册） | 可加载（BUG-011 全链路） | 既有全链路；本轮未重启动 |
-| decl-0.2.1 | 声明代；有 `./list-agents` 子路径；主包未注册 `list_agents` | patch 不含 legacy 行 | **不可用**（主包未注册） | 已实测（`diag-preset-0.2.1-rc.2.json`） | 预设加载面 |
-| decl-0.2.2+ | 声明代；`./list-agents` 已移除；主包注册 `list_agents` | patch 不含 legacy 行；主包行在场 | 主包提供 | 已实测（`diag-preset-0.2.2-rc.1.json`） | 预设加载面 |
-| unknown | 无法判定 | 不投影；fail-closed | 不承诺 | 阻止并诊断 | 预检 fixture |
+| 代际 | 宿主特征 | 预设行策略 | `list_agents` | 预设加载 | 证据等级 | surfaceEvidence（六面，COMPAT-023） |
+|---|---|---|---|---|---|---|
+| legacy-0.1（`0.1.2-rc.1` ~ `0.1.5-rc.2`） | 无 `dsh-agent-preset` 声明代；`.agent-presets` 目录机制 | 使用 `agent.cordis.yml`；保留 legacy 子路径行 | 独立子路径可用 | 完整支持（既有 BUG-006/007 证据） | 隔离实例 + fixture | 面 1-3 verified / 面 4-6 fixture-record（`test/fixtures/host-generations/legacy-0.1/surfaces/surfaces.json`；dsh-* 子包 0.1.5-rc.2 + cordis 4.0.2 / schemastery 3.18.2） |
+| decl-0.2.0 | 声明代；有 `./list-agents` 子路径；主包未注册 `list_agents` | patch 不含 legacy 行 | **不可用**（主包未注册） | 可加载（BUG-011 全链路） | 既有全链路；本轮未重启动 | 面 1-3 verified / 面 4-6 fixture-record（`test/fixtures/host-generations/decl-0.2.0/surfaces/surfaces.json`；cordis 4.0.5 / schemastery 3.18.5） |
+| decl-0.2.1 | 声明代；有 `./list-agents` 子路径；主包未注册 `list_agents` | patch 不含 legacy 行 | **不可用**（主包未注册） | 已实测（`diag-preset-0.2.1-rc.2.json`） | 预设加载面 | 面 1-3 verified / 面 4-6 fixture-record（`test/fixtures/host-generations/decl-0.2.1/surfaces/surfaces.json`；cordis 4.0.5 / schemastery 3.18.5） |
+| decl-0.2.2+ | 声明代；`./list-agents` 已移除；主包注册 `list_agents` | patch 不含 legacy 行；主包行在场 | 主包提供 | 已实测（`diag-preset-0.2.2-rc.1.json`）；工作台挂载真路径已实测（`docs/evidence/COMPAT-023/workbench-mount-report.json`，W1-W6 全绿） | 预设加载面 + 工作台挂载面 | 面 1-3 verified / 面 4-6 fixture-record（`test/fixtures/host-generations/decl-0.2.2/surfaces/surfaces.json`；cordis 4.1.0 / schemastery 3.19.0） |
+| unknown | 无法判定 | 不投影；fail-closed | 不承诺 | 阻止并诊断 | 预检 fixture | 六面全 `unknown`（fail-closed 带 reason；`--surfaces` 输出 WARN 非绿，`--strict` 升红） |
 
 说明：
 
-- “完整支持”只在有全链路证据时使用；`0.2.2` 本轮只对**预设加载面**做了新实测，不能把旧的激活/HTTP/写路径证据平移到新版本。
+- “完整支持”只在有全链路证据时使用；`0.2.2` 本轮只对**预设加载面**与**工作台挂载面**做了新实测，不能把旧的激活/HTTP/写路径证据平移到新版本。
 - `0.2.0`/`0.2.1` 的独立 `list_agents` 缺失是**宿主代际能力差异**，不是插件 bug；UI/文档必须明确“不可用”，不得用“部分支持”掩盖。
 - 0.1.x 的 legacy 行必须保留；删除会让 0.1.x 用户失去工具，且违背 README 的完整支持承诺。
+- surfaceEvidence 六面 = 服务端 API / client 槽位 / DOM / 安装 / 预设清单 / 版本；登记源 = `lib/host-compat/generation-manifest.mjs` `SURFACE_EVIDENCE`（30 格），对账命令 = `node scripts/preflight-preset-rows.mjs --surfaces`（见 §7.5）。
 
 ---
 
@@ -271,8 +272,10 @@ node scripts/preflight-preset-rows.mjs [options]
 | `--fixture <dir>` | 离线 fixture 模式 | 无 |
 | `--json` | 输出稳定 JSON | 人类可读 |
 | `--explain <rowId>` | 解释某行在各代际的处置 | 无 |
-| `--strict` | unknown/mixed plane 也视为失败 | 仅硬错误失败 |
+| `--strict` | unknown/mixed plane 也视为失败；`--surfaces` 下另升 WARN/SKIP（见 §7.5） | 仅硬错误失败 |
 | `--no-color` | 纯文本输出 | 自动 |
+| `--surfaces` | 依赖面证据对账模式（COMPAT-023；与 `--fixture`/`--profile`/`--explain` 互斥） | 无 |
+| `--surfaces-evidence-root <dir>` | 诊断注入：覆盖离线证据缓存根（须与 `--surfaces` 同用；目录须存在） | `test/fixtures/host-generations/` |
 
 退出码：
 
@@ -339,6 +342,23 @@ negative-missing-export/
 - 一个负向用例：0.2.2 fixture 中出现 legacy 子路径 → 必须 `FAIL`，错误含 `ERR_PACKAGE_PATH_NOT_EXPORTED`/等价说明。
 
 Fixture 只读、无网络、无真实宿主；CI 可重复。
+
+### 7.5 依赖面证据对账（COMPAT-023：`--surfaces`）
+
+```text
+node scripts/preflight-preset-rows.mjs --surfaces [--strict] [--surfaces-evidence-root <dir>] [--json]
+```
+
+语义（与行级预检同一 CLI 的独立模式；与 `--fixture`/`--profile`/`--explain` 互斥，混用 exit 2）：
+
+- **对账对象**：`lib/host-compat/generation-manifest.mjs` 的 `SURFACE_EVIDENCE`（5 代 × 6 面 = 30 格）× 离线证据缓存（`test/fixtures/host-generations/<gen>/surfaces/surfaces.json`）× 仓库文件（面 4/5 锚点、面 6 版本判据回环）。
+- **六面**：1 服务端 API（8 看护包 keyExports + BUG-011 settings/sessions 断面）/ 2 client 槽位（shell.overlay 等注册+消费形态——**关键面**）/ 3 DOM 物化锚点 / 4 安装锚点 / 5 预设清单锚点 / 6 版本判据回环（`detectGeneration` 把代表版本判回本代）。
+- **状态三态 + fail-closed**：格 status ∈ `verified`（面 1-3，须缓存证据支撑）/ `fixture-record`（面 4-6，源 = 仓库自身文件）/ `unknown`（无据——**不默认绿**，输出 WARN）；`--strict` 把 WARN（`STRICT_SURFACE_UNKNOWN`）与 SKIP（`STRICT_SURFACE_SKIP`）晋升 exit 1。
+- **SKIP ≠ PASS（BUG-007 三态口径）**：verified 面但缓存文件缺失 ⇒ `SKIP`（`SURFACE_EVIDENCE_CACHE_MISSING`），exit 仍 0（三态非失败）；`--strict` 下升红。
+- **篡改必红（判别力）**：缓存证据与 manifest 声明不符（如抹掉 shell.overlay 的注册/消费命中）⇒ FAIL（`SURFACE_EVIDENCE_MISMATCH`）exit 1，其余格不受污染。
+- **契约交叉对账（BUG-012 教训，恒跑全代际）**：契约 `regionLiterals.slotNames` ⊆ 每个已知代际面 2 证据、`requiredExports` 包 ⊆ 面 1 看护包、`requiredExports` 导出名 ⊆ 现行代（`hostSurface.current`）keyExports——缺 ⇒ `SURFACE_COVERAGE_GAP` FAIL（关键面失据不得静默）。
+- **离线可跑**：缓存随仓入库（`schemaVersion: 1`，无 token/凭据）；重采 = `node scripts/collect-host-surface-evidence.mjs`（只读 `npm view` + `npm pack --pack-destination` + `tar` 解包，**零 install**——不执行任何宿主代码）。
+- 期望基线（当前缓存，`collectedAt: 2026-11-07`）：pristine = 30 格 / 24 PASS + 6 WARN（WARN 全部集中于 unknown 代）/ 0 SKIP / 0 FAIL / exit 0。
 
 ---
 

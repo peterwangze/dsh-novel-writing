@@ -51,6 +51,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import yamlMod from 'js-yaml'
 import {
   GENERATIONS, GENERATION_IDS, GENERATION_VARIANT, GENERATION_DROPPED, HOST_PACKAGES, detectGeneration,
+  SURFACE_EVIDENCE, SURFACE_EVIDENCE_STATUSES,
 } from '../lib/host-compat/generation-manifest.mjs'
 import { dispositionFor, reconcileDualSources } from '../lib/host-compat/preset-projection.mjs'
 
@@ -68,7 +69,7 @@ const ENTRY_SCHEMA = yaml.DEFAULT_SCHEMA.extend([JS_EXPR_TYPE])
 
 // ── 用法与参数 ────────────────────────────────────────────────────────────────
 function parseArgs(argv) {
-  const opts = { patch: PATCH_DEFAULT, legacy: LEGACY_DEFAULT, profile: null, generation: null, fixture: null, globalRoot: null, json: false, explain: null, strict: false, color: true, patchExplicit: false, legacyExplicit: false }
+  const opts = { patch: PATCH_DEFAULT, legacy: LEGACY_DEFAULT, profile: null, generation: null, fixture: null, globalRoot: null, json: false, explain: null, strict: false, color: true, patchExplicit: false, legacyExplicit: false, surfaces: false, surfacesEvidenceRoot: null }
   const need = (flag) => { const v = argv.shift(); if (v === undefined || v.startsWith('--')) die(`${flag} 需要一个值`); return v }
   let a
   while ((a = argv.shift()) !== undefined) {
@@ -78,6 +79,8 @@ function parseArgs(argv) {
     else if (a === '--generation') opts.generation = need('--generation')
     else if (a === '--fixture') opts.fixture = resolve(need('--fixture'))
     else if (a === '--global-root') opts.globalRoot = resolve(need('--global-root'))
+    else if (a === '--surfaces') opts.surfaces = true
+    else if (a === '--surfaces-evidence-root') opts.surfacesEvidenceRoot = resolve(need('--surfaces-evidence-root'))
     else if (a === '--json') opts.json = true
     else if (a === '--explain') opts.explain = need('--explain')
     else if (a === '--strict') opts.strict = true
@@ -87,6 +90,18 @@ function parseArgs(argv) {
   }
   if (opts.generation !== null && !GENERATION_IDS.includes(opts.generation)) {
     die(`--generation 非法：${opts.generation}（合法值：${GENERATION_IDS.join(', ')}）`)
+  }
+  if (opts.surfaces === true && opts.explain !== null) {
+    die('--surfaces 与 --explain 互斥（surfaces 是独立维度，不针对单行）')
+  }
+  if (opts.surfaces === true && (opts.fixture !== null || opts.profile !== null)) {
+    die('--surfaces 不接受 --fixture/--profile（面证据对账 = manifest × 缓存证据 × 仓库文件，零宿主平面依赖）')
+  }
+  if (opts.surfacesEvidenceRoot !== null && opts.surfaces !== true) {
+    die('--surfaces-evidence-root 仅在 --surfaces 模式下有效')
+  }
+  if (opts.surfacesEvidenceRoot !== null && !existsSync(opts.surfacesEvidenceRoot)) {
+    die(`--surfaces-evidence-root 目录不存在：${opts.surfacesEvidenceRoot}`)
   }
   if (opts.fixture !== null && !existsSync(join(opts.fixture, 'node_modules'))) {
     die(`--fixture 目录缺少伪 node_modules 平面：${opts.fixture}`)
@@ -100,15 +115,23 @@ function parseArgs(argv) {
     if (!opts.patchExplicit) opts.patch = join(opts.fixture, 'rows.patch.yml')
     if (!opts.legacyExplicit) opts.legacy = join(opts.fixture, 'rows.legacy.yml')
   }
-  for (const [flag, path] of [['--patch', opts.patch], ['--legacy', opts.legacy]]) {
-    if (!existsSync(path)) die(`${flag} 文件不存在：${path}`)
+  // 行级源存在性校验仅行级模式需要——--surfaces 是独立维度（manifest × 缓存证据 × 仓库文件），
+  // 不读 --patch/--legacy 源 ⇒ 跳过（R1 F3：残缺 checkout 下缺源文件不得误报 usage）。
+  if (opts.surfaces !== true) {
+    for (const [flag, path] of [['--patch', opts.patch], ['--legacy', opts.legacy]]) {
+      if (!existsSync(path)) die(`${flag} 文件不存在：${path}`)
+    }
+    if (opts.profile !== null && !existsSync(opts.profile)) die(`--profile 目录不存在：${opts.profile}`)
   }
-  if (opts.profile !== null && !existsSync(opts.profile)) die(`--profile 目录不存在：${opts.profile}`)
   return opts
 }
 function usage() {
   console.log('用法：node scripts/preflight-preset-rows.mjs [--patch <path>] [--legacy <path>] [--profile <dir>] [--generation <id>] [--fixture <dir>] [--json] [--explain <rowId>] [--strict] [--no-color]')
   console.log('  诊断注入（R1 F1，测试/排查用）：[--global-root <dir>]——覆盖 npm root -g 全局闭包（真平面模式生效；报告 plane.globalRoot 披露实际根）')
+  console.log('  依赖面维度（COMPAT-023）：[--surfaces] [--generation <id>]——契约六面 × 逐代际消费方存在性对账（manifest SURFACE_EVIDENCE × 缓存证据 × 仓库文件；')
+  console.log('    证据缓存 = test/fixtures/host-generations/<gen>/surfaces/surfaces.json，由 scripts/collect-host-surface-evidence.mjs 只读再生；')
+  console.log('    缓存缺失 ⇒ 显式 SKIP ≠ PASS（--strict 升红）；unknown 面 ⇒ WARN（非绿；--strict 升红）；断言不符 ⇒ FAIL。')
+  console.log('    诊断注入（负例测试用）：[--surfaces-evidence-root <dir>]——覆盖证据缓存根（报告 surfacesEvidenceRoot 披露实际根）。')
 }
 function die(message) {
   console.error(`[nv-compat] 用法错误（exit 2）：${message}`)
@@ -432,14 +455,290 @@ const unwrapExports = (exports) => {
 // ── 主流程 ───────────────────────────────────────────────────────────────────
 const colorOf = (status, use) => {
   if (!use) return (s) => s
-  const map = { PASS: '\x1b[32m', FAIL: '\x1b[31m', WARN: '\x1b[33m', KNOWN_DROP: '\x1b[36m', KNOWN_VARIANT: '\x1b[36m', NOT_RUN: '\x1b[90m' }
+  const map = { PASS: '\x1b[32m', FAIL: '\x1b[31m', WARN: '\x1b[33m', KNOWN_DROP: '\x1b[36m', KNOWN_VARIANT: '\x1b[36m', NOT_RUN: '\x1b[90m', SKIP: '\x1b[90m' }
   return (s) => (map[status] ?? '') + s + '\x1b[0m'
+}
+
+/**
+ * --surfaces 模式（COMPAT-023）：「宿主代际 × 依赖面」消费方存在性对账。
+ *
+ * 数据与判定分层（职责三分，与行级预检同式）：
+ *   · 声明 = lib/host-compat/generation-manifest.mjs SURFACE_EVIDENCE（纯数据：哪代哪面有什么证据）；
+ *   · 证据 = 证据缓存 JSON（scripts/collect-host-surface-evidence.mjs 只读再生，npm tarball 扫描摘要）
+ *     + 仓库文件（fixture-record 面：安装锚点/预设机制/版本判据）；
+ *   · 本模式 = 对账编排 + 输出（不产生新事实）。
+ *
+ * 行状态：PASS / WARN（unknown 面——fail-closed，非绿）/ SKIP（verified 面的缓存证据缺失——显式
+ * 披露 ≠ PASS）/ FAIL（声明与证据不符 / 覆盖缺格 / 锚点或版本判据失真）。
+ * 关键面升级（BUG-012 教训）：面 2/3（客户端槽位/DOM）对**已知代际**的覆盖缺口 = FAIL（看护优先级
+ * 等同预设面——docs/COMPATIBILITY.md §3 分级修正），由契约 cross-check 行承担。
+ * 退出码：0 = 无 FAIL（WARN/SKIP 如实披露）；1 = 有 FAIL（或 --strict 下 WARN/SKIP 升红）；
+ *         2 = 用法错误（parseArgs）。surfaces 模式**不用** exit 3（零宿主平面依赖 = 无环境不可判定面；
+ *         证据缓存缺失按 SKIP 披露而非环境错误——离线 CI 语义见 §8.2）。
+ */
+async function surfacesMode(opts, { compatRunId, useColor }) {
+  const { hostContract } = await import('../lib/host-contract.mjs')
+  const evidenceRoot = opts.surfacesEvidenceRoot ?? join(REPO_ROOT, 'test', 'fixtures', 'host-generations')
+  const generations = opts.generation !== null ? [opts.generation] : GENERATION_IDS
+  const contractSlots = hostContract.regionLiterals.slotNames
+  const requiredExports = hostContract.hostSurface.requiredExports
+  const contractCurrent = hostContract.hostSurface.current
+
+  const evidenceCache = new Map()
+  /** gen → 证据对象 | null（缓存缺失）| { unreadable }（坏 JSON）。声明 evidenceFile=null 的代际恒 null。 */
+  const loadEvidence = (gen) => {
+    if (evidenceCache.has(gen)) return evidenceCache.get(gen)
+    const claim = SURFACE_EVIDENCE[gen]
+    let value = null
+    const path = claim?.evidenceFile ? join(evidenceRoot, gen, 'surfaces', 'surfaces.json') : null
+    if (path !== null && existsSync(path)) {
+      try { value = JSON.parse(readFileSync(path, 'utf8')) } catch { value = { unreadable: true, path } }
+    }
+    evidenceCache.set(gen, value)
+    return value
+  }
+
+  const rows = []
+  const errors = []
+  const pushRow = (row) => { rows.push(row); if (row.status === 'FAIL') errors.push(...row.errors) }
+  const mkErr = (code, generation, face, message, fix) => ({ code, generation, face, rowId: null, package: null, check: `surface-face${face}`, message, fix })
+  const FIX_EVIDENCE = '重新采集：node scripts/collect-host-surface-evidence.mjs --gens <gen>（只读 npm view/pack），再按产物核对/更新 manifest SURFACE_EVIDENCE'
+  const FIX_MANIFEST = '按证据产物修正 lib/host-compat/generation-manifest.mjs SURFACE_EVIDENCE（无证据面标 unknown——不得默认绿）'
+
+  for (const gen of generations) {
+    const claim = SURFACE_EVIDENCE[gen]
+    for (const face of [1, 2, 3, 4, 5, 6]) {
+      const base = { generation: gen, face, item: `surfaces.${gen}.face${face}` }
+      const cell = claim?.faces?.[face]
+      if (cell === undefined) {
+        pushRow({ ...base, status: 'FAIL', code: 'SURFACE_COVERAGE_GAP', message: 'manifest SURFACE_EVIDENCE 缺格：六面 × 逐代际必须每格有 status 或显式 unknown', evidence: null, errors: [mkErr('SURFACE_COVERAGE_GAP', gen, face, 'manifest SURFACE_EVIDENCE 缺格', '补格：有证据填 verified/fixture-record，无证据显式 unknown（fail-closed）')] })
+        continue
+      }
+      if (!SURFACE_EVIDENCE_STATUSES.includes(cell.status)) {
+        pushRow({ ...base, status: 'FAIL', code: 'SURFACE_BAD_STATUS', message: `status '${cell.status}' ∉ ${SURFACE_EVIDENCE_STATUSES.join('/')}`, evidence: null, errors: [mkErr('SURFACE_BAD_STATUS', gen, face, `非法 status '${cell.status}'`, FIX_MANIFEST)] })
+        continue
+      }
+      if (cell.status === 'unknown') {
+        pushRow({ ...base, status: 'WARN', code: 'SURFACE_UNKNOWN', message: `unknown 面（fail-closed，非绿）：${cell.reason ?? '无消费方证据'}`, evidence: null, errors: [] })
+        continue
+      }
+
+      if (face === 1) {
+        const ev = loadEvidence(gen)
+        if (ev === null) {
+          pushRow({ ...base, status: 'SKIP', code: 'SURFACE_EVIDENCE_CACHE_MISSING', message: `verified 面但缓存证据缺失（${join(evidenceRoot, gen, 'surfaces', 'surfaces.json')}）——SKIP ≠ PASS`, evidence: null, errors: [] })
+          continue
+        }
+        if (ev.unreadable === true) {
+          pushRow({ ...base, status: 'FAIL', code: 'SURFACE_EVIDENCE_UNREADABLE', message: '缓存证据不是合法 JSON', evidence: ev.path, errors: [mkErr('SURFACE_EVIDENCE_UNREADABLE', gen, face, '缓存证据 JSON 解析失败', FIX_EVIDENCE)] })
+          continue
+        }
+        const problems = []
+        for (const [pkg, claimPkg] of Object.entries(cell.packages ?? {})) {
+          const actual = ev.server?.[pkg]
+          if (actual === undefined) { problems.push(`看护包 ${pkg} 无导出面记录`); continue }
+          if (typeof claimPkg.version === 'string' && actual.version !== claimPkg.version) problems.push(`${pkg}@${actual.version} ≠ 声明 ${claimPkg.version}`)
+          for (const name of claimPkg.keyExports) if (!(actual.exports ?? []).includes(name)) problems.push(`${pkg} 导出面缺 ${name}`)
+        }
+        for (const [section, assertion] of Object.entries(cell.crossSections ?? {})) {
+          const hitsOf = (key) => ev.client?.crossSection?.[key]
+          for (const key of assertion.present ?? []) {
+            const hits = hitsOf(key)
+            if (!Array.isArray(hits) || hits.length === 0) problems.push(`断面 ${section} 应在场键 ${key} 证据 0 命中`)
+          }
+          for (const key of assertion.absent ?? []) {
+            const hits = hitsOf(key)
+            if (Array.isArray(hits) && hits.length > 0) problems.push(`断面 ${section} 应缺席键 ${key} 却 ${hits.length} 命中（首处 ${hits[0].package} ${hits[0].file ?? ''}）`)
+          }
+        }
+        pushRow(problems.length === 0
+          ? { ...base, status: 'PASS', code: null, message: `8 看护包 keyExports + settings/sessions 断面全部对上（${Object.keys(cell.packages ?? {}).length} 包）`, evidence: claim.evidenceFile, errors: [] }
+          : { ...base, status: 'FAIL', code: 'SURFACE_EVIDENCE_MISMATCH', message: `${problems.length} 项声明-证据不符：${problems.join('；')}`, evidence: claim.evidenceFile, errors: [mkErr('SURFACE_EVIDENCE_MISMATCH', gen, face, problems.join('；'), FIX_EVIDENCE)] })
+        continue
+      }
+
+      if (face === 2) {
+        const ev = loadEvidence(gen)
+        if (ev === null) {
+          pushRow({ ...base, status: 'SKIP', code: 'SURFACE_EVIDENCE_CACHE_MISSING', message: `verified 面但缓存证据缺失（${join(evidenceRoot, gen, 'surfaces', 'surfaces.json')}）——SKIP ≠ PASS`, evidence: null, errors: [] })
+          continue
+        }
+        if (ev.unreadable === true) {
+          pushRow({ ...base, status: 'FAIL', code: 'SURFACE_EVIDENCE_UNREADABLE', message: '缓存证据不是合法 JSON', evidence: ev.path, errors: [mkErr('SURFACE_EVIDENCE_UNREADABLE', gen, face, '缓存证据 JSON 解析失败', FIX_EVIDENCE)] })
+          continue
+        }
+        const problems = []
+        for (const [slot, claimSlot] of Object.entries(cell.slots ?? {})) {
+          const actual = ev.client?.slots?.[slot]
+          if (actual === undefined) { problems.push(`槽 ${slot} 无证据条目`); continue }
+          for (const form of claimSlot.registrationForms ?? []) {
+            if (!(actual.registration ?? []).some((h) => h.form === form)) problems.push(`槽 ${slot} 注册声明形态 ${form} 0 命中`)
+          }
+          const consumptionKind = { renderSlot: 'renderSlot', 'slots.inject': 'injectDoc' }
+          for (const form of claimSlot.consumptionForms ?? []) {
+            const kind = consumptionKind[form]
+            if (kind !== undefined && !((actual[kind] ?? []).length > 0)) problems.push(`槽 ${slot} 消费形态 ${form} 0 命中`)
+          }
+          const allHits = [...(actual.registration ?? []), ...(actual.renderSlot ?? []), ...(actual.injectDoc ?? []), ...(actual.entryName ?? [])]
+          for (const pkg of claimSlot.consumers ?? []) {
+            if (!allHits.some((h) => h.package === pkg)) problems.push(`槽 ${slot} 消费包 ${pkg} 0 命中（消费证据应在宿主 client 包栈——BUG-012 阶段 A 判定）`)
+          }
+        }
+        pushRow(problems.length === 0
+          ? { ...base, status: 'PASS', code: null, message: `${Object.keys(cell.slots ?? {}).length} 槽位注册+消费形态全部对上（消费包：宿主 client 包栈）`, evidence: claim.evidenceFile, errors: [] }
+          : { ...base, status: 'FAIL', code: 'SURFACE_EVIDENCE_MISMATCH', message: `${problems.length} 项声明-证据不符：${problems.join('；')}`, evidence: claim.evidenceFile, errors: [mkErr('SURFACE_EVIDENCE_MISMATCH', gen, face, problems.join('；'), FIX_EVIDENCE)] })
+        continue
+      }
+
+      if (face === 3) {
+        const ev = loadEvidence(gen)
+        if (ev === null) {
+          pushRow({ ...base, status: 'SKIP', code: 'SURFACE_EVIDENCE_CACHE_MISSING', message: `verified 面但缓存证据缺失（${join(evidenceRoot, gen, 'surfaces', 'surfaces.json')}）——SKIP ≠ PASS`, evidence: null, errors: [] })
+          continue
+        }
+        if (ev.unreadable === true) {
+          pushRow({ ...base, status: 'FAIL', code: 'SURFACE_EVIDENCE_UNREADABLE', message: '缓存证据不是合法 JSON', evidence: ev.path, errors: [mkErr('SURFACE_EVIDENCE_UNREADABLE', gen, face, '缓存证据 JSON 解析失败', FIX_EVIDENCE)] })
+          continue
+        }
+        const problems = []
+        for (const [key, claimAnchor] of Object.entries(cell.domAnchors ?? {})) {
+          const hits = ev.client?.domAnchors?.[key]
+          if (!Array.isArray(hits) || hits.length === 0) { problems.push(`DOM 锚点 ${key}（${claimAnchor.literal}）0 命中`); continue }
+          for (const pkg of claimAnchor.consumers ?? []) {
+            if (!hits.some((h) => h.package === pkg)) problems.push(`DOM 锚点 ${key} 消费包 ${pkg} 0 命中`)
+          }
+        }
+        pushRow(problems.length === 0
+          ? { ...base, status: 'PASS', code: null, message: `${Object.keys(cell.domAnchors ?? {}).length} 个 DOM 物化锚点全部对上`, evidence: claim.evidenceFile, errors: [] }
+          : { ...base, status: 'FAIL', code: 'SURFACE_EVIDENCE_MISMATCH', message: `${problems.length} 项声明-证据不符：${problems.join('；')}`, evidence: claim.evidenceFile, errors: [mkErr('SURFACE_EVIDENCE_MISMATCH', gen, face, problems.join('；'), FIX_EVIDENCE)] })
+        continue
+      }
+
+      if (face === 4 || face === 5) {
+        const checks = face === 4 ? (cell.anchors ?? []).flatMap((anchor) => anchor.checks.map((c) => ({ ...c, mechanism: anchor.mechanism }))) : (cell.checks ?? [])
+        const problems = []
+        for (const check of checks) {
+          const abs = join(REPO_ROOT, check.file)
+          if (!existsSync(abs)) { problems.push(`${check.mechanism ?? '机制'}：文件不存在 ${check.file}`); continue }
+          if (!readFileSync(abs, 'utf8').includes(check.literal)) problems.push(`${check.mechanism ?? '机制'}：${check.file} 缺字面量 ${check.literal}`)
+        }
+        const code = face === 4 ? 'SURFACE_ANCHOR_MISSING' : 'SURFACE_MECHANISM_MISSING'
+        pushRow(problems.length === 0
+          ? { ...base, status: 'PASS', code: null, message: `${checks.length} 项仓库锚点/机制字面量全部命中（fixture-record：源 = 仓库自身事实）`, evidence: 'repo', errors: [] }
+          : { ...base, status: 'FAIL', code, message: `${problems.length} 项锚点/机制失真：${problems.join('；')}`, evidence: 'repo', errors: [mkErr(code, gen, face, problems.join('；'), '锚点字面量随仓库演进失真——按当前 install 脚本/预设源更新 manifest SURFACE_EVIDENCE（COMPAT-023）')] })
+        continue
+      }
+
+      if (face === 6) {
+        const assertion = cell.detectRoundTrip
+        const problems = []
+        if (assertion === undefined) {
+          problems.push('缺 detectRoundTrip 断言')
+        } else {
+          const verdict = detectGeneration({ hostVersion: assertion.hostVersion, hasAgentPreset: assertion.hasAgentPreset })
+          if (verdict !== assertion.expect) problems.push(`detectGeneration(${assertion.hostVersion}, ${assertion.hasAgentPreset}) = ${verdict} ≠ ${assertion.expect}`)
+          if (GENERATIONS[gen]?.hostCriteria !== undefined && assertion.hostVersion !== claim.representativeVersion) problems.push('detectRoundTrip.hostVersion ≠ representativeVersion（口径漂移）')
+        }
+        pushRow(problems.length === 0
+          ? { ...base, status: 'PASS', code: null, message: '版本探测断言成立（代表版本 × 声明代在场 ⇒ 判回本代际）', evidence: 'manifest-invariant', errors: [] }
+          : { ...base, status: 'FAIL', code: 'SURFACE_VERSION_PROBE_MISMATCH', message: problems.join('；'), evidence: 'manifest-invariant', errors: [mkErr('SURFACE_VERSION_PROBE_MISMATCH', gen, face, problems.join('；'), '版本判据与代表版本失真——按 GENERATIONS hostCriteria 核对 SURFACE_EVIDENCE faces[6]')] })
+        continue
+      }
+    }
+  }
+
+  // ── 契约 cross-check（BUG-012 教训的落地断言；恒跑全代际——--generation 收窄不豁免覆盖缺口）──
+  const crossCheck = { contractSlots, requiredExportPackages: Object.keys(requiredExports), slotCoverage: {}, requiredExportCoverage: {} }
+  for (const gen of GENERATION_IDS.filter((g) => g !== 'unknown')) {
+    const face2 = SURFACE_EVIDENCE[gen].faces[2]
+    const missingSlots = face2.status === 'unknown' ? [...contractSlots] : contractSlots.filter((slot) => face2.slots?.[slot] === undefined)
+    if (missingSlots.length > 0) {
+      pushRow({ generation: gen, face: 2, item: `surfaces.contract-slots.${gen}`, status: 'FAIL', code: 'SURFACE_COVERAGE_GAP', message: `契约登记槽位无本代际证据（关键面——BUG-012 教训：客户端面看护优先级等同预设面）：${missingSlots.join(', ')}`, evidence: null, errors: [mkErr('SURFACE_COVERAGE_GAP', gen, 2, `契约槽位 ${missingSlots.join(', ')} 在 ${gen} 无 surfaceEvidence`, '补采证据（collect-host-surface-evidence）或显式登记差异——已知代际的关键面不得无据')] })
+    }
+    crossCheck.slotCoverage[gen] = missingSlots.length === 0 ? 'covered' : `${missingSlots.length} missing`
+
+    const face1 = SURFACE_EVIDENCE[gen].faces[1]
+    const missingPkgs = face1.status === 'unknown' ? Object.keys(requiredExports).map((p) => p.replace('@deepseek-ai/', '')) : Object.keys(requiredExports).map((p) => p.replace('@deepseek-ai/', '')).filter((p) => face1.packages?.[p] === undefined)
+    if (missingPkgs.length > 0) {
+      pushRow({ generation: gen, face: 1, item: `surfaces.contract-required-exports.${gen}`, status: 'FAIL', code: 'SURFACE_COVERAGE_GAP', message: `契约 requiredExports 包无本代际证据：${missingPkgs.join(', ')}`, evidence: null, errors: [mkErr('SURFACE_COVERAGE_GAP', gen, 1, `requiredExports 包 ${missingPkgs.join(', ')} 在 ${gen} 无 surfaceEvidence`, '补采证据或显式登记差异（面 1 看护清单 = 契约 hostSurface.packages 口径）')] })
+    }
+    crossCheck.requiredExportCoverage[gen] = missingPkgs.length === 0 ? 'covered' : `${missingPkgs.length} missing`
+  }
+  // requiredExports 名单的**导出名级**对账：契约现行闭包（hostSurface.current = 0.1.5-rc.2）的每个
+  // 必需导出名 MUST ⊆ legacy-0.1 代际的 keyExports（契约 provenance；其他代际走 crossSections 断面）。
+  {
+    const gen = 'legacy-0.1'
+    const face1 = SURFACE_EVIDENCE[gen].faces[1]
+    if (face1.status !== 'unknown') {
+      const problems = []
+      for (const [fullPkg, names] of Object.entries(requiredExports)) {
+        const short = fullPkg.replace('@deepseek-ai/', '')
+        const claimPkg = face1.packages?.[short]
+        if (claimPkg === undefined) continue // 缺包已由上一行 FAIL 覆盖
+        for (const name of names) if (!claimPkg.keyExports.includes(name)) problems.push(`${short} 缺 ${name}`)
+      }
+      if (problems.length > 0) {
+        pushRow({ generation: gen, face: 1, item: `surfaces.contract-required-export-names.${gen}`, status: 'FAIL', code: 'SURFACE_COVERAGE_GAP', message: `契约 requiredExports 导出名 ∉ ${contractCurrent} 代际 keyExports：${problems.join('；')}`, evidence: null, errors: [mkErr('SURFACE_COVERAGE_GAP', gen, 1, problems.join('；'), `契约 requiredExports 的 provenance = hostSurface.current（${contractCurrent}）；keyExports 必须覆盖`)] })
+      }
+    }
+  }
+
+  // 汇总与判定
+  const summary = { total: rows.length, pass: 0, warn: 0, skip: 0, fail: 0 }
+  for (const row of rows) {
+    if (row.status === 'PASS') summary.pass += 1
+    else if (row.status === 'WARN') summary.warn += 1
+    else if (row.status === 'SKIP') summary.skip += 1
+    else summary.fail += 1
+  }
+  let hardFail = summary.fail > 0
+  if (opts.strict === true && summary.warn > 0) {
+    hardFail = true
+    errors.push({ code: 'STRICT_SURFACE_UNKNOWN', generation: null, face: null, rowId: null, package: null, check: 'surfaces-strict', message: `--strict：${summary.warn} 个 unknown 面（fail-closed 升红）`, fix: '补采证据（collect-host-surface-evidence）或在 manifest 显式登记差异' })
+  }
+  if (opts.strict === true && summary.skip > 0) {
+    hardFail = true
+    errors.push({ code: 'STRICT_SURFACE_SKIP', generation: null, face: null, rowId: null, package: null, check: 'surfaces-strict', message: `--strict：${summary.skip} 个 verified 面缓存证据缺失（SKIP ≠ PASS，严格口径升红）`, fix: '重新采集：node scripts/collect-host-surface-evidence.mjs（只读 npm view/pack）' })
+  }
+  const ok = !hardFail
+  const report = {
+    schemaVersion: SCHEMA_VERSION,
+    compatRunId,
+    ok,
+    mode: 'surfaces',
+    generations,
+    surfacesEvidenceRoot: evidenceRoot,
+    ...(opts.surfacesEvidenceRoot !== null ? { surfacesEvidenceRootOverride: true } : {}),
+    rows,
+    summary,
+    crossCheck,
+    errors,
+  }
+  if (opts.json) {
+    console.log(JSON.stringify(report, null, 2))
+  } else {
+    console.log(note(`依赖面消费证据对账（manifest SURFACE_EVIDENCE × 缓存证据 × 仓库文件；代际 = ${generations.join(', ')}）`))
+    console.log(note(`  证据根 = ${evidenceRoot}${opts.surfacesEvidenceRoot !== null ? '（诊断注入覆盖）' : ''}；契约槽位对账面 = ${contractSlots.join(' / ')}`))
+    for (const row of rows) {
+      const c = colorOf(row.status, useColor)
+      console.log(c(`  ${row.status.padEnd(5)} ${row.generation.padEnd(10)} 面${row.face}  ${row.message}`))
+    }
+    console.log(note(`  汇总：total ${summary.total} | pass ${summary.pass} | warn ${summary.warn}（unknown，非绿） | skip ${summary.skip}（缓存缺失 ≠ PASS） | fail ${summary.fail}`))
+    for (const error of errors) console.error(colorOf('FAIL', useColor)(`  ERROR ${error.code} [${error.generation ?? '-'} 面${error.face ?? '-'}] ${error.message}`))
+  }
+  process.exit(ok ? EXIT.OK : EXIT.FAIL)
 }
 
 async function main() {
   const opts = parseArgs(process.argv.slice(2))
   const useColor = opts.color === true && opts.json !== true && process.stdout.isTTY === true
   const compatRunId = 'r-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6)
+
+  // ── --surfaces：依赖面消费证据对账（COMPAT-023；独立维度——零宿主平面依赖，先于源加载）──
+  if (opts.surfaces === true) {
+    return surfacesMode(opts, { compatRunId, useColor })
+  }
+
   const patchSource = loadSource(opts.patch)
   const legacySource = loadSource(opts.legacy)
 

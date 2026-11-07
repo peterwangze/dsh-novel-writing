@@ -1104,6 +1104,25 @@
         "lib/host-contract.mjs",
         "test/smoke.mjs"
       ]
+    },
+    "op-cc79e3406c464072a6792fdff39f5b51": {
+      "schema_version": 1,
+      "command": "evidence-append",
+      "task_id": "COMPAT-023",
+      "input_fingerprint": "4affc756da5ff77d97437dfc70224367756d0c527c629442cbd7f057f872302b",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-cc79e3406c464072a6792fdff39f5b51",
+        "code": "ok",
+        "new_revision": 428130,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-07T22:09:32",
+      "updated_at": "2026-11-07T22:09:32"
     }
   }
 }

@@ -1,5 +1,5 @@
 /**
- * test/preflight-preset-rows.test.mjs — 行级预检 CLI 的独立测试（COMPAT-021；不接线 smoke，断言数 334 不变）
+ * test/preflight-preset-rows.test.mjs — 行级预检 CLI 的独立测试（COMPAT-021；smoke 侧接线机检见 test/smoke.mjs COMPAT-023 ④）
  *
  * 覆盖面（docs/COMPATIBILITY.md §7.4/§9.2/§12.1「严格校验」）：
  *   ① 六个离线 fixture（spawn `scripts/preflight-preset-rows.mjs --fixture …`）——四代际 exit 0 /
@@ -14,6 +14,9 @@
  *   ⑤ 端到端混合平面 fail-closed（R1 F1）：`--global-root <dir>` 诊断注入伪全局闭包（与伪 profile 双平面
  *      代际不同 ⇒ legacy-only 行必 FAIL MIXED_PLANE_FAIL_CLOSED 而非 KNOWN_DROP；注入时 JSON 必含
  *      plane.globalRootOverride 审计标记——注入不得冒充自然根，§8.3 injected 纪律）。
+ *   ⑥ COMPAT-023 --surfaces 维度端到端：pristine 30 格（24 PASS + 6 WARN 集中 unknown 代）/
+ *      tamper 负向（缓存副本抹 shell.overlay ⇒ decl-0.2.2 面 2 FAIL SURFACE_EVIDENCE_MISMATCH）/
+ *      缓存缺面（12 SKIP ≠ PASS + 12 PASS + 6 WARN，exit 0 三态；--strict 升红双码）/ 用法面 exit 2。
  *
  * 汇总行：`PREFLIGHT TEST PASSED/FAILED (n)`。退出码 0/1。
  */
@@ -224,6 +227,93 @@ if (real.status === 3) {
     rmSync(profileDir, { recursive: true, force: true })
     rmSync(globalDir, { recursive: true, force: true })
   }
+}
+
+// ── ⑥ COMPAT-023 --surfaces 维度（全依赖面看护：30 格对账 + tamper 负向判别 + SKIP 语义 + --strict 晋升）──
+// 与 smoke 的 COMPAT-023 ④（接线机检）互补：本组端到端真跑 CLI——pristine 24 PASS + 6 WARN（unknown
+// 代六面全 WARN，fail-closed 不冒绿）；tamper 负向（缓存副本抹掉 shell.overlay 证据 ⇒ face2 必红
+// ——BUG-012 教训：客户端面失据必须 FAIL 而非静默绿）；缓存缺面 ⇒ SKIP ≠ PASS（faces 1-3 = verified
+// 依赖缓存、faces 4-6 = fixture-record 只看仓库文件 ⇒ 12 SKIP + 12 PASS + 6 WARN）；--strict 把
+// WARN/SKIP 晋升为 exit 1（STRICT_SURFACE_UNKNOWN / STRICT_SURFACE_SKIP）；用法面 exit 2。
+{
+  const pristine = run(['--surfaces', '--json'])
+  const pReport = tryJson(pristine.stdout)
+  const pBad = []
+  if (pristine.status !== 0) pBad.push(`pristine exit ${pristine.status} ≠ 0`)
+  if (pReport === null || pReport.mode !== 'surfaces') pBad.push('输出不是 surfaces 模式 JSON')
+  else {
+    if (pReport.ok !== true) pBad.push('ok ≠ true')
+    const s = pReport.summary
+    if (s?.total !== 30 || s?.pass !== 24 || s?.warn !== 6 || s?.skip !== 0 || s?.fail !== 0) pBad.push(`summary ${JSON.stringify(s)} ≠ 30/24/6/0/0`)
+    const warnGens = new Set(pReport.rows.filter((r) => r.status === 'WARN').map((r) => r.generation))
+    if (warnGens.size !== 1 || !warnGens.has('unknown')) pBad.push(`WARN 行代际 ${[...warnGens].join(',')} ≠ 恰 unknown（fail-closed）`)
+    if ((pReport.errors ?? []).length !== 0) pBad.push('pristine 出现 errors（应零）')
+  }
+  if (pBad.length === 0) ok('--surfaces 真跑（pristine）：exit 0 ∧ 30 格 = 24 PASS + 6 WARN（WARN 全部集中于 unknown 代——fail-closed，非绿）+ 0 SKIP/FAIL ∧ 零 errors')
+  else fail('--surfaces pristine', pBad.join('；'))
+
+  // tamper 负向：证据根副本（四代全量——缺代际会变 SKIP 混淆判读）只篡 decl-0.2.2——抹掉
+  // shell.overlay 证据（字符串级替换）⇒ 该代面 2 必 FAIL，其余 29 格不受污染。
+  const tamperRoot = mkdtempSync(join(tmpdir(), 'nv-surfaces-tamper-'))
+  try {
+    for (const gen23 of ['legacy-0.1', 'decl-0.2.0', 'decl-0.2.1', 'decl-0.2.2']) {
+      cpSync(join(FIXTURES, gen23, 'surfaces'), join(tamperRoot, gen23, 'surfaces'), { recursive: true })
+    }
+    const tamperedPath = join(tamperRoot, 'decl-0.2.2', 'surfaces', 'surfaces.json')
+    writeFileSync(tamperedPath, readFileSync(tamperedPath, 'utf8').replaceAll('"shell.overlay"', '"shell.tampered-by-test"'))
+    const tampered = run(['--surfaces', '--surfaces-evidence-root', tamperRoot, '--json'])
+    const tReport = tryJson(tampered.stdout)
+    const tBad = []
+    if (tampered.status !== 1) tBad.push(`tamper exit ${tampered.status} ≠ 1（篡改证据必须红）`)
+    if (tReport === null) tBad.push('输出不是 JSON')
+    else {
+      if (tReport.ok !== false) tBad.push('ok ≠ false')
+      const failRow = tReport.rows.find((r) => r.status === 'FAIL' && r.generation === 'decl-0.2.2' && r.face === 2)
+      if (failRow === undefined) tBad.push('decl-0.2.2 面 2 无 FAIL 行')
+      else if (failRow.code !== 'SURFACE_EVIDENCE_MISMATCH' || !String(failRow.message).includes('shell.overlay')) tBad.push(`FAIL 行 code/message 未指向 shell.overlay：${failRow.code} ${String(failRow.message).slice(0, 80)}`)
+      if (!tReport.errors.some((e) => e.code === 'SURFACE_EVIDENCE_MISMATCH' && e.generation === 'decl-0.2.2' && e.face === 2)) tBad.push('errors 未含 decl-0.2.2 面 2 的 SURFACE_EVIDENCE_MISMATCH')
+      if (tReport.summary?.pass !== 23 || tReport.summary?.fail !== 1) tBad.push(`summary ${JSON.stringify(tReport.summary)} ≠ 23 PASS + 1 FAIL（其余 29 格不受污染）`)
+    }
+    if (tBad.length === 0) ok('--surfaces tamper 负向（缓存副本抹 shell.overlay）：exit 1 ∧ decl-0.2.2 面 2 FAIL（SURFACE_EVIDENCE_MISMATCH，指向 shell.overlay）∧ 其余 29 格不受污染（23 PASS + 6 WARN）')
+    else fail('--surfaces tamper 负向', tBad.join('；'))
+  } finally {
+    rmSync(tamperRoot, { recursive: true, force: true })
+  }
+
+  // 缓存缺面：空证据根 ⇒ verified 面（1-3）全部 SKIP ≠ PASS；fixture-record 面（4-6）照常 PASS
+  const emptyRoot = mkdtempSync(join(tmpdir(), 'nv-surfaces-empty-'))
+  try {
+    const missing = run(['--surfaces', '--surfaces-evidence-root', emptyRoot, '--json'])
+    const mReport = tryJson(missing.stdout)
+    const strictMissing = run(['--surfaces', '--surfaces-evidence-root', emptyRoot, '--strict', '--json'])
+    const smReport = tryJson(strictMissing.stdout)
+    const eBad = []
+    if (missing.status !== 0) eBad.push(`cache-missing exit ${missing.status} ≠ 0（SKIP 不是失败——三态口径）`)
+    if (mReport === null) eBad.push('输出不是 JSON')
+    else {
+      const s = mReport.summary
+      if (s?.skip !== 12 || s?.pass !== 12 || s?.warn !== 6) eBad.push(`summary ${JSON.stringify(s)} ≠ 12 SKIP + 12 PASS + 6 WARN（faces1-3 verified × 4 代 = 12 需缓存）`)
+      const skipRows = mReport.rows.filter((r) => r.status === 'SKIP')
+      if (skipRows.some((r) => r.code !== 'SURFACE_EVIDENCE_CACHE_MISSING')) eBad.push('SKIP 行 code ≠ SURFACE_EVIDENCE_CACHE_MISSING')
+      if (skipRows.some((r) => r.face > 3)) eBad.push('face>3（fixture-record）不该 SKIP——它们不依赖缓存')
+    }
+    if (strictMissing.status !== 1) eBad.push(`--strict cache-missing exit ${strictMissing.status} ≠ 1`)
+    if (smReport === null || !smReport.errors.some((e) => e.code === 'STRICT_SURFACE_SKIP')) eBad.push('--strict 未判 STRICT_SURFACE_SKIP')
+    if (smReport === null || !smReport.errors.some((e) => e.code === 'STRICT_SURFACE_UNKNOWN')) eBad.push('--strict 未判 STRICT_SURFACE_UNKNOWN（WARN 同场晋升）')
+    if (eBad.length === 0) ok('--surfaces 缓存缺面：空证据根 ⇒ 12 SKIP（SURFACE_EVIDENCE_CACHE_MISSING ≠ PASS；faces 4-6 fixture-record 照常 12 PASS）+ 6 WARN ∧ exit 0（三态）；--strict ⇒ exit 1 + STRICT_SURFACE_SKIP ∧ STRICT_SURFACE_UNKNOWN')
+    else fail('--surfaces 缓存缺面/--strict', eBad.join('；'))
+  } finally {
+    rmSync(emptyRoot, { recursive: true, force: true })
+  }
+
+  // 用法面：--surfaces 与 --fixture/--profile/--explain 互斥；--surfaces-evidence-root 指向不存在目录
+  const u1 = run(['--surfaces', '--fixture', join(FIXTURES, 'decl-0.2.2')])
+  const u2 = run(['--surfaces', '--surfaces-evidence-root', join(tmpdir(), 'nv-surfaces-nonexistent-' + Date.now())])
+  const uBad = []
+  if (u1.status !== 2) uBad.push(`--surfaces --fixture exit ${u1.status} ≠ 2`)
+  if (u2.status !== 2) uBad.push(`不存在证据根 exit ${u2.status} ≠ 2`)
+  if (uBad.length === 0) ok('--surfaces 用法面：与 --fixture 互斥 exit 2 ∧ --surfaces-evidence-root 指向不存在目录 exit 2')
+  else fail('--surfaces 用法面', uBad.join('；'))
 }
 
 console.log(`\nPREFLIGHT TEST ${failed === 0 ? 'PASSED' : 'FAILED'} (${passed})`)

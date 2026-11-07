@@ -4558,6 +4558,117 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
       && !patchText11.includes(droppedLiteral11) && ymlDroppedDecls11 === 1,
     'wired=' + (vpSrc11.includes('dual: true')) + ' dropped=' + (psfSrc11.includes('export const GENERATION_DROPPED')) + ' ukDropped=' + unverifiedKinds11.includes("'GENERATION_DROPPED'") + ' fkDropped=' + findingKinds11.includes('GENERATION_DROPPED') + ' stray=' + JSON.stringify(strayKinds11) + ' vp=' + (vpSrc11.includes('GENERATION_DROPPED')) + ' hc=' + (hcSrc11.includes(droppedLiteral11)) + ' patchHits=' + (patchText11.includes(droppedLiteral11)) + ' ymlDecls=' + ymlDroppedDecls11)
 }
+
+// ── COMPAT-023：全依赖面看护（surfaceEvidence × 6 面 + 离线证据缓存 + preflight --surfaces + 探针 boot 统一模式）──
+// 动因（BUG-012 教训制度化）：看护面此前只覆盖预设行单格——宿主依赖面（服务端 API / client 槽位 / DOM /
+// 安装 / 预设清单 / 版本六面）零看护 ⇒ 宿主升级塌方先由用户发现。本节机检四件事：
+// ① generation-manifest SURFACE_EVIDENCE 30 格结构完备 + fail-closed（unknown 代全 unknown）；
+// ② 离线证据缓存四代齐备（可解析、schemaVersion 1、无凭据泄漏）且与 manifest 声明同源；
+// ③ 采集脚本只读纪律（npm view/pack + tar 解包；零 install/执行 tarball 内容）+ 看护清单导出；
+// ④ preflight --surfaces 接线 + 三探针 boot 统一为「官方 CLI + DSH_HOME」（旧 bootChild 自举已退役）。
+{
+  const gm23 = await import('../lib/host-compat/generation-manifest.mjs')
+  const { SURFACE_EVIDENCE, SURFACE_EVIDENCE_STATUSES, GENERATION_IDS } = gm23
+  const collectSrc23 = readFileSync(new URL('../scripts/collect-host-surface-evidence.mjs', import.meta.url), 'utf8')
+  const preflightSrc23 = readFileSync(new URL('../scripts/preflight-preset-rows.mjs', import.meta.url), 'utf8')
+  const probeFiles23 = { ux012: '../scripts/probe-nv-ux012.mjs', bar: '../scripts/probe-nv-bar-geometry.mjs', wb: '../scripts/probe-nv-workbench-mount.mjs' }
+  const probeSrc23 = {}
+  for (const [k23, p23] of Object.entries(probeFiles23)) probeSrc23[k23] = readFileSync(new URL(p23, import.meta.url), 'utf8')
+  const gensKnown23 = GENERATION_IDS.filter((g) => g !== 'unknown')
+
+  // ① 30 格结构完备 + 状态枚举 + known/unknown 两半各自的方向性
+  let structOk23 = Array.isArray(SURFACE_EVIDENCE_STATUSES) && SURFACE_EVIDENCE_STATUSES.join(',') === 'verified,fixture-record,unknown'
+  const cellStates23 = []
+  for (const g of GENERATION_IDS) {
+    const gen23 = SURFACE_EVIDENCE[g]
+    structOk23 = structOk23 && gen23 !== undefined && gen23 !== null && typeof gen23 === 'object'
+    if (gen23 === undefined || gen23 === null) continue
+    for (const f of [1, 2, 3, 4, 5, 6]) {
+      const cell = gen23.faces === undefined ? undefined : gen23.faces[f]
+      const ok23 = cell !== undefined && cell !== null && typeof cell === 'object' && SURFACE_EVIDENCE_STATUSES.includes(cell.status)
+      structOk23 = structOk23 && ok23
+      cellStates23.push(g + '/F' + f + '=' + (cell === undefined || cell === null ? 'MISSING' : cell.status))
+    }
+  }
+  let knownDir23 = true
+  for (const g of gensKnown23) {
+    const gen23 = SURFACE_EVIDENCE[g]
+    knownDir23 = knownDir23 && gen23.representativeVersion !== undefined && gen23.evidenceSource === 'tarball-scan'
+      && typeof gen23.evidenceFile === 'string' && gen23.collectedAt !== undefined && gen23.regenerate !== undefined
+    for (const f of [1, 2, 3]) knownDir23 = knownDir23 && gen23.faces[f].status === 'verified'
+    for (const f of [4, 5, 6]) knownDir23 = knownDir23 && gen23.faces[f].status === 'fixture-record'
+  }
+  const unknownCells23 = cellStates23.filter((c) => c.startsWith('unknown/'))
+  const unknownDir23 = unknownCells23.length === 6 && unknownCells23.every((c) => c.endsWith('=unknown'))
+    && SURFACE_EVIDENCE.unknown.faces[1].reason !== undefined // fail-closed 有因可查（不默认绿）
+  check('COMPAT-023 ①manifest surfaceEvidence 结构完备：' + GENERATION_IDS.length + ' 代 × 6 面 = 30 格全在场 ∧ status ∈ 枚举(verified|fixture-record|unknown) ∧ 已知代带 evidenceFile/collectedAt/regenerate 且面 1-3 verified / 面 4-6 fixture-record ∧ unknown 代 6 面全 unknown 且带 reason（fail-closed）',
+    structOk23 && cellStates23.length === 30 && knownDir23 && unknownDir23,
+    'cells=' + cellStates23.length + ' struct=' + structOk23 + ' known=' + knownDir23 + ' unknown=' + unknownDir23 + ' sample=' + cellStates23.slice(0, 3).join(','))
+
+  // ② 离线证据缓存与 manifest 同源（文件在场、可解析、schemaVersion 1、无凭据泄漏）
+  let cacheOk23 = true
+  const cacheDetail23 = []
+  for (const g of gensKnown23) {
+    const rel23 = SURFACE_EVIDENCE[g].evidenceFile
+    let state23 = 'ok'
+    try {
+      const json23 = JSON.parse(readFileSync(new URL('../' + rel23, import.meta.url), 'utf8'))
+      const noLeak23 = JSON.stringify(json23).includes('token=') !== true
+      const genMeta23 = json23.generation === g || json23.schemaVersion !== undefined // 代际标识或 schema 在场（兼容键名）
+      state23 = json23.schemaVersion === 1 && noLeak23 && genMeta23 && Array.isArray(json23.errors) ? 'ok' : 'bad-shape' + (noLeak23 ? '' : '+leak')
+    } catch { state23 = 'unreadable' }
+    cacheOk23 = cacheOk23 && state23 === 'ok'
+    cacheDetail23.push(g + ':' + state23)
+  }
+  check('COMPAT-023 ②离线证据缓存四代齐备：manifest.evidenceFile 指向的 surfaces.json 全部在场/可解析/schemaVersion=1/带 errors 面 ∧ 全文零 token= 字样（BC-05 凭据不入仓）',
+    cacheOk23 && cacheDetail23.length === 4,
+    'caches=' + cacheDetail23.join(' '))
+
+  // ③ 采集脚本只读纪律（npm view/pack + tar 解包到临时目录；绝不 install/执行 tarball 内容）
+  const collectOk23 = collectSrc23.includes('npm view') && collectSrc23.includes('npm pack') && collectSrc23.includes('--pack-destination')
+    && collectSrc23.includes('GENERATION_TARGETS') && collectSrc23.includes('CLIENT_STACK') && collectSrc23.includes('SERVER_WATCHED')
+    && collectSrc23.includes('SLOT_NAMES') && collectSrc23.includes('DOM_ANCHORS') && collectSrc23.includes('CROSS_SECTION_KEYS')
+    && collectSrc23.includes('npm install') !== true && collectSrc23.includes('npm ci') !== true
+  check('COMPAT-023 ③采集脚本只读纪律：npm view + npm pack --pack-destination + tar 解包（宿主包交互只读）∧ 零 npm install / npm ci（不装不执行 tarball 内容）∧ 看护清单常量导出（GENERATION_TARGETS/CLIENT_STACK/SERVER_WATCHED/SLOT_NAMES/DOM_ANCHORS/CROSS_SECTION_KEYS）',
+    collectOk23,
+    'readonly=' + collectOk23 + ' bytes=' + collectSrc23.length)
+
+  // ④ preflight --surfaces 接线（维度行 + 交叉对账 + 三态晋升 + 缓存缺面 SKIP 语义）
+  const preflightOk23 = preflightSrc23.includes("'--surfaces'") && preflightSrc23.includes('surfacesMode')
+    && preflightSrc23.includes("'--surfaces-evidence-root'") && preflightSrc23.includes('SURFACE_COVERAGE_GAP')
+    && preflightSrc23.includes('STRICT_SURFACE_UNKNOWN') && preflightSrc23.includes('STRICT_SURFACE_SKIP')
+    && preflightSrc23.includes('SURFACE_EVIDENCE_CACHE_MISSING') && preflightSrc23.includes('SURFACE_ANCHOR_MISSING')
+    && preflightSrc23.includes('SURFACE_VERSION_PROBE_MISMATCH')
+  check('COMPAT-023 ④preflight --surfaces 接线：--surfaces/--surfaces-evidence-root 参数 + surfacesMode 分发 + 契约交叉对账（SURFACE_COVERAGE_GAP——BUG-012 教训：契约槽名 ⊆ 每代 face2）+ --strict 晋升（STRICT_SURFACE_UNKNOWN/STRICT_SURFACE_SKIP）+ 缓存缺面 SKIP（SURFACE_EVIDENCE_CACHE_MISSING≠PASS）+ 锚/机制/版本失配 FAIL 码（SURFACE_ANCHOR_MISSING/SURFACE_VERSION_PROBE_MISMATCH）',
+    preflightOk23,
+    'wired=' + preflightOk23)
+
+  // ⑤ 三探针 boot 统一模式（官方 CLI + DSH_HOME 隔离；旧 bootChild 自举已退役——0.2.1 起 ERR_MODULE_NOT_FOUND 根因）
+  const bootMarkers23 = ['resolveHostCli', 'NV_PROBE_DSH', 'prepareIsolatedProfile', 'killTree', "'/T', '/F', '/PID'"]
+  let bootOk23 = true
+  const bootDetail23 = []
+  for (const [k23, src23] of Object.entries(probeSrc23)) {
+    const has23 = bootMarkers23.every((m) => src23.includes(m)) && src23.includes('bootChild') !== true
+    bootOk23 = bootOk23 && has23
+    bootDetail23.push(k23 + '=' + has23)
+  }
+  check('COMPAT-023 ⑤三探针 boot 统一模式：resolveHostCli（--dsh > NV_PROBE_DSH > 桌面 CLI > PATH）+ prepareIsolatedProfile（junction + bundles 声明）+ killTree（taskkill /T /F /PID 只杀自启进程树）∧ 三文件零 bootChild 残留（0.2.1 宿主闭包不再装 dsh-app-boot ⇒ 旧自举必 ERR_MODULE_NOT_FOUND）',
+    bootOk23,
+    bootDetail23.join(' '))
+
+  // ⑥ 工作台挂载探针资产（BUG-012 用户真路径固化：W1-W6 + 首跑门处置 + 截图落证据目录 + 入口守卫）
+  const wbSrc23 = probeSrc23.wb
+  const wbOk23 = ['W1-drawer-rendered', 'W2-console-mounted', 'W3-create-api', 'W4-split-mounted', 'W5-auto-bind-notice', 'W6-console-clean']
+      .every((id) => wbSrc23.includes(id))
+    && wbSrc23.includes('#310') && wbSrc23.includes('slot entry crashed')
+    && wbSrc23.includes('readAutoBindTemplate') && wbSrc23.includes('autoBindDone')
+    && wbSrc23.includes("'docs', 'evidence', 'COMPAT-023'") && wbSrc23.includes('GATE_BTN_RE')
+    && wbSrc23.includes('elementFromPoint') && wbSrc23.includes('isDirectEntry')
+    && wbSrc23.includes('token=<redacted>') && wbSrc23.includes('3081')
+  check('COMPAT-023 ⑥工作台挂载探针资产在仓：W1 抽屉→W2 控制台（shell.overlay 消费）→W3 建 API→W4 点书卡 .nv-split→W5 autoBindDone 同源断言→W6 零 React #310/零 slot entry crashed ∧ 首跑门处置（GATE_BTN_RE；关不掉=envBlocked≠断言）∧ 命中性校验（elementFromPoint——BUG-012 阶段 A 误诊防再犯）∧ 截图默认落 docs/evidence/COMPAT-023 ∧ token <redacted> ∧ 端口 3080/3081 纪律 ∧ 入口守卫',
+    wbOk23,
+    'wb=' + wbOk23 + ' bytes=' + wbSrc23.length)
+}
 //   至少 4 个任务周期（179 vs 276，正落在 COMPAT-007 修改的代码块内）；本断言把「随 smoke 计数变更同步」由
 //   文档纪律升级为机检（改 README 计数与改 smoke 断言数必须同 commit）。**必须保持为本文件最后一条 check**
 //   （断言式用 `passed + 1` 计入自身；后续新增 check 会使其红——这正是期望的提示信号）。
