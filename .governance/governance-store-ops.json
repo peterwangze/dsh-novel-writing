@@ -1238,6 +1238,29 @@
       "baseline_effects": null,
       "recorded_at": "2026-11-08T06:23:22",
       "updated_at": "2026-11-08T06:23:22"
+    },
+    "op-74e89bf2c67742f18a05e252ec419f89": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "COMPAT-018",
+      "input_fingerprint": "9ac60de59dcca003d00308ce03d9b1b93c1980412358b3d559f00e222bf35e6d",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-74e89bf2c67742f18a05e252ec419f89",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-08T06:23:54",
+      "updated_at": "2026-11-08T06:23:54",
+      "released_files": [
+        "docs/evidence/COMPAT-018/probe-host-real-run.md",
+        "scripts/probe-host.mjs"
+      ]
     }
   }
 }
