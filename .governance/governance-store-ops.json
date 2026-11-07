@@ -1219,6 +1219,25 @@
         "scripts/preflight-preset-rows.mjs",
         "scripts/probe-nv-bar-geometry.mjs"
       ]
+    },
+    "op-b8da56fe7c274272a84c157c565505be": {
+      "schema_version": 1,
+      "command": "evidence-append",
+      "task_id": "COMPAT-018",
+      "input_fingerprint": "634b7265251511dc6599a3bff8fe62c218ab6ae6f604de6b268225b9de516acd",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-b8da56fe7c274272a84c157c565505be",
+        "code": "ok",
+        "new_revision": 433365,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-08T06:23:22",
+      "updated_at": "2026-11-08T06:23:22"
     }
   }
 }

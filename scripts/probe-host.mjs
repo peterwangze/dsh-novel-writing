@@ -30,9 +30,10 @@
  * 用法：
  *   node scripts/probe-host.mjs                  # = --self-check
  *   node scripts/probe-host.mjs --self-check [--json-out <path>]
- *   node scripts/probe-host.mjs --run [--port 3210] [--timeout 90] [--keep] [--json-out <path>]
+ *   node scripts/probe-host.mjs --run [--port 3210] [--timeout 90] [--host-cmd <path>] [--stage-plugin] [--keep] [--json-out <path>]
+ *     （--stage-plugin = 先把本仓插件接入隔离 DSH_HOME 再读数——不传则空 home 起宿主，面 1 只能读到「插件未装载」缺面）
  */
-import { existsSync, readFileSync, readdirSync, mkdtempSync, mkdirSync, rmSync, writeFileSync, openSync, closeSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, mkdtempSync, mkdirSync, rmSync, writeFileSync, openSync, closeSync, symlinkSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { tmpdir } from 'node:os'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -54,7 +55,7 @@ const die = (msg) => { console.error('[probe-host] 用法/环境错误：' + msg
 const line = (s) => console.log(s)
 
 function parseArgs(argv) {
-  const opts = { mode: 'self-check', port: 3210, timeoutSec: 90, keep: false, jsonOut: null, hostCmd: null }
+  const opts = { mode: 'self-check', port: 3210, timeoutSec: 90, keep: false, jsonOut: null, hostCmd: null, stagePlugin: false }
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]
     if (a === '--run') opts.mode = 'run'
@@ -64,6 +65,7 @@ function parseArgs(argv) {
     else if (a === '--timeout') opts.timeoutSec = Number(argv[++i])
     else if (a === '--json-out') opts.jsonOut = argv[++i]
     else if (a === '--host-cmd') opts.hostCmd = argv[++i]
+    else if (a === '--stage-plugin') opts.stagePlugin = true
     else if (a === '--help' || a === '-h') opts.mode = 'help'
     else die('未知参数 ' + a + '（--help 查看用法）')
   }
@@ -248,6 +250,105 @@ function stopHost(child) {
   } catch { /* 进程可能已退出 */ }
 }
 
+/** 宿主进程 spawn 适配（COMPAT-018 实跑取证修复；R1 F1/F2 返工 2026-11-08）：
+ *  Node ≥ 20.12（CVE-2024-27980，本机 v24）在 win32 上禁止无 `shell` 直接 spawn `.cmd`/`.bat`
+ *  （spawn EINVAL）——改为显式经 `process.env.ComSpec` 包装：`cmd.exe /d /c <hostCmd> <args…>`。
+ *  选 ComSpec 显式包装而非 `{shell:true}`：参数按数组逐元素传递、由 Node/libuv 标准规则转义（仅含空白元素加引号），
+ *  比 shell:true 的整串拼接更可控。
+ *  **不用 `/s`（R1 F1 返工）**：libuv 对含空格路径只包**一对**引号，而 `/s` 强制 cmd 剥首+末引号——含空格的
+ *  hostCmd 被拆成裸路径（R1 T1 实证 `'…\my' is not recognized`）；无 `/s` 时 cmd 默认引号规则对「恰两引号 +
+ *  内部空白 + 可执行文件名」**保留整对引号**，空格路径按原语义执行（R1 复现集微测通过，见 COMPAT-018 证据 §7）。
+ *  转义边界（R1 F2：代码强制，非仅注释声明）：固定子参数（'web'/'--port'/'--no-open'）与 port/timeout（内部数字）
+ *  不含引号或 cmd 元字符；win32 `.cmd`/`.bat` 形态的 hostCmd 含 `"`/`&`/`|`/`<`/`>`/`^`/`%` 会被 cmd 拆分命令/
+ *  展开变量（R1 T2 实证 `&` 路径被误执行）⇒ realRun 解析后即 `assertHostCmdSafe` die 拒绝（空格/括号允许——括号
+ *  仅影响 cmd 引号保留启发式，其失败形态是响亮报错非静默误执行）。
+ *  `.js`/`.mjs`/`.cjs` 宿主命令（如 npm tarball 解包后的 bin 入口，绕开 .cmd 层）统一由 `process.execPath`
+ *  （node 本体）承载，避免依赖 PATHEXT/文件关联；其余（非 win32 / `.exe`）保持原直跑路径不变。
+ *  收尾杀树：win32 下 stopHost 的 `taskkill /pid <cmd包装pid> /T /F` 按进程树终止——包装 cmd 与宿主 node 孙进程一并回收。 */
+function hostSpawn(file, args, spawnOpts) {
+  const lower = String(file).toLowerCase()
+  if (process.platform === 'win32' && (lower.endsWith('.cmd') || lower.endsWith('.bat'))) {
+    const comspec = process.env.ComSpec ?? 'cmd.exe'
+    return spawn(comspec, ['/d', '/c', file, ...args], spawnOpts)
+  }
+  if (lower.endsWith('.js') || lower.endsWith('.mjs') || lower.endsWith('.cjs')) {
+    return spawn(process.execPath, [file, ...args], spawnOpts)
+  }
+  return spawn(file, args, spawnOpts)
+}
+
+/** R1 F2（代码强制）：win32 `.cmd`/`.bat` 宿主命令的 cmd 元字符拒绝——该形态经 ComSpec 包装执行，路径中的
+ *  `"`/`&`/`|`/`<`/`>`/`^`/`%` 会被 cmd 拆分命令/展开变量（注入面；R1 T2 实证 `&` 路径过 existsSync 后仍被
+ *  拆分误执行）。空格/括号放行。在 realRun 解析出 hostCmd 后、任何 spawn/staging 前调用（die = 退出码 2 用法错误）。 */
+function assertHostCmdSafe(hostCmd) {
+  if (process.platform !== 'win32') return
+  const lower = hostCmd.toLowerCase()
+  if (!lower.endsWith('.cmd') && !lower.endsWith('.bat')) return
+  const bad = [...new Set([...hostCmd].filter((ch) => '"&|<>^%'.includes(ch)))]
+  if (bad.length > 0) die('hostCmd（.cmd/.bat）含 cmd 元字符 ' + bad.map((c) => `'${c}'`).join(' ') + ' ——经 cmd.exe 包装执行会被拆分/展开（注入面），拒绝执行（空格/括号允许）')
+}
+
+/** `--stage-plugin`（COMPAT-018 实跑取证新增；可选开关，默认关闭 = 原 --run 行为不变）：把**本仓插件**接入隔离
+ *  DSH_HOME，使宿主装载它（否则空 home 起来的宿主没有任何插件 ⇒ `/novel-writing/api/compat` 404 ⇒ 面 1 只能报
+ *  「插件未装载」层缺面）。通道 = install.ps1 新布局同款官方注册路径的探针内最小实现，两段式：
+ *    第一段：空 home 起一次宿主（同端口）让它物化默认 profile（profiles/web/package.json 的 dsh.profile.bundles
+ *      由宿主自选——@deepseek-ai/dsh-base / dsh-web-app 等；不硬编码，跨 0.2.0/0.2.2 形状漂移安全），liveness 即杀树；
+ *    第二段（staging 本体，幂等）：junction 接入 profiles/web/node_modules/dsh-novel-writing → REPO_ROOT
+ *      （win32 junction / posix symlink）+ profile package.json 幂等注册（dependencies.dsh-novel-writing =
+ *      file:<repo> + dsh.profile.bundles **追加**，绝不替换既有 bundles——首批实验证实：替换掉 dsh-base/dsh-web-app
+ *      会让宿主自身服务（settings/agentPresets）永不起来，插件全部 pending、路由 404）。
+ *  读数仍由 --run 主流程的正式启动取得（staging 不改隔离纪律：全部写入落在临时根内）。 */
+async function stagePluginIntoIsolatedHome(opts, hostCmd, plan, tmpRoot) {
+  const bootLog = join(tmpRoot, 'boot1.log')
+  line('[probe-host] --stage-plugin 第一段：空隔离 home 起宿主物化默认 profile（日志 ' + bootLog + '）…')
+  const bootFd = openSync(bootLog, 'w')
+  const env = { ...process.env, ...plan.env }
+  let child = null
+  let fatal = null
+  let live = null
+  try {
+    child = hostSpawn(hostCmd, ['web', '--port', String(opts.port), '--no-open'], { cwd: tmpRoot, env, stdio: ['ignore', bootFd, bootFd], detached: process.platform !== 'win32' })
+    const base = 'http://127.0.0.1:' + opts.port
+    const budget = Math.min(opts.timeoutSec, 90) * 1000
+    const deadline = Date.now() + budget
+    while (Date.now() < deadline) {
+      const r = await httpGet(base + '/', 3000)
+      if (r.status !== null && r.status < 500) { live = r; break }
+      await new Promise((res) => setTimeout(res, 1500))
+    }
+    if (live !== null) line('  默认 profile 已物化（liveness http ' + live.status + '）')
+    else fatal = '--stage-plugin 第一段失败：宿主在 ' + Math.round(budget / 1000) + 's 内未达 liveness（boot1.log 见临时根）——隔离 home 未物化默认 profile，拒绝继续'
+  } finally {
+    if (child !== null) stopHost(child)
+    closeSync(bootFd)
+  }
+  if (fatal !== null) die(fatal)
+  await new Promise((res) => setTimeout(res, 1500))
+  const profileDir = join(plan.env.DSH_HOME, 'profiles', 'web')
+  const pkgFile = join(profileDir, 'package.json')
+  if (!existsSync(pkgFile)) die('--stage-plugin 失败：' + pkgFile + ' 不在（第一段未物化默认 profile）——如实终止，不伪造装载')
+  const dst = join(profileDir, 'node_modules', 'dsh-novel-writing')
+  mkdirSync(dirname(dst), { recursive: true })
+  if (existsSync(dst)) line('  junction 已存在，跳过：' + dst)
+  else {
+    try { symlinkSync(REPO_ROOT, dst, process.platform === 'win32' ? 'junction' : 'dir') } catch (e) { die('--stage-plugin 失败：junction/symlink 创建失败（' + String(e.message ?? e) + '）——如实终止') }
+    line('  已创建 junction：' + dst + ' -> ' + REPO_ROOT)
+  }
+  let pkg
+  try { pkg = JSON.parse(readFileSync(pkgFile, 'utf8')) } catch (e) { die('--stage-plugin 失败：解析 ' + pkgFile + ' 出错（' + String(e.message ?? e) + '）') }
+  const repoFwd = String(REPO_ROOT).replaceAll('\\', '/')
+  pkg.dependencies = pkg.dependencies ?? {}
+  if (pkg.dependencies['dsh-novel-writing'] === undefined) { pkg.dependencies['dsh-novel-writing'] = 'file:' + repoFwd; line('  已写入 dependencies.dsh-novel-writing = file:' + repoFwd) }
+  else line('  dependencies.dsh-novel-writing 已注册，跳过')
+  pkg.dsh = pkg.dsh ?? {}
+  pkg.dsh.profile = pkg.dsh.profile ?? {}
+  const bundles = Array.isArray(pkg.dsh.profile.bundles) ? pkg.dsh.profile.bundles : []
+  if (!bundles.includes('dsh-novel-writing')) { pkg.dsh.profile.bundles = [...bundles, 'dsh-novel-writing']; line('  已追加 dsh.profile.bundles += dsh-novel-writing（保留既有 ' + bundles.length + ' 项）') }
+  else line('  dsh.profile.bundles 已含 dsh-novel-writing，跳过')
+  writeFileSync(pkgFile, JSON.stringify(pkg, null, 2) + '\n')
+  line('[probe-host] --stage-plugin 完成：插件已按官方通道接入隔离 profile（正式读数见下一段启动）')
+}
+
 async function realRun(opts) {
   line('[probe-host] ⚠️ ' + REAL_RUN_STATE + ' —— 实机模式：需运行中的宿主环境（dsh CLI + 浏览器/DOM）。')
   line('  本仓开发环境与 CI 均未执行过本模式；下列输出 MUST 经人工确认后才可作为宿主兼容性证据（不得据此宣称「实机已验证」）。')
@@ -255,12 +356,17 @@ async function realRun(opts) {
   if (hostCmd === null) {
     die((opts.hostCmd === null || opts.hostCmd === undefined ? '未在 PATH 找到宿主命令 `dsh`（可用 --host-cmd <path> 显式指定）' : '指定的 --host-cmd 路径不存在：' + opts.hostCmd) + '——实机模式不可用，未执行任何操作')
   }
+  assertHostCmdSafe(hostCmd)
   const { fixtures } = loadSurface()
   const { hostContract } = await import(pathToFileURL(CONTRACT).href)
   const tmpRoot = mkdtempSync(join(tmpdir(), 'nv-probe-host-'))
   const plan = isolationPlan(tmpRoot)
   const commands = [
     'mkdir -p ' + plan.env.DSH_HOME,
+    ...(opts.stagePlugin ? [
+      '(stage) <host-cmd> web --port ' + opts.port + ' --no-open   (第一段：空 home 物化宿主默认 profile；杀树后停)',
+      '(stage) junction ' + join(plan.env.DSH_HOME, 'profiles', 'web', 'node_modules', 'dsh-novel-writing') + ' -> ' + REPO_ROOT + ' + profile package.json 幂等注册（dependencies + dsh.profile.bundles 追加）',
+    ] : []),
     hostCmd + ' web --port ' + opts.port + ' --no-open   (cwd=' + tmpRoot + '；stdio → ' + join(tmpRoot, 'host.log') + ')',
     'GET http://127.0.0.1:' + opts.port + '/   (liveness，只读)',
     'GET http://127.0.0.1:' + opts.port + COMPAT_ROUTE + '   (只读诊断路由)',
@@ -269,9 +375,10 @@ async function realRun(opts) {
   // 隔离硬校验（fail-closed）：插件的全部写入面由 DSH_HOME 派生 ⇒ 它 MUST 在临时根内
   if (!plan.env.DSH_HOME.startsWith(tmpRoot)) { rmSync(tmpRoot, { recursive: true, force: true }); die('隔离校验失败：DSH_HOME 不在临时根内（拒绝执行）') }
   mkdirSync(plan.env.DSH_HOME, { recursive: true })
+  if (opts.stagePlugin) await stagePluginIntoIsolatedHome(opts, hostCmd, plan, tmpRoot)
   const env = { ...process.env, ...plan.env }
   const logFd = openSync(join(tmpRoot, 'host.log'), 'w')
-  const child = spawn(hostCmd, ['web', '--port', String(opts.port), '--no-open'], { cwd: tmpRoot, env, stdio: ['ignore', logFd, logFd], detached: process.platform !== 'win32' })
+  const child = hostSpawn(hostCmd, ['web', '--port', String(opts.port), '--no-open'], { cwd: tmpRoot, env, stdio: ['ignore', logFd, logFd], detached: process.platform !== 'win32' })
   line('[probe-host] 宿主已启动（pid=' + String(child.pid) + '）；等待 liveness（上限 ' + opts.timeoutSec + 's）…')
   const base = 'http://127.0.0.1:' + opts.port
   const deadline = Date.now() + opts.timeoutSec * 1000
@@ -282,7 +389,7 @@ async function realRun(opts) {
     await new Promise((res) => setTimeout(res, 1500))
   }
   const rows = []
-  const report = { mode: 'run', state: REAL_RUN_STATE, dshHome: plan.env.DSH_HOME, hostCmd, port: opts.port, hostLog: join(tmpRoot, 'host.log'), live: live === null ? null : live.status, server: null, browser: null, rows, verdict: null }
+  const report = { mode: 'run', state: REAL_RUN_STATE, dshHome: plan.env.DSH_HOME, hostCmd, stagePlugin: opts.stagePlugin, port: opts.port, hostLog: join(tmpRoot, 'host.log'), live: live === null ? null : live.status, server: null, browser: null, rows, verdict: null }
   try {
     if (live === null) {
       report.verdict = '宿主未就绪：liveness 超时（日志：' + report.hostLog + '）——探针未取得任何能力读数'
@@ -339,9 +446,10 @@ async function realRun(opts) {
 // ── 入口 ────────────────────────────────────────────────────────────────────
 const opts = parseArgs(process.argv.slice(2))
 if (opts.mode === 'help') {
-  line('用法：node scripts/probe-host.mjs [--self-check | --run] [--port N] [--timeout S] [--host-cmd PATH] [--keep] [--json-out PATH]')
-  line('  --self-check  离线自检（默认；' + SELF_CHECK_STATE + '）')
-  line('  --run         实机探针（' + REAL_RUN_STATE + '；隔离实例 + 无头浏览器；需运行中宿主环境）')
+  line('用法：node scripts/probe-host.mjs [--self-check | --run] [--port N] [--timeout S] [--host-cmd PATH] [--stage-plugin] [--keep] [--json-out PATH]')
+  line('  --self-check   离线自检（默认；' + SELF_CHECK_STATE + '）')
+  line('  --run          实机探针（' + REAL_RUN_STATE + '；隔离实例 + 无头浏览器；需运行中宿主环境）')
+  line('  --stage-plugin 实机探针前置装载：把本仓插件按官方通道接入隔离 DSH_HOME（junction + profile 注册；默认关闭）')
   process.exit(0)
 }
 if (opts.mode === 'run') await realRun(opts)
