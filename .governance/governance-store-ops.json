@@ -994,6 +994,44 @@
       "baseline_effects": null,
       "recorded_at": "2026-11-07T13:48:04",
       "updated_at": "2026-11-07T13:48:04"
+    },
+    "op-47ad4843fe5940d6abb5dc3e464459c6": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "COMPAT-021",
+      "input_fingerprint": "b6d134fe7233a304a91c4ea8d61802ac9513f8f1c25a6806b8cb5d82c93c8725",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-47ad4843fe5940d6abb5dc3e464459c6",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-07T13:49:28",
+      "updated_at": "2026-11-07T13:49:28",
+      "released_files": [
+        "CHANGELOG.md",
+        "README.md",
+        "docs/COMPATIBILITY.md",
+        "lib/host-compat/generation-manifest.mjs",
+        "lib/host-compat/preset-projection.mjs",
+        "lib/host-contract.mjs",
+        "scripts/preflight-preset-rows.mjs",
+        "test/fixtures/host-generations/decl-0.2.0/package.json",
+        "test/fixtures/host-generations/decl-0.2.1/package.json",
+        "test/fixtures/host-generations/decl-0.2.2/package.json",
+        "test/fixtures/host-generations/legacy-0.1/package.json",
+        "test/fixtures/host-generations/negative-missing-export/package.json",
+        "test/fixtures/host-generations/unknown/package.json",
+        "test/fixtures/host-surfaces/preset-schema-face.mjs",
+        "test/preflight-preset-rows.test.mjs",
+        "test/smoke.mjs",
+        "test/validate-preset.mjs"
+      ]
     }
   }
 }
