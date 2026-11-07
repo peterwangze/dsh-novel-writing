@@ -1032,6 +1032,31 @@
         "test/smoke.mjs",
         "test/validate-preset.mjs"
       ]
+    },
+    "op-2ec76e2963084f8bb4d1c2297753d14e": {
+      "schema_version": 1,
+      "command": "decision-append",
+      "task_id": "",
+      "input_fingerprint": "b271a27579189e660548fa214bb457c2bc0cebdd006548c1251c224fe8033322",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-2ec76e2963084f8bb4d1c2297753d14e",
+        "code": "ok",
+        "new_revision": 44033,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-07T14:44:24",
+      "updated_at": "2026-11-07T14:44:24",
+      "authority": {
+        "state": "MD_ACTIVE",
+        "epoch": 0,
+        "generation": 0,
+        "backend": "md"
+      }
     }
   }
 }

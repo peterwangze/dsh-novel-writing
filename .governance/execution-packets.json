@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-11-07T14:26:03",
+  "generated_at": "2026-11-07T14:44:25",
   "packets": {
     "REL-007": {
       "task_id": "REL-007",
@@ -897,6 +897,133 @@
         "docs/COMPATIBILITY.md 完成四目标差距分析、耦合清单、generation manifest、迁移路线；preflight 脚本对 fixture 给出结构化诊断。",
         "node test/smoke.mjs 与 node scripts/preflight-preset-rows.mjs 通过；P-10 双向对账通过。",
         "独立 Reviewer/Architect 审查通过，Coordinator 完成单任务 commit。"
+      ],
+      "source": "plan-tracker.md##当前活跃事项"
+    },
+    "COMPAT-023": {
+      "task_id": "COMPAT-023",
+      "priority": "P1",
+      "status": "⏳ 范围升级已批准（2026-11-07，DEC-160）；排期 = BUG-012 修复验收后立即实施（用户确认）；执行包已建",
+      "goal": "COMPAT-023 **全量看护补面——全依赖面看护（用户 2026-11-07 质询驱动并经 AskUserQuestion 批准范围升级：「不应该全量看护的吗」+「系统性分析优化没起到效果」）**：把看护面从 COMPAT-021 的「预设行单格」扩展到**契约 52 项宿主耦合六面逐面接入消费方存在性检查**——①面 2/3（客户端 API/槽位/DOM 约定）：宿主 web 资源 + client 包的字面量消费证据扫描（shell.overlay / sidebar.footer.action / settings.section 等），按代际入 generation manifest，某代宿主资源消失即红（BUG-012 这类断裂在宿主版本检出日即抓）②面 1（服务端 API）：宿主闭包 exports/接口存在性逐项检查（COMPAT-020 子路径断裂教训通用化）③面 4/6（安装机制/版本环境）：安装锚点与代际探测断言④面 5（预设行）已有（COMPAT-021）⑤修复仓内 UI 探针脚本 boot（0.2.1 起坏，用 2026-11-07 验证模式重写）+ UI 挂载断言入常规命令集⑥验收口径硬化：README「已实测」必须挂探针证据，无证据一律「未验证」⑦设计修正：工作台 UI 面从 L3「可降级」升为关键面（其看护优先级等同预设面）",
+      "product_success_contract": {
+        "user": "TO_BE_DEFINED: impacted persona for COMPAT-023 **全量看护补面——全依赖面看护（用户 2026-11-07 质询驱动并经 AskUserQuestion 批准范围升级：「不应该全量看护的吗」+「系统性分析优化没起到效果」）**：把看护面从 COMPAT-021 的「预设行单格」扩展到**契约 52 项宿主耦合六面逐面接入消费方存在性检查**——①面 2/3（客户端 API/槽位/DOM 约定）：宿主 web 资源 + client 包的字面量消费证据扫描（shell.overlay / sidebar.footer.action / settings.section 等），按代际入 generation manifest，某代宿主资源消失即红（BUG-012 这类断裂在宿主版本检出日即抓）②面 1（服务端 API）：宿主闭包 exports/接口存在性逐项检查（COMPAT-020 子路径断裂教训通用化）③面 4/6（安装机制/版本环境）：安装锚点与代际探测断言④面 5（预设行）已有（COMPAT-021）⑤修复仓内 UI 探针脚本 boot（0.2.1 起坏，用 2026-11-07 验证模式重写）+ UI 挂载断言入常规命令集⑥验收口径硬化：README「已实测」必须挂探针证据，无证据一律「未验证」⑦设计修正：工作台 UI 面从 L3「可降级」升为关键面（其看护优先级等同预设面）",
+        "job_to_be_done": "TO_BE_DEFINED: user job and desired outcome for COMPAT-023 **全量看护补面——全依赖面看护（用户 2026-11-07 质询驱动并经 AskUserQuestion 批准范围升级：「不应该全量看护的吗」+「系统性分析优化没起到效果」）**：把看护面从 COMPAT-021 的「预设行单格」扩展到**契约 52 项宿主耦合六面逐面接入消费方存在性检查**——①面 2/3（客户端 API/槽位/DOM 约定）：宿主 web 资源 + client 包的字面量消费证据扫描（shell.overlay / sidebar.footer.action / settings.section 等），按代际入 generation manifest，某代宿主资源消失即红（BUG-012 这类断裂在宿主版本检出日即抓）②面 1（服务端 API）：宿主闭包 exports/接口存在性逐项检查（COMPAT-020 子路径断裂教训通用化）③面 4/6（安装机制/版本环境）：安装锚点与代际探测断言④面 5（预设行）已有（COMPAT-021）⑤修复仓内 UI 探针脚本 boot（0.2.1 起坏，用 2026-11-07 验证模式重写）+ UI 挂载断言入常规命令集⑥验收口径硬化：README「已实测」必须挂探针证据，无证据一律「未验证」⑦设计修正：工作台 UI 面从 L3「可降级」升为关键面（其看护优先级等同预设面）",
+        "non_goals": [
+          "TO_BE_DEFINED: explicit non-goal that protects the task from scope drift.",
+          "TO_BE_DEFINED: explicit non-goal that prevents process evidence from replacing product value."
+        ],
+        "success_metrics": [
+          "TO_BE_DEFINED: user-visible outcome or acceptance scenario for this task.",
+          "TO_BE_DEFINED: runnable E2E, test, or command that proves the outcome."
+        ],
+        "competitive_baseline": "TO_BE_DEFINED: mature-team or competing-product baseline this task must match.",
+        "done_definition": [
+          "TO_BE_DEFINED: product success evidence is recorded with concrete facts.",
+          "TO_BE_DEFINED: independent review confirms the user outcome is not replaced by process completion."
+        ]
+      },
+      "acceptance_contract": {
+        "scenario": "TO_BE_DEFINED: user-visible acceptance scenario for COMPAT-023 **全量看护补面——全依赖面看护（用户 2026-11-07 质询驱动并经 AskUserQuestion 批准范围升级：「不应该全量看护的吗」+「系统性分析优化没起到效果」）**：把看护面从 COMPAT-021 的「预设行单格」扩展到**契约 52 项宿主耦合六面逐面接入消费方存在性检查**——①面 2/3（客户端 API/槽位/DOM 约定）：宿主 web 资源 + client 包的字面量消费证据扫描（shell.overlay / sidebar.footer.action / settings.section 等），按代际入 generation manifest，某代宿主资源消失即红（BUG-012 这类断裂在宿主版本检出日即抓）②面 1（服务端 API）：宿主闭包 exports/接口存在性逐项检查（COMPAT-020 子路径断裂教训通用化）③面 4/6（安装机制/版本环境）：安装锚点与代际探测断言④面 5（预设行）已有（COMPAT-021）⑤修复仓内 UI 探针脚本 boot（0.2.1 起坏，用 2026-11-07 验证模式重写）+ UI 挂载断言入常规命令集⑥验收口径硬化：README「已实测」必须挂探针证据，无证据一律「未验证」⑦设计修正：工作台 UI 面从 L3「可降级」升为关键面（其看护优先级等同预设面）",
+        "command": "TO_BE_DEFINED: runnable E2E, smoke, unit, or validation command",
+        "expected_output": "TO_BE_DEFINED: concrete pass output, assertion, or observable demo result",
+        "last_run": {
+          "status": "TO_BE_DEFINED",
+          "exit_code": null,
+          "summary": "TO_BE_DEFINED: last run output summary with evidence location"
+        },
+        "demo_evidence": "TO_BE_DEFINED: demo, CLI output, or artifact proving the scenario"
+      },
+      "quality_budget": {
+        "dimensions": {
+          "performance": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable performance threshold for COMPAT-023 **全量看护补面——全依赖面看护（用户 2026-11-07 质询驱动并经 AskUserQuestion 批准范围升级：「不应该全量看护的吗」+「系统性分析优化没起到效果」）**：把看护面从 COMPAT-021 的「预设行单格」扩展到**契约 52 项宿主耦合六面逐面接入消费方存在性检查**——①面 2/3（客户端 API/槽位/DOM 约定）：宿主 web 资源 + client 包的字面量消费证据扫描（shell.overlay / sidebar.footer.action / settings.section 等），按代际入 generation manifest，某代宿主资源消失即红（BUG-012 这类断裂在宿主版本检出日即抓）②面 1（服务端 API）：宿主闭包 exports/接口存在性逐项检查（COMPAT-020 子路径断裂教训通用化）③面 4/6（安装机制/版本环境）：安装锚点与代际探测断言④面 5（预设行）已有（COMPAT-021）⑤修复仓内 UI 探针脚本 boot（0.2.1 起坏，用 2026-11-07 验证模式重写）+ UI 挂载断言入常规命令集⑥验收口径硬化：README「已实测」必须挂探针证据，无证据一律「未验证」⑦设计修正：工作台 UI 面从 L3「可降级」升为关键面（其看护优先级等同预设面）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for performance",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest performance result or planned evidence location",
+            "exception": ""
+          },
+          "reliability": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable reliability threshold for COMPAT-023 **全量看护补面——全依赖面看护（用户 2026-11-07 质询驱动并经 AskUserQuestion 批准范围升级：「不应该全量看护的吗」+「系统性分析优化没起到效果」）**：把看护面从 COMPAT-021 的「预设行单格」扩展到**契约 52 项宿主耦合六面逐面接入消费方存在性检查**——①面 2/3（客户端 API/槽位/DOM 约定）：宿主 web 资源 + client 包的字面量消费证据扫描（shell.overlay / sidebar.footer.action / settings.section 等），按代际入 generation manifest，某代宿主资源消失即红（BUG-012 这类断裂在宿主版本检出日即抓）②面 1（服务端 API）：宿主闭包 exports/接口存在性逐项检查（COMPAT-020 子路径断裂教训通用化）③面 4/6（安装机制/版本环境）：安装锚点与代际探测断言④面 5（预设行）已有（COMPAT-021）⑤修复仓内 UI 探针脚本 boot（0.2.1 起坏，用 2026-11-07 验证模式重写）+ UI 挂载断言入常规命令集⑥验收口径硬化：README「已实测」必须挂探针证据，无证据一律「未验证」⑦设计修正：工作台 UI 面从 L3「可降级」升为关键面（其看护优先级等同预设面）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for reliability",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest reliability result or planned evidence location",
+            "exception": ""
+          },
+          "security": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable security threshold for COMPAT-023 **全量看护补面——全依赖面看护（用户 2026-11-07 质询驱动并经 AskUserQuestion 批准范围升级：「不应该全量看护的吗」+「系统性分析优化没起到效果」）**：把看护面从 COMPAT-021 的「预设行单格」扩展到**契约 52 项宿主耦合六面逐面接入消费方存在性检查**——①面 2/3（客户端 API/槽位/DOM 约定）：宿主 web 资源 + client 包的字面量消费证据扫描（shell.overlay / sidebar.footer.action / settings.section 等），按代际入 generation manifest，某代宿主资源消失即红（BUG-012 这类断裂在宿主版本检出日即抓）②面 1（服务端 API）：宿主闭包 exports/接口存在性逐项检查（COMPAT-020 子路径断裂教训通用化）③面 4/6（安装机制/版本环境）：安装锚点与代际探测断言④面 5（预设行）已有（COMPAT-021）⑤修复仓内 UI 探针脚本 boot（0.2.1 起坏，用 2026-11-07 验证模式重写）+ UI 挂载断言入常规命令集⑥验收口径硬化：README「已实测」必须挂探针证据，无证据一律「未验证」⑦设计修正：工作台 UI 面从 L3「可降级」升为关键面（其看护优先级等同预设面）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for security",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest security result or planned evidence location",
+            "exception": ""
+          },
+          "accessibility": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable accessibility threshold for COMPAT-023 **全量看护补面——全依赖面看护（用户 2026-11-07 质询驱动并经 AskUserQuestion 批准范围升级：「不应该全量看护的吗」+「系统性分析优化没起到效果」）**：把看护面从 COMPAT-021 的「预设行单格」扩展到**契约 52 项宿主耦合六面逐面接入消费方存在性检查**——①面 2/3（客户端 API/槽位/DOM 约定）：宿主 web 资源 + client 包的字面量消费证据扫描（shell.overlay / sidebar.footer.action / settings.section 等），按代际入 generation manifest，某代宿主资源消失即红（BUG-012 这类断裂在宿主版本检出日即抓）②面 1（服务端 API）：宿主闭包 exports/接口存在性逐项检查（COMPAT-020 子路径断裂教训通用化）③面 4/6（安装机制/版本环境）：安装锚点与代际探测断言④面 5（预设行）已有（COMPAT-021）⑤修复仓内 UI 探针脚本 boot（0.2.1 起坏，用 2026-11-07 验证模式重写）+ UI 挂载断言入常规命令集⑥验收口径硬化：README「已实测」必须挂探针证据，无证据一律「未验证」⑦设计修正：工作台 UI 面从 L3「可降级」升为关键面（其看护优先级等同预设面）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for accessibility",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest accessibility result or planned evidence location",
+            "exception": ""
+          },
+          "ux": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable ux threshold for COMPAT-023 **全量看护补面——全依赖面看护（用户 2026-11-07 质询驱动并经 AskUserQuestion 批准范围升级：「不应该全量看护的吗」+「系统性分析优化没起到效果」）**：把看护面从 COMPAT-021 的「预设行单格」扩展到**契约 52 项宿主耦合六面逐面接入消费方存在性检查**——①面 2/3（客户端 API/槽位/DOM 约定）：宿主 web 资源 + client 包的字面量消费证据扫描（shell.overlay / sidebar.footer.action / settings.section 等），按代际入 generation manifest，某代宿主资源消失即红（BUG-012 这类断裂在宿主版本检出日即抓）②面 1（服务端 API）：宿主闭包 exports/接口存在性逐项检查（COMPAT-020 子路径断裂教训通用化）③面 4/6（安装机制/版本环境）：安装锚点与代际探测断言④面 5（预设行）已有（COMPAT-021）⑤修复仓内 UI 探针脚本 boot（0.2.1 起坏，用 2026-11-07 验证模式重写）+ UI 挂载断言入常规命令集⑥验收口径硬化：README「已实测」必须挂探针证据，无证据一律「未验证」⑦设计修正：工作台 UI 面从 L3「可降级」升为关键面（其看护优先级等同预设面）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for ux",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest ux result or planned evidence location",
+            "exception": ""
+          },
+          "maintainability": {
+            "threshold": "TO_BE_DEFINED: minimum acceptable maintainability threshold for COMPAT-023 **全量看护补面——全依赖面看护（用户 2026-11-07 质询驱动并经 AskUserQuestion 批准范围升级：「不应该全量看护的吗」+「系统性分析优化没起到效果」）**：把看护面从 COMPAT-021 的「预设行单格」扩展到**契约 52 项宿主耦合六面逐面接入消费方存在性检查**——①面 2/3（客户端 API/槽位/DOM 约定）：宿主 web 资源 + client 包的字面量消费证据扫描（shell.overlay / sidebar.footer.action / settings.section 等），按代际入 generation manifest，某代宿主资源消失即红（BUG-012 这类断裂在宿主版本检出日即抓）②面 1（服务端 API）：宿主闭包 exports/接口存在性逐项检查（COMPAT-020 子路径断裂教训通用化）③面 4/6（安装机制/版本环境）：安装锚点与代际探测断言④面 5（预设行）已有（COMPAT-021）⑤修复仓内 UI 探针脚本 boot（0.2.1 起坏，用 2026-11-07 验证模式重写）+ UI 挂载断言入常规命令集⑥验收口径硬化：README「已实测」必须挂探针证据，无证据一律「未验证」⑦设计修正：工作台 UI 面从 L3「可降级」升为关键面（其看护优先级等同预设面）",
+            "validation": "TO_BE_DEFINED: command, check, metric source, or quality signal for maintainability",
+            "status": "TO_BE_DEFINED",
+            "evidence": "TO_BE_DEFINED: latest maintainability result or planned evidence location",
+            "exception": ""
+          }
+        }
+      },
+      "vertical_slice": {
+        "user_visible_slice": "TO_BE_DEFINED: smallest user-visible slice for COMPAT-023 **全量看护补面——全依赖面看护（用户 2026-11-07 质询驱动并经 AskUserQuestion 批准范围升级：「不应该全量看护的吗」+「系统性分析优化没起到效果」）**：把看护面从 COMPAT-021 的「预设行单格」扩展到**契约 52 项宿主耦合六面逐面接入消费方存在性检查**——①面 2/3（客户端 API/槽位/DOM 约定）：宿主 web 资源 + client 包的字面量消费证据扫描（shell.overlay / sidebar.footer.action / settings.section 等），按代际入 generation manifest，某代宿主资源消失即红（BUG-012 这类断裂在宿主版本检出日即抓）②面 1（服务端 API）：宿主闭包 exports/接口存在性逐项检查（COMPAT-020 子路径断裂教训通用化）③面 4/6（安装机制/版本环境）：安装锚点与代际探测断言④面 5（预设行）已有（COMPAT-021）⑤修复仓内 UI 探针脚本 boot（0.2.1 起坏，用 2026-11-07 验证模式重写）+ UI 挂载断言入常规命令集⑥验收口径硬化：README「已实测」必须挂探针证据，无证据一律「未验证」⑦设计修正：工作台 UI 面从 L3「可降级」升为关键面（其看护优先级等同预设面）",
+        "demo_path": "TO_BE_DEFINED: runnable demo, smoke test, URL, screenshot, or command proving the slice",
+        "scope_guard": "TO_BE_DEFINED: files and behavior in scope for this slice only (open)",
+        "rollback_plan": "TO_BE_DEFINED: how to revert or disable the slice if validation fails",
+        "status": "TO_BE_DEFINED",
+        "evidence": "TO_BE_DEFINED: latest demo proof or planned evidence location"
+      },
+      "interruption_policy": {
+        "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
+        "critical_triggers": [
+          "Ask the user when product intent is unclear.",
+          "Ask the user when acceptance standard or done criteria are unclear.",
+          "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions."
+        ],
+        "auto_execute": [
+          "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible.",
+          "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied."
+        ],
+        "assumption_record": {
+          "assumption": "TO_BE_DEFINED: default choice used for a reversible non-critical ambiguity",
+          "basis": "TO_BE_DEFINED: fact source or repository pattern supporting the default",
+          "reversibility": "TO_BE_DEFINED: why the choice can be changed without product damage",
+          "validation": "TO_BE_DEFINED: command or demo that will verify the assumption",
+          "rollback": "TO_BE_DEFINED: how to revert if the assumption is wrong"
+        },
+        "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
+      },
+      "allowed_change_scope": [
+        "Only change files required by this task row: open",
+        "Keep unrelated refactors, release version bumps, and fixture sync out of this task unless listed in the task scope."
+      ],
+      "required_evidence": [
+        "evidence-log entry with 事实依据, 目标对齐, 用户影响, and 结构化事实 JSON",
+        "validation commands with exit_code and concise output summary",
+        "independent review evidence or explicit degraded review evidence that does not claim full separation"
+      ],
+      "next_commands": [
+        "python -m unittest skills/software-project-governance/infra/tests/test_verify_workflow.py -v",
+        "python skills/software-project-governance/infra/verify_workflow.py check-governance --fail-on-issues"
+      ],
+      "done_definition": [
+        "open",
+        "Code Reviewer or matching Reviewer has APPROVED the product-code change.",
+        "Commit and push are completed for this single task."
       ],
       "source": "plan-tracker.md##当前活跃事项"
     }
