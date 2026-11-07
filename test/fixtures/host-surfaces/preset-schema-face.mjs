@@ -38,6 +38,15 @@ import { createRequire } from 'node:module'
 import { existsSync, readFileSync } from 'node:fs'
 import { isAbsolute, dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+// COMPAT-021 单一事实源迁移：GENERATION_VARIANT / GENERATION_DROPPED 的值本体移驻
+// lib/host-compat/generation-manifest.mjs（代际清单）；本模块是**兼容 re-export 面**——
+// 导出面（名字/身份/值零变化）、validate-preset 与 smoke 的既有 import、以及 smoke 的
+// 源码字面量断言（`export const GENERATION_VARIANT` / `export const GENERATION_DROPPED`）
+// 均保持不变；下方两行赋值即 re-export（值 = manifest 冻结常量，同一对象身份）。
+import {
+  GENERATION_VARIANT as GENERATION_VARIANT_SOURCE,
+  GENERATION_DROPPED as GENERATION_DROPPED_SOURCE,
+} from '../../../lib/host-compat/generation-manifest.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 export const REPO_ROOT = join(HERE, '..', '..', '..')
@@ -78,25 +87,20 @@ export const GROUP_NAME = 'cordis:group'
 export const PATCH_COMPOSITION = join(REPO_ROOT, 'cordis.patch.yml')
 /** 0.2.0 预设声明行的宿主包名（声明代标记：0.1.5-rc.2 闭包无此包——首版 0.1.7-alpha.1，2026-09-22）。 */
 export const DECLARATION_PACKAGE = '@deepseek-ai/dsh-agent-preset'
-/** 已知代际变体行（唯一允许的双源行差）：0.1.x `dsh-workflow-worker-thread`（0.2.0 闭包已不存在）↔ 0.2.0 `dsh-workflow-ptc`（官方用法 provider:spawn，宿主 standard.patch.yml 同款）。 */
-export const GENERATION_VARIANT = {
-  legacy: { id: 'workflow-worker-thread', name: '@deepseek-ai/dsh-workflow-worker-thread' },
-  current: { id: 'workflow-ptc', name: '@deepseek-ai/dsh-workflow-ptc' },
-  config: { provider: 'spawn' },
-}
+/** 已知代际变体行（唯一允许的双源行差）：0.1.x `dsh-workflow-worker-thread`（0.2.0 闭包已不存在）↔ 0.2.0 `dsh-workflow-ptc`（官方用法 provider:spawn，宿主 standard.patch.yml 同款）。**COMPAT-021 起值本体 = lib/host-compat/generation-manifest.mjs（单一事实源）；本行为兼容 re-export 面（导出面/行为/coverage 口径零变化）。** */
+export const GENERATION_VARIANT = GENERATION_VARIANT_SOURCE
 /**
  * 已知整行代际删除（legacy-only 行，COMPAT-020）：0.1.x 源保留独立 `list-agents` 子路径行
  * （`@deepseek-ai/dsh-tool-subagent-control/list-agents`）；0.2.2 起该子路径从包 exports 移除、
  * `list_agents` 并入主包（`@deepseek-ai/dsh-tool-subagent-control`）⇒ 0.2.x 源（bundle patch）
  * MUST NOT 再声明该行。与 GENERATION_VARIANT 的区别：变体 =「同行换包名」，本常量 =「整行消失」；
  * 二者都是**源代际差异**（非宿主能力探测——不读 app.asar）：只披露、不计发现项、不计 variants。
- * 方向性硬不变量（yml 恰 1 行且 config 空 / patch 恰 0 行 / patch 主包行在场）见 checkComposition。
+ * 方向性硬不变量（yml 恰 1 行且 config 空 / patch 恰 0 行 / patch 主包行在场）见 checkComposition
+ * （COMPAT-021 起另由 lib/host-compat/preset-projection.mjs reconcileDualSources 单源化看护）。
+ * **COMPAT-021 起值本体 = lib/host-compat/generation-manifest.mjs（单一事实源）；本行为兼容
+ * re-export 面（导出面/行为/coverage 口径零变化）。**
  */
-export const GENERATION_DROPPED = {
-  rowId: 'tool-subagent-list-agents',
-  name: '@deepseek-ai/dsh-tool-subagent-control/list-agents',
-  replacementName: '@deepseek-ai/dsh-tool-subagent-control',
-}
+export const GENERATION_DROPPED = GENERATION_DROPPED_SOURCE
 
 /**
  * 平面是否为声明代（0.2.0 系）：`@deepseek-ai/dsh-agent-preset` 可达即声明代（能力检测，非版本号字符串）。

@@ -1,0 +1,1090 @@
+{
+  "schemaVersion": 1,
+  "compatRunId": "r-mw5zdjc4-mojv",
+  "ok": true,
+  "generation": "decl-0.2.1",
+  "detectedGeneration": "decl-0.2.1",
+  "confidence": "profile",
+  "hostVersion": "0.2.1-rc.2",
+  "hasAgentPreset": true,
+  "overridden": false,
+  "plane": {
+    "channel": "profile-resolve",
+    "profile": "C:\\Users\\peter\\.dsh\\profiles\\web",
+    "via": "profile-anchor-walkup",
+    "dshPackage": "C:\\Users\\peter\\AppData\\Roaming\\npm\\node_modules\\@deepseek-ai\\dsh\\package.json",
+    "globalRoot": "C:\\Users\\peter\\AppData\\Roaming\\npm\\node_modules",
+    "secondary": {
+      "channel": "install-anchor",
+      "via": "npm-root-g",
+      "hostVersion": "0.2.1-rc.2",
+      "generation": "decl-0.2.1"
+    }
+  },
+  "mixedPlane": false,
+  "sources": {
+    "patch": {
+      "path": "D:\\AI\\agent\\deepseek\\harness\\writing-workflow\\cordis.patch.yml",
+      "shape": "bundle-patch",
+      "rows": 17
+    },
+    "legacy": {
+      "path": "D:\\AI\\agent\\deepseek\\harness\\writing-workflow\\agent-presets\\novel-writing\\agent.cordis.yml",
+      "shape": "row-list",
+      "rows": 17
+    }
+  },
+  "rows": [
+    {
+      "id": "novel-writing",
+      "name": "dsh-novel-writing",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.5.3",
+      "channel": "repo-local",
+      "evidence": "channel=repo-local via=repo-root exports=exact→./lib/index.js"
+    },
+    {
+      "id": "persona",
+      "name": "@deepseek-ai/dsh-persona",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "agent-instructions",
+      "name": "@deepseek-ai/dsh-agent-instructions",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-bash",
+      "name": "@deepseek-ai/dsh-tool-bash",
+      "source": "patch",
+      "status": "NOT_RUN",
+      "checks": [
+        "shape"
+      ],
+      "schemaStatus": "NOT_RUN",
+      "message": "本行 disabled（平台分流）——跳过模块解析，仅记录（NOT_RUN ≠ PASS）",
+      "version": null,
+      "channel": null,
+      "evidence": ""
+    },
+    {
+      "id": "tool-pwsh",
+      "name": "@deepseek-ai/dsh-tool-pwsh",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-fs",
+      "name": "@deepseek-ai/dsh-tool-fs",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-fs-search",
+      "name": "@deepseek-ai/dsh-tool-fs-search",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-jobs",
+      "name": "@deepseek-ai/dsh-tool-jobs",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "skill-filesystem",
+      "name": "@deepseek-ai/dsh-skill-filesystem",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-skill",
+      "name": "@deepseek-ai/dsh-tool-skill",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-novel",
+      "name": "dsh-novel-writing/tools",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "NO_SCHEMA",
+      "message": "（schema=NO_SCHEMA）该模块不导出 Config schema——本工具无法校验此行 config（不对加载器随后如何处理它作任何断言）",
+      "version": "0.5.3",
+      "channel": "repo-local",
+      "evidence": "channel=repo-local via=repo-root exports=exact→./lib/tools.js"
+    },
+    {
+      "id": "tool-goal",
+      "name": "@deepseek-ai/dsh-tool-goal",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "planning",
+      "name": "cordis:group",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape"
+      ],
+      "schemaStatus": "NOT_RUN",
+      "message": "group 内建——枚举 1 个子行",
+      "version": null,
+      "channel": null,
+      "evidence": ""
+    },
+    {
+      "id": "plan-mode",
+      "name": "@deepseek-ai/dsh-plan-mode",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "NO_SCHEMA",
+      "message": "（schema=NO_SCHEMA）该模块不导出 Config schema——本工具无法校验此行 config（不对加载器随后如何处理它作任何断言）",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "compaction",
+      "name": "cordis:group",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape"
+      ],
+      "schemaStatus": "NOT_RUN",
+      "message": "group 内建——枚举 3 个子行",
+      "version": null,
+      "channel": null,
+      "evidence": ""
+    },
+    {
+      "id": "compaction-basic",
+      "name": "@deepseek-ai/dsh-compaction-basic",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "command-compact",
+      "name": "@deepseek-ai/dsh-command-compact",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "NO_SCHEMA",
+      "message": "（schema=NO_SCHEMA）该模块不导出 Config schema——本工具无法校验此行 config（不对加载器随后如何处理它作任何断言）",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-result-pruner",
+      "name": "@deepseek-ai/dsh-compaction-tool-result-pruner",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "delegation",
+      "name": "cordis:group",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape"
+      ],
+      "schemaStatus": "NOT_RUN",
+      "message": "group 内建——枚举 8 个子行",
+      "version": null,
+      "channel": null,
+      "evidence": ""
+    },
+    {
+      "id": "tool-subagent-control",
+      "name": "@deepseek-ai/dsh-tool-subagent-control",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "NO_SCHEMA",
+      "message": "（schema=NO_SCHEMA）该模块不导出 Config schema——本工具无法校验此行 config（不对加载器随后如何处理它作任何断言）",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-subagent",
+      "name": "@deepseek-ai/dsh-tool-subagent",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-subagent-fork",
+      "name": "@deepseek-ai/dsh-tool-subagent",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-subagent-codex",
+      "name": "@deepseek-ai/dsh-tool-subagent",
+      "source": "patch",
+      "status": "NOT_RUN",
+      "checks": [
+        "shape"
+      ],
+      "schemaStatus": "NOT_RUN",
+      "message": "本行 disabled（平台分流）——跳过模块解析，仅记录（NOT_RUN ≠ PASS）",
+      "version": null,
+      "channel": null,
+      "evidence": ""
+    },
+    {
+      "id": "tool-subagent-claude-code",
+      "name": "@deepseek-ai/dsh-tool-subagent",
+      "source": "patch",
+      "status": "NOT_RUN",
+      "checks": [
+        "shape"
+      ],
+      "schemaStatus": "NOT_RUN",
+      "message": "本行 disabled（平台分流）——跳过模块解析，仅记录（NOT_RUN ≠ PASS）",
+      "version": null,
+      "channel": null,
+      "evidence": ""
+    },
+    {
+      "id": "workflow-ptc",
+      "name": "@deepseek-ai/dsh-workflow-ptc",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-workflow",
+      "name": "@deepseek-ai/dsh-tool-workflow",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-ralph",
+      "name": "@deepseek-ai/dsh-tool-ralph",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-ask-user",
+      "name": "@deepseek-ai/dsh-tool-ask-user",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-todo",
+      "name": "@deepseek-ai/dsh-tool-todo",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-web",
+      "name": "@deepseek-ai/dsh-tool-web",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "persona",
+      "name": "@deepseek-ai/dsh-persona",
+      "source": "legacy",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "agent-instructions",
+      "name": "@deepseek-ai/dsh-agent-instructions",
+      "source": "legacy",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-bash",
+      "name": "@deepseek-ai/dsh-tool-bash",
+      "source": "legacy",
+      "status": "NOT_RUN",
+      "checks": [
+        "shape"
+      ],
+      "schemaStatus": "NOT_RUN",
+      "message": "本行 disabled（平台分流）——跳过模块解析，仅记录（NOT_RUN ≠ PASS）",
+      "version": null,
+      "channel": null,
+      "evidence": ""
+    },
+    {
+      "id": "tool-pwsh",
+      "name": "@deepseek-ai/dsh-tool-pwsh",
+      "source": "legacy",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-fs",
+      "name": "@deepseek-ai/dsh-tool-fs",
+      "source": "legacy",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-fs-search",
+      "name": "@deepseek-ai/dsh-tool-fs-search",
+      "source": "legacy",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-jobs",
+      "name": "@deepseek-ai/dsh-tool-jobs",
+      "source": "legacy",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "skill-filesystem",
+      "name": "@deepseek-ai/dsh-skill-filesystem",
+      "source": "legacy",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-skill",
+      "name": "@deepseek-ai/dsh-tool-skill",
+      "source": "legacy",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-novel",
+      "name": "dsh-novel-writing/tools",
+      "source": "legacy",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "NO_SCHEMA",
+      "message": "（schema=NO_SCHEMA）该模块不导出 Config schema——本工具无法校验此行 config（不对加载器随后如何处理它作任何断言）",
+      "version": "0.5.3",
+      "channel": "repo-local",
+      "evidence": "channel=repo-local via=repo-root exports=exact→./lib/tools.js"
+    },
+    {
+      "id": "tool-goal",
+      "name": "@deepseek-ai/dsh-tool-goal",
+      "source": "legacy",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "planning",
+      "name": "cordis:group",
+      "source": "legacy",
+      "status": "PASS",
+      "checks": [
+        "shape"
+      ],
+      "schemaStatus": "NOT_RUN",
+      "message": "group 内建——枚举 1 个子行",
+      "version": null,
+      "channel": null,
+      "evidence": ""
+    },
+    {
+      "id": "plan-mode",
+      "name": "@deepseek-ai/dsh-plan-mode",
+      "source": "legacy",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "NO_SCHEMA",
+      "message": "（schema=NO_SCHEMA）该模块不导出 Config schema——本工具无法校验此行 config（不对加载器随后如何处理它作任何断言）",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "compaction",
+      "name": "cordis:group",
+      "source": "legacy",
+      "status": "PASS",
+      "checks": [
+        "shape"
+      ],
+      "schemaStatus": "NOT_RUN",
+      "message": "group 内建——枚举 3 个子行",
+      "version": null,
+      "channel": null,
+      "evidence": ""
+    },
+    {
+      "id": "compaction-basic",
+      "name": "@deepseek-ai/dsh-compaction-basic",
+      "source": "legacy",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "command-compact",
+      "name": "@deepseek-ai/dsh-command-compact",
+      "source": "legacy",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "NO_SCHEMA",
+      "message": "（schema=NO_SCHEMA）该模块不导出 Config schema——本工具无法校验此行 config（不对加载器随后如何处理它作任何断言）",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-result-pruner",
+      "name": "@deepseek-ai/dsh-compaction-tool-result-pruner",
+      "source": "legacy",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "delegation",
+      "name": "cordis:group",
+      "source": "legacy",
+      "status": "PASS",
+      "checks": [
+        "shape"
+      ],
+      "schemaStatus": "NOT_RUN",
+      "message": "group 内建——枚举 9 个子行",
+      "version": null,
+      "channel": null,
+      "evidence": ""
+    },
+    {
+      "id": "tool-subagent-control",
+      "name": "@deepseek-ai/dsh-tool-subagent-control",
+      "source": "legacy",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "NO_SCHEMA",
+      "message": "（schema=NO_SCHEMA）该模块不导出 Config schema——本工具无法校验此行 config（不对加载器随后如何处理它作任何断言）",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-subagent-list-agents",
+      "name": "@deepseek-ai/dsh-tool-subagent-control/list-agents",
+      "source": "legacy",
+      "status": "KNOWN_DROP",
+      "checks": [
+        "shape",
+        "generation"
+      ],
+      "schemaStatus": "SKIPPED",
+      "message": "已知代际删除行（0.2.x 源 MUST 0 行（0.2.2 起子路径已从 exports 移除；0.2.2 请使用主包行，勿声明 ./list-agents））——0.2.x 平面不解析该行模块（单独披露，不计 PASS）",
+      "version": null,
+      "channel": null,
+      "evidence": "manifest GENERATION_DROPPED；listAgents=unavailable"
+    },
+    {
+      "id": "tool-subagent",
+      "name": "@deepseek-ai/dsh-tool-subagent",
+      "source": "legacy",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-subagent-fork",
+      "name": "@deepseek-ai/dsh-tool-subagent",
+      "source": "legacy",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-subagent-codex",
+      "name": "@deepseek-ai/dsh-tool-subagent",
+      "source": "legacy",
+      "status": "NOT_RUN",
+      "checks": [
+        "shape"
+      ],
+      "schemaStatus": "NOT_RUN",
+      "message": "本行 disabled（平台分流）——跳过模块解析，仅记录（NOT_RUN ≠ PASS）",
+      "version": null,
+      "channel": null,
+      "evidence": ""
+    },
+    {
+      "id": "tool-subagent-claude-code",
+      "name": "@deepseek-ai/dsh-tool-subagent",
+      "source": "legacy",
+      "status": "NOT_RUN",
+      "checks": [
+        "shape"
+      ],
+      "schemaStatus": "NOT_RUN",
+      "message": "本行 disabled（平台分流）——跳过模块解析，仅记录（NOT_RUN ≠ PASS）",
+      "version": null,
+      "channel": null,
+      "evidence": ""
+    },
+    {
+      "id": "workflow-worker-thread",
+      "name": "@deepseek-ai/dsh-workflow-worker-thread",
+      "source": "legacy",
+      "status": "KNOWN_VARIANT",
+      "checks": [
+        "shape",
+        "generation"
+      ],
+      "schemaStatus": "SKIPPED",
+      "message": "已知代际变体行（0.2.x 闭包已无 dsh-workflow-worker-thread——对应行为 dsh-workflow-ptc）——本平面按清单不解析，对侧行由 dual 对账钉住（单独披露，不计 PASS）",
+      "version": null,
+      "channel": null,
+      "evidence": "manifest GENERATION_VARIANT → @deepseek-ai/dsh-workflow-ptc"
+    },
+    {
+      "id": "tool-workflow",
+      "name": "@deepseek-ai/dsh-tool-workflow",
+      "source": "legacy",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-ralph",
+      "name": "@deepseek-ai/dsh-tool-ralph",
+      "source": "legacy",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-ask-user",
+      "name": "@deepseek-ai/dsh-tool-ask-user",
+      "source": "legacy",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-todo",
+      "name": "@deepseek-ai/dsh-tool-todo",
+      "source": "legacy",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-web",
+      "name": "@deepseek-ai/dsh-tool-web",
+      "source": "legacy",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "PASS",
+      "message": "全部已执行检查通过",
+      "version": "0.2.1-rc.2",
+      "channel": "profile-resolve",
+      "evidence": "channel=profile-resolve via=plane-closure-resolve exports=exact→./lib/index.js"
+    },
+    {
+      "id": "dual",
+      "name": "D:\\AI\\agent\\deepseek\\harness\\writing-workflow\\cordis.patch.yml ↔ D:\\AI\\agent\\deepseek\\harness\\writing-workflow\\agent-presets\\novel-writing\\agent.cordis.yml",
+      "source": "dual",
+      "status": "PASS",
+      "checks": [
+        "dual"
+      ],
+      "schemaStatus": "NOT_RUN",
+      "message": "双源行差与 manifest 一致（dropped/variant 成对，行序一致）"
+    }
+  ],
+  "summary": {
+    "total": 61,
+    "pass": 53,
+    "knownDrop": 1,
+    "knownVariant": 1,
+    "warn": 0,
+    "fail": 0,
+    "notRun": 6
+  },
+  "dual": {
+    "status": "PASS",
+    "problems": 0
+  },
+  "errors": []
+}

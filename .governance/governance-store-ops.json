@@ -975,6 +975,25 @@
       "released_files": [
         "docs/COMPATIBILITY.md"
       ]
+    },
+    "op-0deb7c8125b144deb5c1660d8f585e64": {
+      "schema_version": 1,
+      "command": "evidence-append",
+      "task_id": "COMPAT-021",
+      "input_fingerprint": "b5f882e4091bc8a69afb94d995ba3b8fe089d1a90676b6f362e7b3f8e28411d6",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-0deb7c8125b144deb5c1660d8f585e64",
+        "code": "ok",
+        "new_revision": 422826,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-07T13:48:04",
+      "updated_at": "2026-11-07T13:48:04"
     }
   }
 }

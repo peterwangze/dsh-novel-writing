@@ -1,0 +1,14 @@
+ok   legacy-0.1 fixture：exit=0 generation=legacy-0.1 verdict=pass（行状态表与 expected.json 全等）
+ok   decl-0.2.0 fixture：exit=0 generation=decl-0.2.0 verdict=pass（行状态表与 expected.json 全等）
+ok   decl-0.2.1 fixture：exit=0 generation=decl-0.2.1 verdict=pass（行状态表与 expected.json 全等）
+ok   decl-0.2.2 fixture：exit=0 generation=decl-0.2.2 verdict=pass（行状态表与 expected.json 全等）
+ok   unknown fixture：exit=1 generation=unknown verdict=fail（行状态表与 expected.json 全等）
+ok   negative-missing-export fixture：exit=1 generation=decl-0.2.2 verdict=fail（行状态表与 expected.json 全等）
+ok   真实仓内真跑（本机平面）：exit=0 ok=true generation=decl-0.2.1（hostVersion=0.2.1-rc.2，confidence=profile）行集 0 FAIL
+ok   环境不可判定面：空 DSH_HOME + NV_COMPAT_PLANE=profile ⇒ exit 3 + NOT_RUN（fail-closed，非崩溃）
+ok   用法错误面（exit 2）与 --generation 覆盖语义（overridden:true；--strict unknown 仍 exit 1）
+ok   C3 判据核心：legacy/decl 对 legacy-only 行处置相反（keep≠drop ⇒ 混合平面 fail-closed 前提）∧ projectRows(unknown) 不投影 ∧ 判据双轴矛盾恒 unknown
+ok   端到端混合平面（伪 profile=decl-0.2.2 × 伪全局闭包=legacy-0.1，--global-root 注入）：exit 1 ∧ mixedPlane=true ∧ droppedDispositionConflicts=true ∧ legacy-only 行 FAIL（MIXED_PLANE_FAIL_CLOSED，非 KNOWN_DROP）∧ --strict 加 STRICT_MIXED_PLANE
+ok   注入可审计性（R2 N1）：--global-root 注入运行 JSON 含 plane.globalRootOverride=true ∧ secondary.via=global-root-override（§8.3 injected 纪律——注入不得冒充自然根；无注入运行零标记，由 ② 真跑组的 plane 字段实跑佐证）
+
+PREFLIGHT TEST PASSED (12)

@@ -1,0 +1,12 @@
+{
+  "fixture": "negative-missing-export",
+  "description": "COMPAT-020 原故障形态复刻：0.2.2 平面 + 0.2.x 源塞回 legacy 子路径行 ⇒ 该行双面失败（代际处置 DECLARED_DROPPED_ROW + exports 解析 ERR_PACKAGE_PATH_NOT_EXPORTED——0.2.2 起 ./list-agents 已从 exports 移除）；dual 对账另产 DUAL_SOURCE_DRIFT（patch MUST 0 行）。整体 exit 1。",
+  "expectedGeneration": "decl-0.2.2",
+  "verdict": "fail",
+  "exitCode": 1,
+  "mustContain": ["ERR_PACKAGE_PATH_NOT_EXPORTED"],
+  "rows": {
+    "patch": { "tool-subagent-control": "PASS", "tool-subagent-list-agents": "FAIL", "workflow-ptc": "PASS" },
+    "legacy": { "tool-subagent-control": "PASS", "tool-subagent-list-agents": "KNOWN_DROP", "workflow-worker-thread": "KNOWN_VARIANT" }
+  }
+}

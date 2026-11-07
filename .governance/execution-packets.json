@@ -775,7 +775,7 @@
     "COMPAT-021": {
       "task_id": "COMPAT-021",
       "priority": "P1",
-      "status": "⏳ pending（待实施；设计阶段，依赖 COMPAT-020；triage = change-triage/COMPAT-021.json）",
+      "status": "✅ 已交付：R1 APPROVED_WITH_NOTES（P2×1 F1 已返工闭环 + 变异自测）→ R2 APPROVED_WITH_NOTES（P0/P1/P2=0，N1-N3 已顺手修）；triage = change-triage/COMPAT-021.json",
       "goal": "COMPAT-021 **插件兼容性设计系统优化**（用户 2026-11-07 直接要求，四目标）：①尽可能减少对 DSH 宿主依赖 ②必须的接口/字段依赖解耦、单独维护 ③依赖代码严格校验与看护 ④依赖边界可调测、问题第一时间发现、低代价适配。交付：四目标差距分析 + 宿主耦合面清单（契约 `items[]` / `regionLiterals` / `clientProbes` 现状与盲区）+ 目标架构（generation manifest / 行级 preflight / fail-soft 预设注册 / 结构化诊断）+ 迁移路线；落地行级 preflight（含子路径解析，`scripts/preflight-preset-rows.mjs`）+ P-10 契约对账 + 探针；运行时预设注册重写不在本任务直接实施（另立任务待关键决策批准）",
       "product_success_contract": {
         "user": "插件维护者（需要升级 DSH 时不因宿主 API/包导出变化而整插件失效）与使用预设的小说作者。",
@@ -787,7 +787,7 @@
         ],
         "success_metrics": [
           "维护者运行行级 preflight 能看到每个预设行的解析结果，缺失子路径以非零退出和结构化诊断直接暴露，而不是让用户看到整棵预设 broken。",
-          "node scripts/preflight-preset-rows.mjs --self-test 通过；fixture 注入缺失子路径时 exit 1 并列出 row id、包名、子路径、错误码。"
+          "node test/preflight-preset-rows.test.mjs PASSED (12)（含 negative-missing-export exit 1 + ERR_PACKAGE_PATH_NOT_EXPORTED + 端到端混合平面 fail-closed）；node scripts/preflight-preset-rows.mjs --json 真实面 exit 0（decl-0.2.1，61 行 0 FAIL）。"
         ],
         "competitive_baseline": "DSH 官方插件在宿主升级时通过能力检测/fail-soft 保持可用；本插件应达到同等的升级韧性（不断链、可诊断）。",
         "done_definition": [
@@ -800,59 +800,60 @@
         "command": "node scripts/preflight-preset-rows.mjs",
         "expected_output": "正常行 exit 0 并逐行打印 ok；fixture 注入缺失子路径时 exit 1，输出包含 row id、包名、子路径、ERR_PACKAGE_PATH_NOT_EXPORTED 诊断。",
         "last_run": {
-          "status": "not_run_yet",
-          "exit_code": null,
-          "summary": "COMPAT-021 当前为设计/待实施阶段：docs/COMPATIBILITY.md 正在交付，scripts/preflight-preset-rows.mjs 尚未实现，因此没有运行结果；本轮不把设计文档冒充为功能验收。"
+          "status": "PASS",
+          "exit_code": 0,
+          "summary": "2026-11-07 Coordinator 独立复跑：node scripts/preflight-preset-rows.mjs --json exit 0（ok:true，generation=decl-0.2.1，mixedPlane=false，61 行 0 FAIL：53 PASS+1 KNOWN_DROP+1 KNOWN_VARIANT+6 NOT_RUN，dual=PASS）；negative-missing-export fixture exit 1 且含 ERR_PACKAGE_PATH_NOT_EXPORTED；test/preflight-preset-rows.test.mjs PASSED (12)。证据 docs/evidence/COMPAT-021/。"
         },
-        "demo_evidence": "docs/COMPATIBILITY.md 的设计与迁移路线；实现后由 scripts/preflight-preset-rows.mjs 的 fixture 输出补齐运行演示。"
+        "demo_evidence": "docs/evidence/COMPAT-021/preflight-real.decl-0.2.1.json、preflight-negative-missing-export.json、preflight-test.out.txt、README.md。"
       },
       "quality_budget": {
         "dimensions": {
           "performance": {
             "threshold": "行级 preflight 只读解析，单次运行目标低于 2 秒（设计门槛）。",
-            "validation": "node scripts/preflight-preset-rows.mjs --help / fixture 运行",
-            "status": "not_run_yet",
-            "evidence": "docs/COMPATIBILITY.md 迁移路线"
+            "validation": "node scripts/preflight-preset-rows.mjs --json（Coordinator 复跑实测秒级返回）",
+            "status": "PASS",
+            "evidence": "docs/evidence/COMPAT-021/preflight-real.decl-0.2.1.json（exit 0 单次完成）"
           },
           "reliability": {
-            "threshold": "preflight 对缺失子路径 fail-closed（exit 1），不静默 broken。",
-            "validation": "node scripts/preflight-preset-rows.mjs fixture",
-            "status": "not_run_yet",
-            "evidence": "docs/COMPATIBILITY.md 设计文档与后续 fixture 输出"
+            "threshold": "preflight 对缺失子路径 fail-closed（exit 1），不静默 broken；混合平面 legacy-only 行 fail-closed 不静默跳过。",
+            "validation": "node test/preflight-preset-rows.test.mjs（12 组，含 negative exit 1 + 端到端混合平面 MIXED_PLANE_FAIL_CLOSED + 变异自测）",
+            "status": "PASS",
+            "evidence": "docs/evidence/COMPAT-021/preflight-test.out.txt、preflight-negative-missing-export.json"
           },
           "security": {
-            "threshold": "脚本只读 package.json/exports，不执行宿主包代码。",
-            "validation": "node scripts/preflight-preset-rows.mjs 安全测试",
-            "status": "not_run_yet",
-            "evidence": "docs/COMPATIBILITY.md 设计原则"
+            "threshold": "脚本只读 package.json/exports，不执行宿主包代码；输出不含 token/密钥；注入面可审计（globalRootOverride 标记，不得冒充真实证据）。",
+            "validation": "代码审查（reviewer R1/R2）+ 输出扫描（evidence 目录无敏感串）+ 注入可审计性断言（第 12 组）",
+            "status": "PASS",
+            "evidence": "docs/review/COMPAT-021-R1.md、COMPAT-021-R2.md；docs/evidence/COMPAT-021/"
           },
           "accessibility": {
             "threshold": "不涉及 UI 变更；本任务交付设计与只读 CLI。",
-            "validation": "node scripts/preflight-preset-rows.mjs 输出可读性检查",
-            "status": "not_run_yet",
-            "evidence": "docs/COMPATIBILITY.md 诊断输出设计"
+            "validation": "git diff 无 UI/客户端文件改动",
+            "status": "EXEMPT",
+            "evidence": "git diff --name-only（仅 lib/host-compat/、scripts/、test/、docs/、契约/README/CHANGELOG）",
+            "exception": "纯 CLI 工具与文档交付，无 UI 结构/键盘/ARIA 面。"
           },
           "ux": {
-            "threshold": "维护者能从诊断中定位 row id、包名、子路径与错误码。",
-            "validation": "fixture 输出快照检查",
-            "status": "not_run_yet",
-            "evidence": "docs/COMPATIBILITY.md 诊断输出设计"
+            "threshold": "维护者能从诊断中定位 row id、包名、子路径与错误码，并获修复建议；--explain 提供逐行代际解释。",
+            "validation": "preflight-test.out.txt 12 组断言 + reviewer R1 独立取证（--explain/报文含 rowId/包名/修复建议）",
+            "status": "PASS",
+            "evidence": "docs/evidence/COMPAT-021/preflight-negative-missing-export.json（结构化 errors）；docs/review/COMPAT-021-R1.md"
           },
           "maintainability": {
-            "threshold": "耦合清单与 generation manifest 单一事实源；P-10 双向对账。",
-            "validation": "node scripts/verify-contract-anchors.mjs",
-            "status": "not_run_yet",
-            "evidence": "lib/host-contract.mjs"
+            "threshold": "generation manifest 单一事实源（schema-face re-export，值逐字节等值）；P-10 双向对账；anchors FAIL=0。",
+            "validation": "node scripts/verify-contract-anchors.mjs + node test/smoke.mjs（334/0）+ R1 字节等值取证",
+            "status": "PASS",
+            "evidence": "lib/host-compat/generation-manifest.mjs；docs/review/COMPAT-021-R1.md §迁移字节等值；docs/evidence/COMPAT-021/verify-contract-anchors.out.txt"
           }
         }
       },
       "vertical_slice": {
         "user_visible_slice": "维护者在升级 DSH 前运行 preflight 命令，看到每个预设行的解析结果与结构化诊断，而不是等到用户打开设置页才发现整棵预设 broken。",
-        "demo_path": "node scripts/preflight-preset-rows.mjs（实现后）与 docs/COMPATIBILITY.md 的 fixture 表",
-        "scope_guard": "仅 docs/COMPATIBILITY.md、lib/host-contract.mjs、scripts/preflight-preset-rows.mjs、test/smoke.mjs、test/validate-preset.mjs；不重写运行时注册、不改版本、不恢复 0.2.0/0.2.1 工具行。",
-        "rollback_plan": "删除设计文档与只读 preflight 脚本即回退；不写运行时数据、不改宿主状态。",
-        "status": "not_run_yet",
-        "evidence": "docs/COMPATIBILITY.md 与后续 preflight fixture 输出（实现后）。"
+        "demo_path": "node scripts/preflight-preset-rows.mjs --json（真实面）+ --fixture test/fixtures/host-generations/negative-missing-export --json（负向）",
+        "scope_guard": "仅 docs/COMPATIBILITY.md、lib/host-compat/、scripts/preflight-preset-rows.mjs、test/fixtures/host-generations/、test/preflight-preset-rows.test.mjs、test/smoke.mjs（守卫适配）、test/fixtures/host-surfaces/preset-schema-face.mjs（常量迁移）、test/validate-preset.mjs、lib/host-contract.mjs、README/CHANGELOG；不重写运行时注册、不改版本、不恢复 0.2.0/0.2.1 工具行、不改 package.json。",
+        "rollback_plan": "删除新增 lib/host-compat/、scripts/preflight-preset-rows.mjs、test/fixtures/host-generations/、test/preflight-preset-rows.test.mjs 并还原 schema-face 常量与 smoke 两处守卫适配即回退；不写运行时数据、不改宿主状态。",
+        "status": "PASS",
+        "evidence": "docs/evidence/COMPAT-021/（README + 真实面/负向/测试/validate/smoke/anchors 六份输出）。"
       },
       "interruption_policy": {
         "mode": "critical-only: default execute routine reversible work and record assumptions when needed",

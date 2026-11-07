@@ -1,0 +1,11 @@
+{
+  "fixture": "unknown",
+  "description": "未审阅的未来宿主平面（0.3.0 ≥ manifest 上界 ⇒ unknown）。fail-closed：不投影、不默放——所有行 NOT_RUN（绝不渲染成 PASS），dual 对账同样 NOT_RUN，退出码 1（UNKNOWN_GENERATION 硬失败）。修复路径 = 按 docs/COMPATIBILITY.md §10.3 升级检查清单补 manifest/fixture，或以 --generation 显式覆盖做诊断。",
+  "expectedGeneration": "unknown",
+  "verdict": "fail",
+  "exitCode": 1,
+  "rows": {
+    "patch": { "tool-subagent-control": "NOT_RUN", "workflow-ptc": "NOT_RUN" },
+    "legacy": { "tool-subagent-control": "NOT_RUN", "tool-subagent-list-agents": "NOT_RUN", "workflow-worker-thread": "NOT_RUN" }
+  }
+}

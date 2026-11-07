@@ -1,0 +1,11 @@
+{
+  "fixture": "legacy-0.1",
+  "description": "DSH 0.1.x 宿主平面（0.1.5-rc.2；闭包无 @deepseek-ai/dsh-agent-preset，./list-agents 子路径在场）。0.1.x 源三行全部原生可解析；0.2.x 源的 ptc 行按清单披露为 KNOWN_VARIANT。dual 对账通过（dropped：legacy 1 / patch 0；variant 成对）。",
+  "expectedGeneration": "legacy-0.1",
+  "verdict": "pass",
+  "exitCode": 0,
+  "rows": {
+    "patch": { "tool-subagent-control": "PASS", "workflow-ptc": "KNOWN_VARIANT" },
+    "legacy": { "tool-subagent-control": "PASS", "tool-subagent-list-agents": "PASS", "workflow-worker-thread": "PASS" }
+  }
+}

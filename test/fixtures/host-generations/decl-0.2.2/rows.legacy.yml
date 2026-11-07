@@ -1,0 +1,10 @@
+# COMPAT-021 fixture — 0.1.x 源最小行集（agent.cordis.yml 的行级缩影；含 legacy-only dropped 行 + 0.1.x variant 行）。
+# 只用普通 YAML（无 !!js 标签）：fixture 平面是纯元数据（伪 node_modules），不依赖宿主 loader / 真实模块文件。
+- id: tool-subagent-control
+  name: '@deepseek-ai/dsh-tool-subagent-control'
+- id: tool-subagent-list-agents
+  name: '@deepseek-ai/dsh-tool-subagent-control/list-agents'
+- id: workflow-worker-thread
+  name: '@deepseek-ai/dsh-workflow-worker-thread'
+  config:
+    provider: spawn

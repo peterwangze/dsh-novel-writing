@@ -1,0 +1,11 @@
+{
+  "fixture": "decl-0.2.0",
+  "description": "DSH 0.2.0-rc.2 声明代平面（exports 仍含 ./list-agents，主包未注册 list_agents）。0.2.x 源不含 dropped 行；legacy 源的 list-agents 行按清单披露为 KNOWN_DROP、worker-thread 为 KNOWN_VARIANT。list_agents=unavailable（已知代际能力缺失，降级披露不阻断）。",
+  "expectedGeneration": "decl-0.2.0",
+  "verdict": "pass",
+  "exitCode": 0,
+  "rows": {
+    "patch": { "tool-subagent-control": "PASS", "workflow-ptc": "PASS" },
+    "legacy": { "tool-subagent-control": "PASS", "tool-subagent-list-agents": "KNOWN_DROP", "workflow-worker-thread": "KNOWN_VARIANT" }
+  }
+}

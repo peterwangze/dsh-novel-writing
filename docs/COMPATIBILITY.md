@@ -1,6 +1,6 @@
 # DSH 宿主兼容性架构设计（COMPAT-021 设计基线）
 
-- 状态：设计基线（`COMPAT-021` 实施前；`COMPAT-020` 产品热修已完成，R2 复审尚在进行/待记录）
+- 状态：已实施（待评审）（`COMPAT-021` 代际清单/行投影/行级预检 CLI/离线 fixtures 已落地，见 §12.2 勾选；`COMPAT-020` 产品热修已完成）
 - 日期：2026-11-07
 - 适用插件：`dsh-novel-writing`（包版本 `0.5.3`，发布号待 Release Gate 用户确认）
 - 目标宿主：DSH `0.1.x`（最低声明 `0.1.2-rc.1`，完整支持 `0.1.5-rc.2`）、`0.2.0-rc.2`、`0.2.1-rc.2`、`0.2.2-rc.1`
@@ -288,7 +288,7 @@ node scripts/preflight-preset-rows.mjs [options]
 3. **包存在性**：在同一平面解析包；记录 `profile-resolve`/`install-anchor`/`fixture` 通道。
 4. **exports 解析**：若 `name` 含子路径，检查包 `exports` 映射；禁止用 `require.resolve` 的“碰巧成功”代替 exports 检查。
 5. **config schema**：与宿主 loader 同源的 `entryListSchema`/`resolveConfig` 核对；无 schema 的模块标 `NO_SCHEMA`，不伪造 PASS。
-6. **inject/服务**：声明依赖的服务是否在宿主平面可用；缺失按 manifest 策略 fail/warn。
+6. **inject/服务**：声明依赖的服务是否在宿主平面可用；缺失按 manifest 策略 fail/warn。**实现注记（COMPAT-021 R1 F3）**：本步**未实现**——当前预设行（两源的 `plugins[]` 行）不声明 inject/服务字段，检查面为空，硬实现只会制造恒真断言；留待 COMPAT-022 provider 引入服务依赖时一并实现（届时 manifest `failurePolicy` 已就位）。
 7. **dual 对账**：0.1.x 源与 0.2.x patch 的行集/顺序/config 差异必须与清单一致；不一致即 `DUAL_SOURCE_DRIFT`。
 8. **结果**：`PASS` / `KNOWN_DROP` / `KNOWN_VARIANT` / `WARN` / `FAIL` / `NOT_RUN`；`NOT_RUN` 不得渲染为 PASS。
 
@@ -364,7 +364,7 @@ node scripts/preflight-preset-rows.mjs --generation unknown --strict
 
 - 正常：exit 0，`ok:true`，`knownDrop:1`（仅 0.1.x 源 dual 对账时）；
 - 负向：exit 1，错误可定位到 row/包/exports；
-- unknown：exit 3 或 1（`--strict`），**不得默认 PASS**。
+- unknown：exit 1（fail-closed，与 §7.1 退出码表一致——未知代际列在硬失败；`--strict` 仅为混合平面加判），**不得默认 PASS**。
 
 ### 8.3 故障注入
 
@@ -473,21 +473,21 @@ node scripts/preflight-preset-rows.mjs --generation unknown --strict
 |---|---|---|
 | 减少依赖 | 契约/源码扫描 | 新增/修改的宿主字面量 100% 登记；L2 工具行有 optional/降级说明；无新增深路径 import |
 | 解耦维护 | `lib/host-contract.mjs` + manifest | 契约 52 项不变或按变更登记；manifest 成为代际唯一数据源；revisions 追加 |
-| 严格校验 | `preflight-preset-rows.mjs --fixture ...` | 4 代际 fixture 全通过；negative fixture 必失败；unknown exit 1/3；真实 profile 预检 PASS 或明确 NOT_RUN |
+| 严格校验 | `preflight-preset-rows.mjs --fixture ...` | 4 代际 fixture 全通过；negative fixture 必失败；unknown exit 1（fail-closed，与 §7.1/§8.2 统一）；真实 profile 预检 PASS 或明确 NOT_RUN |
 | 可调测 | `--json`/`--explain`/故障注入 | 输出稳定 schema；单行解释可读；测试可强制代际；诊断不含密钥 |
 
 ### 12.2 交付物
 
-- [ ] `docs/COMPATIBILITY.md`（本文）
-- [ ] `lib/host-compat/generation-manifest.mjs`（计划）
-- [ ] `lib/host-compat/preset-projection.mjs`（计划）
-- [ ] `scripts/preflight-preset-rows.mjs`（计划）
-- [ ] `test/fixtures/host-generations/`（计划）
-- [ ] `test/preflight-preset-rows.test.mjs` 或 smoke 接线（计划）
-- [ ] `lib/host-contract.mjs` revisions/条目更新（按实际）
-- [ ] README/CHANGELOG 说明
-- [ ] `docs/evidence/COMPAT-021/` 预检证据
-- [ ] R2+ 独立复审
+- [x] `docs/COMPATIBILITY.md`（本文）
+- [x] `lib/host-compat/generation-manifest.mjs`（已实施：五代清单 + `detectGeneration` 纯函数；`GENERATION_VARIANT`/`GENERATION_DROPPED` 单一事实源，preset-schema-face 为兼容 re-export 面）
+- [x] `lib/host-compat/preset-projection.mjs`（已实施：`projectRows` 行投影（unknown fail-closed）+ `reconcileDualSources` 双源对账单源化）
+- [x] `scripts/preflight-preset-rows.mjs`（已实施：§7 检查顺序/退出码/JSON schema/C3 平面绑定/`--explain`/`--strict`/故障注入）
+- [x] `test/fixtures/host-generations/`（已实施：六目录 + 伪 node_modules 平面 + 最小行集 + `expected.json`；negative 复刻原故障必红）
+- [x] `test/preflight-preset-rows.test.mjs` 或 smoke 接线（已实施：独立测试，spawn CLI 真跑；smoke 断言数 334 不变）
+- [x] `lib/host-contract.mjs` revisions/条目更新（已实施：revisions 追加 COMPAT-021（21→22）；不加 items[] 条目——52 项与面分布 golden 保持，preflight 的宿主 exports 面读取以清单登记（职责三分））
+- [x] README/CHANGELOG 说明
+- [ ] `docs/evidence/COMPAT-021/` 预检证据（**未交付**：归 Coordinator/评审侧归档——本任务产出以验收命令实跑读数为准，见交付报告）
+- [ ] R2+ 独立复审（**未做**：待评审；§9.2 严格校验面已由 `test/preflight-preset-rows.test.mjs` 先行落地）
 
 ### 12.3 明确不在本任务范围
 

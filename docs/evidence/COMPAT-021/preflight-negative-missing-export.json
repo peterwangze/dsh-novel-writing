@@ -1,0 +1,191 @@
+{
+  "schemaVersion": 1,
+  "compatRunId": "r-mw5z1x2m-phlo",
+  "ok": false,
+  "generation": "decl-0.2.2",
+  "detectedGeneration": "decl-0.2.2",
+  "confidence": "fixture",
+  "hostVersion": "0.2.2-rc.1",
+  "hasAgentPreset": true,
+  "overridden": false,
+  "plane": {
+    "channel": "fixture",
+    "profile": "D:\\AI\\agent\\deepseek\\harness\\writing-workflow\\test\\fixtures\\host-generations\\negative-missing-export",
+    "via": "fixture-pseudo-node-modules",
+    "dshPackage": "D:\\AI\\agent\\deepseek\\harness\\writing-workflow\\test\\fixtures\\host-generations\\negative-missing-export\\node_modules\\@deepseek-ai\\dsh\\package.json",
+    "globalRoot": null
+  },
+  "mixedPlane": false,
+  "sources": {
+    "patch": {
+      "path": "D:\\AI\\agent\\deepseek\\harness\\writing-workflow\\test\\fixtures\\host-generations\\negative-missing-export\\rows.patch.yml",
+      "shape": "row-list",
+      "rows": 3
+    },
+    "legacy": {
+      "path": "D:\\AI\\agent\\deepseek\\harness\\writing-workflow\\test\\fixtures\\host-generations\\negative-missing-export\\rows.legacy.yml",
+      "shape": "row-list",
+      "rows": 3
+    }
+  },
+  "rows": [
+    {
+      "id": "tool-subagent-control",
+      "name": "@deepseek-ai/dsh-tool-subagent-control",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "NOT_RUN",
+      "message": "（schema=NOT_RUN）fixture 元数据平面无真实模块——schema 检查未运行（NOT_RUN ≠ PASS）",
+      "version": "0.2.2-rc.1",
+      "channel": "fixture",
+      "evidence": "channel=fixture via=fixture-pseudo-node-modules exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-subagent-list-agents",
+      "name": "@deepseek-ai/dsh-tool-subagent-control/list-agents",
+      "source": "patch",
+      "status": "FAIL",
+      "checks": [
+        "shape",
+        "generation",
+        "package"
+      ],
+      "schemaStatus": "NOT_RUN",
+      "message": "ERR_PACKAGE_PATH_NOT_EXPORTED：./list-agents 不在 @deepseek-ai/dsh-tool-subagent-control exports 面",
+      "version": "0.2.2-rc.1",
+      "channel": "fixture",
+      "evidence": "exports=[., ./src/*, ./package.json, ./locale/*.json]"
+    },
+    {
+      "id": "workflow-ptc",
+      "name": "@deepseek-ai/dsh-workflow-ptc",
+      "source": "patch",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "NOT_RUN",
+      "message": "（schema=NOT_RUN）fixture 元数据平面无真实模块——schema 检查未运行（NOT_RUN ≠ PASS）",
+      "version": "0.2.2-rc.1",
+      "channel": "fixture",
+      "evidence": "channel=fixture via=fixture-pseudo-node-modules exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-subagent-control",
+      "name": "@deepseek-ai/dsh-tool-subagent-control",
+      "source": "legacy",
+      "status": "PASS",
+      "checks": [
+        "shape",
+        "generation",
+        "package",
+        "exports",
+        "config"
+      ],
+      "schemaStatus": "NOT_RUN",
+      "message": "（schema=NOT_RUN）fixture 元数据平面无真实模块——schema 检查未运行（NOT_RUN ≠ PASS）",
+      "version": "0.2.2-rc.1",
+      "channel": "fixture",
+      "evidence": "channel=fixture via=fixture-pseudo-node-modules exports=exact→./lib/index.js"
+    },
+    {
+      "id": "tool-subagent-list-agents",
+      "name": "@deepseek-ai/dsh-tool-subagent-control/list-agents",
+      "source": "legacy",
+      "status": "KNOWN_DROP",
+      "checks": [
+        "shape",
+        "generation"
+      ],
+      "schemaStatus": "SKIPPED",
+      "message": "已知代际删除行（0.2.x 源 MUST 0 行（0.2.2 起子路径已从 exports 移除；0.2.2 请使用主包行，勿声明 ./list-agents））——0.2.x 平面不解析该行模块（单独披露，不计 PASS）",
+      "version": null,
+      "channel": null,
+      "evidence": "manifest GENERATION_DROPPED；listAgents=main-package"
+    },
+    {
+      "id": "workflow-worker-thread",
+      "name": "@deepseek-ai/dsh-workflow-worker-thread",
+      "source": "legacy",
+      "status": "KNOWN_VARIANT",
+      "checks": [
+        "shape",
+        "generation"
+      ],
+      "schemaStatus": "SKIPPED",
+      "message": "已知代际变体行（0.2.x 闭包已无 dsh-workflow-worker-thread——对应行为 dsh-workflow-ptc）——本平面按清单不解析，对侧行由 dual 对账钉住（单独披露，不计 PASS）",
+      "version": null,
+      "channel": null,
+      "evidence": "manifest GENERATION_VARIANT → @deepseek-ai/dsh-workflow-ptc"
+    },
+    {
+      "id": "dual",
+      "name": "D:\\AI\\agent\\deepseek\\harness\\writing-workflow\\test\\fixtures\\host-generations\\negative-missing-export\\rows.patch.yml ↔ D:\\AI\\agent\\deepseek\\harness\\writing-workflow\\test\\fixtures\\host-generations\\negative-missing-export\\rows.legacy.yml",
+      "source": "dual",
+      "status": "FAIL",
+      "checks": [
+        "dual"
+      ],
+      "schemaStatus": "NOT_RUN",
+      "message": "2 项 DUAL_SOURCE_DRIFT"
+    }
+  ],
+  "summary": {
+    "total": 7,
+    "pass": 3,
+    "knownDrop": 1,
+    "knownVariant": 1,
+    "warn": 0,
+    "fail": 2,
+    "notRun": 0
+  },
+  "dual": {
+    "status": "FAIL",
+    "problems": 2
+  },
+  "errors": [
+    {
+      "code": "DECLARED_DROPPED_ROW",
+      "rowId": "tool-subagent-list-agents",
+      "package": "@deepseek-ai/dsh-tool-subagent-control/list-agents",
+      "check": "generation",
+      "message": "0.2.x 源声明了 legacy-only 行 @deepseek-ai/dsh-tool-subagent-control/list-agents（0.2.x 源 MUST 0 行（0.2.2 起子路径已从 exports 移除；0.2.2 请使用主包行，勿声明 ./list-agents））",
+      "fix": "0.2.2 请使用主包行 @deepseek-ai/dsh-tool-subagent-control，勿声明 ./list-agents"
+    },
+    {
+      "code": "ERR_PACKAGE_PATH_NOT_EXPORTED",
+      "rowId": "tool-subagent-list-agents",
+      "package": "@deepseek-ai/dsh-tool-subagent-control/list-agents",
+      "check": "exports",
+      "message": "包 @deepseek-ai/dsh-tool-subagent-control 的 exports 不允许子路径 ./list-agents（exports keys：., ./src/*, ./package.json, ./locale/*.json）——宿主 agentPresets.register 激活期将抛 ERR_PACKAGE_PATH_NOT_EXPORTED，整棵预设挂载被否决",
+      "fix": "0.2.2 请使用主包行，勿声明 ./list-agents；或升级行声明到当前代际的 exports 面（见 lib/host-compat/generation-manifest.mjs）"
+    },
+    {
+      "code": "DUAL_SOURCE_DRIFT",
+      "rowId": "tool-subagent-list-agents",
+      "package": "@deepseek-ai/dsh-tool-subagent-control/list-agents",
+      "check": "dual",
+      "message": "cordis.patch.yml MUST 0 行 @deepseek-ai/dsh-tool-subagent-control/list-agents（残留即整棵预设激活抛 ERR_PACKAGE_PATH_NOT_EXPORTED——COMPAT-020 修复的那个故障；0.2.2 请使用主包行 @deepseek-ai/dsh-tool-subagent-control，勿声明 ./list-agents）",
+      "fix": "行差只允许 GENERATION_VARIANT（同行换包名）/ GENERATION_DROPPED（legacy-only 整行）——见 lib/host-compat/generation-manifest.mjs"
+    },
+    {
+      "code": "DUAL_SOURCE_DRIFT",
+      "rowId": null,
+      "package": null,
+      "check": "dual",
+      "message": "双源行序漂移（manifest 未登记的差异）：第 2 行键差（patch \"tool-subagent-list-agents:@deepseek-ai/dsh-tool-subagent-control/list-agents\" / legacy \"workflow-ptc:@deepseek-ai/dsh-workflow-ptc\"）——唯一允许差异 = GENERATION_VARIANT（同行换包名）与 GENERATION_DROPPED（legacy-only 整行）",
+      "fix": "行差只允许 GENERATION_VARIANT（同行换包名）/ GENERATION_DROPPED（legacy-only 整行）——见 lib/host-compat/generation-manifest.mjs"
+    }
+  ]
+}

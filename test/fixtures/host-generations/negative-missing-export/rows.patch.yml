@@ -1,0 +1,11 @@
+# COMPAT-021 negative fixture — 0.2.2 平面上把 legacy 子路径行塞回 0.2.x 源（= COMPAT-020 修复的原故障形态）：
+# 该行 MUST 双面失败——代际处置（0.2.x 源 MUST 0 行 dropped 行）+ exports 解析（0.2.2 起 ./list-agents
+# 已从 @deepseek-ai/dsh-tool-subagent-control 的 exports 移除 ⇒ ERR_PACKAGE_PATH_NOT_EXPORTED）。
+- id: tool-subagent-control
+  name: '@deepseek-ai/dsh-tool-subagent-control'
+- id: tool-subagent-list-agents
+  name: '@deepseek-ai/dsh-tool-subagent-control/list-agents'
+- id: workflow-ptc
+  name: '@deepseek-ai/dsh-workflow-ptc'
+  config:
+    provider: spawn

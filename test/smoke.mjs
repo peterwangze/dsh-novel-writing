@@ -3329,7 +3329,12 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   }
   for (const rel of entryRels) walkImports(rel)
   const closureBad = [...pkgClosure].filter((rel) => !pkgCovered(rel))
-  const libOrphans = LIB_FILES.filter((f) => !pkgClosure.has('lib/' + f))
+  // COMPAT-021：lib/host-compat/（代际清单 + 行投影）是**登记的工具面**子目录——消费方 =
+  // scripts/preflight-preset-rows.mjs / test/preflight-preset-rows.test.mjs（非入口运行时闭包；
+  // COMPAT-022 起 provider 亦从此层取行）。登记进 LIB_TOOLING_DIRS 后不再按孤儿判；白名单外的
+  // lib 顶层条目仍 MUST 被入口闭包消费（孤儿即红的原判据不放宽——子目录级注册 = 显式评审点）。
+  const LIB_TOOLING_DIRS = ['host-compat']
+  const libOrphans = LIB_FILES.filter((f) => !pkgClosure.has('lib/' + f) && !LIB_TOOLING_DIRS.includes(f))
   check('COMPAT-004 F1 打包面：package.json files ⊇ lib/ 全部 ' + LIB_FILES.length + ' 文件 ∧ ⊇ 入口相对 import 闭包 ' + pkgClosure.size + ' 文件（' + entryRels.length + ' 入口）∧ 条目形态白名单（精确路径/目录前缀）',
     filesEntries.length > 0 && pkgUncovered.length === 0 && closureBad.length === 0 && patternBad.length === 0,
     'files=' + JSON.stringify(filesEntries) + ' uncovered=' + JSON.stringify(pkgUncovered) + ' closureBad=' + JSON.stringify(closureBad) + ' patternBad=' + JSON.stringify(patternBad))
@@ -3993,7 +3998,8 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   const smokeSrc15 = readFileSync(new URL('./smoke.mjs', import.meta.url), 'utf8')
   const smokeLines15 = smokeSrc15.split('\n')
   const changelogLines15 = readFileSync(new URL('../CHANGELOG.md', import.meta.url), 'utf8').split('\n')
-  const CHANGELOG_ENTRY_ANCHORS15 = ['- **COMPAT-015', '- **COMPAT-016']
+  // COMPAT-021 新条目入锚点集（新增任务 MUST 把自身条目 id 加入锚点集，否则该条目落在面外——本批遵守）。
+  const CHANGELOG_ENTRY_ANCHORS15 = ['- **COMPAT-015', '- **COMPAT-016', '- **COMPAT-021']
   const changelogEntrySlices15 = CHANGELOG_ENTRY_ANCHORS15.map((anchor) => {
     const start = changelogLines15.findIndex((l) => l.startsWith(anchor))
     if (start < 0) return { anchor, start: -1, lines: [] }

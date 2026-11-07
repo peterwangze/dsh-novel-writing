@@ -1,0 +1,11 @@
+{
+  "fixture": "decl-0.2.2",
+  "description": "DSH 0.2.2-rc.1 声明代平面（./list-agents 已从 exports 移除，list_agents 由主包注册）。legacy 源的 list-agents 行按清单披露为 KNOWN_DROP（不解析模块——即使 0.2.0/0.2.1 平面 exports 尚含该子路径，0.2.x 源也不声明它）；list_agents=main-package。",
+  "expectedGeneration": "decl-0.2.2",
+  "verdict": "pass",
+  "exitCode": 0,
+  "rows": {
+    "patch": { "tool-subagent-control": "PASS", "workflow-ptc": "PASS" },
+    "legacy": { "tool-subagent-control": "PASS", "tool-subagent-list-agents": "KNOWN_DROP", "workflow-worker-thread": "KNOWN_VARIANT" }
+  }
+}

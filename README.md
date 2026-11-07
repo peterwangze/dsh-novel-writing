@@ -176,6 +176,11 @@ node scripts/verify-visual-geometry.mjs --strict
 npm view @deepseek-ai/dsh versions --json   # 与 fixtures 覆盖版本对账 ⇒ 新版本即红（见下「探测轨与窗口期」）
 node test/fixtures/host-surfaces/probe-face.mjs   # 探测轨判据的**离线机检** + install 头部布局契约对账（PR 门禁：提取 ci.yml heredoc → node --check → 构造 JSON 驱动判据真跑；不触网、不 install）
 node scripts/probe-host.mjs --self-check          # 宿主能力探针**离线自检**（契约 × fixtures 能力面 6 层对账；零网络 / 零宿主进程；实机模式见「维护者：一条命令定位断在哪一层」）
+# COMPAT-021 预设声明行级预检（代际清单 + 行投影 + exports/schema/dual 对账；agentPresets.register 激活前的快速门禁；详见 docs/COMPATIBILITY.md §7）：
+node test/preflight-preset-rows.test.mjs                                 # 六 fixture 期望全对账（4 代际 exit 0 / unknown fail-closed exit 1 / negative 必含 ERR_PACKAGE_PATH_NOT_EXPORTED）+ 本机平面真跑 + exit 3 NOT_RUN 口径
+node scripts/preflight-preset-rows.mjs --fixture test/fixtures/host-generations/decl-0.2.2 --json   # 离线单代际（fixture 用法：伪 node_modules 平面 + rows.patch/rows.legacy.yml 最小行集 + expected.json；换目录即换代际）
+node scripts/preflight-preset-rows.mjs --json                            # 真实 profile 平面（平面判定绑定 profile 宿主平面，npm 全局闭包仅 fallback；无平面 ⇒ exit 3 NOT_RUN，绝不渲染成 PASS）
+node scripts/preflight-preset-rows.mjs --explain tool-subagent-list-agents   # 单行逐代际处置解释（keep/drop/replace + 修复建议）
 # 隔离 boot（最接近真实安装路径）：
 $env:DSH_HOME="$env:TEMP\dsh-novel-test"; dsh plugin --profile web add link:<本仓库>
 dsh web --port 3100 --no-open   # 另一终端 curl http://127.0.0.1:3100/novel-writing/api/overview → 200

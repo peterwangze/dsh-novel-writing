@@ -1,0 +1,11 @@
+{
+  "fixture": "decl-0.2.1",
+  "description": "DSH 0.2.1-rc.2 声明代平面（本机 npm-global 现行代；exports 仍含 ./list-agents，主包未注册 list_agents）。行处置与 decl-0.2.0 同构；list_agents=unavailable。",
+  "expectedGeneration": "decl-0.2.1",
+  "verdict": "pass",
+  "exitCode": 0,
+  "rows": {
+    "patch": { "tool-subagent-control": "PASS", "workflow-ptc": "PASS" },
+    "legacy": { "tool-subagent-control": "PASS", "tool-subagent-list-agents": "KNOWN_DROP", "workflow-worker-thread": "KNOWN_VARIANT" }
+  }
+}

@@ -1,0 +1,99 @@
+mode: full (profile dir available)
+  schema-face host-plane: DSH_HOME | oracle: {"@deepseek-ai/cordis":"4.0.5","@deepseek-ai/cordis-plugin-include":"1.0.10","@deepseek-ai/cordis-plugin-loader":"1.0.6","js-yaml":"4.3.2"}
+    ✓ [yml] PASS                     persona                  @deepseek-ai/dsh-persona                         0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-persona\lib\index.js:23
+    ✓ [yml] PASS                     agent-instructions       @deepseek-ai/dsh-agent-instructions              0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-agent-instructions\lib\index.js:25
+    · [yml] DISABLED_INHERITED       tool-bash                @deepseek-ai/dsh-tool-bash                       - 本行 disabled=true（平台分流），本次核对未启动 | evidence=-
+    ✓ [yml] PASS                     tool-pwsh                @deepseek-ai/dsh-tool-pwsh                       0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-pwsh\lib\index.js:245
+    ✓ [yml] PASS                     tool-fs                  @deepseek-ai/dsh-tool-fs                         0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-fs\lib\index.js:1194
+    ✓ [yml] PASS                     tool-fs-search           @deepseek-ai/dsh-tool-fs-search                  0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-fs-search\lib\index.js:1218
+    ✓ [yml] PASS                     tool-jobs                @deepseek-ai/dsh-tool-jobs                       0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-jobs\lib\index.js:88
+    ✓ [yml] PASS                     skill-filesystem         @deepseek-ai/dsh-skill-filesystem                0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-skill-filesystem\lib\index.js:30
+    ✓ [yml] PASS                     tool-skill               @deepseek-ai/dsh-tool-skill                      0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-skill\lib\index.js:777
+    · [yml] NO_SCHEMA                tool-novel               dsh-novel-writing/tools                          0.5.3 该模块不导出 Config schema——本工具无法校验此行的 config（不对加载器随后如何处理它作任何断言） | evidence=-
+    ✓ [yml] PASS                     tool-goal                @deepseek-ai/dsh-tool-goal                       0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-goal\lib\index.js:115
+    · [yml] NO_SCHEMA                plan-mode                @deepseek-ai/dsh-plan-mode                       0.2.1-rc.2 该模块不导出 Config schema——本工具无法校验此行的 config（不对加载器随后如何处理它作任何断言） | evidence=-
+    · [yml] BUILTIN                  planning                 cordis:group                                     - group 内建 — 枚举 1 个子行 | evidence=-
+    ✓ [yml] PASS                     compaction-basic         @deepseek-ai/dsh-compaction-basic                0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-compaction-basic\lib\index.js:806
+    · [yml] NO_SCHEMA                command-compact          @deepseek-ai/dsh-command-compact                 0.2.1-rc.2 该模块不导出 Config schema——本工具无法校验此行的 config（不对加载器随后如何处理它作任何断言） | evidence=-
+    ✓ [yml] PASS                     tool-result-pruner       @deepseek-ai/dsh-compaction-tool-result-pruner   0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-compaction-tool-result-pruner\lib\index.js:63
+    · [yml] BUILTIN                  compaction               cordis:group                                     - group 内建 — 枚举 3 个子行 | evidence=-
+    · [yml] NO_SCHEMA                tool-subagent-control    @deepseek-ai/dsh-tool-subagent-control           0.2.1-rc.2 该模块不导出 Config schema——本工具无法校验此行的 config（不对加载器随后如何处理它作任何断言） | evidence=-
+    · [yml] GENERATION_DROPPED       tool-subagent-list-agents @deepseek-ai/dsh-tool-subagent-control/list-agents - 已知代际删除行（@deepseek-ai/dsh-tool-subagent-control/list-agents，0.2.x 源已移除本行；0.2.2+ 由 @deepseek-ai/dsh-tool-subagent-control 主包注册 list_agents） | evidence=-
+    ✓ [yml] PASS                     tool-subagent            @deepseek-ai/dsh-tool-subagent                   0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-subagent\lib\index.js:311
+    ✓ [yml] PASS                     tool-subagent-fork       @deepseek-ai/dsh-tool-subagent                   0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-subagent\lib\index.js:311
+    · [yml] DISABLED_INHERITED       tool-subagent-codex      @deepseek-ai/dsh-tool-subagent                   - 本行 disabled=true（平台分流），本次核对未启动 | evidence=-
+    · [yml] DISABLED_INHERITED       tool-subagent-claude-code @deepseek-ai/dsh-tool-subagent                   - 本行 disabled=true（平台分流），本次核对未启动 | evidence=-
+    · [yml] GENERATION_VARIANT       workflow-worker-thread   @deepseek-ai/dsh-workflow-worker-thread          - 已知代际变体行（@deepseek-ai/dsh-workflow-worker-thread，本平面已不存在；对侧源 @deepseek-ai/dsh-workflow-ptc 由双源核对覆盖） | evidence=-
+    ✓ [yml] PASS                     tool-workflow            @deepseek-ai/dsh-tool-workflow                   0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-workflow\lib\index.js:66
+    ✓ [yml] PASS                     tool-ralph               @deepseek-ai/dsh-tool-ralph                      0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-ralph\lib\index.js:18
+    · [yml] BUILTIN                  delegation               cordis:group                                     - group 内建 — 枚举 9 个子行 | evidence=-
+    ✓ [yml] PASS                     tool-ask-user            @deepseek-ai/dsh-tool-ask-user                   0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-ask-user\lib\index.js:211
+    ✓ [yml] PASS                     tool-todo                @deepseek-ai/dsh-tool-todo                       0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-todo\lib\index.js:20
+    ✓ [yml] PASS                     tool-web                 @deepseek-ai/dsh-tool-web                        0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-web\lib\index.js:845
+    ✓ [patch] PASS                     persona                  @deepseek-ai/dsh-persona                         0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-persona\lib\index.js:23
+    ✓ [patch] PASS                     agent-instructions       @deepseek-ai/dsh-agent-instructions              0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-agent-instructions\lib\index.js:25
+    · [patch] DISABLED_INHERITED       tool-bash                @deepseek-ai/dsh-tool-bash                       - 本行 disabled=true（平台分流），本次核对未启动 | evidence=-
+    ✓ [patch] PASS                     tool-pwsh                @deepseek-ai/dsh-tool-pwsh                       0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-pwsh\lib\index.js:245
+    ✓ [patch] PASS                     tool-fs                  @deepseek-ai/dsh-tool-fs                         0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-fs\lib\index.js:1194
+    ✓ [patch] PASS                     tool-fs-search           @deepseek-ai/dsh-tool-fs-search                  0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-fs-search\lib\index.js:1218
+    ✓ [patch] PASS                     tool-jobs                @deepseek-ai/dsh-tool-jobs                       0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-jobs\lib\index.js:88
+    ✓ [patch] PASS                     skill-filesystem         @deepseek-ai/dsh-skill-filesystem                0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-skill-filesystem\lib\index.js:30
+    ✓ [patch] PASS                     tool-skill               @deepseek-ai/dsh-tool-skill                      0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-skill\lib\index.js:777
+    · [patch] NO_SCHEMA                tool-novel               dsh-novel-writing/tools                          0.5.3 该模块不导出 Config schema——本工具无法校验此行的 config（不对加载器随后如何处理它作任何断言） | evidence=-
+    ✓ [patch] PASS                     tool-goal                @deepseek-ai/dsh-tool-goal                       0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-goal\lib\index.js:115
+    · [patch] NO_SCHEMA                plan-mode                @deepseek-ai/dsh-plan-mode                       0.2.1-rc.2 该模块不导出 Config schema——本工具无法校验此行的 config（不对加载器随后如何处理它作任何断言） | evidence=-
+    · [patch] BUILTIN                  planning                 cordis:group                                     - group 内建 — 枚举 1 个子行 | evidence=-
+    ✓ [patch] PASS                     compaction-basic         @deepseek-ai/dsh-compaction-basic                0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-compaction-basic\lib\index.js:806
+    · [patch] NO_SCHEMA                command-compact          @deepseek-ai/dsh-command-compact                 0.2.1-rc.2 该模块不导出 Config schema——本工具无法校验此行的 config（不对加载器随后如何处理它作任何断言） | evidence=-
+    ✓ [patch] PASS                     tool-result-pruner       @deepseek-ai/dsh-compaction-tool-result-pruner   0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-compaction-tool-result-pruner\lib\index.js:63
+    · [patch] BUILTIN                  compaction               cordis:group                                     - group 内建 — 枚举 3 个子行 | evidence=-
+    · [patch] NO_SCHEMA                tool-subagent-control    @deepseek-ai/dsh-tool-subagent-control           0.2.1-rc.2 该模块不导出 Config schema——本工具无法校验此行的 config（不对加载器随后如何处理它作任何断言） | evidence=-
+    ✓ [patch] PASS                     tool-subagent            @deepseek-ai/dsh-tool-subagent                   0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-subagent\lib\index.js:311
+    ✓ [patch] PASS                     tool-subagent-fork       @deepseek-ai/dsh-tool-subagent                   0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-subagent\lib\index.js:311
+    · [patch] DISABLED_INHERITED       tool-subagent-codex      @deepseek-ai/dsh-tool-subagent                   - 本行 disabled=true（平台分流），本次核对未启动 | evidence=-
+    · [patch] DISABLED_INHERITED       tool-subagent-claude-code @deepseek-ai/dsh-tool-subagent                   - 本行 disabled=true（平台分流），本次核对未启动 | evidence=-
+    ✓ [patch] PASS                     workflow-ptc             @deepseek-ai/dsh-workflow-ptc                    0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-workflow-ptc\lib\index.js:597
+    ✓ [patch] PASS                     tool-workflow            @deepseek-ai/dsh-tool-workflow                   0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-workflow\lib\index.js:66
+    ✓ [patch] PASS                     tool-ralph               @deepseek-ai/dsh-tool-ralph                      0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-ralph\lib\index.js:18
+    · [patch] BUILTIN                  delegation               cordis:group                                     - group 内建 — 枚举 8 个子行 | evidence=-
+    ✓ [patch] PASS                     tool-ask-user            @deepseek-ai/dsh-tool-ask-user                   0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-ask-user\lib\index.js:211
+    ✓ [patch] PASS                     tool-todo                @deepseek-ai/dsh-tool-todo                       0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-todo\lib\index.js:20
+    ✓ [patch] PASS                     tool-web                 @deepseek-ai/dsh-tool-web                        0.2.1-rc.2 evidence=C:\Users\peter\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-web\lib\index.js:845
+ok   schema-face: 预设行 × 已装宿主 Config schema PASS（启用行 47；与 schema 比对 37；未校验 22 项已逐行披露）
+ok   agent.cordis.yml parses with loader dialect (js-yaml + entryListSchema)
+ok   row 1 (persona → @deepseek-ai/dsh-persona) resolves[profile-resolve] → ~\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-persona\lib\index.js
+ok   row 2 (agent-instructions → @deepseek-ai/dsh-agent-instructions) resolves[profile-resolve] → ~\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-agent-instructions\lib\index.js
+ok   row 3 (tool-bash → @deepseek-ai/dsh-tool-bash) resolves[profile-resolve] → ~\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-bash\lib\index.js
+ok   row 4 (tool-pwsh → @deepseek-ai/dsh-tool-pwsh) resolves[profile-resolve] → ~\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-pwsh\lib\index.js
+ok   row 5 (tool-fs → @deepseek-ai/dsh-tool-fs) resolves[profile-resolve] → ~\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-fs\lib\index.js
+ok   row 6 (tool-fs-search → @deepseek-ai/dsh-tool-fs-search) resolves[profile-resolve] → ~\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-fs-search\lib\index.js
+ok   row 7 (tool-jobs → @deepseek-ai/dsh-tool-jobs) resolves[profile-resolve] → ~\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-jobs\lib\index.js
+ok   row 8 (skill-filesystem → @deepseek-ai/dsh-skill-filesystem) resolves[profile-resolve] → ~\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-skill-filesystem\lib\index.js
+ok   row 9 (tool-skill → @deepseek-ai/dsh-tool-skill) resolves[profile-resolve] → ~\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-skill\lib\index.js
+ok   row 10 (tool-novel → dsh-novel-writing/tools) exports → ./lib/tools.js
+ok   row 11 (tool-goal → @deepseek-ai/dsh-tool-goal) resolves[profile-resolve] → ~\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-goal\lib\index.js
+ok   row 12 / row 1 (plan-mode → @deepseek-ai/dsh-plan-mode) resolves[profile-resolve] → ~\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-plan-mode\lib\index.js
+ok   row 13 / row 1 (compaction-basic → @deepseek-ai/dsh-compaction-basic) resolves[profile-resolve] → ~\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-compaction-basic\lib\index.js
+ok   row 13 / row 2 (command-compact → @deepseek-ai/dsh-command-compact) resolves[profile-resolve] → ~\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-command-compact\lib\index.js
+ok   row 13 / row 3 (tool-result-pruner → @deepseek-ai/dsh-compaction-tool-result-pruner) resolves[profile-resolve] → ~\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-compaction-tool-result-pruner\lib\index.js
+ok   row 14 / row 1 (tool-subagent-control → @deepseek-ai/dsh-tool-subagent-control) resolves[profile-resolve] → ~\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-subagent-control\lib\index.js
+ok   row 14 / row 2 (tool-subagent-list-agents → @deepseek-ai/dsh-tool-subagent-control/list-agents) [generation-dropped：0.2.x 源已移除本行；0.2.2 由主包提供 list_agents；本工具跳过 legacy-only 行]
+ok   row 14 / row 3 (tool-subagent → @deepseek-ai/dsh-tool-subagent) resolves[profile-resolve] → ~\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-subagent\lib\index.js
+ok   row 14 / row 4 (tool-subagent-fork → @deepseek-ai/dsh-tool-subagent) resolves[profile-resolve] → ~\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-subagent\lib\index.js
+ok   row 14 / row 5 (tool-subagent-codex → @deepseek-ai/dsh-tool-subagent) [disabled]
+ok   row 14 / row 6 (tool-subagent-claude-code → @deepseek-ai/dsh-tool-subagent) [disabled]
+ok   row 14 / row 7 (workflow-worker-thread → @deepseek-ai/dsh-workflow-worker-thread) [generation-variant：本平面已无此包；对侧 @deepseek-ai/dsh-workflow-ptc 在场，双源核对覆盖]
+ok   row 14 / row 8 (tool-workflow → @deepseek-ai/dsh-tool-workflow) resolves[profile-resolve] → ~\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-workflow\lib\index.js
+ok   row 14 / row 9 (tool-ralph → @deepseek-ai/dsh-tool-ralph) resolves[profile-resolve] → ~\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-ralph\lib\index.js
+ok   row 15 (tool-ask-user → @deepseek-ai/dsh-tool-ask-user) resolves[profile-resolve] → ~\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-ask-user\lib\index.js
+ok   row 16 (tool-todo → @deepseek-ai/dsh-tool-todo) resolves[profile-resolve] → ~\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-todo\lib\index.js
+ok   row 17 (tool-web → @deepseek-ai/dsh-tool-web) resolves[profile-resolve] → ~\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules\@deepseek-ai\dsh-tool-web\lib\index.js
+ok   cordis.patch.yml 未声明 legacy-only list-agents 行（0.2.x 源正确）
+ok   agent.cordis.yml 保留恰 1 行 legacy-only list-agents（0.1.x 源）
+ok   legacy-only list-agents 行 config 为空/未声明
+ok   preset.yml exists
+ok   preset.yml carries name/description
+ok   skills indexed: 29/29
+ok   customSkillDirs expression present
+
+PRESET VALIDATION PASSED（schema-face: PASS）

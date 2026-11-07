@@ -1,0 +1,85 @@
+契约行区间核验（scripts/verify-contract-anchors.mjs，只读；启发式判据见文件头）
+
+| # | item | face | file | 声明区间 | 实测起点 | 实测终点 | 命中 | 主构造行号候选 | 判定 |
+|---|------|------|------|----------|----------|----------|------|----------------|------|
+| 1 | 1.1 | 1 | lib/host-boundary.js | L18 | import { Service } from '@deepseek-ai/cordis' | import { Service } from '@deepseek-ai/cordis' | 3 |  | OK |
+| 2 | 1.2 | 1 | lib/host-boundary.js | L17 | import z from '@deepseek-ai/schemastery' | import z from '@deepseek-ai/schemastery' | 3 |  | OK |
+| 3 | 1.5 | 1 | lib/index.js | L40 | export const inject = [...hostInject] // F6 副本：宿主/消费方就地改写（push/s | export const inject = [...hostInject] // F6 副本：宿 | 2 |  | OK |
+| 4 | 1.5 | 1 | lib/host-boundary.js | L53 | export const hostInject = ['settings'] | export const hostInject = ['settings'] | 3 |  | OK |
+| 5 | 1.7 | 1 | lib/index.js | L105 | super(ctx, SERVICE_NAME) | super(ctx, SERVICE_NAME) | 2 |  | OK |
+| 6 | 1.7 | 1 | lib/host-boundary.js | L45 | export const SERVICE_NAME = 'novel-writing' | export const SERVICE_NAME = 'novel-writing' | 3 |  | OK |
+| 7 | 1.8 | 1 | lib/host-boundary.js | L165 | export function getWebServer(ctx) { | export function getWebServer(ctx) { | 4 |  | OK |
+| 8 | 1.8 | 1 | lib/host-boundary.js | L183 | export function registerRoute(webServer, route) { | export function registerRoute(webServer, route)  | 3 |  | OK |
+| 9 | 1.9 | 1 | lib/host-boundary.js | L188 | export function onLifecycle(ctx, fn, label) { | export function onLifecycle(ctx, fn, label) { | 3 |  | OK |
+| 10 | 1.9 | 1 | lib/index.js | L1626 | service.ctx = ctx | service.ctx = ctx | 1 |  | OK |
+| 11 | 1.10 | 1 | lib/host-boundary.js | L194 | export function loggerOf(ctx) { | export function loggerOf(ctx) { | 3 |  | OK |
+| 12 | 1.10 | 1 | lib/host-boundary.js | L199 | export function logWarn(ctx, message) { | export function logWarn(ctx, message) { | 2 |  | OK |
+| 13 | 1.10 | 1 | lib/host-boundary.js | L204 | export function emitChanged(ctx, payload) { | export function emitChanged(ctx, payload) { | 4 |  | OK |
+| 14 | 1.11 | 1 | lib/tools.js | L17 | import { defineTool } from '@deepseek-ai/dsh-tools' | import { defineTool } from '@deepseek-ai/dsh-too | 3 |  | OK |
+| 15 | 1.11 | 1 | lib/tools.js | L22 | export const inject = ['tools'] | export const inject = ['tools'] | 2 |  | OK |
+| 16 | 1.11 | 1 | lib/tools.js | L46 | ctx.tools.register(defineTool({ | ctx.tools.register(defineTool({ | 5 |  | OK |
+| 17 | 2.1 | 2 | lib/client.js | L92-94 | window.__ModuleLoader__.load({ | factory: (require) => { | 8 |  | OK |
+| 18 | 2.2 | 2 | lib/client.js | L97 | let react = require('react') | let react = require('react') | 2 |  | OK |
+| 19 | 2.3 | 2 | lib/client.js | L5954 | const inject = ['slots'] | const inject = ['slots'] | 2 |  | OK |
+| 20 | 2.4 | 2 | lib/client.js | L915 | const legacyApi = connection !== undefined && connection !== nul | const legacyApi = connection !== undefined && co | 3 |  | OK |
+| 21 | 2.5 | 2 | lib/client.js | L937-947 | get settings() { | }, | 6 |  | OK |
+| 22 | 2.6 | 2 | lib/client.js | L948-963 | get sessions() { | }, | 8 |  | OK |
+| 23 | 2.7 | 2 | lib/client.js | L964-991 | get workspace() { | }, | 11 |  | OK |
+| 24 | 2.8 | 2 | lib/client.js | L992-1011 | get host() { | }, | 7 |  | WARN：起点未直接命中关键词（无声明式主构造，仅提示） |
+| 25 | 2.9 | 2 | lib/client.js | L1012-1020 | get agentPresets() { | }, | 4 |  | OK |
+| 26 | 2.10 | 2 | lib/client.js | L1784-1890 | function makeSessionsHookReactive(ctx) { | } | 6 |  | OK |
+| 27 | 2.11 | 2 | lib/client.js | L1951-1976 | open(sessionId) { | }, | 5 |  | OK |
+| 28 | 2.12 | 2 | lib/client.js | L5984-5991 | const offServiceEvent = typeof ctx.on === 'function' | : null | 9 |  | OK |
+| 29 | 2.13 | 2 | lib/client.js | L6021-6053 | ctx.slots.inject('settings.section', () => ctx.slots.register( | )) | 18 |  | OK |
+| 30 | 2.14 | 2 | lib/client.js | L1041-1052 | function sessionsCurrentOf(s) { | } | 5 |  | OK |
+| 31 | 3.1 | 3 | lib/client.js | L1278-1286 | /** 找到会话根容器：data-phase 元素中排除输入框、取含子元素者；优先 phase=active；无会话返回 nul | } | 11 |  | OK |
+| 32 | 3.2 | 3 | lib/client.js | L1367-1369 | const header = root.children[0] | if (header === undefined || viewArea === undefin | 5 |  | OK |
+| 33 | 3.2 | 3 | lib/client.js | L1456-1474 | // 会把引擎永久卡在旧锚点（重挂载后 live viewArea 永不接受挤压）。重锚定与 | this.snapshotViewArea(viewArea) | 4 |  | OK |
+| 34 | 3.3 | 3 | lib/client.js | L1516-1530 | applyMargin() { | viewArea.style.width = this.chatW + 'px' | 4 |  | WARN：起点未直接命中关键词（无声明式主构造，仅提示） |
+| 35 | 3.3 | 3 | lib/client.js | L1581-1590 | applyDrawer() { | }, | 7 |  | WARN：起点未直接命中关键词（无声明式主构造，仅提示） |
+| 36 | 3.3 | 3 | lib/client.js | L1534-1551 | *  恢复保证的事实源——snapshot 与 restore 都是单点（open / syncAnchor 换根共用）。 */ | this.savedBackground = viewArea.style.background | 9 |  | WARN：起点未直接命中关键词（无声明式主构造，仅提示） |
+| 37 | 3.3 | 3 | lib/client.js | L1557-1573 | restoreViewArea() { | this.viewArea.style.background = this.savedBackg | 9 |  | WARN：起点未直接命中关键词（无声明式主构造，仅提示） |
+| 38 | 3.3 | 3 | lib/client.js | L5140-5152 | snap.drawerOpen === false ? el('button', { | ) | 4 |  | WARN：起点未直接命中关键词（无声明式主构造，仅提示） |
+| 39 | 3.4 | 3 | lib/client.js | L5456-5468 | // ── 视觉：单 <style id="novel-writing-style">（.nv-* 类；经 --nv-* 语义层 | '.nv-drawer-caret{flex:none;display:inline-flex; | 12 |  | WARN：起点未直接命中关键词（无声明式主构造，仅提示） |
+| 40 | 3.4 | 3 | lib/client.js | L1096-1100 | accent: 'var(--nv-accent,#4f8ef7)', | bg: 'var(--nv-bg,#0b0e14)', | 3 |  | OK |
+| 41 | 3.4 | 3 | lib/client.js | L5462-5463 | '.nv-drawer{margin:2px 0 8px;width:100%;box-sizing:border-box}', | // 层次：分隔线 l1→l2 加粗；区块底部留白经 .nv-drawer margin-bot | 1 |  | WARN：终点为注释 |
+| 42 | 3.4 | 3 | lib/client.js | L5502-5506 | // 分栏工作区（容器 zIndex 900 < 对话框 1000；对话分隔线 901） | // UX-027（用户放大「这里为何是两根线」）：外框右缘与聊天窗拖线重复（相距仅 ~2px， | 1 |  | WARN：起点未直接命中关键词（无声明式主构造，仅提示） + 终点为注释 |
+| 43 | 3.5 | 3 | lib/client.js | L1353-1363 | // 跨插件互操作：非协议引擎的关闭按钮让位 + 共享占用声明（dsh-worktable 兼容） | } | 6 |  | OK |
+| 44 | 3.6 | 3 | lib/client.js | L1409-1433 | if (this.drawerOpen === true) this.applyDrawer() | if (!sameMargin(this.viewArea.style.marginLeft,  | 5 |  | WARN：起点未直接命中关键词（无声明式主构造，仅提示） |
+| 45 | 3.6 | 3 | lib/client.js | L3827-3843 | try { | } | 6 |  | WARN：起点未直接命中关键词（无声明式主构造，仅提示） |
+| 46 | 3.7 | 3 | lib/client.js | L1135 | const SPLIT_PERSIST_KEY = 'dsh.novel.split.v1' | const SPLIT_PERSIST_KEY = 'dsh.novel.split.v1' | 3 |  | OK |
+| 47 | 3.7 | 3 | lib/client.js | L1137 | const DEFAULTS_PERSIST_KEY = 'dsh.novel.defaults.v1' | const DEFAULTS_PERSIST_KEY = 'dsh.novel.defaults | 3 |  | OK |
+| 48 | 3.7 | 3 | lib/client.js | L1245 | const ORDER_PERSIST_KEY = 'dsh.novel.order.v1' | const ORDER_PERSIST_KEY = 'dsh.novel.order.v1' | 3 |  | OK |
+| 49 | 3.7 | 3 | lib/client.js | L1187 | const DRAWER_PERSIST_KEY = 'dsh.novel.drawer.v1' | const DRAWER_PERSIST_KEY = 'dsh.novel.drawer.v1' | 3 |  | OK |
+| 50 | 3.8 | 3 | lib/client.js | L3418-3429 | function findSidebarEl() { | } | 9 | 3418,3813,3828 | OK |
+| 51 | 4.1 | 4 | install.ps1 | L156-158 | # ── 布局检测（步骤 2/3 按此分流）：profiles\<Profile>\package.json 存在 = dsh  | $newLayout = Test-Path (Join-Path $profileDir 'p | 3 |  | OK |
+| 52 | 4.1 | 4 | install.sh | L72-81 | # 布局检测（步骤按此分流）：profiles/<Profile>/package.json 存在 = dsh >=0.1.5  | echo "==> 检测到 dsh 旧布局（<=0.1.2 全局 node_modules）：接 | 5 |  | OK |
+| 53 | 4.2 | 4 | install.ps1 | L221-272 | # ── 2. 链接 / 拷贝到 node_modules（新布局 = profile 私有；旧布局 = 全局）──────── |  | 3 |  | WARN：终点为空行 |
+| 54 | 4.2 | 4 | install.sh | L147-164 | DST="$NM/$PLUGIN" | # 注册 profile package.json（新布局官方通道：dependencies + | 2 |  | WARN：起点未直接命中关键词（无声明式主构造，仅提示） + 终点为注释 |
+| 55 | 4.3 | 4 | install.ps1 | L273-333 | # ── 3. 注册插件（新布局：profile package.json dependencies + bundles，官方通 |  | 10 |  | WARN：终点为空行 |
+| 56 | 4.3 | 4 | install.sh | L165-276 | PKG_REG=0 |  | 7 |  | WARN：起点未直接命中关键词（无声明式主构造，仅提示） + 终点为空行 |
+| 57 | 4.4 | 4 | install.ps1 | L334-478 | # ── 3c. cordis.patch.yml 宿主行（按宿主代系分流）────────────────────────── |  | 5 |  | WARN：终点为空行 |
+| 58 | 4.4 | 4 | install.ps1 | L277-360 | $depValue = "file:$srcNorm" | $lines = ($content -replace "`r`n", "`n").Split( | 5 |  | WARN：起点未直接命中关键词（无声明式主构造，仅提示） |
+| 59 | 4.4 | 4 | install.ps1 | L24-225 | #      0.2.0+：跳过（.agent-presets 目录机制已废弃——预设组合由 bundle patch 声明行承 | } else { | 5 |  | OK |
+| 60 | 4.5 | 4 | install.ps1 | L479-545 | # ── 4. agent 预设（按宿主代系分流）─────────────────────────────────────── | Write-Host '' | 9 |  | OK |
+| 61 | 4.5 | 4 | install.sh | L361-418 | # ── agent 预设（按宿主代系分流）────────────────────────────────────────── | echo '' | 9 |  | OK |
+| 62 | 4.5 | 4 | lib/index.js | L195-226 | ensurePreset() { | } | 9 |  | OK |
+| 63 | 4.6 | 4 | package.json | L17-29 | "dsh": { | }, | 11 |  | WARN：起点未直接命中关键词（无声明式主构造，仅提示） |
+| 64 | 4.7 | 4 | install.ps1 | L160-219 | # ── 宿主代系探测（BUG-011；能力检测，非版本号字符串）────────────────────────── | } | 9 |  | WARN：起点未直接命中关键词（无声明式主构造，仅提示） |
+| 65 | 4.7 | 4 | install.sh | L84-146 | # 宿主代系探测（BUG-011；能力检测，非版本号字符串）──────────────────────────── | fi | 9 |  | WARN：起点未直接命中关键词（无声明式主构造，仅提示） |
+| 66 | 5.1 | 5 | agent-presets/novel-writing/preset.yml | L1-2 | name: 小说写作工作流 | description: AI 辅助小说创作工作流（DSH 版）：从平台调研、竞品分析、题材与作 | 1 |  | WARN：起点未直接命中关键词（无声明式主构造，仅提示） |
+| 67 | 5.2 | 5 | agent-presets/novel-writing/agent.cordis.yml | L16-226 | - id: persona | searchTimeoutMs: 60000 | 31 |  | OK |
+| 68 | 5.3 | 5 | agent-presets/novel-writing/agent.cordis.yml | L58 | disabled: !!js process.platform === 'win32' | disabled: !!js process.platform === 'win32' | 3 |  | OK |
+| 69 | 5.3 | 5 | agent-presets/novel-writing/agent.cordis.yml | L62 | disabled: !!js process.platform !== 'win32' | disabled: !!js process.platform !== 'win32' | 3 |  | OK |
+| 70 | 5.3 | 5 | agent-presets/novel-writing/agent.cordis.yml | L87 | - !!js "process.getBuiltinModule('node:url').fileURLToPath(new U | - !!js "process.getBuiltinModule('node:url').fil | 6 |  | OK |
+| 71 | 5.4 | 5 | agent-presets/novel-writing/agent.cordis.yml | L77-81 | name: '@deepseek-ai/dsh-tool-jobs' | # 本预设自带的 26+ 个工作流 Skill 目录（随预设目录拷贝/升级），加 tool-sk | 2 |  | WARN：起点未直接命中关键词（无声明式主构造，仅提示） + 终点为注释 |
+| 72 | 5.5 | 5 | install.ps1 | L479-497 | # ── 4. agent 预设（按宿主代系分流）─────────────────────────────────────── |  | 4 |  | WARN：终点为空行 |
+| 73 | 5.5 | 5 | install.sh | L361-380 | # ── agent 预设（按宿主代系分流）────────────────────────────────────────── |  | 4 |  | WARN：终点为空行 |
+| 74 | 5.5 | 5 | lib/index.js | L195-226 | ensurePreset() { | } | 4 |  | OK |
+| 75 | 5.6 | 5 | agent-presets/novel-writing/agent.cordis.yml | L16 | - id: persona | - id: persona | 1 |  | OK |
+| 76 | 5.7 | 5 | cordis.patch.yml | L28-35 | - id: preset-novel-writing | plugins: | 10 |  | OK |
+| 77 | 6.1 | 6 | package.json | L41-47 | "peerDependencies": { | } | 7 |  | OK |
+| 78 | 6.2 | 6 | package.json | L8-10 | "engines": { | }, | 2 |  | OK |
+| 79 | 6.4 | 6 | .github/workflows/ci.yml | L105-146 | # 宿主逻辑冒烟需要 @deepseek-ai 闭包的最小子集。schemastery 是无下游依赖的 | printf '{ "name": "@deepseek-ai/dsh-tools", "ver | 8 |  | OK |
+
+共 79 段；FAIL = 0；WARN = 24
