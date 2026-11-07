@@ -106,7 +106,10 @@ function parseArgs(argv) {
   if (opts.fixture !== null && !existsSync(join(opts.fixture, 'node_modules'))) {
     die(`--fixture 目录缺少伪 node_modules 平面：${opts.fixture}`)
   }
-  if (opts.globalRoot !== null && !existsSync(join(opts.globalRoot, '@deepseek-ai'))) {
+  // --global-root 闭包存在性校验仅行级（真平面）模式需要——--surfaces 是零宿主平面依赖的独立维度
+  // （main() 先分发 surfacesMode，不读 globalRoot）⇒ surfaces 模式跳过该诊断注入的校验
+  // （CLEAN-014 / R2 N1：与 F3 同族——surfaces fail-fast 仅对 surfaces 自身输入）。
+  if (opts.surfaces !== true && opts.globalRoot !== null && !existsSync(join(opts.globalRoot, '@deepseek-ai'))) {
     die(`--global-root 目录缺少 @deepseek-ai 闭包：${opts.globalRoot}`)
   }
   // 离线模式：fixture 自带最小行集（rows.patch.yml / rows.legacy.yml）；显式 --patch/--legacy 仍可覆盖

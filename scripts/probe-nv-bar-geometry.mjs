@@ -44,7 +44,14 @@ const REPO_ROOT = join(HERE, '..')
 const CLIENT_SRC = join(REPO_ROOT, 'lib', 'client.js')
 const PROFILE_NAME = 'ux060probe'
 const VIEWPORTS = [{ name: '1078x593', width: 1078, height: 593 }, { name: '1400x900', width: 1400, height: 900 }]
-/** 参考视口（非判据，仅观测）：宽栏下短提示应回到既有标题栏 chip 形态（零变化实证）。 */
+/**
+ * 参考视口（非判据，仅观测）：宽栏下短提示保持标题栏 chip 形态（「短提示不劣化/零变化」实证）。
+ * CLEAN-014（裁决出处 REVIEW-COMPAT-023-R1 §3 C5 = 裁决 A「判据过时，非产品回归」）：chip/row 两形态
+ * 均为 C5 判据形态（形态感知双臂，分臂断言）——形态演进原因：UX-061 icon rail + UX-063 全屏工作台释放
+ * 标题栏横向空间后，1400×900 判据视口常态渲染栏内 chip（实测 chip∩横幅不相交 ⇒ 不升级流式行），
+ * 1078×593 窄栏仍为栏下 row；chip/row 分界点归设计所有（NOTICE_INLINE_MAX + SplitWorkspace measure）。
+ * 本参考位与判据的差别只在「零变化观测」（宽栏同形态回归对照），不再暗示 chip 仅为参考形态。
+ */
 const WIDE_VIEWPORT = { name: '1800x900', width: 1800, height: 900 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const sha256 = (text) => createHash('sha256').update(text).digest('hex')
@@ -233,13 +240,29 @@ const MEASURE_JS = `(() => {
     noticeTitleAttr: note === null ? null : (note.getAttribute('title') || ''),
     noticeOverflow: note === null ? null : { scrollWidth: note.scrollWidth, clientWidth: note.clientWidth, scrollHeight: note.scrollHeight, clientHeight: note.clientHeight, textOverflow: getComputedStyle(note).textOverflow, whiteSpace: getComputedStyle(note).whiteSpace, position: getComputedStyle(note).position },
     noticeForm: note === null ? null : (note.getAttribute('data-form') || null),
-    // 单行性度量：文本节点自身高度 / 行高（多行块必然 > 1 行）
+    // 形态标记（CLEAN-014 / REVIEW-COMPAT-023-R1 §3 C5 裁决 A——两形态实测可判特征，双结构信号交叉）：
+    //   chip = 标题栏内 .nv-bar-note（类名 nv-bar-note ∧ 无 .nv-notice-text 文本子元素；几何旁证 w < barW/2，
+    //          实测 77 ≪ 559 = 1118/2）；非 chip = 标题栏下 .nv-notice 流式面（类名 nv-notice ∧ 有
+    //          .nv-notice-text 子元素；w = barW 全宽）⇒ 取 data-form（短提示 'row'；长告警 'block'——非 C5
+    //          消费面）。两信号冲突 → 'ambiguous'（fail-closed：C5 双臂均不过）。
+    noticeShape: (() => {
+      if (note === null) return null
+      const chipCls = note.classList.contains('nv-bar-note')
+      const hasTextSpan = note.querySelector('.nv-notice-text') !== null
+      if (chipCls === true && hasTextSpan === false) return 'chip'
+      if (chipCls === false && hasTextSpan === true) return note.getAttribute('data-form') || 'row'
+      return 'ambiguous'
+    })(),
+    // 单行性度量：文本节点自身高度 / 行高（多行块必然 > 1 行）。
+    // CLEAN-014：补 whiteSpace（chip 臂判据——.nv-bar-note CSS nowrap ⇒ 构造性单行；实测 chip='nowrap'、
+    // row 的 .nv-notice-text='pre-wrap'）；line-height 不可算（chip 未声明 ⇒ computed 'normal'）时
+    // lh/lines = null = 测量事实，不再视为测量失败——单行性由所在形态的对应臂背书。
     noticeTextLine: (() => {
       if (note === null) return null
       const span = note.querySelector('.nv-notice-text') ?? note
       const cs = getComputedStyle(span)
       const lh = cs.lineHeight === 'normal' ? null : parseFloat(cs.lineHeight)
-      return { height: Math.round(span.getBoundingClientRect().height), lineHeight: lh, lines: lh === null ? null : Math.round(span.getBoundingClientRect().height / lh) }
+      return { height: Math.round(span.getBoundingClientRect().height), lineHeight: lh, lines: lh === null ? null : Math.round(span.getBoundingClientRect().height / lh), whiteSpace: cs.whiteSpace }
     })(),
     noticeInsideBar: note === null || bar === null ? null : bar.contains(note),
     main: rectOf(document.querySelector('.nv-main')),
@@ -556,7 +579,7 @@ function main() {
             suffixOk: typeof m.noticeText === 'string' && m.noticeText.endsWith(errHint),
             noticeTitleAttrLen: m.noticeTitleAttr === null ? null : m.noticeTitleAttr.length,
             overflow: m.noticeOverflow, truncated, insideBar: m.noticeInsideBar,
-            noticeForm: m.noticeForm, noticeTextLine: m.noticeTextLine,
+            noticeForm: m.noticeForm, noticeShape: m.noticeShape, noticeTextLine: m.noticeTextLine,
             intersections: inter, intersectionSum: interSum,
             contentAnchors: { chrow: m.chrow, wfrow: m.wfrow, main: m.main }, belowContent,
             bannerHidden: m.bannerHidden, viewportActual: m.viewport, screenshot: shot, barEls,
@@ -579,7 +602,9 @@ function main() {
             await cdp.send('Fetch.disable')
           }
         }
-        // 参考视口（非判据）：宽栏下短提示应回到标题栏 chip 形态（"短提示不劣化/零变化"的实证）。
+        // 参考视口（非判据，仅零变化观测）：宽栏下短提示保持标题栏 chip 形态。CLEAN-014 起 chip 已是
+        // C5 判据形态之一（1400×900 判据视口常态 chip——UX-061/063 释放栏宽所致，见 C5 双臂注释）；
+        // 本参考位仍非判据，其价值 = 宽栏「短提示不劣化/零变化」对照，与两判据视口的分臂断言互补。
         // 关键：**先把视口切到宽栏再触发新短提示**——形态裁决按当前几何实测（先窄后宽会让闩锁保持，
         // 测不到宽栏形态）。
         await setViewport(WIDE_VIEWPORT)
@@ -615,10 +640,26 @@ function main() {
         verdict('C1-full-text-in-app', '长告警全文在应用内可读（流式面承载完整文本）——两视口', false, 'S1 未测得（未触发长 err 告警）')
       }
       if (shortRecs.length > 0) {
-        verdict('C5-short-compact', '短 ok 提示保持紧凑（恰好单行：文本行数 = 1 且总高 ≤ 32px；无截断；交集 = ∅）——两视口',
-          shortRecs.every((r) => r.notice !== null && r.notice.h <= 32 && r.noticeTextLine !== null && r.noticeTextLine.lines === 1
-            && r.intersectionSum === 0 && r.truncated === false && r.textMatches === true),
-          shortRecs.map((r) => r.viewport + ': h=' + (r.notice === null ? null : r.notice.h) + ' lines=' + (r.noticeTextLine === null ? null : r.noticeTextLine.lines) + ' w=' + (r.notice === null ? null : r.notice.w) + ' barW=' + r.bar.w + ' form=' + r.noticeForm + ' sum=' + r.intersectionSum + ' truncated=' + r.truncated).join(' | '))
+        // C5 形态感知双臂（CLEAN-014；裁决出处 REVIEW-COMPAT-023-R1 §3 C5 = 裁决 A「判据过时，非产品回归」）。
+        // 形态演进原因：UX-061 icon rail + UX-063 全屏工作台释放标题栏横向空间 ⇒ 1400×900 判据视口常态
+        // 渲染栏内 chip（UX-060 设计形态），1078×593 窄栏仍为栏下 row——两形态都是判据，只是臂不同：
+        //   chip 臂（noticeShape='chip'）：whiteSpace nowrap（CSS 构造性单行）∧ h ≤ 32 ∧ 交集 ∅ ∧ 无截断
+        //     ∧ 文本逐字匹配——chip 未声明 line-height ⇒ computed 'normal' ⇒ lh/lines=null 为测量事实，
+        //     不再要求 lines===1（旧判据在 chip 形态必红 = R1 F1 移交本任务）；
+        //   row 臂（noticeShape='row'）：文本行数 = 1（.nv-notice-text line-height 16px 可算）∧ h ≤ 32
+        //     ∧ 其余同 chip 臂；ambiguous（形态信号冲突）⇒ 双臂均不过（fail-closed）。
+        // 总谓词 = 每条记录按其 form 过对应臂；chip/row 分界点归设计所有（NOTICE_INLINE_MAX +
+        // SplitWorkspace measure——本探针测形态不裁形态）。
+        const c5Common = (r) => r.notice !== null && r.notice.h <= 32 && r.intersectionSum === 0 && r.truncated === false && r.textMatches === true
+        const c5Chip = (r) => r.noticeShape === 'chip' && r.noticeTextLine !== null && r.noticeTextLine.whiteSpace === 'nowrap' && c5Common(r)
+        const c5Row = (r) => r.noticeShape === 'row' && r.noticeTextLine !== null && r.noticeTextLine.lines === 1 && c5Common(r)
+        const c5Pass = (r) => (r.noticeShape === 'chip' ? c5Chip(r) : c5Row(r))
+        const chipN = shortRecs.filter((r) => r.noticeShape === 'chip').length
+        const rowN = shortRecs.filter((r) => r.noticeShape === 'row').length
+        verdict('C5-short-compact', '短 ok 提示保持紧凑（形态感知双臂：chip = 栏内 nowrap 构造性单行；row = 文本行数 1；两臂均 h≤32 ∧ 交集 ∅ ∧ 无截断 ∧ 文本逐字匹配）——两判据视口（chip/row 分界归设计所有）',
+          shortRecs.every(c5Pass),
+          shortRecs.map((r) => r.viewport + ': form=' + r.noticeShape + ' h=' + (r.notice === null ? null : r.notice.h) + ' w=' + (r.notice === null ? null : r.notice.w) + ' lh=' + (r.noticeTextLine === null ? null : r.noticeTextLine.lineHeight) + ' lines=' + (r.noticeTextLine === null ? null : r.noticeTextLine.lines) + ' ws=' + (r.noticeTextLine === null ? null : r.noticeTextLine.whiteSpace) + ' barW=' + r.bar.w + ' dataForm=' + r.noticeForm + ' sum=' + r.intersectionSum + ' truncated=' + r.truncated).join(' | ')
+            + '｜臂统计：chip 臂 ' + chipN + ' 条 / row 臂 ' + rowN + ' 条（共 ' + shortRecs.length + '）')
       }
       verdict('C7-real-env-untouched', '真实 $DSH_HOME 零写入（收尾指纹逐项与开跑前一致）', true, '收尾复核在下方回填')
     } finally {
@@ -634,13 +675,13 @@ function main() {
       writeFileSync(join(opts.out, 'report.json'), JSON.stringify(report, null, 2) + '\n')
       console.log('\n[probe] UX-060 告警几何测量（隔离实例 + 无头浏览器；真实 $DSH_HOME 只读）')
       for (const [key, rec] of Object.entries(report.scenarios)) {
-        console.log('  ' + key + '：notice=' + JSON.stringify(rec.notice) + ' cls=' + rec.noticeClass + '/' + rec.noticeForm + ' 截断=' + rec.truncated
-          + ' 交集=' + rec.intersectionSum + JSON.stringify(rec.intersections) + ' 栏内=' + rec.insideBar + ' 不覆盖下方=' + rec.belowContent + ' 行数=' + (rec.noticeTextLine === null ? null : rec.noticeTextLine.lines))
+        console.log('  ' + key + '：notice=' + JSON.stringify(rec.notice) + ' cls=' + rec.noticeClass + '/' + rec.noticeForm + ' 形态=' + rec.noticeShape + ' 截断=' + rec.truncated
+          + ' 交集=' + rec.intersectionSum + JSON.stringify(rec.intersections) + ' 栏内=' + rec.insideBar + ' 不覆盖下方=' + rec.belowContent + ' lh=' + (rec.noticeTextLine === null ? null : rec.noticeTextLine.lineHeight) + ' ws=' + (rec.noticeTextLine === null ? null : rec.noticeTextLine.whiteSpace) + ' 行数=' + (rec.noticeTextLine === null ? null : rec.noticeTextLine.lines))
         console.log('      文本(' + (rec.noticeText === null ? 0 : rec.noticeText.length) + ' 字)=' + JSON.stringify(String(rec.noticeText).slice(0, 100)) + '… title属性长度=' + rec.noticeTitleAttrLen)
         console.log('      截图 → ' + rec.screenshot)
       }
       for (const [key, rec] of Object.entries(report.reference)) {
-        console.log('  [参考/非判据] ' + key + '：cls=' + rec.noticeClass + '/' + rec.noticeForm + ' rect=' + JSON.stringify(rec.notice) + ' 行数=' + (rec.noticeTextLine === null ? null : rec.noticeTextLine.lines) + ' 交集=' + rec.intersectionSum + ' 栏内=' + rec.insideBar)
+        console.log('  [参考/非判据] ' + key + '：cls=' + rec.noticeClass + '/' + rec.noticeForm + ' 形态=' + rec.noticeShape + ' rect=' + JSON.stringify(rec.notice) + ' lh=' + (rec.noticeTextLine === null ? null : rec.noticeTextLine.lineHeight) + ' ws=' + (rec.noticeTextLine === null ? null : rec.noticeTextLine.whiteSpace) + ' 行数=' + (rec.noticeTextLine === null ? null : rec.noticeTextLine.lines) + ' 交集=' + rec.intersectionSum + ' 栏内=' + rec.insideBar)
       }
       const failed = report.verdicts.filter((v) => !v.ok)
       for (const v of report.verdicts) console.log('  ' + (v.ok ? '✅' : '❌') + ' ' + v.id + ' ' + v.label + (v.ok ? '' : ' :: ' + v.detail))

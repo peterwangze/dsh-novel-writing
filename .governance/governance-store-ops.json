@@ -1176,6 +1176,25 @@
       "baseline_effects": null,
       "recorded_at": "2026-11-08T05:26:56",
       "updated_at": "2026-11-08T05:26:56"
+    },
+    "op-598e55c369d44f229c2bff3866e4072d": {
+      "schema_version": 1,
+      "command": "evidence-append",
+      "task_id": "CLEAN-014",
+      "input_fingerprint": "c85a19693f599304eeda69692fdbb2cd62bf028fd65aa90685e256f719619ef4",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-598e55c369d44f229c2bff3866e4072d",
+        "code": "ok",
+        "new_revision": 430701,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-08T05:44:12",
+      "updated_at": "2026-11-08T05:44:12"
     }
   }
 }

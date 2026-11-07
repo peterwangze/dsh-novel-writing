@@ -1,0 +1,880 @@
+{
+  "tool": "probe-nv-bar-geometry",
+  "task": "UX-060",
+  "startedAt": "2026-11-07T21:35:24.716Z",
+  "isolation": {
+    "root": "C:\\Users\\peter\\AppData\\Local\\Temp\\ux060-probe-6cTOGT",
+    "dshHome": "C:\\Users\\peter\\AppData\\Local\\Temp\\ux060-probe-6cTOGT\\dsh-home",
+    "hostCli": {
+      "cmd": "D:\\app\\dsh\\resources\\runtime\\cli\\bin\\dsh.cmd",
+      "source": "桌面运行时 CLI（默认；0.2.2-rc.1）"
+    },
+    "plane": "C:\\Users\\peter\\AppData\\Roaming\\npm\\node_modules\\@deepseek-ai",
+    "browser": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+    "containment": {
+      "home": true,
+      "userprofile": true,
+      "appdata": true,
+      "localappdata": true,
+      "edge": true,
+      "tmp": true
+    },
+    "realEnvBefore": {
+      "home": "C:\\Users\\peter\\.dsh",
+      "settingsSha": null,
+      "profiles": "chatgpt,desktop,node_modules,web",
+      "preset": ".dsh-bundle-version:5,agent.cordis.yml:13034,agents:0,preset.yml:410,skills:0"
+    }
+  },
+  "injected": {
+    "channel": "/api/session/prompt",
+    "message": "llm-deepseek: MISSING_CREDENTIAL: no API key for provider route \"deepseek-official\": store DEEPSEEK_API_KEY through the credentials service (the web Models page writes it), or export DEEPSEEK_API_KEY in the launching environment"
+  },
+  "i18n": {
+    "promptFailPrefix": "会话已就绪，但启动指令发送失败：",
+    "promptFailHint": "请打开该会话手动发送启动指令。",
+    "resetLayoutDone": "已恢复默认布局",
+    "savedDefault": "已将当前布局设为默认"
+  },
+  "scenarios": {
+    "S1-err-1078x593": {
+      "scenario": "S1-err",
+      "kind": "long",
+      "label": "长 err 告警（会话已就绪，但启动指令发送失败…）",
+      "viewport": "1078x593",
+      "measuredAt": "2026-11-07T21:35:36.335Z",
+      "expectedText": "会话已就绪，但启动指令发送失败：llm-deepseek: MISSING_CREDENTIAL: no API key for provider route \"deepseek-official\": store DEEPSEEK_API_KEY through the credentials service (the web Models page writes it), or export DEEPSEEK_API_KEY in the launching environment请打开该会话手动发送启动指令。",
+      "expectedLen": 259,
+      "bar": {
+        "x": 281,
+        "y": 1,
+        "w": 796,
+        "h": 36,
+        "right": 1077,
+        "bottom": 37
+      },
+      "notice": {
+        "x": 281,
+        "y": 37,
+        "w": 796,
+        "h": 57,
+        "right": 1077,
+        "bottom": 94
+      },
+      "noticeClass": "nv-notice",
+      "noticeKind": "err",
+      "noticeText": "会话已就绪，但启动指令发送失败：llm-deepseek: MISSING_CREDENTIAL: no API key for provider route \"deepseek-official\": store DEEPSEEK_API_KEY through the credentials service (the web Models page writes it), or export DEEPSEEK_API_KEY in the launching environment请打开该会话手动发送启动指令。",
+      "textMatches": true,
+      "textOk": true,
+      "prefixOk": true,
+      "suffixOk": true,
+      "noticeTitleAttrLen": 0,
+      "overflow": {
+        "scrollWidth": 796,
+        "clientWidth": 796,
+        "scrollHeight": 56,
+        "clientHeight": 56,
+        "textOverflow": "clip",
+        "whiteSpace": "normal",
+        "position": "static"
+      },
+      "truncated": false,
+      "insideBar": false,
+      "noticeForm": "block",
+      "noticeShape": "block",
+      "noticeTextLine": {
+        "height": 48,
+        "lineHeight": 16,
+        "lines": 3,
+        "whiteSpace": "pre-wrap"
+      },
+      "intersections": {
+        "title": 0,
+        "banner": 0,
+        "ctl0": 0,
+        "ctl1": 0,
+        "ctl2": 0,
+        "ctl3": 0,
+        "ctl4": 0
+      },
+      "intersectionSum": 0,
+      "contentAnchors": {
+        "chrow": {
+          "x": 531,
+          "y": 131,
+          "w": 159,
+          "h": 28,
+          "right": 690,
+          "bottom": 159
+        },
+        "wfrow": {
+          "x": 300,
+          "y": 571.23,
+          "w": 193,
+          "h": 16,
+          "right": 493,
+          "bottom": 587.23
+        },
+        "main": {
+          "x": 281,
+          "y": 94,
+          "w": 796,
+          "h": 498,
+          "right": 1077,
+          "bottom": 592
+        }
+      },
+      "belowContent": true,
+      "bannerHidden": "true",
+      "viewportActual": {
+        "w": 1078,
+        "h": 593
+      },
+      "screenshot": "docs\\evidence\\CLEAN-014\\probe\\1078x593-S1-err.png",
+      "barEls": {
+        "title": {
+          "x": 327,
+          "y": 5,
+          "w": 536,
+          "h": 27,
+          "right": 863,
+          "bottom": 32
+        },
+        "banner": {
+          "x": 545.2,
+          "y": 7.72,
+          "w": 267.59,
+          "h": 21.56,
+          "right": 812.8,
+          "bottom": 29.28
+        },
+        "ctl": [
+          {
+            "x": 871,
+            "y": 2.5,
+            "w": 32,
+            "h": 32,
+            "right": 903,
+            "bottom": 34.5
+          },
+          {
+            "x": 911,
+            "y": 2.5,
+            "w": 32,
+            "h": 32,
+            "right": 943,
+            "bottom": 34.5
+          },
+          {
+            "x": 951,
+            "y": 2.5,
+            "w": 32,
+            "h": 32,
+            "right": 983,
+            "bottom": 34.5
+          },
+          {
+            "x": 991,
+            "y": 2.5,
+            "w": 32,
+            "h": 32,
+            "right": 1023,
+            "bottom": 34.5
+          },
+          {
+            "x": 1031,
+            "y": 2.5,
+            "w": 32,
+            "h": 32,
+            "right": 1063,
+            "bottom": 34.5
+          }
+        ]
+      }
+    },
+    "S2-ok-1078x593": {
+      "scenario": "S2-ok",
+      "kind": "short",
+      "label": "短 ok 告警（已恢复默认布局）",
+      "viewport": "1078x593",
+      "measuredAt": "2026-11-07T21:35:38.483Z",
+      "expectedText": "已恢复默认布局",
+      "expectedLen": 7,
+      "bar": {
+        "x": 281,
+        "y": 1,
+        "w": 796,
+        "h": 36,
+        "right": 1077,
+        "bottom": 37
+      },
+      "notice": {
+        "x": 281,
+        "y": 37,
+        "w": 796,
+        "h": 29,
+        "right": 1077,
+        "bottom": 66
+      },
+      "noticeClass": "nv-notice",
+      "noticeKind": "ok",
+      "noticeText": "已恢复默认布局",
+      "textMatches": true,
+      "textOk": true,
+      "prefixOk": false,
+      "suffixOk": false,
+      "noticeTitleAttrLen": 0,
+      "overflow": {
+        "scrollWidth": 796,
+        "clientWidth": 796,
+        "scrollHeight": 28,
+        "clientHeight": 28,
+        "textOverflow": "clip",
+        "whiteSpace": "normal",
+        "position": "static"
+      },
+      "truncated": false,
+      "insideBar": false,
+      "noticeForm": "row",
+      "noticeShape": "row",
+      "noticeTextLine": {
+        "height": 16,
+        "lineHeight": 16,
+        "lines": 1,
+        "whiteSpace": "pre-wrap"
+      },
+      "intersections": {
+        "title": 0,
+        "banner": 0,
+        "ctl0": 0,
+        "ctl1": 0,
+        "ctl2": 0,
+        "ctl3": 0,
+        "ctl4": 0
+      },
+      "intersectionSum": 0,
+      "contentAnchors": {
+        "chrow": {
+          "x": 531,
+          "y": 103,
+          "w": 159,
+          "h": 28,
+          "right": 690,
+          "bottom": 131
+        },
+        "wfrow": {
+          "x": 300,
+          "y": 549.39,
+          "w": 193,
+          "h": 16,
+          "right": 493,
+          "bottom": 565.39
+        },
+        "main": {
+          "x": 281,
+          "y": 66,
+          "w": 796,
+          "h": 526,
+          "right": 1077,
+          "bottom": 592
+        }
+      },
+      "belowContent": true,
+      "bannerHidden": "true",
+      "viewportActual": {
+        "w": 1078,
+        "h": 593
+      },
+      "screenshot": "docs\\evidence\\CLEAN-014\\probe\\1078x593-S2-ok.png",
+      "barEls": {
+        "title": {
+          "x": 327,
+          "y": 5,
+          "w": 536,
+          "h": 27,
+          "right": 863,
+          "bottom": 32
+        },
+        "banner": {
+          "x": 545.2,
+          "y": 7.72,
+          "w": 267.59,
+          "h": 21.56,
+          "right": 812.8,
+          "bottom": 29.28
+        },
+        "ctl": [
+          {
+            "x": 871,
+            "y": 2.5,
+            "w": 32,
+            "h": 32,
+            "right": 903,
+            "bottom": 34.5
+          },
+          {
+            "x": 911,
+            "y": 2.5,
+            "w": 32,
+            "h": 32,
+            "right": 943,
+            "bottom": 34.5
+          },
+          {
+            "x": 951,
+            "y": 2.5,
+            "w": 32,
+            "h": 32,
+            "right": 983,
+            "bottom": 34.5
+          },
+          {
+            "x": 991,
+            "y": 2.5,
+            "w": 32,
+            "h": 32,
+            "right": 1023,
+            "bottom": 34.5
+          },
+          {
+            "x": 1031,
+            "y": 2.5,
+            "w": 32,
+            "h": 32,
+            "right": 1063,
+            "bottom": 34.5
+          }
+        ]
+      }
+    },
+    "S1-err-1400x900": {
+      "scenario": "S1-err",
+      "kind": "long",
+      "label": "长 err 告警（会话已就绪，但启动指令发送失败…）",
+      "viewport": "1400x900",
+      "measuredAt": "2026-11-07T21:35:40.995Z",
+      "expectedText": "会话已就绪，但启动指令发送失败：llm-deepseek: MISSING_CREDENTIAL: no API key for provider route \"deepseek-official\": store DEEPSEEK_API_KEY through the credentials service (the web Models page writes it), or export DEEPSEEK_API_KEY in the launching environment请打开该会话手动发送启动指令。",
+      "expectedLen": 259,
+      "bar": {
+        "x": 281,
+        "y": 1,
+        "w": 1118,
+        "h": 36,
+        "right": 1399,
+        "bottom": 37
+      },
+      "notice": {
+        "x": 281,
+        "y": 37,
+        "w": 1118,
+        "h": 41,
+        "right": 1399,
+        "bottom": 78
+      },
+      "noticeClass": "nv-notice",
+      "noticeKind": "err",
+      "noticeText": "会话已就绪，但启动指令发送失败：llm-deepseek: MISSING_CREDENTIAL: no API key for provider route \"deepseek-official\": store DEEPSEEK_API_KEY through the credentials service (the web Models page writes it), or export DEEPSEEK_API_KEY in the launching environment请打开该会话手动发送启动指令。",
+      "textMatches": true,
+      "textOk": true,
+      "prefixOk": true,
+      "suffixOk": true,
+      "noticeTitleAttrLen": 0,
+      "overflow": {
+        "scrollWidth": 1118,
+        "clientWidth": 1118,
+        "scrollHeight": 40,
+        "clientHeight": 40,
+        "textOverflow": "clip",
+        "whiteSpace": "normal",
+        "position": "static"
+      },
+      "truncated": false,
+      "insideBar": false,
+      "noticeForm": "block",
+      "noticeShape": "block",
+      "noticeTextLine": {
+        "height": 32,
+        "lineHeight": 16,
+        "lines": 2,
+        "whiteSpace": "pre-wrap"
+      },
+      "intersections": {
+        "title": 0,
+        "banner": 0,
+        "ctl0": 0,
+        "ctl1": 0,
+        "ctl2": 0,
+        "ctl3": 0,
+        "ctl4": 0
+      },
+      "intersectionSum": 0,
+      "contentAnchors": {
+        "chrow": {
+          "x": 531,
+          "y": 115,
+          "w": 159,
+          "h": 28,
+          "right": 690,
+          "bottom": 143
+        },
+        "wfrow": {
+          "x": 300,
+          "y": 671.81,
+          "w": 201,
+          "h": 16,
+          "right": 501,
+          "bottom": 687.81
+        },
+        "main": {
+          "x": 281,
+          "y": 78,
+          "w": 1118,
+          "h": 821,
+          "right": 1399,
+          "bottom": 899
+        }
+      },
+      "belowContent": true,
+      "bannerHidden": null,
+      "viewportActual": {
+        "w": 1400,
+        "h": 900
+      },
+      "screenshot": "docs\\evidence\\CLEAN-014\\probe\\1400x900-S1-err.png",
+      "barEls": {
+        "title": {
+          "x": 327,
+          "y": 5,
+          "w": 858,
+          "h": 27,
+          "right": 1185,
+          "bottom": 32
+        },
+        "banner": {
+          "x": 706.2,
+          "y": 7.72,
+          "w": 267.59,
+          "h": 21.56,
+          "right": 973.8,
+          "bottom": 29.28
+        },
+        "ctl": [
+          {
+            "x": 1193,
+            "y": 2.5,
+            "w": 32,
+            "h": 32,
+            "right": 1225,
+            "bottom": 34.5
+          },
+          {
+            "x": 1233,
+            "y": 2.5,
+            "w": 32,
+            "h": 32,
+            "right": 1265,
+            "bottom": 34.5
+          },
+          {
+            "x": 1273,
+            "y": 2.5,
+            "w": 32,
+            "h": 32,
+            "right": 1305,
+            "bottom": 34.5
+          },
+          {
+            "x": 1313,
+            "y": 2.5,
+            "w": 32,
+            "h": 32,
+            "right": 1345,
+            "bottom": 34.5
+          },
+          {
+            "x": 1353,
+            "y": 2.5,
+            "w": 32,
+            "h": 32,
+            "right": 1385,
+            "bottom": 34.5
+          }
+        ]
+      }
+    },
+    "S2-ok-1400x900": {
+      "scenario": "S2-ok",
+      "kind": "short",
+      "label": "短 ok 告警（已恢复默认布局）",
+      "viewport": "1400x900",
+      "measuredAt": "2026-11-07T21:35:43.144Z",
+      "expectedText": "已恢复默认布局",
+      "expectedLen": 7,
+      "bar": {
+        "x": 281,
+        "y": 1,
+        "w": 1118,
+        "h": 36,
+        "right": 1399,
+        "bottom": 37
+      },
+      "notice": {
+        "x": 1108,
+        "y": 11,
+        "w": 77,
+        "h": 15,
+        "right": 1185,
+        "bottom": 26
+      },
+      "noticeClass": "nv-bar-note",
+      "noticeKind": "ok",
+      "noticeText": "已恢复默认布局",
+      "textMatches": true,
+      "textOk": true,
+      "prefixOk": false,
+      "suffixOk": false,
+      "noticeTitleAttrLen": 7,
+      "overflow": {
+        "scrollWidth": 77,
+        "clientWidth": 77,
+        "scrollHeight": 15,
+        "clientHeight": 15,
+        "textOverflow": "ellipsis",
+        "whiteSpace": "nowrap",
+        "position": "static"
+      },
+      "truncated": false,
+      "insideBar": true,
+      "noticeForm": null,
+      "noticeShape": "chip",
+      "noticeTextLine": {
+        "height": 15,
+        "lineHeight": null,
+        "lines": null,
+        "whiteSpace": "nowrap"
+      },
+      "intersections": {
+        "title": 0,
+        "banner": 0,
+        "ctl0": 0,
+        "ctl1": 0,
+        "ctl2": 0,
+        "ctl3": 0,
+        "ctl4": 0
+      },
+      "intersectionSum": 0,
+      "contentAnchors": {
+        "chrow": {
+          "x": 531,
+          "y": 74,
+          "w": 159,
+          "h": 28,
+          "right": 690,
+          "bottom": 102
+        },
+        "wfrow": {
+          "x": 300,
+          "y": 671.81,
+          "w": 201,
+          "h": 16,
+          "right": 501,
+          "bottom": 687.81
+        },
+        "main": {
+          "x": 281,
+          "y": 37,
+          "w": 1118,
+          "h": 862,
+          "right": 1399,
+          "bottom": 899
+        }
+      },
+      "belowContent": true,
+      "bannerHidden": null,
+      "viewportActual": {
+        "w": 1400,
+        "h": 900
+      },
+      "screenshot": "docs\\evidence\\CLEAN-014\\probe\\1400x900-S2-ok.png",
+      "barEls": {
+        "title": {
+          "x": 327,
+          "y": 5,
+          "w": 773,
+          "h": 27,
+          "right": 1100,
+          "bottom": 32
+        },
+        "banner": {
+          "x": 706.2,
+          "y": 7.72,
+          "w": 267.59,
+          "h": 21.56,
+          "right": 973.8,
+          "bottom": 29.28
+        },
+        "ctl": [
+          {
+            "x": 1193,
+            "y": 2.5,
+            "w": 32,
+            "h": 32,
+            "right": 1225,
+            "bottom": 34.5
+          },
+          {
+            "x": 1233,
+            "y": 2.5,
+            "w": 32,
+            "h": 32,
+            "right": 1265,
+            "bottom": 34.5
+          },
+          {
+            "x": 1273,
+            "y": 2.5,
+            "w": 32,
+            "h": 32,
+            "right": 1305,
+            "bottom": 34.5
+          },
+          {
+            "x": 1313,
+            "y": 2.5,
+            "w": 32,
+            "h": 32,
+            "right": 1345,
+            "bottom": 34.5
+          },
+          {
+            "x": 1353,
+            "y": 2.5,
+            "w": 32,
+            "h": 32,
+            "right": 1385,
+            "bottom": 34.5
+          }
+        ]
+      }
+    }
+  },
+  "reference": {
+    "S2-ok-1800x900": {
+      "scenario": "S2-ok",
+      "kind": "short",
+      "label": "短 ok 告警（宽栏参考：☆ 固化为默认）",
+      "viewport": "1800x900",
+      "measuredAt": "2026-11-07T21:35:47.950Z",
+      "expectedText": "已将当前布局设为默认",
+      "expectedLen": 10,
+      "bar": {
+        "x": 281,
+        "y": 1,
+        "w": 1518,
+        "h": 36,
+        "right": 1799,
+        "bottom": 37
+      },
+      "notice": {
+        "x": 1475,
+        "y": 11,
+        "w": 110,
+        "h": 15,
+        "right": 1585,
+        "bottom": 26
+      },
+      "noticeClass": "nv-bar-note",
+      "noticeKind": "ok",
+      "noticeText": "已将当前布局设为默认",
+      "textMatches": true,
+      "textOk": true,
+      "prefixOk": false,
+      "suffixOk": false,
+      "noticeTitleAttrLen": 10,
+      "overflow": {
+        "scrollWidth": 110,
+        "clientWidth": 110,
+        "scrollHeight": 15,
+        "clientHeight": 15,
+        "textOverflow": "ellipsis",
+        "whiteSpace": "nowrap",
+        "position": "static"
+      },
+      "truncated": false,
+      "insideBar": true,
+      "noticeForm": null,
+      "noticeShape": "chip",
+      "noticeTextLine": {
+        "height": 15,
+        "lineHeight": null,
+        "lines": null,
+        "whiteSpace": "nowrap"
+      },
+      "intersections": {
+        "title": 0,
+        "banner": 0,
+        "ctl0": 0,
+        "ctl1": 0,
+        "ctl2": 0,
+        "ctl3": 0,
+        "ctl4": 0
+      },
+      "intersectionSum": 0,
+      "contentAnchors": {
+        "chrow": {
+          "x": 531,
+          "y": 74,
+          "w": 159,
+          "h": 28,
+          "right": 690,
+          "bottom": 102
+        },
+        "wfrow": {
+          "x": 300,
+          "y": 671.81,
+          "w": 201,
+          "h": 16,
+          "right": 501,
+          "bottom": 687.81
+        },
+        "main": {
+          "x": 281,
+          "y": 37,
+          "w": 1518,
+          "h": 862,
+          "right": 1799,
+          "bottom": 899
+        }
+      },
+      "belowContent": true,
+      "bannerHidden": null,
+      "viewportActual": {
+        "w": 1800,
+        "h": 900
+      },
+      "screenshot": "docs\\evidence\\CLEAN-014\\probe\\1800x900-S2-ok.png",
+      "barEls": {
+        "title": {
+          "x": 327,
+          "y": 5,
+          "w": 1140,
+          "h": 27,
+          "right": 1467,
+          "bottom": 32
+        },
+        "banner": {
+          "x": 906.2,
+          "y": 7.72,
+          "w": 267.59,
+          "h": 21.56,
+          "right": 1173.8,
+          "bottom": 29.28
+        },
+        "ctl": [
+          {
+            "x": 1593,
+            "y": 2.5,
+            "w": 32,
+            "h": 32,
+            "right": 1625,
+            "bottom": 34.5
+          },
+          {
+            "x": 1633,
+            "y": 2.5,
+            "w": 32,
+            "h": 32,
+            "right": 1665,
+            "bottom": 34.5
+          },
+          {
+            "x": 1673,
+            "y": 2.5,
+            "w": 32,
+            "h": 32,
+            "right": 1705,
+            "bottom": 34.5
+          },
+          {
+            "x": 1713,
+            "y": 2.5,
+            "w": 32,
+            "h": 32,
+            "right": 1745,
+            "bottom": 34.5
+          },
+          {
+            "x": 1753,
+            "y": 2.5,
+            "w": 32,
+            "h": 32,
+            "right": 1785,
+            "bottom": 34.5
+          }
+        ]
+      }
+    }
+  },
+  "verdicts": [
+    {
+      "id": "C1-full-text-in-app",
+      "label": "长告警全文在应用内可读（流式面承载完整文本：逐字前缀 + 逐字后缀 + 中间实质错误文本；无截断/无省略号）——两视口",
+      "ok": true,
+      "detail": "1078x593: truncated=false prefixOk=true suffixOk=true len=259 textOverflow=clip insideBar=false cls=nv-notice | 1400x900: truncated=false prefixOk=true suffixOk=true len=259 textOverflow=clip insideBar=false cls=nv-notice"
+    },
+    {
+      "id": "C2-no-overlap-bar",
+      "label": "告警矩形与 .nv-bar-title/.nv-bar-banner/.nv-bar-ctl 交集 = ∅（长告警）——两视口",
+      "ok": true,
+      "detail": "1078x593: sum=0 {\"title\":0,\"banner\":0,\"ctl0\":0,\"ctl1\":0,\"ctl2\":0,\"ctl3\":0,\"ctl4\":0} | 1400x900: sum=0 {\"title\":0,\"banner\":0,\"ctl0\":0,\"ctl1\":0,\"ctl2\":0,\"ctl3\":0,\"ctl4\":0}"
+    },
+    {
+      "id": "C3-below-bar",
+      "label": "长告警位于标题栏之下（非浮动/非覆盖）——两视口",
+      "ok": true,
+      "detail": "1078x593: notice.y=37 bar.bottom=37 | 1400x900: notice.y=37 bar.bottom=37"
+    },
+    {
+      "id": "C4-not-cover-content",
+      "label": "长告警不覆盖标题栏下方首屏内容（章节行/当前阶段行/主区）——两视口",
+      "ok": true,
+      "detail": "1078x593: belowContent=true | 1400x900: belowContent=true"
+    },
+    {
+      "id": "C6-long-multiline",
+      "label": "长告警为多行块形态（data-form=block，文本 > 1 行＝非单行截断形态）——两视口",
+      "ok": true,
+      "detail": "1078x593: form=block lines=3 | 1400x900: form=block lines=2"
+    },
+    {
+      "id": "C5-short-compact",
+      "label": "短 ok 提示保持紧凑（形态感知双臂：chip = 栏内 nowrap 构造性单行；row = 文本行数 1；两臂均 h≤32 ∧ 交集 ∅ ∧ 无截断 ∧ 文本逐字匹配）——两判据视口（chip/row 分界归设计所有）",
+      "ok": true,
+      "detail": "1078x593: form=row h=29 w=796 lh=16 lines=1 ws=pre-wrap barW=796 dataForm=row sum=0 truncated=false | 1400x900: form=chip h=15 w=77 lh=null lines=null ws=nowrap barW=1118 dataForm=null sum=0 truncated=false｜臂统计：chip 臂 1 条 / row 臂 1 条（共 2）"
+    },
+    {
+      "id": "C7-real-env-untouched",
+      "label": "真实 $DSH_HOME 零写入（收尾指纹逐项与开跑前一致）",
+      "ok": true,
+      "detail": "指纹一致（零写入）"
+    }
+  ],
+  "realEnvAfter": {
+    "home": "C:\\Users\\peter\\.dsh",
+    "settingsSha": null,
+    "profiles": "chatgpt,desktop,node_modules,web",
+    "preset": ".dsh-bundle-version:5,agent.cordis.yml:13034,agents:0,preset.yml:410,skills:0"
+  },
+  "ok": true,
+  "instanceUrlRedacted": "http://127.0.0.1:56502/?token=***",
+  "opened": {
+    "bar": true,
+    "cards": 1
+  },
+  "injections": {
+    "count": 2,
+    "lastRpcId": "77fc2b74-ac1c-4b8b-ad60-a44d345f9693"
+  },
+  "s1Triggered": true,
+  "finishedAt": "2026-11-07T21:35:49.241Z"
+}
