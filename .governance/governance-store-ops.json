@@ -1076,6 +1076,34 @@
       "baseline_effects": null,
       "recorded_at": "2026-11-07T20:47:14",
       "updated_at": "2026-11-07T20:47:14"
+    },
+    "op-219e27f6e0394f33a59680e69e9a7f85": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "BUG-012",
+      "input_fingerprint": "2cc7f408b257597597c20ea101c0fbc545eaf0d2c322884a38cbaf0be1ee9b67",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-219e27f6e0394f33a59680e69e9a7f85",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-07T20:51:32",
+      "updated_at": "2026-11-07T20:51:32",
+      "released_files": [
+        "CHANGELOG.md",
+        "README.md",
+        "docs/evidence/BUG-012/README.md",
+        "docs/evidence/BUG-012/fix-verification.md",
+        "lib/client.js",
+        "lib/host-contract.mjs",
+        "test/smoke.mjs"
+      ]
     }
   }
 }
