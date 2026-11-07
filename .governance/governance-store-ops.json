@@ -1157,6 +1157,25 @@
         "test/preflight-preset-rows.test.mjs",
         "test/smoke.mjs"
       ]
+    },
+    "op-36d2f8b3f56c4e8abc8ed98ff1c9a85b": {
+      "schema_version": 1,
+      "command": "evidence-append",
+      "task_id": "BUG-012",
+      "input_fingerprint": "fc5157f2924df2fa3cbf9b85a30b7d7a37f864a0c2ec06bac75ce22de418d602",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-36d2f8b3f56c4e8abc8ed98ff1c9a85b",
+        "code": "ok",
+        "new_revision": 429065,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-08T05:26:56",
+      "updated_at": "2026-11-08T05:26:56"
     }
   }
 }
