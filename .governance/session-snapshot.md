@@ -1,39 +1,33 @@
-# 会话快照 — 2026-11-07（COMPAT-020 热修 + COMPAT-021 设计系统优化 双闭环）
+# 会话快照（2026-11-07 深场：COMPAT-020/021 收尾 + BUG-012 + COMPAT-023）
 
-**session_date**: 2026-11-07
-**工作流版本**: 0.99.0
-**会话标识**: dsh-writing-workflow-20261107-compat020-021
-**HEAD**: `2d7d162`（COMPAT-021 落地）← `6eaffb8` ← `9617a44` ← `c5442e1`（设计基线）← `444d18f`（COMPAT-020 热修）；全部已 push origin/main
-**上一会话**: 2026-10-25（治理升级 0.99.0 + UX-063 P0-a，EVD-142）
+## 本会话交付（全部 committed + pushed）
 
-## 一、本轮结论（两任务全闭环）
+| 任务 | commit | 结论 |
+|---|---|---|
+| COMPAT-020 预设热修 | `444d18f` + 真机验收 `2fd2446` | 用户确认预设可选入会话 |
+| COMPAT-021 设计系统 | `c5442e1`/`2d7d162` | 五代际清单 + 行级预检 + 12 组断言 |
+| BUG-012 工作台消失 | `f2d9ab8` + `817f990` | hooks 双违规修复 + 守卫；R2 AWN |
+| COMPAT-023 全依赖面看护 | `3d12ccb` + `004626b` | surfaceEvidence 30 格 + 探针三件修复；R2 APPROVED 0/0/0 |
 
-### 1) COMPAT-020 预设「加载失败」热修 — committed `444d18f`（EVD-143，DEC-159）
-根因 0.2.2 移除 `./list-agents` 子路径而静态 patch 仍声明 ⇒ 整棵预设 broken。修复=方向性双源（0.2.x 删行/0.1.x 保留）+ `GENERATION_DROPPED` + 双源硬不变量 + 负向对照。R1 NEEDS_CHANGE（P2×4）→ R2 **APPROVED_WITH_NOTES（0/0/0）**。0.2.2/0.2.1 隔离实例 `agentPresets.list()` 无 broken（docs/evidence/COMPAT-020/）。如实披露：0.2.0/0.2.1 独立 list_agents 不可用。
+## 关键学习（下会话必读）
 
-### 2) COMPAT-021 兼容性设计系统优化 — committed `2d7d162`（EVD-144）
-- **设计基线** `c5442e1`：docs/COMPATIBILITY.md（依赖分层 L0-L4 / 代际矩阵 / 预检契约 / RISK-C1~C8）。
-- **代码落地**：`lib/host-compat/generation-manifest.mjs`（五代际单一事实源 + detectGeneration）+ `preset-projection.mjs`（projectRows + reconcileDualSources）+ `scripts/preflight-preset-rows.mjs`（行级预检 CLI：exports 映射解析、退出码 0/1/2/3、--json/--explain/--global-root）+ `test/fixtures/host-generations/`（六代际 fixture）+ `test/preflight-preset-rows.test.mjs`（12 组断言）。
-- **C3 修复**：平面绑定 profile、npm 全局仅 fallback、**mixedPlane ⇒ legacy-only 行 MIXED_PLANE_FAIL_CLOSED**（端到端用例 + 变异自测双保险；Reviewer 独立变异验证一致）。
-- **R1**（AWN，P2×1：混合平面无仓内守卫）返工闭环 → **R2 AWN（P0/P1/P2=0）**；N1-N3（注入可审计性 globalRootOverride 标记/头注释/文档统一）已顺手修。
-- 门禁（Coordinator 独立复跑）：preflight PASSED (12)；真实面 exit 0（decl-0.2.1，61 行 0 FAIL）；negative exit 1；validate PASS；smoke **334/0**；anchors 79 段 FAIL=0。证据 docs/evidence/COMPAT-021/。
-- 偏离（已裁量接受）：smoke `LIB_TOOLING_DIRS=['host-compat']` 守卫适配（判据不放宽）；host-contract 不加 item（manifest 登记，revisions 21→22）。
-- 状态机 dev→review→approved→completed→**committed**；锁已释放。
+1. **BUG-012 真根因**：不是宿主槽位变更——是插件自身 Rules-of-Hooks 违规（SplitWorkspace effect 在早退后 + ChapterPanel listRef 在早退后），点书卡 → React #310 → SlotErrorBoundary 卸载。四代宿主同雷。初判「宿主不再消费 shell.overlay」是**登录遮罩误诊**（点击从未送达）——探针必须处置首跑门（预览版说明对话框 + sign-in 遮罩）。
+2. **npm tarball = 桌面事实源**（app.asar 与 npm 包逐字节等价已证）；宿主 client 包栈（dsh-client-ui-layout/runner/modules/renderer）承载槽位消费，web index/vendor 无槽名字面量是正常的。
+3. **探针可行模式**：`$env:DSH_HOME=<隔离>` + 官方 CLI `--profile probe --no-open --port 3080` + token 取 stdout；Playwright 工具链 `D:\AI\dev_toolchain\browser_test_tool_list\node-with-playwright.cmd`；浏览器进程必须系统 env 原样（重定向 APPDATA ⇒ Edge 即退）；只杀自启进程树。
+4. **治理坑**：refs 格式 task-row-update 用 `k=v`、evidence-append 用 `k:v`；evidence description 必须含「目标对齐：」；状态单元标记词形敏感（`✅完成` 后不得残留歧义词形）；locks-release 无 --session/--reason 参数。
 
-## 二、跨会话待办（按优先级）
+## 待办（优先级序）
 
-1. **COMPAT-022 立项决策**（运行时自适应预设 provider，接口草案 docs/COMPATIBILITY.md §5.4）：需关键决策批准；根治 0.2.0/0.2.1 独立 list_agents 缺失。
-2. **COMPAT-021 遗留 P3**（记录未扩面）：F6 manifest↔contract 双向 smoke 对账；F7 CI preflight fixtures job（§9.2）；F8 LIB_TOOLING_DIRS 消费断言。
-3. **COMPAT-018 收口前复核**：0.2.1/0.2.2 闭包含 dsh-app-boot（0.2.1 已 boot 实证），旧结论需改述。
-4. 既有债：18e/18f UX-061/UX-062/CLEAN-013（acceptance/quality 未跑）；UX-063 真机验收仍缺。
-5. 用户侧：桌面端重启 DSH 验证预设红字消失；标题截断「小...」独立 UI 问题未处理。
-6. Release Gate：v0.6.0 发布号待用户确认（本会话未 bump，版本 0.5.3）。
+1. **用户真机复验 BUG-012**：重启 DSH 桌面 → 点小说书卡 → 工作台应出现（待用户反馈）。
+2. **CLEAN-014**（P2 已立案）：bar-geometry C5 判据形态感知刷新（chip/row 分形判据或 Range 回退）+ 顺带 R2-N1（--surfaces --global-root 坏路径 fail-fast 统一）。
+3. **COMPAT-018 收口复核**：探针通道已修好（本会话产物），其遗留②「probe-host 对 0.2.0 实跑」可执行了。
+4. **COMPAT-022**（运行时自适应预设提供器）提案——需用户关键决策，尚未立项。
+5. COMPAT-021 P3 遗留 F6/F7/F8；CLEAN-010 安装器健壮性；UX-061/UX-062；治理债 18e/18f。
+6. 版本仍 0.5.3；发布号待 Release Gate 用户确认。
 
-## 三、方法论事实（下轮直接复用）
+## 环境事实
 
-- task-row-update：approved→completed→committed（无直达）；refs 用 `kind=value`；evidence-append refs 用 `kind:value`；状态单元格里无 🔄 标记时 writer 不识别（先手改标记）。
-- `*.log` 全局 gitignore ⇒ 证据日志 `git add -f`。
-- pre-commit hook 强制 commit message 带 task ID（session-snapshot 也要带）；`locks-release`（非 agent-locks-release）；空 `plan-tracker.md.lock` 残留可删。
-- 子代理空转两次（Developer/Architect）⇒ interrupt + 重派有效；设计/证据文档 Coordinator 可写，产品码必须 Developer。
-- 探针 home `%TEMP%\dsh-O6knv8\dsh-compat-probe`；`--global-root` 注入输出带 override 标记（不得冒充真实证据）。
-- 变异自测是评审 P2「守卫无判别力」的标准闭环手段（短路接线 → 必红 → 还原 → SHA 一致）。
+- 探针 DSH_HOME：`C:\Users\peter\AppData\Local\Temp\dsh-O6knv8\dsh-compat-probe`（profile probe，含 diag-preset 定时器——无害）；桌面 host closure `D:\app\dsh`（0.2.2-rc.1）；npm-global dsh 0.2.1 对照。
+- 桌面进程组（11:23:27 起）勿杀；探针进程已全部清理（3080/3081 释放）。
+- smoke 计数 342；preflight test 16 组；anchors 79 段。
+- `.governance/tpa-last-run.json` 维持不提交模式；`plan-tracker.md.lock` 空锁文件可删（会复现，无害）。
