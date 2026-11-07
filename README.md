@@ -54,7 +54,7 @@ dsh plugin --profile web remove dsh-novel-writing            # 卸载
 
 也支持 npm 包名或本地路径：`add file:/path/to/repo`（内容寻址，升级需 remove+add）、`add link:/path/to/repo`（符号链接，改码即生效，本地开发用）。
 
-> dsh ≥0.1.5：`dsh plugin add` 即注册 profile `package.json`（`dependencies` + `dsh.profile.bundles`）——per-profile pnpm 布局的标准通道，无需手动改文件。dsh ≥0.2.0：宿主行与「小说写作工作流」预设声明行均由包内 `cordis.patch.yml` 经 bundles 通道自动承载（安装器检测到 0.2.0 代系时不再写 profile patch 插行——同 id 双层会破坏宿主设置面写入）。Windows 下若该命令报「'dsh' 不是内部或外部命令」，为 dsh 上游 shell 转发问题（非本插件问题）：在 profile 目录（`$DSH_HOME/profiles/<Profile>`）手动执行 `pnpm add <spec>`（如 `pnpm add file:/path/to/repo`）+ 把 `dsh-novel-writing` 追加进 `dsh.profile.bundles` 即等价替代。
+> dsh ≥0.1.5：`dsh plugin add` 即注册 profile `package.json`（`dependencies` + `dsh.profile.bundles`）——per-profile pnpm 布局的标准通道，无需手动改文件。dsh ≥0.2.0：宿主行与「小说写作工作流」预设声明行均由包内 `cordis.patch.yml` 经 bundles 通道自动承载（安装器检测到 0.2.0 代系时不再写 profile patch 插行——同 id 双层会破坏宿主设置面写入）。**两代真源不同（COMPAT-020）**：0.1.x 走包内 `agent-presets/novel-writing/agent.cordis.yml`（含独立 `list-agents` 子路径行），0.2.x 走 `cordis.patch.yml` 的预设声明行（**不含**该行——0.2.2 起该子路径已从 exports 移除、`list_agents` 由主包 `@deepseek-ai/dsh-tool-subagent-control` 注册）；两源的方向性差异由 `GENERATION_DROPPED` 披露 + smoke B2 双源硬不变量看护。Windows 下若该命令报「'dsh' 不是内部或外部命令」，为 dsh 上游 shell 转发问题（非本插件问题）：在 profile 目录（`$DSH_HOME/profiles/<Profile>`）手动执行 `pnpm add <spec>`（如 `pnpm add file:/path/to/repo`）+ 把 `dsh-novel-writing` 追加进 `dsh.profile.bundles` 即等价替代。
 
 安装后：
 
@@ -192,11 +192,15 @@ node scripts/probe-nv-ux012.mjs                    # 隔离实例 + 无头浏览
 
 | 宿主版本 | 支持状态 | 依据 / 生效时点 |
 |---|---|---|
-| `0.2.0-rc.2`（现行宿主：CLI 0.2.0-rc.2，闭包 cordis 4.0.5 / schemastery 3.18.5） | ✅ 完整支持（BUG-011 双表面适配） | 隔离实例全链路实测（激活/HTTP/预设声明行/写路径重启持久/legacy settings 迁移）+ `preset-schema-face` dual 模式逐行核对；settings Config 范式 + 预设声明行 + install 代系分流 + 会话面双表面（详见 CHANGELOG [Unreleased] BUG-011） |
+| `0.2.2-rc.1`（现行宿主修复面：桌面端预设「加载失败」热修） | ✅ 预设加载面已实测（完整支持范围见验证管线） | 0.2.2 起 `@deepseek-ai/dsh-tool-subagent-control` 移除 `./list-agents` 子路径、`list_agents` 并入主包（`registerListAgents`）；本版包内 `cordis.patch.yml` 已删除 legacy 子路径行（仅保留主包行，由主包注册 `list_agents`）⇒ 预设声明行可正常 `agentPresets.register`；0.1.x 源 `agent.cordis.yml` 保留该行（0.1.x 通道靠它获得工具），方向差由 `GENERATION_DROPPED` 机检看护。证据 = 0.2.2-rc.1 闭包只读实测（exports 面 + 主包注册点）+ smoke B2 双源断言 + validate-preset 声明代平面显式跳过披露 + docs/evidence/COMPAT-020/diag-preset-0.2.2-rc.1.json（`agentPresets.list()` 中 `novel-writing` 无 `broken`）。**本行只背书预设加载面**：激活/HTTP/写路径/迁移等完整支持范围以上方验证管线实测为准（本轮未在 0.2.2 重跑全链路） |
+| `0.2.1-rc.2`（COMPAT-020 探针实测；npm-global） | ⚠️ 部分支持（预设加载面已实测；独立 `list_agents` 不可用） | 隔离实例诊断 `agentPresets.list()`：返回 5 个预设、`novel-writing` 行含 `name`/`description`/`order`、**无 `broken`**、`ok:true`（`docs/evidence/COMPAT-020/diag-preset-0.2.1-rc.2.json`，启动日志同目录）⇒ 预设加载面已实测。`list_agents` 不可用的依据 = 该代 `@deepseek-ai/dsh-tool-subagent-control` 主包尚未注册该工具 + 包内 patch 已无 legacy 子路径行（包面结论，非本次 `agentPresets.list()` 探针直接测得）；本轮未重跑 0.2.1 全链路，链路基线沿用 BUG-011 的 0.2.0 代隔离实例证据（见下行） |
+| `0.2.0-rc.2`（BUG-011 代：CLI 0.2.0-rc.2，闭包 cordis 4.0.5 / schemastery 3.18.5） | ⚠️ 部分支持（预设可加载；独立 `list_agents` 不可用） | 隔离实例全链路实测（激活/HTTP/预设声明行/写路径重启持久/legacy settings 迁移）+ `preset-schema-face` dual 模式逐行核对；settings Config 范式 + 预设声明行 + install 代系分流 + 会话面双表面（详见 CHANGELOG [Unreleased] BUG-011 / COMPAT-020） |
 | `0.1.5-rc.2`（现行闭包内子包实测版本；CLI `0.1.5-rc.1` = registry `latest`） | ✅ 完整支持 | 宿主表面 fixtures 现行快照（`test/fixtures/host-surfaces/`）+ per-profile 布局隔离实例全链路实测（BUG-006）+ 预设组合行 × 已装 Config schema 逐行核对与隔离实例挂载冒烟（BUG-007：`preset-schema-face.mjs` / `scripts/isolated-preset-mount.mjs`，persona 键 = `prefix`） |
 | `0.1.2-rc.1` | ✅ 支持（**最低支持线**） | fixtures 快照 + 客户端双表面适配层；**v1.0 起为声明下限**（`peerDependencies` 加下限 + 移除 `connection.api` 回退〔过渡期保留一个版本期的 `__NV_LEGACY_API__` 开关〕）——A1 绑定 v1.0 major 边界，**当前 A3 阶段尚未生效** |
 | `0.1.0-rc.7` / `0.1.1-rc.2`（0.1.x 旧表面线） | ⚠️ 最佳努力（A3 保留旧表面回退） | 依据 = `docs/RESEARCH.md` §3.1 实测（`0.1.0-rc.7`）+ `docs/DESIGN.md` 兼容矩阵 + fixtures 快照（`0.1.1-rc.2` 为 0.1.x 旧表面线代表，与 `0.1.2-rc.1` 构成 BUG-003/004 断点对照）；**fixture 归属精确化**：本行两版本中——`0.1.0-rc.7` **无仓内 fixture**（勿把本行的「实测」依据读作适用于它的快照；其依据是 `RESEARCH`/`DESIGN` 的历史实机实测），`0.1.1-rc.2` **有**仓内 fixture 快照（`test/fixtures/host-surfaces/0.1.1-rc.2.json`，由 smoke ① 目录 ≡ 契约键集机检）；**v1.0 起断供**——旧宿主上 `remote.*` 全缺而 `connection.api` 域对象在场 ⇒ 设置页「诊断」区明确提示「宿主版本低于最低支持」，并指向 v0.5.x tag 回退路径（DEC-026） |
 | 未列版本（含 `next` / `alpha` tag 上的预发布） | 未验证 | 向前兼容以实测为准；`*` 无下限 = 不设防（契约 6.1） |
+
+**代际限制（0.2.0 / 0.2.1，COMPAT-020 如实披露）**：这两代的 bundle patch 是**静态声明**、无法按宿主版本分流 ⇒ 预设可加载（0.2.0 有 BUG-011 隔离实例全链路证据；0.2.1 有 `diag-preset-0.2.1-rc.2.json` 的预设加载面实测），但独立 `list_agents` 工具不可用（这两代的 `dsh-tool-subagent-control` 主包尚未注册 `list_agents`，而包内 patch 已不再声明 legacy 子路径行）；0.2.2+ 由主包提供该工具，0.1.x 继续走 `agent.cordis.yml` 的 legacy 行。根治方案需运行时按宿主代际分流；COMPAT-021 先交付设计、契约与预检，运行时实现另立任务并以关键决策批准。
 
 ### 宿主发版探测轨与探测窗口期（COMPAT-007；DEC-025 决策②② / RB-01）
 

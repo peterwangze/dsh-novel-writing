@@ -4196,6 +4196,10 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   const VARIANT_CURRENT_11 = 'workflow-ptc:@deepseek-ai/dsh-workflow-ptc'
   const SKILL_LEGACY_11 = "new URL('skills/', baseUrl)"
   const SKILL_PATCH_11 = "new URL('node_modules/dsh-novel-writing/agent-presets/novel-writing/skills/', baseUrl)"
+  // COMPAT-020 代际删除行：0.1.x 源保留独立 list-agents 子路径行；0.2.2 起该子路径从包 exports 移除
+  // （`list_agents` 并入主包）⇒ 0.2.x 源（bundle patch）MUST 0 行、0.1.x 源 MUST 恰 1 行、patch 主包行在场。
+  const DROPPED_LEGACY_11 = 'tool-subagent-list-agents:@deepseek-ai/dsh-tool-subagent-control/list-agents'
+  const DROPPED_REPLACEMENT_11 = '@deepseek-ai/dsh-tool-subagent-control'
   const flatRows11 = (rows, out = []) => {
     for (const row of rows) {
       if (row === null || typeof row !== 'object' || Array.isArray(row)) continue
@@ -4219,8 +4223,23 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
     if (typeof decl.config?.order !== 'number') problems.push('声明行 config.order 非数字')
     if (typeof decl.config?.name !== 'string' || decl.config.name !== presetName11) problems.push('声明行显示名 ≠ preset.yml name（' + String(decl.config?.name) + ' ≠ ' + presetName11 + '）')
     const A = flatRows11(Array.isArray(decl.config?.plugins) ? decl.config.plugins : [])
-    const B = flatRows11(Array.isArray(ymlObj) ? ymlObj : [])
-    if (A.length !== B.length) problems.push(`行数不等（patch ${A.length} ≠ yml ${B.length}）`)
+    const B0 = flatRows11(Array.isArray(ymlObj) ? ymlObj : [])
+    // COMPAT-020 双源方向性硬不变量（发现项口径，非白名单容忍）：
+    //   patch 恰 0 行 legacy-only（0.2.2 exports 已移除 ⇒ 残留即整棵预设加载失败）；
+    //   yml 恰 1 行（0 行 = 0.1.x 丢工具）；该行 config 空/未声明；patch 主包行在场（0.2.2+ 注册 list_agents）。
+    const aDropped = A.filter((r) => r.key === DROPPED_LEGACY_11)
+    const bDropped = B0.filter((r) => r.key === DROPPED_LEGACY_11)
+    if (aDropped.length !== 0) problems.push('patch 必须 0 行 legacy-only list-agents（实测 ' + aDropped.length + '；0.2.2 起子路径已从 exports 移除）')
+    if (bDropped.length !== 1) problems.push('yml 必须恰 1 行 legacy-only list-agents（实测 ' + bDropped.length + '；0 行 = 0.1.x 丢工具）')
+    if (bDropped.length === 1) {
+      const droppedCfg = JSON.parse(bDropped[0].rest).config
+      const empty = droppedCfg === undefined || droppedCfg === null || (typeof droppedCfg === 'object' && !Array.isArray(droppedCfg) && Object.keys(droppedCfg).length === 0)
+      if (!empty) problems.push('legacy-only list-agents 行 config 必须空/未声明（实测 ' + JSON.stringify(droppedCfg) + '）')
+    }
+    if (!A.some((r) => r.key === 'tool-subagent-control:' + DROPPED_REPLACEMENT_11)) problems.push('patch 缺少主包 ' + DROPPED_REPLACEMENT_11 + ' 行（0.2.2+ 由它注册 list_agents）')
+    // 等价比较面：yml 侧剔除这 1 行 legacy-only（patch 侧 0 行已单独断言）⇒ 其余行逐位全等仍成立。
+    const B = B0.filter((r) => r.key !== DROPPED_LEGACY_11)
+    if (A.length !== B.length) problems.push(`行数不等（patch ${A.length} ≠ yml ${B.length}；已剔除 legacy-only 行）`)
     const n = Math.min(A.length, B.length)
     let variants = 0
     for (let i = 0; i < n; i++) {
@@ -4272,18 +4291,47 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   declMut2.config.plugins.find((r) => r.id === 'tool-todo').config = { allowParallelInProgress: false }
   const neg2 = dualProblems11([{ insert: [declMut2] }], ymlObj11, presetName11)
   const neg3 = dualProblems11([{ insert: [] }], ymlObj11, presetName11)
-  check('BUG-011 B2 判别力正向对照：删 ptc 行 ⇒ 红（' + neg1.length + ' 项）∧ 改共享行 config ⇒ 红（' + neg2.length + ' 项）∧ 删声明行 ⇒ 红（' + neg3.length + ' 项）——判据非恒真',
-    neg1.length > 0 && neg2.length > 0 && neg3.length > 0,
-    'neg1=' + JSON.stringify(neg1.slice(0, 2)) + ' neg2=' + JSON.stringify(neg2.slice(0, 2)) + ' neg3=' + JSON.stringify(neg3.slice(0, 2)))
+  // ④ 回归复现变体：把 0.1.x 的 legacy-only 行重新塞回 patch 的 delegation group（= COMPAT-020 原故障形态）⇒ 必红。
+  const declMut4 = structuredClone(decl11)
+  declMut4.config.plugins.find((r) => r.id === 'delegation').config.push({ id: 'tool-subagent-list-agents', name: '@deepseek-ai/dsh-tool-subagent-control/list-agents' })
+  const neg4 = dualProblems11([{ insert: [declMut4] }], ymlObj11, presetName11)
+  check('BUG-011 B2 判别力正向对照：删 ptc 行 ⇒ 红（' + neg1.length + ' 项）∧ 改共享行 config ⇒ 红（' + neg2.length + ' 项）∧ 删声明行 ⇒ 红（' + neg3.length + ' 项）∧ patch 残留 legacy-only list-agents 行 ⇒ 红（' + neg4.length + ' 项）——判据非恒真',
+    neg1.length > 0 && neg2.length > 0 && neg3.length > 0 && neg4.length > 0,
+    'neg1=' + JSON.stringify(neg1.slice(0, 2)) + ' neg2=' + JSON.stringify(neg2.slice(0, 2)) + ' neg3=' + JSON.stringify(neg3.slice(0, 2)) + ' neg4=' + JSON.stringify(neg4.slice(0, 2)))
   // preset-schema-face 双源接线自断言：validate-preset 以 dual 模式调用；工具导出双源常量与抽取器。
+  // COMPAT-020：GENERATION_DROPPED（代际删除行）双源看护接线 + P-10 契约登记双向对账（负向字面量
+  // 只在 0.1.x 源出现 ⇒ 0.2.x 源零命中；契约 5.2 登记 legacy-only 行 + 主包 `list_agents` 正负两面）。
   const psfSrc11 = readFileSync(new URL('./fixtures/host-surfaces/preset-schema-face.mjs', import.meta.url), 'utf8')
   const vpSrc11 = readFileSync(new URL('./validate-preset.mjs', import.meta.url), 'utf8')
-  check('BUG-011 B2 双源看护接线：preset-schema-face 导出 PATCH_COMPOSITION/DECLARATION_PACKAGE/GENERATION_VARIANT/extractDeclarationPlugins ∧ GENERATION_VARIANT 为披露项 ∧ DUAL_SOURCE_DRIFT 为发现项 ∧ validate-preset 以 dual:true 调用',
+  const hcSrc11 = readFileSync(new URL('../lib/host-contract.mjs', import.meta.url), 'utf8')
+  const droppedLiteral11 = '@deepseek-ai/dsh-tool-subagent-control/list-agents'
+  const ymlDroppedDecls11 = (ymlText11.match(/'@deepseek-ai\/dsh-tool-subagent-control\/list-agents'/g) ?? []).length
+  // 披露枚举**块级**提取（COMPAT-020 复核缺口）：全文 includes 会被 walk 分支的 `kind: 'GENERATION_DROPPED',`
+  // 误命中 ⇒ 即便把它从 UNVERIFIED_KINDS 数组删掉也不会红。故只截 `export const X = [...]` 的数组块再判包含。
+  const kindsBlock11 = (src, name) => {
+    const start = src.indexOf('export const ' + name + ' =')
+    if (start < 0) return ''
+    const open = src.indexOf('[', start)
+    const close = open < 0 ? -1 : src.indexOf(']', open)
+    return open < 0 || close < 0 ? '' : src.slice(open, close + 1)
+  }
+  const unverifiedKinds11 = kindsBlock11(psfSrc11, 'UNVERIFIED_KINDS')
+  const findingKinds11 = kindsBlock11(psfSrc11, 'FINDING_KINDS')
+  // 提取器判别力自证：只有 walk 分支的 kind 字面量、没有数组块 ⇒ 必须提不出（否则块级断言仍可能被误命中）
+  const strayKinds11 = kindsBlock11("entry.rows.push({ ...record, kind: 'GENERATION_DROPPED', message: 'x' })", 'UNVERIFIED_KINDS')
+  check('BUG-011 B2 双源看护接线：preset-schema-face 导出 PATCH_COMPOSITION/DECLARATION_PACKAGE/GENERATION_VARIANT/GENERATION_DROPPED/extractDeclarationPlugins ∧ GENERATION_VARIANT 与 GENERATION_DROPPED 均为披露项 ∧ DUAL_SOURCE_DRIFT 为发现项 ∧ validate-preset 以 dual:true 调用并披露 generation-dropped ∧ COMPAT-020 双源字面量方向（patch 零命中 legacy-only 行 / yml 恰 1 行声明）∧ 契约登记（正向主包 list_agents + 负向 legacy-only 子路径）∧ UNVERIFIED_KINDS 数组块含 GENERATION_DROPPED 且 FINDING_KINDS 数组块不含（块级精确，防 walk 分支误命中）',
     psfSrc11.includes('export const PATCH_COMPOSITION') && psfSrc11.includes('export const DECLARATION_PACKAGE')
       && psfSrc11.includes('export const GENERATION_VARIANT') && psfSrc11.includes('export function extractDeclarationPlugins')
       && psfSrc11.includes("'GENERATION_VARIANT',") && psfSrc11.includes("'DUAL_SOURCE_DRIFT',")
-      && vpSrc11.includes('dual: true'),
-    'wired=' + (vpSrc11.includes('dual: true')))
+      && vpSrc11.includes('dual: true')
+      && psfSrc11.includes('export const GENERATION_DROPPED')
+      && unverifiedKinds11.includes("'GENERATION_DROPPED'") && findingKinds11.length > 0 && !findingKinds11.includes('GENERATION_DROPPED')
+      && strayKinds11 === ''
+      && psfSrc11.includes('GENERATION_DROPPED.replacementName')
+      && vpSrc11.includes('GENERATION_DROPPED') && vpSrc11.includes('generation-dropped')
+      && hcSrc11.includes('GENERATION_DROPPED') && hcSrc11.includes('list_agents') && hcSrc11.includes(droppedLiteral11)
+      && !patchText11.includes(droppedLiteral11) && ymlDroppedDecls11 === 1,
+    'wired=' + (vpSrc11.includes('dual: true')) + ' dropped=' + (psfSrc11.includes('export const GENERATION_DROPPED')) + ' ukDropped=' + unverifiedKinds11.includes("'GENERATION_DROPPED'") + ' fkDropped=' + findingKinds11.includes('GENERATION_DROPPED') + ' stray=' + JSON.stringify(strayKinds11) + ' vp=' + (vpSrc11.includes('GENERATION_DROPPED')) + ' hc=' + (hcSrc11.includes(droppedLiteral11)) + ' patchHits=' + (patchText11.includes(droppedLiteral11)) + ' ymlDecls=' + ymlDroppedDecls11)
 }
 //   至少 4 个任务周期（179 vs 276，正落在 COMPAT-007 修改的代码块内）；本断言把「随 smoke 计数变更同步」由
 //   文档纪律升级为机检（改 README 计数与改 smoke 断言数必须同 commit）。**必须保持为本文件最后一条 check**

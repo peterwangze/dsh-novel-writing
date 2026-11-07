@@ -156,6 +156,10 @@
     - id: tool-subagent-control
       name: '@deepseek-ai/dsh-tool-subagent-control'
 
+    # COMPAT-020：本行是 0.1.x 专用（legacy-only）——0.1.x 的 list_agents 由该子路径独立注册；0.2.2 起
+    # 子路径从 exports 移除（list_agents 并入主包），0.2.x 源 `cordis.patch.yml` 刻意不再声明本行。
+    # 两源差异由 `GENERATION_DROPPED` 看护；代际限制（如实披露）：0.2.0/0.2.1 的静态 bundle patch 无法
+    # 按宿主版本分流 ⇒ 该两代预设可加载但独立 list_agents 工具不可用（0.2.2+ 主包提供；根治见 COMPAT-021）。
     - id: tool-subagent-list-agents
       name: '@deepseek-ai/dsh-tool-subagent-control/list-agents'
 

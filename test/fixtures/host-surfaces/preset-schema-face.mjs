@@ -55,7 +55,7 @@ export const FINDING_KINDS = [
   'MODULE_UNRESOLVED', 'IMPORT_ERROR', 'CONFIG_INVALID', 'DUAL_SOURCE_DRIFT',
 ]
 /** 披露项：不是发现项，**也不能计入「已校验」**（PASS 要求逐行披露它们）。 */
-export const UNVERIFIED_KINDS = ['NO_SCHEMA', 'BUILTIN', 'DISABLED_INHERITED', 'DISABLED_INHERITED_UNKNOWN', 'GENERATION_VARIANT']
+export const UNVERIFIED_KINDS = ['NO_SCHEMA', 'BUILTIN', 'DISABLED_INHERITED', 'DISABLED_INHERITED_UNKNOWN', 'GENERATION_VARIANT', 'GENERATION_DROPPED']
 const PASS_KIND = 'PASS'
 
 /** 宿主耦合字面量（P-10）：oracle 包与符号名 = 契约 item 5.6 登记面，新增/改名 MUST 同步契约。 */
@@ -83,6 +83,19 @@ export const GENERATION_VARIANT = {
   legacy: { id: 'workflow-worker-thread', name: '@deepseek-ai/dsh-workflow-worker-thread' },
   current: { id: 'workflow-ptc', name: '@deepseek-ai/dsh-workflow-ptc' },
   config: { provider: 'spawn' },
+}
+/**
+ * 已知整行代际删除（legacy-only 行，COMPAT-020）：0.1.x 源保留独立 `list-agents` 子路径行
+ * （`@deepseek-ai/dsh-tool-subagent-control/list-agents`）；0.2.2 起该子路径从包 exports 移除、
+ * `list_agents` 并入主包（`@deepseek-ai/dsh-tool-subagent-control`）⇒ 0.2.x 源（bundle patch）
+ * MUST NOT 再声明该行。与 GENERATION_VARIANT 的区别：变体 =「同行换包名」，本常量 =「整行消失」；
+ * 二者都是**源代际差异**（非宿主能力探测——不读 app.asar）：只披露、不计发现项、不计 variants。
+ * 方向性硬不变量（yml 恰 1 行且 config 空 / patch 恰 0 行 / patch 主包行在场）见 checkComposition。
+ */
+export const GENERATION_DROPPED = {
+  rowId: 'tool-subagent-list-agents',
+  name: '@deepseek-ai/dsh-tool-subagent-control/list-agents',
+  replacementName: '@deepseek-ai/dsh-tool-subagent-control',
 }
 
 /**
@@ -129,6 +142,16 @@ export function extractDeclarationPlugins(oracle, patchPath) {
   if (decl === undefined) return { ok: false, reason: `bundle patch 内未找到声明行（name: ${DECLARATION_PACKAGE}）` }
   if (!Array.isArray(decl.config?.plugins)) return { ok: false, reason: '声明行 config.plugins 不是行列表' }
   return { ok: true, plugins: decl.config.plugins, declaration: decl, rows }
+}
+
+/** 递归摊平行列表（group 行的 config = 子行数组；双源硬不变量用，不参与 walk 的 schema 判定）。 */
+function flattenRows(rows, out = []) {
+  for (const row of rows) {
+    if (row === null || typeof row !== 'object' || Array.isArray(row)) continue
+    out.push(row)
+    if (row.group === true && Array.isArray(row.config)) flattenRows(row.config, out)
+  }
+  return out
 }
 
 // ── 宿主平面定位（只读）─────────────────────────────────────────────────────
@@ -310,6 +333,14 @@ async function walk(rows, at, ctx, entry, oracle, inheritedBy, tolerance = null)
     if (name.startsWith('file:') || isAbsolute(name)) target = name.startsWith('file:') ? name : pathToFileURL(name).href
     else if (name.startsWith('.')) target = new URL(name, ctx.baseUrl).href
     else {
+      // COMPAT-020：legacy 源在 0.2.x 代际的**整行删除**——不解析模块、不产生发现项，只披露；
+      // 单独计数（dropped），不计入 checked / variants；作为披露类同时计入 unverified（dropped 是 unverified
+      // 的子集，汇总时勿重复相加），PASS 仍要求 checked > 0。
+      if (tolerance === 'legacy-on-current' && name === GENERATION_DROPPED.name) {
+        entry.dropped += 1
+        entry.rows.push({ ...record, kind: 'GENERATION_DROPPED', message: `已知代际删除行（${name}，0.2.x 源已移除本行；0.2.2+ 由 ${GENERATION_DROPPED.replacementName} 主包注册 list_agents）` })
+        continue
+      }
       const resolved = resolveHostModule(oracle, name)
       if (resolved === null) {
         const variant = tolerance === 'legacy-on-current' && name === GENERATION_VARIANT.legacy.name ? GENERATION_VARIANT.legacy
@@ -412,7 +443,7 @@ export async function checkComposition(options = {}) {
   const isPatchSource = composition === PATCH_COMPOSITION
   // 容忍方向：声明代平面核对 0.1.x 源 → 容忍 worker-thread；旧平面核对 0.2.0 源（patch）→ 容忍 ptc。
   const tolerance = currentGeneration === !isPatchSource ? (isPatchSource ? 'current-on-legacy' : 'legacy-on-current') : null
-  const entry = { rows: [], enabled: 0, checked: 0 }
+  const entry = { rows: [], enabled: 0, checked: 0, dropped: 0 }
   const ctx = { baseUrl: pathToFileURL(composition).href, process, console }
   await walk(rows, '', ctx, entry, oracle, '', tolerance)
   entry.rows = entry.rows.map((r) => ({ ...r, source: dual ? (isPatchSource ? 'patch' : 'yml') : undefined }))
@@ -453,12 +484,42 @@ export async function checkComposition(options = {}) {
       entry.rows.push({ row: vr.row, id: vr.id, name: vr.name, kind: 'DUAL_SOURCE_DRIFT', message: `代际变体行 ${vr.name}（${vr.source ?? '?'}）的对侧行 ${wantName}（${wantSource}）缺失或未通过核对——双源已漂移`, detail: null, schema: null, version: null, source: vr.source })
     }
   }
+  // ── COMPAT-020 代际删除行：双源方向性硬不变量（发现项 DUAL_SOURCE_DRIFT）────────
+  // 仅「披露」守不住「0.2.x 源不得再声明 legacy-only 行」——故删除面另设 4 条硬不变量：
+  // ① agent.cordis.yml 恰 1 行（0 行 = 0.1.x 丢工具；>1 = 重复挂载）；② cordis.patch.yml 恰 0 行
+  // （0.2.2 起该子路径已从 exports 移除 ⇒ 残留即整棵预设激活抛 ERR_PACKAGE_PATH_NOT_EXPORTED，
+  // 即 COMPAT-020 修复的那个故障）；③ patch 恰 1 行主包 replacementName（0.2.2+ 由它注册 list_agents，
+  // 替代被删子路径行）；④ legacy 行 config 空/未声明（避免删除行被「借壳」塞配置）。
+  if (dual) {
+    const drift = (text) => entry.rows.push({ row: 'dropped', id: GENERATION_DROPPED.rowId, name: GENERATION_DROPPED.name, kind: 'DUAL_SOURCE_DRIFT', message: text, detail: null, schema: null, version: null, source: 'dual' })
+    let legacyRows = []
+    try {
+      legacyRows = oracle.yaml.load(readFileSync(DEFAULT_COMPOSITION, 'utf8'), { schema: oracle.entryListSchema })
+    } catch (error) { drift(`代际删除行不变量：agent.cordis.yml 不可解析（${message(error)}）`) }
+    let extracted = { ok: false, reason: '未执行' }
+    try { extracted = extractDeclarationPlugins(oracle, PATCH_COMPOSITION) } catch (error) { extracted = { ok: false, reason: message(error) } }
+    if (extracted.ok !== true) drift(`代际删除行不变量：cordis.patch.yml 声明行不可抽取（${extracted.reason}）`)
+    const legacyFlat = flattenRows(Array.isArray(legacyRows) ? legacyRows : [])
+    const patchFlat = extracted.ok === true ? flattenRows(extracted.plugins) : []
+    const legacyDropped = legacyFlat.filter((row) => row.name === GENERATION_DROPPED.name)
+    const patchDropped = patchFlat.filter((row) => row.name === GENERATION_DROPPED.name)
+    const patchReplacement = patchFlat.filter((row) => row.name === GENERATION_DROPPED.replacementName)
+    if (legacyDropped.length !== 1) drift(`代际删除行不变量：agent.cordis.yml MUST 恰 1 行 ${GENERATION_DROPPED.name}（实测 ${legacyDropped.length}）`)
+    if (patchDropped.length !== 0) drift(`代际删除行不变量：cordis.patch.yml MUST 0 行 ${GENERATION_DROPPED.name}（实测 ${patchDropped.length}——0.2.2 起该子路径已移除）`)
+    if (patchReplacement.length !== 1) drift(`代际删除行不变量：cordis.patch.yml MUST 恰 1 行主包 ${GENERATION_DROPPED.replacementName}（实测 ${patchReplacement.length}；0.2.2+ 由它注册 list_agents）`)
+    if (legacyDropped.length === 1) {
+      const cfg = legacyDropped[0].config
+      const empty = cfg === undefined || cfg === null || (typeof cfg === 'object' && !Array.isArray(cfg) && Object.keys(cfg).length === 0)
+      if (!empty) drift(`代际删除行不变量：legacy 行 ${GENERATION_DROPPED.name} config MUST 空/未声明（实测 ${JSON.stringify(cfg).slice(0, 120)}）`)
+    }
+  }
   const findings = entry.rows.filter((row) => FINDING_KINDS.includes(row.kind))
   const unverified = entry.rows.filter((row) => UNVERIFIED_KINDS.includes(row.kind))
   const coverage = {
     total: entry.rows.length,
     enabled: entry.enabled,
     checked: entry.checked,
+    dropped: entry.dropped,
     findings: findings.length,
     unverified: unverified.length,
   }
@@ -521,7 +582,7 @@ async function main() {
     }
     console.log(`  判定：${report.verdict}${report.reason === null ? '' : ' — ' + report.reason}`)
     if (report.coverage !== null) {
-      console.log(`  coverage：启用行 ${report.coverage.enabled}；与 schema 比对 ${report.coverage.checked}；发现项 ${report.coverage.findings}；未校验（已披露）${report.coverage.unverified}`)
+      console.log(`  coverage：启用行 ${report.coverage.enabled}；与 schema 比对 ${report.coverage.checked}；发现项 ${report.coverage.findings}；未校验（已披露）${report.coverage.unverified}；代际删除行（已披露）${report.coverage.dropped}`)
     }
   }
   if (report.verdict === VERDICT_PASS) process.exit(EXIT.PASS)

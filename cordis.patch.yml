@@ -160,8 +160,9 @@
               - id: tool-subagent-control
                 name: '@deepseek-ai/dsh-tool-subagent-control'
 
-              - id: tool-subagent-list-agents
-                name: '@deepseek-ai/dsh-tool-subagent-control/list-agents'
+              # COMPAT-020：0.2.x 代际不声明独立 list-agents 行——0.2.2 起该子路径已从
+              # `@deepseek-ai/dsh-tool-subagent-control` 的 exports 移除，`list_agents` 由该主包自身注册
+              # （上一行 tool-subagent-control）。0.1.x 源 `agent.cordis.yml` 仍保留该行（legacy-only）。
 
               - id: tool-subagent
                 name: '@deepseek-ai/dsh-tool-subagent'

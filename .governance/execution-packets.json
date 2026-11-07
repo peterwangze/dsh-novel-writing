@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-10-22T19:00:44",
+  "generated_at": "2026-11-07T11:05:43",
   "packets": {
     "REL-007": {
       "task_id": "REL-007",
@@ -637,6 +637,265 @@
         "open",
         "Code Reviewer or matching Reviewer has APPROVED the product-code change.",
         "Commit and push are completed for this single task."
+      ],
+      "source": "plan-tracker.md##当前活跃事项"
+    },
+    "COMPAT-020": {
+      "task_id": "COMPAT-020",
+      "priority": "P0",
+      "status": "🔄 R1 复审 NEEDS_CHANGE（P2×4），Developer 修复中（triage = change-triage/COMPAT-020.json）",
+      "goal": "COMPAT-020 **dsh 0.2.2 预设兼容热修**（用户 2026-11-07 报障：设置页「小说写作工作流」红「加载失败」）。根因（已隔离实例复现）：0.2.2 从 `@deepseek-ai/dsh-tool-subagent-control` 的 package exports 删除 `./list-agents` 子路径，`list_agents` 并入主包 `lib/index.js`（`registerListAgents`）；`cordis.patch.yml` 的预设声明仍含 `tool-subagent-list-agents` 行 ⇒ 宿主 `agentPresets.register` 激活抛 `ERR_PACKAGE_PATH_NOT_EXPORTED`，整棵预设 broken（非用户层 workspaceRoot/bindings 覆盖所致）。修复：0.2.x 源删除该行 + 0.1.x 源保留（README 声明 0.1.5 完整支持）+ 新增 `GENERATION_DROPPED` 代际差异披露并贯通 `preset-schema-face` / `validate-preset` / smoke BUG-011 B2 双源判据 + `host-contract.mjs` 登记（正向：0.2.2 主包提供 `list_agents`；负向：`./list-agents` 子路径已移除，防回退）+ 0.2.2 隔离实例启动实测。已知代价如实披露：0.2.0/0.2.1 上该独立工具行缺失（静态 patch 无法按宿主版本分流；由 COMPAT-021 目标架构解决）",
+      "product_success_contract": {
+        "user": "使用 DSH 0.2.2 的小说作者（设置页 → Agent 预设的用户）。",
+        "job_to_be_done": "在 DSH 0.2.2 打开设置 → Agent 预设，选择「小说写作工作流」即可用；不再显示红色「加载失败」，选择后能进入写作会话。",
+        "non_goals": [
+          "不重写运行时预设注册/加载器；自适应运行时方案另立 COMPAT-022，须关键决策批准。",
+          "不恢复 0.2.0/0.2.1 上独立 list_agents 工具行；该代际限制由 COMPAT-021 目标架构解决并如实披露。",
+          "不 bump 版本、不改发布号；不在本任务处理预设标题截断（属 UI 展示问题）。"
+        ],
+        "success_metrics": [
+          "用户在 DSH 0.2.2 设置页看到「小说写作工作流」可选中，选择后能进入写作会话，不再显示红色「加载失败」。",
+          "node test/smoke.mjs 输出 334 passed / 0 failed；0.2.2 隔离实例 diag 返回 ok:true 且 novel-writing 无 broken。"
+        ],
+        "competitive_baseline": "DSH 官方 preset-standard 在 0.2.2 可正常注册并选择；本插件的 novel-writing 应达到同等可用性（不出现 broken）。",
+        "done_definition": [
+          "0.2.2 与 0.2.1 隔离实例的 agentPresets.list() 均显示 novel-writing 且无 broken，记录于 docs/evidence/COMPAT-020/。",
+          "独立 Reviewer 对 COMPAT-020 产品代码变更给出 APPROVED（docs/review/COMPAT-020-R1.md），smoke/validate-preset 复跑通过。"
+        ]
+      },
+      "acceptance_contract": {
+        "scenario": "在 DSH 0.2.2 隔离实例打开设置 → Agent 预设：列表出现「小说写作工作流」，不显示红色「加载失败」；选中后会话可进入。",
+        "command": "node test/smoke.mjs",
+        "expected_output": "SMOKE DONE: 334 passed, 0 failed；0.2.2 与 0.2.1 探针 diag 中 novel-writing 均无 broken。",
+        "last_run": {
+          "status": "PASS",
+          "exit_code": 0,
+          "summary": "SMOKE DONE: 334 passed, 0 failed；node test/validate-preset.mjs PASS；0.2.2 探针 2026-11-07T02:46:52Z 返回 ok:true，novel-writing 无 broken。"
+        },
+        "demo_evidence": "docs/evidence/COMPAT-020/README.md、diag-preset-0.2.2-rc.1.json、diag-preset-0.2.1-rc.2.json。"
+      },
+      "quality_budget": {
+        "dimensions": {
+          "performance": {
+            "threshold": "预设注册只在启动时执行一次；本热修不引入持续 CPU/内存 KPI。",
+            "validation": "node test/smoke.mjs 启动路径回归",
+            "status": "EXEMPT",
+            "evidence": "docs/evidence/COMPAT-020/README.md（0.2.2/0.2.1 启动探针）",
+            "exception": "预设注册为一次性启动路径，无热路径性能回退面；不设性能 KPI。"
+          },
+          "reliability": {
+            "threshold": "0.2.2 与 0.2.1 的 agentPresets.list() 中 novel-writing 均无 broken；smoke 334/0。",
+            "validation": "node test/smoke.mjs + node test/validate-preset.mjs",
+            "status": "PASS",
+            "evidence": "docs/evidence/COMPAT-020/diag-preset-0.2.2-rc.1.json"
+          },
+          "security": {
+            "threshold": "不新增外部输入/网络/写路径；删除失效子路径引用，攻击面不扩大。",
+            "validation": "node test/smoke.mjs 安全回归断言 + git diff 文件范围检查",
+            "status": "PASS",
+            "evidence": "git diff --name-only 的 8 个产品文件；docs/evidence/COMPAT-020/README.md"
+          },
+          "accessibility": {
+            "threshold": "不新增/修改交互控件；设置页渲染由宿主既有组件负责。",
+            "validation": "node test/smoke.mjs 现有设置页回归检查",
+            "status": "EXEMPT",
+            "evidence": "docs/evidence/COMPAT-020/README.md",
+            "exception": "本热修仅改预设声明与看护测试，无 UI 结构、键盘或 ARIA 变更。"
+          },
+          "ux": {
+            "threshold": "设置页「小说写作工作流」不再红色「加载失败」，可选中并进入会话。",
+            "validation": "隔离实例设置页 screenshot/browser 验收 + 宿主侧 diag",
+            "status": "PASS",
+            "evidence": "docs/evidence/COMPAT-020/diag-preset-0.2.2-rc.1.json"
+          },
+          "maintainability": {
+            "threshold": "代际差异单点登记 GENERATION_DROPPED + host-contract 5.2/5.7；smoke 双向对账。",
+            "validation": "node scripts/verify-contract-anchors.mjs + node test/smoke.mjs B2",
+            "status": "PASS",
+            "evidence": "lib/host-contract.mjs；docs/evidence/COMPAT-020/README.md"
+          }
+        }
+      },
+      "vertical_slice": {
+        "user_visible_slice": "用户在 DSH 0.2.2 设置页打开「Agent 预设」时看到「小说写作工作流」可选中，不再显示红色「加载失败」。",
+        "demo_path": "node test/smoke.mjs + 0.2.2 隔离实例 diag（docs/evidence/COMPAT-020/diag-preset-0.2.2-rc.1.json）",
+        "scope_guard": "仅改 cordis.patch.yml / agent.cordis.yml / 三份测试 / host-contract / README / CHANGELOG / 证据；不重写运行时预设注册、不改版本、不动 UI。",
+        "rollback_plan": "发布态回退到上一版 0.5.3；恢复已删除的 tool-subagent-list-agents 行会重新触发 0.2.2 broken，因此不保留该回退作为发布态。",
+        "status": "PASS",
+        "evidence": "docs/evidence/COMPAT-020/README.md；smoke 334/0；0.2.2 探针 ok:true。"
+      },
+      "interruption_policy": {
+        "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
+        "critical_triggers": [
+          "Ask the user when product intent is unclear.",
+          "Ask the user when acceptance standard or done criteria are unclear.",
+          "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions."
+        ],
+        "auto_execute": [
+          "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible.",
+          "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied."
+        ],
+        "assumption_record": {
+          "assumption": "0.2.0/0.2.1 的静态 bundle patch 无法按宿主版本分流；接受这两代独立 list_agents 工具行缺失，用 GENERATION_DROPPED 如实披露，不在本热修引入运行时分支。",
+          "basis": "0.2.2 包 exports 移除 ./list-agents；0.2.0/0.2.1 仍导出；静态 patch 无条件语法。",
+          "reversibility": "改动限于 YAML/看护测试；可由 COMPAT-021/022 的 preflight/runtime provider 替换，无数据迁移。",
+          "validation": "0.2.2 与 0.2.1 隔离探针 diag 均 ok:true 且 novel-writing 无 broken；smoke 334/0。",
+          "rollback": "回退 COMPAT-020 commit；0.2.2 将回到 broken，故发布态不保留该回退。"
+        },
+        "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
+      },
+      "allowed_change_scope": [
+        "cordis.patch.yml",
+        "agent-presets/novel-writing/agent.cordis.yml",
+        "test/fixtures/host-surfaces/preset-schema-face.mjs",
+        "test/validate-preset.mjs",
+        "test/smoke.mjs",
+        "lib/host-contract.mjs",
+        "README.md",
+        "CHANGELOG.md",
+        "docs/evidence/COMPAT-020/",
+        ".governance/ 中本任务对应的计划、证据、决策与审查记录"
+      ],
+      "required_evidence": [
+        "evidence-log entry with 事实依据, 目标对齐, 用户影响, and 结构化事实 JSON",
+        "validation commands with exit_code and concise output summary",
+        "independent review evidence or explicit degraded review evidence that does not claim full separation"
+      ],
+      "next_commands": [
+        "python -m unittest skills/software-project-governance/infra/tests/test_verify_workflow.py -v",
+        "python skills/software-project-governance/infra/verify_workflow.py check-governance --fail-on-issues"
+      ],
+      "done_definition": [
+        "0.2.2 隔离实例 agentPresets.list() 返回 novel-writing 且无 broken；设置页不再显示红色「加载失败」。",
+        "smoke 334/0、validate-preset PASS、verify-contract-anchors FAIL=0；证据 docs/evidence/COMPAT-020/。",
+        "独立 Reviewer 对 COMPAT-020 给出 APPROVED（docs/review/COMPAT-020-R1.md），Coordinator 完成单任务 commit。"
+      ],
+      "source": "plan-tracker.md##当前活跃事项"
+    },
+    "COMPAT-021": {
+      "task_id": "COMPAT-021",
+      "priority": "P1",
+      "status": "⏳ pending（待实施；设计阶段，依赖 COMPAT-020；triage = change-triage/COMPAT-021.json）",
+      "goal": "COMPAT-021 **插件兼容性设计系统优化**（用户 2026-11-07 直接要求，四目标）：①尽可能减少对 DSH 宿主依赖 ②必须的接口/字段依赖解耦、单独维护 ③依赖代码严格校验与看护 ④依赖边界可调测、问题第一时间发现、低代价适配。交付：四目标差距分析 + 宿主耦合面清单（契约 `items[]` / `regionLiterals` / `clientProbes` 现状与盲区）+ 目标架构（generation manifest / 行级 preflight / fail-soft 预设注册 / 结构化诊断）+ 迁移路线；落地行级 preflight（含子路径解析，`scripts/preflight-preset-rows.mjs`）+ P-10 契约对账 + 探针；运行时预设注册重写不在本任务直接实施（另立任务待关键决策批准）",
+      "product_success_contract": {
+        "user": "插件维护者（需要升级 DSH 时不因宿主 API/包导出变化而整插件失效）与使用预设的小说作者。",
+        "job_to_be_done": "维护者按 generation manifest 与行级 preflight 在升级前发现宿主耦合断裂，获得可操作诊断并在低代价范围内适配；预设加载失败不再整棵 broken。",
+        "non_goals": [
+          "不在本任务重写运行时预设注册；另立 COMPAT-022，须关键决策批准。",
+          "不承诺 0.2.0/0.2.1 恢复独立 list_agents 工具行；仅如实披露代际限制。",
+          "不 bump 版本、不改发布号。"
+        ],
+        "success_metrics": [
+          "维护者运行行级 preflight 能看到每个预设行的解析结果，缺失子路径以非零退出和结构化诊断直接暴露，而不是让用户看到整棵预设 broken。",
+          "node scripts/preflight-preset-rows.mjs --self-test 通过；fixture 注入缺失子路径时 exit 1 并列出 row id、包名、子路径、错误码。"
+        ],
+        "competitive_baseline": "DSH 官方插件在宿主升级时通过能力检测/fail-soft 保持可用；本插件应达到同等的升级韧性（不断链、可诊断）。",
+        "done_definition": [
+          "docs/COMPATIBILITY.md 完成四目标差距分析、耦合清单、generation manifest 与迁移路线；preflight 脚本对 fixture 给出结构化诊断。",
+          "独立 Reviewer/Architect 审查通过，确认四项用户目标逐条覆盖，且未把设计文档冒充为运行时功能。"
+        ]
+      },
+      "acceptance_contract": {
+        "scenario": "维护者在 DSH 升级前后运行行级 preflight：逐行解析 cordis.patch.yml 与 agent.cordis.yml 的 Loader 行，缺失子路径时输出 row id、包名、子路径、错误码并以 exit 1 失败，而不是等到用户打开设置页才发现整棵预设 broken。",
+        "command": "node scripts/preflight-preset-rows.mjs",
+        "expected_output": "正常行 exit 0 并逐行打印 ok；fixture 注入缺失子路径时 exit 1，输出包含 row id、包名、子路径、ERR_PACKAGE_PATH_NOT_EXPORTED 诊断。",
+        "last_run": {
+          "status": "not_run_yet",
+          "exit_code": null,
+          "summary": "COMPAT-021 当前为设计/待实施阶段：docs/COMPATIBILITY.md 正在交付，scripts/preflight-preset-rows.mjs 尚未实现，因此没有运行结果；本轮不把设计文档冒充为功能验收。"
+        },
+        "demo_evidence": "docs/COMPATIBILITY.md 的设计与迁移路线；实现后由 scripts/preflight-preset-rows.mjs 的 fixture 输出补齐运行演示。"
+      },
+      "quality_budget": {
+        "dimensions": {
+          "performance": {
+            "threshold": "行级 preflight 只读解析，单次运行目标低于 2 秒（设计门槛）。",
+            "validation": "node scripts/preflight-preset-rows.mjs --help / fixture 运行",
+            "status": "not_run_yet",
+            "evidence": "docs/COMPATIBILITY.md 迁移路线"
+          },
+          "reliability": {
+            "threshold": "preflight 对缺失子路径 fail-closed（exit 1），不静默 broken。",
+            "validation": "node scripts/preflight-preset-rows.mjs fixture",
+            "status": "not_run_yet",
+            "evidence": "docs/COMPATIBILITY.md 设计文档与后续 fixture 输出"
+          },
+          "security": {
+            "threshold": "脚本只读 package.json/exports，不执行宿主包代码。",
+            "validation": "node scripts/preflight-preset-rows.mjs 安全测试",
+            "status": "not_run_yet",
+            "evidence": "docs/COMPATIBILITY.md 设计原则"
+          },
+          "accessibility": {
+            "threshold": "不涉及 UI 变更；本任务交付设计与只读 CLI。",
+            "validation": "node scripts/preflight-preset-rows.mjs 输出可读性检查",
+            "status": "not_run_yet",
+            "evidence": "docs/COMPATIBILITY.md 诊断输出设计"
+          },
+          "ux": {
+            "threshold": "维护者能从诊断中定位 row id、包名、子路径与错误码。",
+            "validation": "fixture 输出快照检查",
+            "status": "not_run_yet",
+            "evidence": "docs/COMPATIBILITY.md 诊断输出设计"
+          },
+          "maintainability": {
+            "threshold": "耦合清单与 generation manifest 单一事实源；P-10 双向对账。",
+            "validation": "node scripts/verify-contract-anchors.mjs",
+            "status": "not_run_yet",
+            "evidence": "lib/host-contract.mjs"
+          }
+        }
+      },
+      "vertical_slice": {
+        "user_visible_slice": "维护者在升级 DSH 前运行 preflight 命令，看到每个预设行的解析结果与结构化诊断，而不是等到用户打开设置页才发现整棵预设 broken。",
+        "demo_path": "node scripts/preflight-preset-rows.mjs（实现后）与 docs/COMPATIBILITY.md 的 fixture 表",
+        "scope_guard": "仅 docs/COMPATIBILITY.md、lib/host-contract.mjs、scripts/preflight-preset-rows.mjs、test/smoke.mjs、test/validate-preset.mjs；不重写运行时注册、不改版本、不恢复 0.2.0/0.2.1 工具行。",
+        "rollback_plan": "删除设计文档与只读 preflight 脚本即回退；不写运行时数据、不改宿主状态。",
+        "status": "not_run_yet",
+        "evidence": "docs/COMPATIBILITY.md 与后续 preflight fixture 输出（实现后）。"
+      },
+      "interruption_policy": {
+        "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
+        "critical_triggers": [
+          "Ask the user when product intent is unclear.",
+          "Ask the user when acceptance standard or done criteria are unclear.",
+          "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions."
+        ],
+        "auto_execute": [
+          "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible.",
+          "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied."
+        ],
+        "assumption_record": {
+          "assumption": "先交付设计、契约与 preflight，不直接重写运行时预设注册；运行时自适应另立 COMPAT-022 并走关键决策。",
+          "basis": "用户明确要求 design+contract+probe；运行时重写风险高且需版本/回滚验证。",
+          "reversibility": "设计文档与只读脚本可删除；不影响现有运行时。",
+          "validation": "docs/COMPATIBILITY.md 审查与 preflight fixture 输出。",
+          "rollback": "删除设计与脚本；无运行时/数据影响。"
+        },
+        "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
+      },
+      "allowed_change_scope": [
+        "docs/COMPATIBILITY.md",
+        "lib/host-contract.mjs",
+        "scripts/preflight-preset-rows.mjs",
+        "test/smoke.mjs",
+        "test/validate-preset.mjs",
+        "package.json（仅当需要注册 preflight 脚本时）",
+        ".governance/ 中本任务对应的计划、证据、决策与审查记录"
+      ],
+      "required_evidence": [
+        "evidence-log entry with 事实依据, 目标对齐, 用户影响, and 结构化事实 JSON",
+        "validation commands with exit_code and concise output summary",
+        "independent review evidence or explicit degraded review evidence that does not claim full separation"
+      ],
+      "next_commands": [
+        "python -m unittest skills/software-project-governance/infra/tests/test_verify_workflow.py -v",
+        "python skills/software-project-governance/infra/verify_workflow.py check-governance --fail-on-issues"
+      ],
+      "done_definition": [
+        "docs/COMPATIBILITY.md 完成四目标差距分析、耦合清单、generation manifest、迁移路线；preflight 脚本对 fixture 给出结构化诊断。",
+        "node test/smoke.mjs 与 node scripts/preflight-preset-rows.mjs 通过；P-10 双向对账通过。",
+        "独立 Reviewer/Architect 审查通过，Coordinator 完成单任务 commit。"
       ],
       "source": "plan-tracker.md##当前活跃事项"
     }

@@ -131,7 +131,7 @@ function entryListSchemaCompat() {
 // BUG-011 代际变体容忍口径（与 preset-schema-face GENERATION_VARIANT 同源常量）：本源是 0.1.x
 // 真源（agent.cordis.yml 保留 worker-thread 行），在 0.2.0 平面上必然 MODULE_NOT_FOUND——对侧包
 // 在场即判「已知代际变体」披露通过（双源等价由 schema-face dual 模式互钉）；对侧也不在 ⇒ 真缺包仍 FAIL。
-const { GENERATION_VARIANT } = await import('./fixtures/host-surfaces/preset-schema-face.mjs')
+const { GENERATION_VARIANT, GENERATION_DROPPED } = await import('./fixtures/host-surfaces/preset-schema-face.mjs')
 const generationCounterpart = (name) => name === GENERATION_VARIANT.legacy.name ? GENERATION_VARIANT.current.name
   : name === GENERATION_VARIANT.current.name ? GENERATION_VARIANT.legacy.name : null
 // 平面探测双通道（BUG-011）：①profile 目录 require.resolve（经典通道——但 profiles/node_modules
@@ -156,6 +156,11 @@ function packageOnPlane(name) {
   }
   return null
 }
+// 声明代平面（0.2.x）：`@deepseek-ai/dsh-agent-preset` 在场 ⇒ 0.2.x 源为事实源（与 install 脚本 /
+// preset-schema-face 同口径的能力检测）。为 null 时按 profile 在场与否分流：**有 profile** 的 0.1.x
+// 平面下 legacy-only 行走下方原始解析路径（缺失即真故障）；**无 profile** 的降级面属预存在的解析期
+// fail-closed（loader schema 不可得 ⇒ YAML `!!js` 标签解析即失败），不对模块解析作保证。
+const declarationPlane = packageOnPlane('@deepseek-ai/dsh-agent-preset')
 function checkRows(list, at) {
   for (const [index, row] of list.entries()) {
     const label = `${at}row ${index + 1}`
@@ -180,11 +185,26 @@ function checkRows(list, at) {
       continue
     }
     if (!profileAvailable) {
+      // COMPAT-020 legacy-only 行：无 profile ⇒ 无法判定声明代平面，显式 fail-closed（非静默跳过）。
+      // 注：当前降级运行在更早的 YAML 解析期即失败（loader schema 不可得），本分支是防御性兜底。
+      if (row.name === GENERATION_DROPPED.name) {
+        fail(`${label} (${row.id ?? '?'} → ${row.name}) legacy-only 行在无 profile 降级面无法判定声明代平面：fail-closed`)
+        continue
+      }
       if (row.name.startsWith('@deepseek-ai/')) { ok(`${label} (${row.id ?? '?'} → ${row.name}) [resolution skipped: no profile]`); continue }
       fail(`${label} (${row.id ?? '?'} → ${row.name}) unknown plugin without profile to resolve`)
       continue
     }
     // 包在场探测（loader 以 profile 目录为 baseUrl；BUG-011 起叠加安装锚点直查通道）
+    // COMPAT-020：legacy-only 行（0.2.x 源已整行移除）——声明代平面（0.2.x）不解析该子路径（0.2.2 起
+    // 已从 exports 移除），`list_agents` 改由主包注册；此处**显式披露并跳过**（非静默）。**有 profile**
+    // 且声明面为 null（0.1.x）时不跳过，保留下面的原始解析/fail 路径（0.1.x 上该行 MUST 可解析，缺失仍
+    // 是真故障）。**无 profile** 的降级面在到达本函数前即已在 YAML 解析期 fail-closed；若未来可达，
+    // 上面的无 profile 分支对该行显式 fail-closed，本工具不对其宣称模块解析保证（REVIEW-COMPAT-020-R1 F4）。
+    if (row.name === GENERATION_DROPPED.name && declarationPlane !== null) {
+      ok(`${label} (${row.id ?? '?'} → ${row.name}) [generation-dropped：0.2.x 源已移除本行；0.2.2 由主包提供 list_agents；本工具跳过 legacy-only 行]`)
+      continue
+    }
     const present = packageOnPlane(row.name)
     if (present !== null) {
       ok(`${label} (${row.id ?? '?'} → ${row.name}) resolves[${present.hit}] → ${present.path.replace(process.env.USERPROFILE ?? '', '~')}`)
@@ -199,6 +219,32 @@ function checkRows(list, at) {
   }
 }
 checkRows(rows, '')
+
+// ── 2b. COMPAT-020 代际删除行静态硬不变量（源侧；与 preset-schema-face dual 双保险）──
+// ① cordis.patch.yml MUST NOT 再声明 legacy-only 行（0.2.2 起该子路径已从 exports 移除——残留即整棵
+//   预设激活抛 ERR_PACKAGE_PATH_NOT_EXPORTED）；② agent.cordis.yml MUST 恰 1 行（0 行 = 0.1.x 丢工具）；
+// ③ 该 legacy 行 config 空/未声明（删除行不得「借壳」承载配置）。
+const flattenRows = (list, out = []) => {
+  for (const row of list) {
+    if (row === null || typeof row !== 'object') continue
+    out.push(row)
+    if (row.group === true && Array.isArray(row.config)) flattenRows(row.config, out)
+  }
+  return out
+}
+const droppedName = GENERATION_DROPPED.name
+const patchText = readFileSync(join(root, 'cordis.patch.yml'), 'utf8')
+if (patchText.includes(droppedName)) fail(`cordis.patch.yml MUST NOT 声明 legacy-only 行：${droppedName}（0.2.2 起该子路径已移除）`)
+else ok('cordis.patch.yml 未声明 legacy-only list-agents 行（0.2.x 源正确）')
+const droppedRows = flattenRows(rows).filter((row) => row.name === droppedName)
+if (droppedRows.length !== 1) fail(`agent.cordis.yml MUST 恰 1 行 legacy-only list-agents（实测 ${droppedRows.length}）`)
+else {
+  ok('agent.cordis.yml 保留恰 1 行 legacy-only list-agents（0.1.x 源）')
+  const cfg = droppedRows[0].config
+  const empty = cfg === undefined || cfg === null || (typeof cfg === 'object' && !Array.isArray(cfg) && Object.keys(cfg).length === 0)
+  if (empty) ok('legacy-only list-agents 行 config 为空/未声明')
+  else fail(`legacy-only list-agents 行 config MUST 空/未声明（实测 ${JSON.stringify(cfg).slice(0, 120)}）`)
+}
 
 // ── 3. 元数据与技能目录 ──────────────────────────────────────────────────
 if (!existsSync(join(presetDir, 'preset.yml'))) fail('preset.yml missing')

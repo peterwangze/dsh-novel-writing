@@ -880,6 +880,50 @@
       "baseline_effects": null,
       "recorded_at": "2026-10-25T21:13:42",
       "updated_at": "2026-10-25T21:13:42"
+    },
+    "op-1178cc6c53674190aa95e7e77310f480": {
+      "schema_version": 1,
+      "command": "decision-append",
+      "task_id": "",
+      "input_fingerprint": "d76c42155931ad578a878704caadb52b4c6cffeb17cf1dc1a4495adab235fbb9",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-1178cc6c53674190aa95e7e77310f480",
+        "code": "ok",
+        "new_revision": 42973,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-07T10:31:48",
+      "updated_at": "2026-11-07T10:31:48",
+      "authority": {
+        "state": "MD_ACTIVE",
+        "epoch": 0,
+        "generation": 0,
+        "backend": "md"
+      }
+    },
+    "op-aa681701a9bc41b6a8781e6c4554deb8": {
+      "schema_version": 1,
+      "command": "evidence-append",
+      "task_id": "COMPAT-020",
+      "input_fingerprint": "a5426f7194d75aed02a75d842ea33464730c485bacc365dbc4c0bde7bc91a9d8",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-aa681701a9bc41b6a8781e6c4554deb8",
+        "code": "ok",
+        "new_revision": 420988,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-07T11:45:34",
+      "updated_at": "2026-11-07T11:45:34"
     }
   }
 }
