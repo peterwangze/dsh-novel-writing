@@ -1195,6 +1195,30 @@
       "baseline_effects": null,
       "recorded_at": "2026-11-08T05:44:12",
       "updated_at": "2026-11-08T05:44:12"
+    },
+    "op-2780733adef84382a45991a5f0e2ba8e": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "CLEAN-014",
+      "input_fingerprint": "8ee75a3e30f9675a02fadc0d190efd0b5629e64a57443f8d0473376509e8333c",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-2780733adef84382a45991a5f0e2ba8e",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-08T05:44:43",
+      "updated_at": "2026-11-08T05:44:43",
+      "released_files": [
+        "docs/evidence/CLEAN-014/",
+        "scripts/preflight-preset-rows.mjs",
+        "scripts/probe-nv-bar-geometry.mjs"
+      ]
     }
   }
 }
