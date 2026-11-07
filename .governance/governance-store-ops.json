@@ -924,6 +924,57 @@
       "baseline_effects": null,
       "recorded_at": "2026-11-07T11:45:34",
       "updated_at": "2026-11-07T11:45:34"
+    },
+    "op-93e8ce3a9a90410eb9614a237be1f2e1": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "COMPAT-020",
+      "input_fingerprint": "beecde1ce89f6772fa8010bd07dffdb9b3bbc2578312faf146a2c857034f6279",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-93e8ce3a9a90410eb9614a237be1f2e1",
+        "code": "ok",
+        "new_revision": 875,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-07T11:48:33",
+      "updated_at": "2026-11-07T11:48:33",
+      "released_files": [
+        "CHANGELOG.md",
+        "README.md",
+        "agent-presets/novel-writing/agent.cordis.yml",
+        "cordis.patch.yml",
+        "lib/host-contract.mjs",
+        "test/fixtures/host-surfaces/preset-schema-face.mjs",
+        "test/smoke.mjs",
+        "test/validate-preset.mjs"
+      ]
+    },
+    "op-e1770199a3334150861a49ca6489db3d": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "COMPAT-021",
+      "input_fingerprint": "b6d134fe7233a304a91c4ea8d61802ac9513f8f1c25a6806b8cb5d82c93c8725",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-e1770199a3334150861a49ca6489db3d",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-07T11:48:33",
+      "updated_at": "2026-11-07T11:48:33",
+      "released_files": [
+        "docs/COMPATIBILITY.md"
+      ]
     }
   }
 }
