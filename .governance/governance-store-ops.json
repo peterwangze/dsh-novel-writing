@@ -1123,6 +1123,40 @@
       "baseline_effects": null,
       "recorded_at": "2026-11-07T22:09:32",
       "updated_at": "2026-11-07T22:09:32"
+    },
+    "op-de61ccc9b3aa4d269efa2c4131c671e5": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "COMPAT-023",
+      "input_fingerprint": "2b19f5dd6a7560b1ff1e55fd33630d13caebd5553b22860a5aadd14495bddcbd",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-de61ccc9b3aa4d269efa2c4131c671e5",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-07T22:10:32",
+      "updated_at": "2026-11-07T22:10:32",
+      "released_files": [
+        "README.md",
+        "docs/COMPATIBILITY.md",
+        "docs/evidence/COMPAT-023/README.md",
+        "docs/evidence/COMPAT-023/implementation.md",
+        "lib/host-compat/generation-manifest.mjs",
+        "lib/host-compat/preset-projection.mjs",
+        "lib/host-contract.mjs",
+        "scripts/preflight-preset-rows.mjs",
+        "scripts/probe-nv-bar-geometry.mjs",
+        "scripts/probe-nv-ux012.mjs",
+        "scripts/probe-nv-workbench-mount.mjs",
+        "test/preflight-preset-rows.test.mjs",
+        "test/smoke.mjs"
+      ]
     }
   }
 }
