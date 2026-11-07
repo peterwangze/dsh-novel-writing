@@ -1399,7 +1399,10 @@ check('客户端源码面：UX-063 P0-a② 返工（用户 2026-10-25）首页 C
     && launchB.includes('launcher.promptLaunch(sid, current, novels, opt)')
     && launchB.includes('allowStop !== true')                          // 首页发起不抢停运行中的轮次
     && clientSrc.includes('onClick: () => launchWorkflow(null, true)')  // rail 主按钮仍承担停止
-    && clientSrc.includes('launchWorkflow({ mode: wf.mode, chapter: wf.chapter }, false)')
+    // BUG-012 修复形态订正：消费 effect 上移后首页意图经 launchWfRef 间接调用（原直调字面量随违规形态退役）
+    && clientSrc.includes('launchWfRef.current({ mode: wf.mode, chapter: wf.chapter }, false)')
+    && clientSrc.includes('launchWfRef.current = launchWorkflow')      // 渲染期闭包刷新（active 渲染才走到）
+    && clientSrc.includes('}, [pendingWorkflow, snap.active])')        // effect 以 snap.active 门控（保留意图不清空）
 })(), 'ux063 home workflow trigger missing')
 check('客户端源码面：UX-063 P0-a② 返工：客户端「新建章编辑面」已移除（不建空章节文件）', (() => {
   return !clientSrc.includes('saveNewChapter')
@@ -1481,6 +1484,221 @@ check('数据分支结构：UX-063 P0-a② 四区齐备 + CTA 文案取 homeCont
     && blk.includes("t('homeContinueCta', homeNextNum)")              // CTA 文案 = 章号同源
     && blk.includes("homeDetailFailed === true\n                ? el('button', { type: 'button', className: 'nv-home-sub nv-home-retry'")  // 失败态才有重试
 })(), 'ux063 home data-branch structure missing')
+
+// ── BUG-012：Rules-of-Hooks 静态守卫（防再犯；证据 docs/evidence/BUG-012/0.2.2-surface-facts.md）────
+// 事故形态：组件函数体内「条件早退」出现在顶层 hook 调用之前 ⇒ 挂载渲染（inactive）hook 数少一个，
+// snap.active 翻转（inactive→active）时本渲染 hook 数 > 上一渲染 ⇒ React #310 ⇒ 宿主 SlotErrorBoundary
+// 捕获后卸载 novel-split entry =「点小说工作台不出现」（四代宿主同雷，与宿主代际无关）。
+// 检测口径（启发式静态扫描，非 AST，边界如实披露）：
+//   ① 扫描对象 = function 声明 / const 箭头函数体中**体内出现 hook 调用**（use[A-Z]\w*( ）的函数；
+//   ② 条件早退 = 控制块（if/else/try/catch/finally/for/while/do/switch）内的 return——**块状与无块
+//      两形态均判**（R1-F1：块头分类改「末行判据」+ 跨行条件括号回扫 + 「块内直层裸 return」内容
+//      兜底，三路见 hooksGuardClassify/hooksGuardContentOverride），或与 if(…)/else 同行（括号净差
+//      为 0，即条件已闭合）的无块 return；回调（=> / function / 方法头）与对象字面量内的 return
+//      不算——它们不是组件语句（useEffect 回调里的 return 是清理/短路，合法）；
+//   ③ 顶层 hook 调用 = 函数体直层（不进任何嵌套块/回调）的 hook 调用；
+//   ④ 违规 = 存在早退位置早于某顶层 hook 位置；字符串/注释/模板字面量静态部/正则字面量先置空（保留
+//      换行与行号）再做括号配平，防样式串内花括号干扰；已知盲区：return 另起一行书写的无块 if 等
+//      罕见形态不保证检出（判别力由负例对照证明非恒真）。R1-F1 实战：本判据曾揪出 ChapterPanel
+//      预存在同类违规（空章早退在 useRef 之前，chapters 0→N 翻转即 #310）——已随 R1 修复（listRef 上提）。
+const hooksGuardBlank = (src) => {
+  const out = []
+  const frames = [] // { tpl, depth }：tpl=true 模板静态部；false 为模板插值代码部（花括号计数）
+  let last = ''
+  const kwBeforeRegex = (txt) => {
+    const m = /([A-Za-z_$][\w$]*)$/.exec(txt)
+    return m !== null && ['return', 'typeof', 'case', 'in', 'of', 'instanceof', 'delete', 'void', 'do', 'else', 'yield', 'await'].includes(m[1])
+  }
+  let i = 0
+  const n = src.length
+  while (i < n) {
+    const c = src[i]
+    const d = i + 1 < n ? src[i + 1] : ''
+    const top = frames.length > 0 ? frames[frames.length - 1] : null
+    if (top !== null && top.tpl) {
+      if (c === '`') { frames.pop(); out.push(' '); i += 1; last = '`'; continue }
+      if (c === '\\' && d !== '') { out.push(' ', ' '); i += 2; continue }
+      if (c === '$' && d === '{') { frames.push({ tpl: false, depth: 0 }); out.push('$', '{'); i += 2; last = '{'; continue }
+      out.push(c === '\n' ? '\n' : ' '); i += 1; continue
+    }
+    if (c === '/' && d === '/') { let j = src.indexOf('\n', i); if (j < 0) j = n; for (; i < j; i++) out.push(' '); continue }
+    if (c === '/' && d === '*') { let j = src.indexOf('*/', i + 2); j = j < 0 ? n : j + 2; for (; i < j; i++) out.push(src[i] === '\n' ? '\n' : ' '); continue }
+    if (c === "'" || c === '"') {
+      const q = c; out.push(' '); i += 1
+      while (i < n && src[i] !== q) {
+        if (src[i] === '\\') { out.push(' '); i += 1; if (i < n) { out.push(src[i] === '\n' ? '\n' : ' '); i += 1 } }
+        else { out.push(src[i] === '\n' ? '\n' : ' '); i += 1 }
+      }
+      i += 1; out.push(' '); last = q; continue
+    }
+    if (c === '`') { frames.push({ tpl: true, depth: 0 }); out.push(' '); i += 1; continue }
+    if (c === '/' && (last === '' || /[({[,;=:?!&|<>+\-*%^~]/.test(last) || kwBeforeRegex(out.join('')))) {
+      out.push(' '); i += 1
+      let done = false
+      while (i < n && !done) {
+        if (src[i] === '\\') { out.push(' '); i += 1; if (i < n) { out.push(' '); i += 1 }; continue }
+        if (src[i] === '[') {
+          out.push(' '); i += 1
+          while (i < n && src[i] !== ']') { if (src[i] === '\\') { out.push(' '); i += 1 }; out.push(src[i] === '\n' ? '\n' : ' '); i += 1 }
+          if (i < n) { out.push(' '); i += 1 }
+          continue
+        }
+        if (src[i] === '\n') break // 跨行 ⇒ 非正则（防御性终止）
+        if (src[i] === '/') done = true
+        out.push(src[i] === '\n' ? '\n' : ' '); i += 1
+      }
+      while (i < n && /[a-z]/i.test(src[i])) { out.push(' '); i += 1 }
+      last = '/'; continue
+    }
+    if (top !== null && !top.tpl && c === '}') {
+      if (top.depth === 0) { frames.pop(); out.push('}'); last = '}'; i += 1; continue }
+      top.depth -= 1; out.push('}'); last = '}'; i += 1; continue
+    }
+    if (top !== null && !top.tpl && c === '{') top.depth += 1
+    out.push(c); last = c; i += 1
+  }
+  return out.join('')
+}
+const HOOKS_GUARD_CTRL = new Set(['if', 'else', 'try', 'catch', 'finally', 'for', 'while', 'do', 'switch'])
+const hooksGuardParenNet = (s) => (s.match(/\(/g) ?? []).length - (s.match(/\)/g) ?? []).length
+// R1-F1：块头分类改「末行判据」——取 head 的末尾非空行；末行含未配平闭括号（跨行条件）时向前累计
+// 至配平，取累计块首行判控制关键字。本仓无分号风格下，回扫 `;{}` 边界会吃到前置语句残尾（Reviewer
+// 微测 A/D 形态 0/3 检出的根因）；方法头/对象字面量/回调不受影响（name( 非控制关键字）。
+const hooksGuardClassify = (head) => {
+  const lines = head.split('\n')
+  while (lines.length > 0 && lines[lines.length - 1].trim() === '') lines.pop()
+  if (lines.length === 0) return 'other'
+  let chunk = lines.pop()
+  let net = hooksGuardParenNet(chunk)
+  while (net < 0 && lines.length > 0) { const prev = lines.pop(); chunk = prev + '\n' + chunk; net += hooksGuardParenNet(prev) }
+  if (/=>[ \t]*$/.test(chunk)) return 'other'
+  if (/\bfunction\b/.test(chunk)) return 'other'
+  const firstLine = chunk.split('\n')[0].trim()
+  if (/^[} \t]*(?:else[ \t]+)?(if|for|while|switch|do|try|catch|finally)\b/.test(firstLine)) return 'block'
+  return 'other'
+}
+// R1-F1 兜底：head 未识别为回调/函数/方法头，而块内（至配平 }）直层含裸 return ⇒ 必为语句块
+// （对象字面量不可能含裸语句；方法体/回调体的 return 属其自身作用域——前三行排除门保其不翻判）。
+const hooksGuardContentOverride = (head, body, openIdx) => {
+  const lastLine = head.split('\n').filter((l) => l.trim() !== '').pop() ?? ''
+  if (/=>[ \t]*$/.test(head) || /\bfunction\b/.test(head) || /^[A-Za-z_$][\w$]*[ \t]*\(/.test(lastLine.trim())) return 'other'
+  let depth = 0; let end = -1
+  for (let i2 = openIdx; i2 < body.length; i2++) {
+    if (body[i2] === '{') depth += 1
+    else if (body[i2] === '}') { depth -= 1; if (depth === 0) { end = i2; break } }
+  }
+  if (end < 0) return 'other'
+  let d = 0; let i3 = openIdx + 1
+  while (i3 < end) {
+    const ch = body[i3]
+    if (ch === '{') { d += 1; i3 += 1; continue }
+    if (ch === '}') { d -= 1; i3 += 1; continue }
+    if (d === 0 && /[A-Za-z_$]/.test(ch)) {
+      let j = i3; while (j < end && /[\w$]/.test(body[j])) j += 1
+      if (body.slice(i3, j) === 'return') return 'block'
+      i3 = j; continue
+    }
+    i3 += 1
+  }
+  return 'other'
+}
+const scanHooksViolations = (src) => {
+  const code = hooksGuardBlank(src)
+  const defs = []
+  const FN_RE = /(?:^|[\n;])[ \t]*(?:async[ \t]+)?function[ \t]+([A-Za-z_$][\w$]*)[ \t]*\([^()]*\)[ \t]*\{/g
+  const AR_RE = /(?:^|[\n;])[ \t]*const[ \t]+([A-Za-z_$][\w$]*)[ \t]*=[ \t]*(?:async[ \t]*)?(?:\([^()]*\)|[A-Za-z_$][\w$]*)[ \t]*=>[ \t]*\{/g
+  for (const re of [FN_RE, AR_RE]) for (const m of code.matchAll(re)) defs.push({ name: m[1], open: m.index + m[0].length - 1 })
+  const lineStarts = []
+  { let acc = 0; for (const l of code.split('\n')) { lineStarts.push(acc); acc += l.length + 1 } }
+  const lineOf = (pos) => { let lo = 0, hi = lineStarts.length - 1; while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (lineStarts[mid] <= pos) lo = mid; else hi = mid - 1 } return lo + 1 }
+  const hookFns = []
+  const violations = []
+  const seen = new Set()
+  for (const def of defs) {
+    if (seen.has(def.open)) continue
+    seen.add(def.open)
+    let depth = 0; let close = -1
+    for (let i = def.open; i < code.length; i++) {
+      if (code[i] === '{') depth += 1
+      else if (code[i] === '}') { depth -= 1; if (depth === 0) { close = i; break } }
+    }
+    if (close < 0) continue
+    const body = code.slice(def.open + 1, close)
+    if (!/\buse[A-Z]\w*[ \t]*\(/.test(body)) continue
+    hookFns.push(def.name)
+    const scopes = []
+    const early = []
+    const topHooks = []
+    let p = 0
+    while (p < body.length) {
+      const ch = body[p]
+      if (ch === '{') {
+        let b = -1
+        for (let k = p - 1; k >= 0; k--) { const t = body[k]; if (t === ';' || t === '{' || t === '}') { b = k; break } }
+        const head = body.slice(b + 1, p)
+        let type = hooksGuardClassify(head)
+        if (type === 'other') type = hooksGuardContentOverride(head, body, p) // R1-F1 内容兜底
+        scopes.push(type); p += 1; continue
+      }
+      if (ch === '}') { scopes.pop(); p += 1; continue }
+      if (/[A-Za-z_$]/.test(ch)) {
+        let j = p; while (j < body.length && /[\w$]/.test(body[j])) j += 1
+        const word = body.slice(p, j)
+        if (word === 'return') {
+          if (scopes.every((s) => s === 'block')) {
+            const lineStart = body.lastIndexOf('\n', p) + 1
+            const lineBefore = body.slice(lineStart, p).trim()
+            const parenNet = (lineBefore.match(/\(/g) ?? []).length - (lineBefore.match(/\)/g) ?? []).length
+            const braceless = parenNet === 0
+              && (/^(?:}[ \t]*)?(?:else[ \t]+)?(?:if|for|while)[ \t]*\(/.test(lineBefore) || /^(?:}[ \t]*)?else$/.test(lineBefore))
+            if (scopes.length >= 1 || braceless) early.push({ pos: p, line: lineOf(def.open + 1 + p) })
+          }
+        } else if (/^use[A-Z]/.test(word)) {
+          let k = j; while (k < body.length && (body[k] === ' ' || body[k] === '\t')) k += 1
+          if (body[k] === '(' && scopes.length === 0) topHooks.push({ pos: p, name: word, line: lineOf(def.open + 1 + p) })
+        }
+        p = j; continue
+      }
+      p += 1
+    }
+    for (const e of early) {
+      const h = topHooks.find((x) => x.pos > e.pos)
+      if (h !== undefined) violations.push({ fn: def.name, earlyReturnLine: e.line, hookLine: h.line, hook: h.name })
+    }
+  }
+  const braceBalance = (code.match(/\{/g) ?? []).length - (code.match(/\}/g) ?? []).length
+  return { hookFns, violations, braceBalance }
+}
+// golden（brittle-by-design）：含 hook 调用的函数清单——增删组件/hook 必须显式改此值（防扫描面静默萎缩）
+const HOOKS_GUARD_GOLDEN_FNS = 23
+const hooksScan = scanHooksViolations(clientSrc)
+check('BUG-012 Rules-of-Hooks 静态守卫：lib/client.js 含 hook 调用的函数 ' + hooksScan.hookFns.length + ' 个（golden ' + HOOKS_GUARD_GOLDEN_FNS + '）全扫——「条件早退早于顶层 hook 调用」违规 = ' + hooksScan.violations.length + '（配平自检 ' + hooksScan.braceBalance + '）',
+  hooksScan.violations.length === 0 && hooksScan.hookFns.length === HOOKS_GUARD_GOLDEN_FNS && hooksScan.braceBalance === 0,
+  'violations=' + JSON.stringify(hooksScan.violations.slice(0, 3)) + ' fns=' + hooksScan.hookFns.join(','))
+check('BUG-012 Rules-of-Hooks 守卫判别力（负例对照，临时字符串直测非变异产品文件；R1-F1 补块状三件套）：无块/块状最小违规各必检出 1（块状例含无分号前置语句——Reviewer 微测 A 形态）∧ 合规形态 0 误报（hook 前置 + 回调内 return〔无块与块状〕+ 对象方法内 return）∧ 修复回退形态（无块版 + 块状版源码副本，块状版上文的 `}, [deps])` 即 D 形态上下文）SplitWorkspace 必检出', (() => {
+  const bad = scanHooksViolations(['function Bad(props) {', '  if (props.hide) return null', '  const [x, sx] = useState(0)', '  return x', '}'].join('\n'))
+  const badBlock = scanHooksViolations(['function BadBlock(props) {', '  const t = makeT()', '  if (props.hide) {', '    return null', '  }', '  const [x, sx] = useState(0)', '  return x', '}'].join('\n'))
+  const good = scanHooksViolations(['function Good(props) {', '  const [x, sx] = useState(0)', '  useEffect(() => {', '    if (x === 0) return', '    sx(1)', '  }, [x])', '  if (props.hide) return null', '  return x', '}'].join('\n'))
+  const okayBlock = scanHooksViolations(['function OkayBlock(props) {', '  const [x, sx] = useState(0)', '  useEffect(() => {', '    if (x === 0) {', '      return', '    }', '    sx(1)', '  }, [x])', '  return x', '}'].join('\n'))
+  const method = scanHooksViolations(['function M(props) {', '  const ctl = {', '    run(n) {', '      if (n === 0) return', '      return n', '    },', '  }', '  const [x, sx] = useState(0)', '  return x', '}'].join('\n'))
+  const reverted = clientSrc.replace(
+    '      const launchWfRef = useRef(null)\n      useEffect(() => {\n        if (snap.active !== true) return // 分栏未开：意图保留，开启后由本 deps 变化消费\n        if (pendingWorkflow === null) return\n        const wf = pendingWorkflow\n        setPendingWorkflow(null)\n        if (launchWfRef.current !== null) launchWfRef.current({ mode: wf.mode, chapter: wf.chapter }, false)\n      }, [pendingWorkflow, snap.active])\n\n      if (snap.active !== true) return null',
+    '      if (snap.active !== true) return null\n      const [fake, sfake] = useState(null)',
+  )
+  const rg = scanHooksViolations(reverted)
+  const revertedBlock = clientSrc.replace(
+    '      const launchWfRef = useRef(null)\n',
+    '      if (snap.active !== true) {\n        return null\n      }\n      const launchWfRef = useRef(null)\n',
+  )
+  const rgb = scanHooksViolations(revertedBlock)
+  return reverted !== clientSrc && revertedBlock !== clientSrc
+    && bad.violations.length === 1 && bad.violations[0].fn === 'Bad' && bad.violations[0].hook === 'useState'
+    && badBlock.violations.length === 1 && badBlock.violations[0].fn === 'BadBlock'
+    && good.violations.length === 0 && good.hookFns.length === 1
+    && okayBlock.violations.length === 0 && method.violations.length === 0
+    && rg.violations.length >= 1 && rg.violations.some((v) => v.fn === 'SplitWorkspace')
+    && rgb.violations.length >= 1 && rgb.violations.some((v) => v.fn === 'SplitWorkspace')
+})(), '判别力八段在断言内自含；若红请先看上一条守卫读数的 violations 明细')
 
 check('客户端源码面：UX-063 P0-a① 恢复保证五路径逐条具名（open / syncAnchor / closeDrawer / close / setBook）', (() => {
   const openB = fnBody('open(novelId) {')
@@ -2962,7 +3180,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   //      **残余缝（同次实测，未闭合）**：若 2.13 只删**终点闭合行**（**历史锚点**：COMPAT-013 时期值 `L4429-4460`——6 处注册仍全在范围内）
   //      则 ①②③④⑤ **全绿**（实测 262/0：⑤a 计数仍 6 ≡ 6、④ callPrefix = null、⑤b 无 `键: {` 形态构造）
   //      ⇒ 该形态目前无持续机检力。根治需「构造闭合行」口径，而 JS 范围本就可能是**合法语义片段**
-  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L5954` +1 / 3.8 `L3418-L3429` +1 实测均非配平）——
+  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L5971` +1 / 3.8 `L3420-L3431` +1 实测均非配平）——
   //      无差别要求配平会误报上述 3 项，故如实留档待另案（非本任务可安全落地）。
   //      **本行 3 个契约行号副本的同步方（CLEAN-006 **N-6** 归属订正，避免审计归因错位）**：本块随
   //      契约 `line` 重基**必须同步**，其**机检执行者 = `COMPAT-015 F3 行号引用对账`**（把本行 2.3
@@ -3116,7 +3334,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // 首行起构造者恰 3 项 = 4.6 `"dsh": {` / 6.1 `"peerDependencies": {` / 6.2 `"engines": {`（面 6 三项
   // JSON 根级子对象；其余 18 项首行为 JS 调用/声明/注释 ⇒ 不适用），项数入 golden（防空转）。
   // **只取首行、不取范围内全部 opener 的理由**：JS 范围可为**合法语义片段**（2.1 `L92-94` 净差 +2 / 2.3
-  // `L5526-L5528` +1 / 3.8 `L3418-L3432` +1 实测均非配平，⑤ 注释已留档）——无差别要求范围内每个 opener 配平
+  // 旧值 `L5526-L5528` +1 / 3.8 旧值 `L3418-L3432` +1 实测均非配平〔历史锚点：COMPAT-013 时期量测〕，⑤ 注释已留档）——无差别要求范围内每个 opener 配平
   // 会误报这些条目；而「范围未包住自身构造闭合行」的形态恰以构造键行起段（首行 opener 即充分判据）。
   // 口径边界同 ⑤b（裸字符配平，不剥注释/字符串中的 `{`/`}`）。
   const KEY_OPEN6 = /^\s*(?:"([^"]{1,60})"|'([^']{1,60})'|([A-Za-z_$][\w$.-]{0,60}))\s*:\s*\{\s*$/
@@ -3148,7 +3366,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // ⑫d F-3 披露数字入机检（COMPAT-013）：非严格面（**由 rangeItems 动态生成**；实测 **3/4/5/6 共 10 项**——
   // COMPAT-014 C-F-1 订正：原标签「3/5/6」漏面 4，且与下方列举清单自含 `4.6 L17`（面 4）自相矛盾；条目数同时
   // 入 golden）范围条目中「起于注释/空行」者 MUST 恰 2 项
-  //（3.1 起于 `/**` JSDoc L1278、3.8 起于 `/**` JSDoc L3418——互操作说明在本段内、非起点）。动因 = 该计数原为**人工转写**且写错
+  //（历史锚点：COMPAT-013 时期实测——3.1 起于 `/**` JSDoc L1278、3.8 起于 `/**` JSDoc L3418；现行注释起段以本断言动态计算清单为准）。动因 = 该计数原为**人工转写**且写错
   //（CHANGELOG 曾披露「三处」）——与 COMPAT-004 FIND-1 的 tier 串转写漂移同类，故沿用同款处置：实测值
   // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.5 `L1353` `try {` / 4.6 `L17`
   // `"dsh": {` / 5.1 `L1` `name:` / 5.2 `L16` `- id:` / 5.4 `L77` `- id:` / 6.1 `L39`（修正后真值；修正前
@@ -3998,8 +4216,9 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   const smokeSrc15 = readFileSync(new URL('./smoke.mjs', import.meta.url), 'utf8')
   const smokeLines15 = smokeSrc15.split('\n')
   const changelogLines15 = readFileSync(new URL('../CHANGELOG.md', import.meta.url), 'utf8').split('\n')
-  // COMPAT-021 新条目入锚点集（新增任务 MUST 把自身条目 id 加入锚点集，否则该条目落在面外——本批遵守）。
-  const CHANGELOG_ENTRY_ANCHORS15 = ['- **COMPAT-015', '- **COMPAT-016', '- **COMPAT-021']
+  // COMPAT-021 新条目入锚点集（新增任务 MUST 把自身条目 id 加入锚点集，否则该条目落在面外——本批遵守；
+  // BUG-012 同批加入）。
+  const CHANGELOG_ENTRY_ANCHORS15 = ['- **COMPAT-015', '- **COMPAT-016', '- **COMPAT-021', '- **BUG-012']
   const changelogEntrySlices15 = CHANGELOG_ENTRY_ANCHORS15.map((anchor) => {
     const start = changelogLines15.findIndex((l) => l.startsWith(anchor))
     if (start < 0) return { anchor, start: -1, lines: [] }

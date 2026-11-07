@@ -1,4 +1,18 @@
-# BUG-012 证据：0.2.2 工作台浮层（shell.overlay）静默不挂载
+# BUG-012 证据：0.2.2 工作台不出现（初判误诊 + 阶段 A 订正）
+
+> ## ⚠️ 根因订正（2026-11-07 阶段 A，见 [0.2.2-surface-facts.md](0.2.2-surface-facts.md)）
+> 本文档初版结论「0.2.2 宿主不再消费 `shell.overlay` 槽」**是误诊**：探针首跑存在
+> sign-in 登录遮罩拦截点击，「点击抽屉头无反应」实际是点击从未送达。阶段 A 经
+> npm tarball（0.2.1-rc.5 ↔ 0.2.2-rc.1 逐版比对）+ 桌面 app.asar 只读解包证明
+> `shell.overlay` 协议四代未变、宿主照常消费（走掉登录门后 `.nv-console`/`.nv-home`
+> 真实挂载）。**真根因 = 插件自身 `lib/client.js` SplitWorkspace Rules-of-Hooks
+> 违规**（条件早退在 `useEffect` 之前，UX-063 P0-a② commit 370a100 引入）：
+> 点书卡 active 翻转 → React #310 → 宿主 SlotErrorBoundary 卸载 novel-split
+> entry =「点小说，工作台不在」。与宿主代际无关，0.1.x~0.2.2 同雷。
+> **阶段 B 修复验证已通过（2026-11-07，见 [fix-verification.md](fix-verification.md)）**：
+> 0.2.2 探针真跑点书卡 → `.nv-split` 挂载、console 0 错误（无 #310 / 无槽位崩溃）。
+> 以下初版内容按原样保留作为调查过程记录（其中「bundle 字面量 0 命中」的解释
+> 见 facts 文档 §1 末段：宿主 client 包经批量 URL 加载，不走 index/vendor）。
 
 - 采集：2026-11-07 14:10–14:20（0.2.2-rc.1 隔离实例，probe profile，端口 3080，Playwright Chromium 156）
 - 报告人：用户（真机桌面，「我点击小说，工作台还是不在」）
@@ -32,6 +46,10 @@
 
 | 文件 | 内容 |
 |---|---|
+| `0.2.2-surface-facts.md` | 阶段 A 事实源（真根因 + 误诊订正 + 双版比对证据链） |
+| `fix-verification.md` | 阶段 B 修复验证（0.2.2 探针真跑：分栏挂载 + console 0 错误 + 门禁读数） |
+| `phaseB-console-mounted.png` | 阶段 B 断言①：点抽屉头后控制台浮层 + 首页挂载 |
+| `phaseB-split-mounted.png` | 阶段 B 断言②：点书卡后分栏工作台挂载 |
 | `probe-0.2.2-main-view.png` | 主视图：抽屉入口 + 空态文案可见 |
 | `probe-0.2.2-after-cta.png` | 点击后：无任何浮层挂载（与主视图一致） |
 | `probe-0.2.2-boot.log` | 探针启动日志（token 已脱敏） |

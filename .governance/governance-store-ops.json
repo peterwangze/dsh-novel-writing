@@ -1057,6 +1057,25 @@
         "generation": 0,
         "backend": "md"
       }
+    },
+    "op-8b45605fb6ab408cb188c82a6147abb0": {
+      "schema_version": 1,
+      "command": "evidence-append",
+      "task_id": "BUG-012",
+      "input_fingerprint": "2e582c2fb4836402380456d2999e31cfd4d3722a60b9d853a8d4491f0976c1e7",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-8b45605fb6ab408cb188c82a6147abb0",
+        "code": "ok",
+        "new_revision": 425100,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-07T20:47:14",
+      "updated_at": "2026-11-07T20:47:14"
     }
   }
 }

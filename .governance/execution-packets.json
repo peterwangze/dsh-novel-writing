@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-11-07T14:44:25",
+  "generated_at": "2026-11-07T20:47:56",
   "packets": {
     "REL-007": {
       "task_id": "REL-007",
@@ -986,6 +986,130 @@
         "rollback_plan": "TO_BE_DEFINED: how to revert or disable the slice if validation fails",
         "status": "TO_BE_DEFINED",
         "evidence": "TO_BE_DEFINED: latest demo proof or planned evidence location"
+      },
+      "interruption_policy": {
+        "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
+        "critical_triggers": [
+          "Ask the user when product intent is unclear.",
+          "Ask the user when acceptance standard or done criteria are unclear.",
+          "Ask the user before irreversible, release, risk acceptance, external dependency, or mode change decisions."
+        ],
+        "auto_execute": [
+          "Run routine execution, local validation, focused code edits, and governance record updates when scope is known and reversible.",
+          "Commit and push normal single-task changes when validation, evidence, and review gates are satisfied."
+        ],
+        "assumption_record": {
+          "assumption": "TO_BE_DEFINED: default choice used for a reversible non-critical ambiguity",
+          "basis": "TO_BE_DEFINED: fact source or repository pattern supporting the default",
+          "reversibility": "TO_BE_DEFINED: why the choice can be changed without product damage",
+          "validation": "TO_BE_DEFINED: command or demo that will verify the assumption",
+          "rollback": "TO_BE_DEFINED: how to revert if the assumption is wrong"
+        },
+        "interruption_budget": "At most one user interruption per work unit unless a new critical trigger appears."
+      },
+      "allowed_change_scope": [
+        "Only change files required by this task row: open",
+        "Keep unrelated refactors, release version bumps, and fixture sync out of this task unless listed in the task scope."
+      ],
+      "required_evidence": [
+        "evidence-log entry with 事实依据, 目标对齐, 用户影响, and 结构化事实 JSON",
+        "validation commands with exit_code and concise output summary",
+        "independent review evidence or explicit degraded review evidence that does not claim full separation"
+      ],
+      "next_commands": [
+        "python -m unittest skills/software-project-governance/infra/tests/test_verify_workflow.py -v",
+        "python skills/software-project-governance/infra/verify_workflow.py check-governance --fail-on-issues"
+      ],
+      "done_definition": [
+        "open",
+        "Code Reviewer or matching Reviewer has APPROVED the product-code change.",
+        "Commit and push are completed for this single task."
+      ],
+      "source": "plan-tracker.md##当前活跃事项"
+    },
+    "BUG-012": {
+      "task_id": "BUG-012",
+      "priority": "P0",
+      "status": "✅ 完成（R2 APPROVED_WITH_NOTES，P2×1 F3 已闭；待 Coordinator 提交）：真根因 = lib/client.js SplitWorkspace Rules-of-Hooks 违规（UX-063 P0-a② commit 370a100 引入），点书卡 → React #310 → SlotErrorBoundary 卸载 novel-split，四代宿主同雷；初判「宿主槽位变更」系登录遮罩误诊（阶段 A tarball+asar 逐版比对证伪）。修复 = effect 上移 + launchWfRef 间接调用 + ChapterPanel 同类违规 listRef 上提 + smoke 块状早退静态守卫（负例 8/8）。证据 docs/evidence/BUG-012/；评审 docs/review/BUG-012-R1/R2.md",
+      "goal": "BUG-012 **dsh 0.2.2 工作台浮层静默失效**（用户 2026-11-07 真机报障：「我点击小说，工作台还是不在」——COMPAT-020 热修后预设已可选入会话，但工作台不出现）。**隔离 0.2.2 实测定案（docs/evidence/BUG-012/）**：服务器面 ✅（`/novel-writing/api/settings-migrate` 200、overview 轮询成功）；侧栏槽 `sidebar.footer.action` ✅（抽屉渲染）；**`shell.overlay` × 4（nv-console/novel-split/novel-workspace-dialog/novel-bind-dialog，lib/client.js L6038-6053）全部静默不挂载**——点击抽屉头后 store 翻转但 DOM 零变化、console 零错误 ⇒ 宿主 shell 不再消费该槽。0.2.2 web 资源（index+vendor）`shell.overlay`/`sidebar.footer.action` 字面量 0 命中 ⇒ 槽位查询/渲染机制在 0.2.2 变更。修复方向 = 0.2.2 新客户端面双表面适配（参照 BUG-011 sessions 双表面先例），需宿主 client 包源码作事实源",
+      "product_success_contract": {
+        "user": "使用「小说写作工作流」预设的小说作者（在 DSH 任意代际宿主上从书卡进入创作工作台）。",
+        "job_to_be_done": "在预设会话里点击小说书卡即可进入创作工作台（分栏写作界面），而不是点击后工作台消失且无任何报错。",
+        "non_goals": [
+          "不改宿主槽位协议（shell.overlay 四代未变，无需适配）。",
+          "不处理 UX-063 视觉演进遗留（另行任务）。",
+          "不 bump 版本、不改服务器面 API。"
+        ],
+        "success_metrics": [
+          "用户在 0.2.2 真机点击书卡后工作台（.nv-split 分栏）出现并可写作。",
+          "node test/smoke.mjs 336/0（含新增 Rules-of-Hooks 块状早退守卫，负例 8/8 判别力）；隔离 0.2.2 探针点书卡路径 console 零 #310、零 slot entry crashed。"
+        ],
+        "competitive_baseline": "宿主自带工作面（worktable 等）在同代 React 下不受插件组件崩溃影响；本插件工作台应达到同等稳定性：单组件不因渲染契约被整棵卸载。",
+        "done_definition": [
+          "SplitWorkspace 与 ChapterPanel 两处 hooks 违规修复；全文件守卫 0 违规。",
+          "独立 Reviewer 两轮复审（R1 AWN P2×2 → 返工 → R2 AWN P2×1 F3 已闭）。",
+          "隔离 0.2.2 真跑：点书卡 .nv-split=1 无 #310（docs/evidence/BUG-012/fix-verification.md）。"
+        ]
+      },
+      "acceptance_contract": {
+        "scenario": "用户在 DSH（任意代际，含 0.2.2 桌面）预设会话侧栏点小说书卡 → 自动建会话绑定 → 分栏创作工作台出现且不再消失；空书目首开 → 工作流生章后工作台不崩溃（ChapterPanel 面）。",
+        "command": "node test/smoke.mjs",
+        "expected_output": "SMOKE DONE: 336 passed, 0 failed（含 Rules-of-Hooks 块状早退守卫 0 违规 + 负例判别力）；隔离 0.2.2 探针点书卡路径 .nv-split=1 且 console 无 Minified React error #310 / slot entry crashed。",
+        "last_run": {
+          "status": "PASS",
+          "exit_code": 0,
+          "summary": "2026-11-07 Coordinator 独立复跑：smoke 336/0；validate-preset PASS；anchors 79 段 FAIL=0；隔离 0.2.2 探针（junction SHA 实证服务工作树修复版）：点抽屉头 .nv-console/.nv-home 挂载；API 建书→点书卡→.nv-split=1、console error 0（对照阶段 A 同路径 = #310 崩溃卸载）。证据 docs/evidence/BUG-012/fix-verification.md + phaseB 双截图。"
+        },
+        "demo_evidence": "docs/evidence/BUG-012/fix-verification.md、phaseB-console-mounted.png、phaseB-split-mounted.png、0.2.2-surface-facts.md（根因订正链）。"
+      },
+      "quality_budget": {
+        "dimensions": {
+          "performance": {
+            "threshold": "客户端渲染零新增开销（effect 位置移动 + ref 间接调用，无轮询/无额外渲染）。",
+            "validation": "node test/smoke.mjs 渲染面回归 + 探针截图帧正常",
+            "status": "PASS",
+            "evidence": "docs/evidence/BUG-012/phaseB-split-mounted.png（工作台正常渲染）"
+          },
+          "reliability": {
+            "threshold": "hooks 恒定调用契约恢复：点书卡/空书首开两路径不再触发 React #310；守卫防再犯（块状+无块双形态）。",
+            "validation": "node test/smoke.mjs（守卫 0 违规 + 负例 8/8）+ R1/R2 双形态变异验证",
+            "status": "PASS",
+            "evidence": "docs/review/BUG-012-R1.md（变异 3/3）、BUG-012-R2.md（独立变异 + SHA 还原）"
+          },
+          "security": {
+            "threshold": "纯客户端渲染逻辑修复；无新输入面/网络面/存储面。",
+            "validation": "git diff 范围审（lib/client.js 2 hunk + 守卫/文档）",
+            "status": "PASS",
+            "evidence": "docs/review/BUG-012-R1.md §CRLF/diff 审计"
+          },
+          "accessibility": {
+            "threshold": "不新增/修改交互控件语义；工作台恢复可见本身即可达性修复。",
+            "validation": "UI 组件结构零改动（仅 hook 位置）",
+            "status": "EXEMPT",
+            "evidence": "git diff lib/client.js（无 DOM/ARIA 变更）",
+            "exception": "hook 声明位置移动，渲染输出逐字节等价（listRef 求值/使用位置不变）。"
+          },
+          "ux": {
+            "threshold": "点书卡即得工作台（用户核心路径恢复）；空书目生章路径不再整棵消失。",
+            "validation": "隔离 0.2.2 探针点书卡路径 + 用户真机复验（待用户重启桌面端后确认）",
+            "status": "PASS",
+            "evidence": "docs/evidence/BUG-012/fix-verification.md；用户真机确认待提交后复验"
+          },
+          "maintainability": {
+            "threshold": "守卫进 smoke（断言 336 含判别力负例）；契约 9 段重基 + revisions 22→23；行数账换行符口径。",
+            "validation": "node test/smoke.mjs + node scripts/verify-contract-anchors.mjs",
+            "status": "PASS",
+            "evidence": "docs/review/BUG-012-R2.md（9/9 内容级 MATCH + 字节级行数账实测）"
+          }
+        }
+      },
+      "vertical_slice": {
+        "user_visible_slice": "用户点小说书卡 → 创作工作台出现并可写作（不再静默消失）。",
+        "demo_path": "隔离 0.2.2 探针：点抽屉头 → 控制台挂载；API 建书 → 点书卡 → .nv-split=1 无 #310（docs/evidence/BUG-012/fix-verification.md）",
+        "scope_guard": "仅 lib/client.js（2 处 hook 上提 + 注释）、lib/host-contract.mjs（重基+revision）、test/smoke.mjs（守卫+订正）、README/CHANGELOG、docs/evidence/BUG-012/；不改宿主协议/服务器 API/预设声明/package.json。",
+        "rollback_plan": "还原 lib/client.js 两处 hook 位置 + 移除 smoke 守卫两条断言即回退；守卫回退将使 smoke 计数回落 336→334，README 同步。",
+        "status": "PASS",
+        "evidence": "docs/evidence/BUG-012/fix-verification.md + phaseB 双截图 + R1/R2 复审报告。"
       },
       "interruption_policy": {
         "mode": "critical-only: default execute routine reversible work and record assumptions when needed",
