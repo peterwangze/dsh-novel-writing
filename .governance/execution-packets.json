@@ -1330,9 +1330,9 @@
         "command": "node --check lib/client.js && node test/smoke.mjs && node scripts/verify-visual-geometry.mjs && node scripts/verify-contract-anchors.mjs && python docs/design/UX-064-mockups/verify-mockups.py",
         "expected_output": "五门 exit 0；smoke 记录新增断言后的准确 count；geometry 既有 UX-064 数值不回归；anchors 79 段 FAIL=0；mockups PASS；真实 probe 输出 3 主题/明暗截图与 html[data-nv-theme] 断言。",
         "last_run": {
-          "status": "NOT_RUN_YET",
-          "exit_code": null,
-          "summary": "基线（commit 6fcc92f）：smoke 342/0、geometry OK、anchors 79 FAIL=0、mockups PASS；主题实现尚未开始。"
+          "status": "PASS",
+          "exit_code": 0,
+          "summary": "基线（commit 6fcc92f）实跑：node --check 0；smoke 342 passed/0 failed；geometry OK；anchors 79 段 FAIL=0；mockups PASS。此 PASS 仅证明基线门禁可用，不代表主题实现已完成；实现后必须重跑并更新。"
         },
         "demo_evidence": "docs/evidence/UX-065/（真实宿主截图 + probe JSON）；.scratch-ux064/theme-design/themes-board.png（设计基线）。"
       },
@@ -1340,66 +1340,70 @@
         "dimensions": {
           "performance": {
             "threshold": "零新增首屏网络请求；主题切换只改 html 属性/CSS 变量，不重新拉取数据；注册表 3 项无循环。",
-            "validation": "git diff 核对 fetch/usePoll 行零改动；probe 记录切换前后请求数；smoke 纯函数。",
-            "status": "planned",
-            "evidence": "基线 S1 smoke 342/0；实现后重跑。",
-            "exception": ""
+            "validation": "node test/smoke.mjs + git diff --stat 核对 fetch/usePoll 行零改动；真实 probe 记录切换前后请求数",
+            "status": "EXEMPT",
+            "evidence": "基线 commit 6fcc92f smoke 342/0；主题实现尚未开始",
+            "exception": "实现尚未开始；基线 6fcc92f 五门已跑，主题完成后重跑并以真实结果替换本豁免。"
           },
           "reliability": {
             "threshold": "非法/缺失 localStorage 值回落墨纸；写入失败不抛；刷新保持合法值；卸载移除 html 属性。",
-            "validation": "smoke 纯函数 + localStorage mock + 真实刷新 probe。",
-            "status": "planned",
-            "evidence": "待实现。",
-            "exception": ""
+            "validation": "node test/smoke.mjs（主题纯函数/localStorage mock）+ 真实刷新 probe",
+            "status": "EXEMPT",
+            "evidence": "基线 commit 6fcc92f smoke 342/0；主题实现后重跑并记录准确 count",
+            "exception": "实现尚未开始；基线 6fcc92f 五门已跑，主题完成后重跑并以真实结果替换本豁免。"
           },
           "security": {
             "threshold": "不新增外部依赖、不新增网络/文件系统路径、不写宿主 settings/API；只新增自有键 dsh.novel.theme.v1，值仅主题 id。",
-            "validation": "git diff lib/index.js/package.json 零改动；host-contract 3.7 登记；smoke 双向对账。",
-            "status": "planned",
-            "evidence": "当前 lib/index.js/package.json 未改；新键为显式批准的范围扩展。",
-            "exception": ""
+            "validation": "node test/smoke.mjs + git diff -- lib/index.js package.json + host-contract 3.7 登记",
+            "status": "EXEMPT",
+            "evidence": "基线 commit 6fcc92f；lib/index.js/package.json 零改动；新键为显式批准范围扩展",
+            "exception": "实现尚未开始；基线 6fcc92f 五门已跑，主题完成后重跑并以真实结果替换本豁免。"
           },
           "accessibility": {
             "threshold": "palette 按钮/菜单项/设置卡均有 aria-label/aria-pressed；Enter/Space 打开；Esc 关闭且焦点回按钮；外部点击关闭；焦点环清晰；明暗对比达到基线。",
-            "validation": "smoke 渲染断言 + 真实键盘 probe + 对比度计算。",
-            "status": "planned",
-            "evidence": "主题 spec §5/§6 已定义。",
-            "exception": ""
+            "validation": "node test/smoke.mjs（palette/菜单/设置卡 ARIA 渲染断言）+ 真实键盘 probe",
+            "status": "EXEMPT",
+            "evidence": "基线 commit 6fcc92f；主题 spec §5/§6 已定义，实现后以真实 probe 验收",
+            "exception": "实现尚未开始；基线 6fcc92f 五门已跑，主题完成后重跑并以真实结果替换本豁免。"
           },
           "ux": {
             "threshold": "用户不读说明即可在顶栏找到主题；切换无布局位移；设置页 3 卡一眼可辨；当前主题与恢复默认清楚；两工作台视觉一致。",
             "validation": "真实截图 + 用户目检；不在指标里替代审美判断。",
-            "status": "planned",
+            "status": "EXEMPT",
             "evidence": "用户已批准三套方向（themes-board.png）；实现截图待交付。",
-            "exception": ""
+            "exception": "实现尚未开始；用户已批准三套方向（themes-board.png），实现后以真实截图+用户目检替换本豁免"
           },
           "maintainability": {
             "threshold": "主题 = 数据注册表 + 生成 CSS；新增主题只加一项；颜色不散落；--nv-* 单点；宿主耦合按 P-10 登记。",
             "validation": "smoke 检查 3 个 :root[data-nv-theme] 块与 token 完整性；anchors 重基。",
-            "status": "planned",
+            "status": "EXEMPT",
             "evidence": "theme-spec.md / theme-implementation-brief.md。",
-            "exception": ""
+            "exception": "实现尚未开始；设计基线 theme-spec.md 已定义注册表/令牌生成，完成后以 smoke/anchors 验收"
           }
         }
       },
       "vertical_slice": {
-        "user_visible_slice": "书斋顶栏 palette 打开 3 项菜单 → 选青简 → 纸色即时变、布局不动 → 设置页看到当前标记 → 刷新保持。",
+        "user_visible_slice": "用户打开书斋，点顶栏 palette 打开 3 项主题菜单，选择青简后页面即时换纸色且布局不动；设置页看到当前主题标记；刷新后保持。",
         "demo_path": "真实宿主 probe：点击 palette/青简/设置卡/恢复默认，断言 html[data-nv-theme] 与截图。",
         "scope_guard": "仅主题令牌/切换 UI/持久化/契约/测试/证据；不含 S2 布局重排。",
         "rollback_plan": "回退本任务 commit；删除 html 属性后 :root 墨纸兜底；不改 API/数据。",
-        "status": "NOT_RUN_YET",
-        "evidence": "设计板 + spec；实现未开始。"
+        "status": "PLANNED",
+        "evidence": "设计方向已批准；主题实现尚未开始，完成后以真实 probe/截图验收。"
       },
       "interruption_policy": {
         "mode": "critical-only: implementation proceeds autonomously; user is interrupted only at final visual review or a critical decision.",
         "critical_triggers": [
-          "用户要求改变已批准的 3 套主题方向或默认主题。",
-          "技术约束使批准的 3 套主题/双入口无法按规格实现。",
-          "不可逆操作、发布、外部依赖或架构变更。"
+          "改变已批准主题方向/默认主题（product intent）。",
+          "改变验收标准或完成定义（acceptance）。",
+          "不可逆或破坏性操作（irreversible）。",
+          "发布/版本 go-no-go（release）。",
+          "接受新风险（risk acceptance）。",
+          "新增外部依赖（external dependency）。",
+          "治理/权限模式变更（mode change）。"
         ],
         "auto_execute": [
-          "主题实现、测试、契约重基、隔离宿主探针与可逆 commit。",
-          "Governance 记录更新与用户最终目检前的证据整理。"
+          "按既定范围执行 routine execution：主题实现、测试、契约重基、隔离探针、可逆 commit。",
+          "生成/更新 governance record updates、证据与最终目检材料。"
         ],
         "assumption_record": {
           "assumption": "主题存 localStorage 自有键，不写宿主 settings/API；两工作台共用同一选择。",
@@ -1411,11 +1415,18 @@
         "interruption_budget": "One user interruption at final visual review."
       },
       "allowed_change_scope": [
-        "可改：lib/client.js（主题注册表/令牌生成/设置页主题区/两顶栏入口/主题菜单/apply 持久化接线）。",
-        "可改：lib/host-contract.mjs（3.7 新键、P-10 必要登记、行号重基）。",
-        "可改：test/smoke.mjs（纯函数/CSS/渲染/持久化断言，不删旧断言）。",
-        "可改：docs/design/UX-065-theme/**、docs/evidence/UX-065/**、docs/review/UX-065-*.md、README/CHANGELOG。",
-        "禁改：lib/index.js、HTTP API、数据结构、既有 localStorage 键、package.json、install 脚本、宿主源码/依赖、S1/S2 布局与文案。"
+        "lib/client.js（主题注册表/令牌生成/设置页主题区/两顶栏入口/主题菜单/apply 持久化接线；不重排 S1/S2 布局）",
+        "lib/host-contract.mjs（3.7 新键、P-10 必要登记、行号重基）",
+        "test/smoke.mjs（主题纯函数/CSS/渲染/持久化断言；不删旧断言）",
+        "README.md（smoke 计数同步）",
+        "CHANGELOG.md（主题用户可见功能条目）",
+        "docs/design/UX-065-theme/themes.html",
+        "docs/design/UX-065-theme/themes-board.png",
+        "docs/design/UX-065-theme/theme-spec.md",
+        "docs/design/UX-065-theme/theme-implementation-brief.md",
+        "docs/design/UX-065-theme/README.md",
+        "docs/evidence/UX-065/",
+        "docs/review/UX-065-R1.md"
       ],
       "required_evidence": [
         "EVD row：事实依据/目标对齐/用户影响/结构化事实 JSON/文件清单。",
