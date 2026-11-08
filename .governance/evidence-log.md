@@ -564,3 +564,7 @@
 | REVIEW-UX-064-R5 | UX-064 | 治理记录 | review-record CLI 机器写入 review 结论记录（round 5） | 事实依据：review-record 输出摘要（机器写入） | docs/review/UX-064-S2-R1.md; review-UX-064-R5.md; report_sha256=f4e889cff783; commit=488066963515; obligation=RECHECK-UX-064-R6 | Reviewer | 2026-11-08 | G11 | NEEDS_CHANGE |
 
 | REVIEW-UX-064-R6 | UX-064 | 治理记录 | review-record CLI 机器写入 review 结论记录（round 6） | 事实依据：review-record 输出摘要（机器写入） | docs/review/UX-064-S2-R2.md; review-UX-064-R6.md; report_sha256=0e55cc924040; commit=b07765704648; obligation=RECHECK-UX-064-R7 | Reviewer | 2026-11-08 | G11 | NEEDS_CHANGE |
+
+| REVIEW-UX-064-R7 | UX-064 | 治理记录 | review-record CLI 机器写入 review 结论记录（round 7） | 事实依据：review-record 输出摘要（机器写入） | docs/review/UX-064-S2-R3.md; review-UX-064-R7.md; report_sha256=dab79494bba2; commit=2abca5e30470 | Reviewer | 2026-11-08 | G11 | APPROVED_WITH_NOTES | unresolved_blockers=0 |
+
+| REVIEW-UX-064-R8 | UX-064 | 治理记录 | review-record CLI 机器写入 review 结论记录（round 8） | 事实依据：review-record 输出摘要（机器写入） | docs/review/UX-064-S2-R4.md; review-UX-064-R8.md; report_sha256=26b3e2385e65; commit=2abca5e30470 | Reviewer | 2026-11-08 | G11 | APPROVED_WITH_NOTES | unresolved_blockers=0 |

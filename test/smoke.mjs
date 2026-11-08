@@ -766,44 +766,31 @@ check('客户端源码面：CLEAN-007 F2 创建链单点收口（launcher.create
     && clientSrc.includes('requirePreset: true')   // 第二消费点的缺面口径（sessionsMissing）参数化
     && clientSrc.includes("!launcher.apiHas('sessions', 'create') || (needPreset === true && !launcher.apiHas('agentPresets', 'select'))")
 })(), 'clean007 f2 create chain not consolidated')
-check('客户端源码面：UX-059 工作流控制条（标题栏 ▶ 启动钮迁移至创作台下半区；主按钮按绑定会话状态切换 go/stop 形态 + busy 防连点 + promptLaunch 复用）', (() => {
-  const css = (cls) => {
-    const m = new RegExp(cls.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{([^}]*)\\}').exec(clientSrc)
-    return m !== null ? m[1] : ''
-  }
-  const go = css('.nv-wfctl-btn[data-mode=go]')
-  return clientSrc.includes("className: 'nv-wfctl-btn'") && clientSrc.includes('.nv-wfctl-btn{')
-    && go.includes('background:var(--nv-accent')  // 空闲=accent 实底（原 nv-bar-launch 迁移）
+check('客户端源码面：UX-059 工作流控制条（UX-064 S2：控制条从 44px icon rail 迁入 196 左栏底部，语义/三态/忙碌防连点不变）', (() => {
+  return clientSrc.includes("className: 'nv-rb-ico nv-rb-wf-play'")
+    && clientSrc.includes("'data-mode': props.wfRunning === true ? 'stop' : 'go'")
+    && clientSrc.includes("title: props.mainLabel")
     && clientSrc.includes("t('startWorkflow')") && clientSrc.includes("t('continueWorkflow')")
     && clientSrc.includes("t('stopWorkflow')")
     && clientSrc.includes('bindFirstHint') && clientSrc.includes('setWfBusy')
     && clientSrc.includes('launcher.promptLaunch(sid, current, novels, opt)')
     && clientSrc.includes('.nv-bar-note')                       // 三态提示条（ok/err/info）保留
+    && clientSrc.includes('onWfLaunch: () => launchWorkflow(null, true)')
+    && clientSrc.includes('onCompact: compactWf') && clientSrc.includes('onBindNew: bindNewSessionCtl')
     && !clientSrc.includes("className: 'nv-bar-launch'")        // 标题栏启动钮已删除（迁移负断言）
 })(), 'ux059 wf ctl missing')
-check('客户端源码面：UX-059 底部行左右拆分（左=工作流控制与章节列表列等宽·右=工作台右移）', (() => {
-  const css = (cls) => {
-    const m = new RegExp(cls.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{([^}]*)\\}').exec(clientSrc)
-    return m !== null ? m[1] : ''
-  }
-  const stop = css('.nv-wfctl-btn[data-mode=stop]')
-  const btn = css('.nv-wfctl-btn')
-  const btn2 = css('.nv-wfctl-btn2')
-  return clientSrc.includes("className: 'nv-rail'")                  // 控制条容器（左块）
-    && clientSrc.includes("className: 'nv-wfctl-btn'") && clientSrc.includes('.nv-wfctl-btn{')
-    && clientSrc.includes("'data-mode': wfRunning === true ? 'stop' : 'go'")  // 形态切换
-    && stop.includes('background:var(--nv-err')       // 运行中=⏹ 停止 danger 实底
-    // UX-059 布局结构：底部行水平左右拆分——左=工作流控制面板（与章节列表列等宽 wfW/右缘可见线/同像素列），右=工作台右移收窄
-    && clientSrc.includes('function resolveChapterW(')                // 模块级解析单一事实源（P-05：ChapterPanel/左块共用）
-    && clientSrc.includes("const cw = resolveChapterW(props.chapterW)")  // ChapterPanel 同函数（行为等价，兜底不变）
-    && clientSrc.includes('.nv-rail{flex:none;width:44px')  // rail 宽 44px（DEC-155 定稿）
-    && clientSrc.includes("role: 'toolbar'")  // 键盘/读屏可识别工具栏
-    && css('.nv-chlist').includes('box-sizing:border-box')            // R3：两条边界线同垂线且同像素列（边框计入宽内，无 1px 错位）
-    && clientSrc.includes("flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', padding: '8px 10px 0 10px'")  // 右块右缘 10px 内缩恢复（与上部区呼吸一致）
-    && clientSrc.includes('border-right:1px solid var(--nv-border-strong)')  // 左块右缘可见线（面板自身边缘线）
-    && clientSrc.includes('.nv-rail .nv-wfctl-btn,.nv-rail .nv-wfctl-btn2{width:32px')  // rail 按钮 32×32（44px 容器内居中）        // 主/次按钮满宽（左面板纵向排列）
-    && clientSrc.includes("title: mainLabel, 'aria-label': mainLabel")  // 图标按钮有可读名称
-    && clientSrc.includes("'aria-label': t('compactWorkflow')") && clientSrc.includes("'aria-label': t('bindNewSession')")  // 窄宽（chapterW=120）超宽省略号兜底（不横向滚动）
+check('客户端源码面：UX-059/S2 底部案卷与左栏工作流控制（真实功能保留：go/stop · 压缩 · 绑定 · 三态文案）', (() => {
+  return clientSrc.includes("className: 'nv-railbar'")                 // 左栏容器
+    && clientSrc.includes("className: 'nv-rb-row'")                    // 真实章节目录行
+    && clientSrc.includes("className: 'nv-rb-wf'")                     // 从属工作流控制区
+    && clientSrc.includes("className: 'nv-bottom'")                    // 按需下半案卷
+    && clientSrc.includes("className: 'nv-status-tab'")                // 状态栏轻入口
+    && clientSrc.includes("className: 'nv-rb-ico nv-rb-wf-play'")
+    && clientSrc.includes("'data-mode': props.wfRunning === true ? 'stop' : 'go'")  // 形态切换
+    && !clientSrc.includes("role: 'toolbar'")                          // 旧 44px icon rail 工具栏已退役（S2 左栏）
+    && clientSrc.includes("aria-label': t('studioChapterDir')")         // 左栏可读名称
+    && clientSrc.includes("title: props.mainLabel")                    // 图标按钮有可读名称
+    && clientSrc.includes("'aria-label': t('compactWorkflow')") && clientSrc.includes("'aria-label': t('bindNewSession')")
     && clientSrc.includes('sessions.cancel') && clientSrc.includes("apiHas('sessions', 'cancel')")  // 停止（队列保留）
     && clientSrc.includes("text: '/compact'") && clientSrc.includes('compactBusyHint') && clientSrc.includes('compactSent')  // 压缩上下文
     && clientSrc.includes("t('bindNewSession')") && clientSrc.includes('bindNewDone') && clientSrc.includes('bindNewSessionCtl')  // 绑定新会话（链唯一函数名，不自动打开）
@@ -921,20 +908,24 @@ check('客户端源码面：UX-014 左窗仅文件树（无工作区行/书目�
     && !clientSrc.includes('更改工作区根目录')
     && clientSrc.includes('collectDirPaths') && clientSrc.includes('collapseInitRef')
     && clientSrc.includes('setCollapsed(new Set(dirs))')
-    && clientSrc.includes('key: selectedId, t, detail, selectedId')
+    // UX-064 S2：文件树折入左栏「资料」段，仍复用同一 LeftNav（真实 detail.files 过滤）
+    && clientSrc.includes('el(LeftNav, {')
+    && clientSrc.includes('detail: { ...novel, files: matFiles }')
+    && clientSrc.includes('key: props.selectedId, t,')
 })(), 'ux014 left pane missing')
-check('客户端源码面：UX-014④⑤ 让位观察器容差比较 + 重锚定重挂（CSSOM ≤6 位有效数字归一化自伤修复）', (() => {
-  const disconnects = (clientSrc.match(/this\.yieldObserver\.disconnect\(\)/g) ?? []).length
+check('客户端源码面：UX-014④⑤ 让位观察器容差比较 + 重锚定重挂（CSSOM ≤6 位有效数字归一化自伤修复；S2 R2 起观察器宿主面收口在 DrawerHostAdapter）', (() => {
+  const disconnects = (clientSrc.match(/DrawerHost\.yieldObserver\.disconnect\(\)/g) ?? []).length
   return clientSrc.includes('function sameMargin') && clientSrc.includes('Math.abs(pa - pb) < 0.5')
-    && clientSrc.includes('sameMargin(this.viewArea.style.marginLeft, this.lastMarginLeft)')
-    && clientSrc.includes('sameMargin(this.viewArea.style.marginRight, this.lastMarginRight)')
-    && disconnects >= 2 && clientSrc.includes('this.yieldObserver.observe(viewArea, { attributes: true, attributeFilter: [\'style\'] })')
+    && clientSrc.includes('sameMargin(DrawerHost.viewArea.style.marginLeft, DrawerHost.lastMarginLeft)')
+    && clientSrc.includes('sameMargin(DrawerHost.viewArea.style.marginRight, DrawerHost.lastMarginRight)')
+    && disconnects >= 2 && clientSrc.includes("DrawerHost.yieldObserver.observe(viewArea, { attributes: true, attributeFilter: ['style'] })")
 })(), 'ux014 yield fix missing')
-check('客户端源码面：UX-014⑨ 挤法不再推下对话窗（applyMargin 不写 marginTop；对话窗保持整高）', (() => {
-  return clientSrc.includes('viewArea.style.marginRight = this.lastMarginRight')
+check('客户端源码面：UX-014⑨ / S2 R2 DrawerHostAdapter 不写 marginTop（对话窗保持整高；仅 marginLeft+width 挤到右缘，top/height 由真实 bar/status rect 决定）', (() => {
+  return clientSrc.includes("viewArea.style.marginLeft = contentW + 'px'")
+    && clientSrc.includes("viewArea.style.marginRight = ''")
+    && clientSrc.includes("viewArea.style.height = height + 'px'")
     && !clientSrc.includes('viewArea.style.marginTop = this.lastMarginTop')
-    && !clientSrc.includes('this.lastMarginTop = TITLE_BAR_H')
-    && clientSrc.includes("this.lastMarginRight = this.chatSide === 'left' ? contentW + 'px' : ''")
+    && !clientSrc.includes('lastMarginTop')
 })(), 'ux014 marginTop fix missing')
 check('客户端源码面：UX-014⑥ 标题栏 ⇄/✕ 28×28 醒目钮（.nv-bar-ctl 与管理台 ✕ 同型；UX-015① 放大 32×32/18px/600）', (() => {
   const css = (cls) => {
@@ -942,11 +933,12 @@ check('客户端源码面：UX-014⑥ 标题栏 ⇄/✕ 28×28 醒目钮（.nv-b
     return m !== null ? m[1] : ''
   }
   const ctl = css('.nv-bar-ctl')
-  const count = (clientSrc.match(/className: 'nv-bar-ctl'/g) ?? []).length
-  return ctl.includes('width:32px') && ctl.includes('height:32px') && ctl.includes('border:1px solid')
-    && ctl.includes('border-radius:var(--nv-r-md,8px)') && ctl.includes('font-size:18px') && ctl.includes('font-weight:600')
-    // UX-063（连带迁移）：右簇新增对话抽屉开关（⧉ 图标 + title/aria-label「对话」）——4→5
-    && count === 5
+  const count = (clientSrc.match(/barButton\('nv-bar-/g) ?? []).length
+  return ctl.includes('width:32px') && ctl.includes('height:32px') && ctl.includes('border:1px solid transparent')
+    && ctl.includes('border-radius:4px') && ctl.includes('color:var(--nv-ink-2)')
+    // UX-064 S2 R2：右簇 = 主题 palette + 沉浸（条件）+ 带文字抽屉 + 专注 + 关闭；barButton 图标钮 3 个 + 唯一带文字抽屉入口
+    && count === 3 && clientSrc.includes("className: 'nv-bar-ctl nv-bar-drawer'")
+    && clientSrc.includes("el(ThemePicker, { t, variant: 'split'")
 })(), 'ux014 bar ctl missing')
 check('客户端源码面：UX-014⑦ 抽屉卡片直达创作工作台（openCtl 单链；不再打开控制台聚焦）', (() => {
   return clientSrc.includes('const openCtl = {')
@@ -970,154 +962,121 @@ check('客户端源码面：UX-014⑧ 创作台会话联动关闭分栏（splitC
 //    UX-019③）恢复 UX-015③ 拖宽条：.nv-chdiv pointer 拖拽 120–360px + chapterW 持久化
 //  ④抽屉小一档（.nv-card 13/12px、6·8px padding、4px 间隙、点 8px、空态随动；控制台卡片不动）
 //  ⑤聊天区正常 = UX-014⑨ 回归（marginTop 不写断言在位）
-check('客户端源码面：UX-015① 标题栏几何（UX-061-B：36px 高 / 20px 标题 / 徽标描边 pill / 32×32·18px / 14px 内边距 / TITLE_BAR_H=36）', (() => {
+check('客户端源码面：UX-015①/S2 标题栏几何（56px 高 / 衬线 16px 书名 / 阶段 chip / 保存态 / 尺寸单一事实源 = CSS 变量）', (() => {
   const css = (cls) => {
     const m = new RegExp(cls.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{([^}]*)\\}').exec(clientSrc)
     return m !== null ? m[1] : ''
   }
+  const split = css('.nv-split')
   const bar = css('.nv-bar')
   const bt = css('.nv-bar-title')
-  const badge = css('.nv-badge')
+  const chip = css('.nv-bar-chip')
+  const save = css('.nv-bar-save')
   const ctl = css('.nv-bar-ctl')
-  const barMini = css('.nv-bar .nv-mini')
-  const launch = css('.nv-wfctl-btn')
-  return clientSrc.includes('const TITLE_BAR_H = 36')
-    && bar.includes('height:36px') && bar.includes('padding:0 14px')
-    && bt.includes('TYPO.page') && bt.includes('font-weight:600') && bt.includes('letter-spacing:-.015em') // UX-055①：书名 14→20px/600（字阶第一级）
-    && badge.includes('font-size:var(--nv-fs-card)')
-    && ctl.includes('width:32px') && ctl.includes('height:32px') && ctl.includes('font-size:18px') && ctl.includes('font-weight:600')
-    && barMini.includes('width:24px') && barMini.includes('height:24px')
-    && launch.includes('padding:5px 14px')  // UX-059：主按钮（工作流控制条）padding 沿用 5px 14px
+  const sheet = css('.nv-sheet')
+  return split.includes('--nv-bar-h:56px') && split.includes('--nv-status-h:40px')
+    && split.includes('--nv-rail-w:196px') && split.includes('--nv-rail-collapsed-w:48px')
+    && split.includes('--nv-sheet-max:680px') && split.includes('--nv-focus-w:680px')
+    && split.includes('--nv-drawer-w:420px') && split.includes('container-type:inline-size')
+    && bar.includes('height:var(--nv-bar-h)') && bar.includes('padding:0 14px 0 12px')
+    && bt.includes('font-family:var(--nv-serif)') && bt.includes('font-weight:600') && bt.includes('letter-spacing:.02em')
+    && chip.includes('border-radius:3px') && save.includes('font-variant-numeric:tabular-nums')
+    && ctl.includes('width:32px') && ctl.includes('height:32px')
+    && sheet.includes('width:max(var(--nv-sheet-min),min(100%,var(--nv-sheet-max)))')
+    && clientSrc.includes('.nv-split[data-focus=true] .nv-sheet{width:var(--nv-focus-w)')
+    && !clientSrc.includes('const TITLE_BAR_H') && !clientSrc.includes('const STATUS_BAR_H')
+    && !clientSrc.includes('.nv-sheet{width:588px')
 })(), 'ux015 bar missing')
 check('客户端源码面：UX-019② 章节行仅「第N章 + 名称」（去字数+去装饰圆点〔UX-021〕；有名称「第N章 名称」/空名称回退「第N章」；ellipsis 沿用；UX-053：✓/⚠ 标记图标化〔check/triangle-alert〕）', (() => {
-  return clientSrc.includes("const cName = typeof c.name === 'string' ? c.name : ''")
-    && clientSrc.includes('`第${c.num}章`')           // 无名称回退格式（第N章；标记经 marksEls 图标化）
-    && clientSrc.includes("el('span', { key: 'no'")       // 有名称：第N章 span
-    && !clientSrc.includes("key: 'sep'")                  // 无装饰圆点「·」（UX-021 负断言）
-    && clientSrc.includes("el('span', { key: 'nm'")       // 有名称：名称 ellipsis span
-    && clientSrc.includes("'mk-pub'") && clientSrc.includes("'mk-gate'")   // UX-053 标记图标节点
-    && !clientSrc.includes('${c.words}')                  // 章节行无任何字数渲染（去字数）
+  return clientSrc.includes("const name = typeof c.name === 'string' ? c.name : ''")
+    && clientSrc.includes('`第${c.num}章`')           // 无名称回退格式（第N章；标记经图标化）
+    && clientSrc.includes("className: 'nv-rb-num'")     // 左栏目录：章号
+    && clientSrc.includes("className: 'nv-rb-name'")    // 左栏目录：名称（CSS ellipsis）
+    && clientSrc.includes('className: \'nv-rb-mark\'') && clientSrc.includes("'data-kind': 'ok'") && clientSrc.includes("'data-kind': 'warn'")   // ✓/⚠ 图标标记
+    && !clientSrc.includes('${c.words}')                // 章节行无任何字数渲染（去字数）
     && !clientSrc.includes('`· ${c.words}${marks}`')
     && !clientSrc.includes('`第${c.num}章 ${c.words}${marks}`')
-    && clientSrc.includes("textOverflow: 'ellipsis'")
-    && clientSrc.includes("className: 'nv-chlist'")
+    && clientSrc.includes('text-overflow:ellipsis')
+    && clientSrc.includes("className: 'nv-rb-row'")
+    && clientSrc.includes('className: \'nv-rb-row\'')
+    && !clientSrc.includes("key: 'sep'")
 })(), 'ux019 chapter name row missing')
-check('客户端源码面：UX-020 章节列拖宽条（.nv-chdiv 元素+pointer 拖拽 / CHAPTER_W 120–360 常量 / chapterW 持久化读写 / 列宽随 snap.chapterW / .nv-chlist overflow:auto 滚动 / i18n 键恢复 / 4px 几何保持〔UX-021 默认透明三态〕）', (() => {
-  return clientSrc.includes("className: 'nv-chdiv'")                                    // 正：拖宽条元素
-    && clientSrc.includes("onPointerDown: chapterDividerHandler")                       // 正：pointer 拖拽入口
-    && clientSrc.includes('target.setPointerCapture(e.pointerId)')
-    && clientSrc.includes('const CHAPTER_W_MIN = 120') && clientSrc.includes('const CHAPTER_W_MAX = 360')
-    && clientSrc.includes('const CHAPTER_W_DEFAULT = 160')
-    && clientSrc.includes('chapterW: Number.isFinite(s.chapterW) ? s.chapterW : null')  // 读存档
-    && clientSrc.includes('chapterW: state.chapterW')                                   // 写存档
-    && clientSrc.includes('setChapterW(w)') && clientSrc.includes('onChapterW: (w) => novelSplit.setChapterW(w)')
-    && clientSrc.includes('this.chapterW = clampNum(Math.round(w), CHAPTER_W_MIN, CHAPTER_W_MAX)')
-    && clientSrc.includes('clampNum(saved.chapterW, CHAPTER_W_MIN, CHAPTER_W_MAX)')
-    && clientSrc.includes("width: cw + 'px'")                                            // 列宽随章列状态（cw=resolveChapterW 单一事实源）
-    && clientSrc.includes('title: t(\'resizeChlist\')') && clientSrc.includes('resizeChlist:')
-    && clientSrc.includes('.nv-chlist{box-sizing:border-box;flex:none;min-height:0;overflow-y:auto;overscroll-behavior:contain;background:var(--nv-surface,rgba(255,255,255,.02));border-right:1px solid var(--nv-border-strong,#3a4150)}')           // 独立滚动+浅底+右缘边线（UX-022/025/030；R3 border-box 与左块同像素列）
-    && clientSrc.includes('.nv-chdiv{flex:none;width:4px;align-self:stretch;cursor:col-resize;background:transparent;touch-action:none}')  // 透明命中区（UX-030——可见线=列自身边线）
-})(), 'ux020 chapter drag restored')
-check('客户端源码面：UX-030 边界线体系化（VS Code sash 语义——可见线=面板/列自身边缘线：.nv-split 全框 1px border-l2〔右缘恢复，全高〕/ .nv-left 右缘 / .nv-chlist 右缘，全部边界 0 偏移、标题栏横线与边缘线 T 型直角相接；三个可拖区=纯透明命中区〔vdiv/chdiv/chatdiv 无边框无 hover 线〕；chatdiv 命中区 -2 居中）', (() => {
-  const divider = (cls) => {
-    const m = new RegExp('\\.' + cls + '\\{([^}]*)\\}').exec(clientSrc)
-    return m !== null ? m[1] : ''
-  }
-  return !divider('nv-vdiv').includes('border') && !divider('nv-chdiv').includes('border') && !divider('nv-chatdiv').includes('border')   // 拖区无可见线
-    && divider('nv-vdiv').includes('background:transparent') && divider('nv-chdiv').includes('background:transparent')
-    && clientSrc.includes('.nv-left{flex:none;min-height:0;display:flex;flex-direction:column;overflow:hidden;padding:8px;box-sizing:border-box;border-right:1px solid var(--nv-border-strong,#3a4150)}')   // 树窗右缘=自身边线（UX-036 纵向分栏容器）
-    && clientSrc.includes('background:var(--nv-surface,rgba(255,255,255,.02));border-right:1px solid var(--nv-border-strong,#3a4150)}')                       // 章节列右缘=自身边线
-    && clientSrc.includes('.nv-split{position:fixed;display:flex;flex-direction:column;box-sizing:border-box;border:1px solid var(--nv-border-strong,#3a4150);border-radius:0;')  // 外框全边线（直角）
-    && clientSrc.includes("left: (x + contentW) + 'px'")                                                         // 抽屉态聊天命中区对齐抽屉左缘（第③步 P3-7：不再 −4，避免与开启态手柄 4px 重叠）
-    && !clientSrc.includes('.nv-vdiv:hover{border') && !clientSrc.includes('.nv-chdiv:hover{border') && !clientSrc.includes('.nv-chatdiv:hover{border')  // 无 hover 线残留
-    && clientSrc.includes('.nv-vdiv:hover,.nv-vdiv:active{box-shadow:inset 1px 0 0 0 var(--nv-accent,#4f8ef7)}')   // UX-033 选中高亮
-    && clientSrc.includes('.nv-chdiv:hover,.nv-chdiv:active{box-shadow:inset 1px 0 0 0 var(--nv-accent,#4f8ef7)}')
-    && clientSrc.includes('.nv-chatdiv:hover,.nv-chatdiv:active{box-shadow:inset 1px 0 0 0 var(--nv-accent,#4f8ef7)}')
-    && clientSrc.match(/\.nv-split\{[^}]*border-right:none/) === null                                    // 外框右缘已恢复全高边线（旧去重方案无残留）
-    && clientSrc.match(/\.nv-split\{[^}]*border:1px solid var\(--nv-border,/) === null  // 无 border-l1 残留
-    && clientSrc.includes('.nv-chlist button{transition:border-color .15s cubic-bezier(.4,0,.2,1),background-color .15s cubic-bezier(.4,0,.2,1),color .15s cubic-bezier(.4,0,.2,1),box-shadow .15s cubic-bezier(.4,0,.2,1)}')                                          // UX-053 交互过渡统一（150ms 标准曲线）
-    && clientSrc.includes('transition:border-color .15s cubic-bezier(.4,0,.2,1),background-color .15s cubic-bezier(.4,0,.2,1),color .15s cubic-bezier(.4,0,.2,1),box-shadow .15s cubic-bezier(.4,0,.2,1)}')                     // 页签过渡（UX-053 统一）
-    && clientSrc.includes('.nv-tab:hover{color:var(--nv-fg,#e6e8eb);background:var(--nv-surface-hover,rgba(255,255,255,.05))}')
-    && clientSrc.includes('.nv-bar{flex:none;position:relative;display:flex;align-items:center;gap:8px;height:36px;padding:0 14px;box-sizing:border-box;border-bottom:1px solid var(--nv-border-strong,#3a4150)')  // 标题栏底边线清晰（UX-041 居中横幅需 relative）
-})(), 'ux030 coherent boundary lines')
+check('客户端源码面：S2 R2 删除面（旧分栏几何符号零残留；白名单 = v1→v2 一次性迁移函数 + 迁移键声明）', (() => {
+  // 删除面 grep gate：旧像素布局的常量/状态/setter/拖拽处理器/CSS 选择器/i18n 键全部不得残留。
+  // 白名单仅两处：migrateStudioV1() 内对 LEGACY_SPLIT_KEY 的读取、LEGACY_SPLIT_KEY 常量声明
+  // （迁移源；迁移后永不再读写）。
+  const banned = [
+    'const LEFT_MIN =', 'const LEFT_MAX =', 'const LEFT_DEFAULT =', 'const CHAT_MIN =',
+    'const CENTER_MIN =', 'CHAT_DEFAULT_RATIO', 'DRAWER_HANDLE_MIN_COLW', 'DRAWER_TEXT_MAX',
+    'DRAWER_RAIL_W', 'DRAWER_GUTTER', 'DRAWER_EDGE_W', 'DRAWER_HINT_H', 'const TITLE_BAR_H',
+    'const STATUS_BAR_H', 'resolveChapterW', 'drawerTextW', 'setLeftW(', 'setChatW(',
+    'setChatSide(', 'setChapterW(', 'setMidH(', 'setLeftCollapsed(', 'saveAsDefaults(',
+    'resetSplit(', 'leftDividerHandler', 'midDividerHandler', 'chatDividerHandler',
+    'nv-chlist', 'nv-chdiv', 'nv-chatdiv', 'nv-vdiv', 'nv-left{', 'nv-middiv', 'nv-drawer-hint',
+    'nv-drawer-edge', 'this.leftW', 'this.chatW', 'this.chapterW', 'this.midH', 'this.chatSide',
+  ]
+  const found = banned.filter((sym) => clientSrc.includes(sym))
+  const legacyReads = (clientSrc.match(/LEGACY_SPLIT_KEY/g) ?? []).length
+  const studioKeys = (clientSrc.match(/dsh\.novel\.studio\.v2/g) ?? []).length
+  return found.length === 0 && legacyReads === 2 && studioKeys >= 1
+})(), 's2r2 deletion gate failed')
+check('客户端源码面：S2 R2 边界线体系（一条边界一条线：rail 右缘 / 稿纸自身边框 / 外框全边线；旧三拖线选择器已删）', (() => {
+  return clientSrc.includes('.nv-railbar{flex:none;width:var(--nv-rail-w);')
+    && clientSrc.includes('border-right:1px solid var(--nv-rule)')
+    && clientSrc.includes('.nv-split{position:fixed;')
+    && clientSrc.includes('border:1px solid var(--nv-border-strong,#3a4150)')
+    && clientSrc.includes('.nv-sheet{width:max(var(--nv-sheet-min),min(100%,var(--nv-sheet-max)))')
+    && clientSrc.includes('border:1px solid var(--nv-rule);border-radius:2px')
+    && !clientSrc.includes('nv-vdiv') && !clientSrc.includes('nv-chdiv') && !clientSrc.includes('nv-chatdiv')
+})(), 's2r2 boundary lines missing')
 check('客户端源码面：UX-034 文件显示复用章节内容列（fileSel 提升到 SplitWorkspace 受控：左窗树仅选择、内容列 fileSel!==null 渲染 FilePreview〔复用章节 nv-scroll 阅读区——无 maxHeight 截断/无左窗内嵌小卡〕；切书复位 fileSel）', (() => {
   return clientSrc.includes("const [fileSel, setFileSel] = useState(null)")
-    && clientSrc.includes("useEffect(() => { setFileSel(null) }, [selectedId])")        // 切书复位
+    && clientSrc.includes('setFileSel(null)')        // 切书复位（S2 同时复位章选择/案卷/专注）
     && !clientSrc.includes('fileSel !== null ? el(FilePreview, { novelId: selectedId, path: fileSel, onClose: () => setFileSel(null) }) : null')   // 左窗旧内嵌已除
     && clientSrc.includes("props.fileSel !== null") && clientSrc.includes("el(FilePreview, { novelId: props.novelId, path: props.fileSel")   // 内容列复用渲染
     && !clientSrc.includes("maxHeight: '300px'")                                        // 文件内容不再 300px 截断（整列滚动复用）
     && !clientSrc.includes("borderTop: '1px solid ' + TK.line, marginTop: '8px'")       // 无左窗嵌卡样式残留
     && clientSrc.includes('fileSel, onFileSel: setFileSel')                             // 左窗受控选择
     && clientSrc.includes('fileSel, onFileClose: () => setFileSel(null)')
-    && (clientSrc.match(/if \(props\.fileSel !== null && typeof props\.onFileClose === 'function'\) props\.onFileClose\(\)/g) ?? []).length === 2   // UX-035 点章节/点编辑退出文件视图
+    && (clientSrc.match(/if \(props\.fileSel !== null && typeof props\.onFileClose === 'function'\) props\.onFileClose\(\)/g) ?? []).length === 3   // UX-035 点章节/点编辑退出文件视图 + S2 R2 章节意图跳转
 })(), 'ux034 file view reuses chapter column')
-check('客户端源码面：UX-036 工作流状态迁左窗（左窗=纵向分栏：文件树 flex:1 + 工作流状态 46%〔nv-scroll 滚动+顶边线〕；中窗页签去「工作流」且不再渲染 WorkflowPanel；WorkflowPanel 仅在左窗渲染一次）', (() => {
-  return clientSrc.includes("['data', t('data')], ['publish', t('publish')], ['requests', t('requests')]")
-    && !clientSrc.includes("'chapters', t('chapters')]")                                  // UX-042 章节不再页签（常驻上半区）
-    && !clientSrc.includes("'workflow', t('workflow')]")
-    && clientSrc.includes("minHeight: 0, display: 'flex', flexDirection: 'column', borderTop")                   // UX-044/047 底部工作台全宽+高度可拖（默认 30%）
-    && clientSrc.includes('detail !== null ? midFooter : null')                           // UX-044 底部工作台为顶区兄弟（章节列不占全高）
-    && clientSrc.includes("flex: '0 0 auto', maxHeight: '78%'")                            // 工作流容器随内容自适应（UX-039：不固定 60%、无下方空白）
-    && !clientSrc.includes("maxHeight: '220px', overflow: 'auto' }")                        // 清单卡取消内部滚动（全部展开——上面不再滚动）
+check('客户端源码面：UX-036/S2 工作流与数据面板（按需下半案卷；WorkflowPanel/DataPanel/PublishPanel/RequestPanel 真实数据；状态栏轻入口）', (() => {
+  return clientSrc.includes("['workflow', t('studioWorkflow')], ['data', t('studioData')], ['publish', t('studioPublish')], ['requests', t('studioRequests')]")
+    && !clientSrc.includes("'chapters', t('chapters')]")                                  // 章节不再页签（章节目录在左栏）
+    && clientSrc.includes("className: 'nv-bottom'")                                      // 按需案卷
+    && clientSrc.includes("className: 'nv-status-tab'")                                  // 状态栏轻入口
+    && clientSrc.includes('panelOpen === true')
+    && !clientSrc.includes('detail !== null ? midFooter : null')
     && clientSrc.includes("el(WorkflowPanel, { t, novel: detail })")
     && (clientSrc.match(/el\(WorkflowPanel, \{ t, novel: detail \}\)/g) ?? []).length === 1
-    // UX-041：标题栏居中「阶段+统计」横幅（用户箭头指定：标题栏内挪动居中 + 整体统计 + 呈现升级）
-    && clientSrc.includes("position: 'absolute', left: '50%', transform: 'translateX(-50%)'")
+    && clientSrc.includes("el(DataPanel, { t, novelId: selectedId, detail })")
+    && clientSrc.includes("el(PublishPanel, {")
+    && clientSrc.includes("el(RequestPanel, {")
+    // UX-041：标题栏居中统计横幅（真实数据；碰撞保护保留）
+    && clientSrc.includes("className: 'nv-bar-banner'")
     && clientSrc.includes("const titleStageName = (NOVEL_STAGES.find(([id]) => id === curStage) ?? [])[1] ?? curStage")
     && clientSrc.includes("detail.state?.statistics?.total_words ?? 0} ${t('words')}")
-check('客户端源码面：UX-047 中窗上下工作台分隔线可拖（.nv-middiv 水平命中区 row-resize + hover/active accent；midDividerHandler pointer 拖拽：下半区高度 120px–60% bodyH、默认 30%、持久化 midH〔loadSplitSaved/persistSplit/novelSplit.setMidH〕；i18n resizeMid 成对）', (() => {
-  return clientSrc.includes("className: 'nv-middiv'") && clientSrc.includes('onPointerDown: midDividerHandler')
-    && clientSrc.includes('.nv-middiv{flex:none;height:4px;cursor:row-resize;background:transparent;touch-action:none}')
-    && clientSrc.includes('.nv-middiv:hover,.nv-middiv:active{box-shadow:inset 0 1px 0 0 var(--nv-accent,#4f8ef7)}')
-    && clientSrc.includes('midH: Number.isFinite(s.midH) ? s.midH : null')
-    && clientSrc.includes('midH: state.midH')
-    && clientSrc.includes('setMidH(w) {')
-    && clientSrc.includes('midH: this.midH')
-    && clientSrc.includes("midHpx !== null ? ('0 0 ' + midHpx + 'px') : '0 0 30%'")
-    && clientSrc.includes('clampNum(Math.round(init.h + (init.y - ev.clientY)), 120, max)')
-    && clientSrc.includes('resizeMid: \'拖拽调整下方工作台高度\'') && clientSrc.includes('resizeMid: \'Drag to resize bottom workbench height\'')
-})(), 'ux047 mid divider draggable')
-check('客户端源码面：UX-048 当前布局固化为默认（☆ nv-bar-ctl 按钮：saveAsDefaults 写 dsh.novel.defaults.v1 默认槽；loadSplitSaved 无存档时回退默认槽〔parseSplitSaved 抽取〕否则内置默认；open() 回读 midH——持久化值重开生效；i18n saveAsDefault/savedDefault 成对）', (() => {
-  return clientSrc.includes('DEFAULTS_PERSIST_KEY')
-    && clientSrc.includes("localStorage.setItem(DEFAULTS_PERSIST_KEY, JSON.stringify({ leftW: this.leftW, chatW: this.chatW, chapterW: this.chapterW, midH: this.midH, chatSide: this.chatSide }))")
-    && clientSrc.includes("const defRaw = localStorage.getItem(DEFAULTS_PERSIST_KEY)\n        if (defRaw !== null) return parseSplitSaved(defRaw)")
-    && clientSrc.includes('function parseSplitSaved(raw)')
-    && clientSrc.includes("this.midH = saved !== null && saved.midH !== null ? saved.midH : null")
-    && clientSrc.includes("title: t('saveAsDefault')")
-    && clientSrc.includes('savedDefault: \'已将当前布局设为默认\'') && clientSrc.includes('savedDefault: \'Saved as default layout\'')
-    && clientSrc.includes("localStorage.removeItem(SPLIT_PERSIST_KEY)")                  // UX-049 恢复默认：清当前存档→回默认槽/内置
-    && clientSrc.includes("title: t('resetLayout')")
-    && clientSrc.includes('resetLayoutDone: \'已恢复默认布局\'') && clientSrc.includes('resetLayoutDone: \'Default layout restored\'')
-})(), 'ux048 save current layout as default + ux049 restore default')
-    && clientSrc.includes("const NOVEL_STAGES = [")
-    && (clientSrc.match(/el\(TitleDot, \{ useSessions: props\.useSessions, boundId, t \}\)/g) ?? []).length === 1   // 状态点回到标题栏（仅一处）
-    && clientSrc.includes('`${t(\'stage\')}：${titleStageName}`')                          // UX-041b 阶段前缀「阶段：」
-    && !clientSrc.includes("${t('stage')}：${state.current_stage ?? '—'}")                // UX-037 阶段信息卡已删（阶段逻辑由清单图标承载）
-    && clientSrc.includes("${t('gates')}：")                                              // 门禁/清单卡恢复保留
-    && clientSrc.includes("${t('requests')}：")
 })(), 'ux036 workflow state in left column')
-check('客户端源码面：UX-022 两个「拖动条」（滚动条）默认隐藏 + 滚动隔离（-webkit-scrollbar track/thumb 透明；UX-024 滚动中显示/停止 600ms 自动隐藏——.nv-scl 滚动事件驱动、无悬停常驻；.nv-chlist/.nv-scroll 带 overscroll-behavior:contain；高度链=章节页签包装层 height:100%+overflow:hidden、正文列/左窗/页签外层均为 nv-scroll 独立滚动容器——章节列 1587px 撑开整体联动问题修复；正文阅读区容器与编辑 textarea 亦纳入 UX-023 补充；共 5 个 nv-scroll）', (() => {
-  return clientSrc.includes('.nv-chlist::-webkit-scrollbar,.nv-scroll::-webkit-scrollbar{width:8px;background:transparent}')
-    && clientSrc.includes('.nv-chlist::-webkit-scrollbar-thumb,.nv-scroll::-webkit-scrollbar-thumb{background:transparent}')
-    && clientSrc.includes('.nv-scl::-webkit-scrollbar-thumb{background:var(--nv-border-strong,#3a4150)}')   // UX-024 滚动触发显现
-    && clientSrc.includes('.nv-scl::-webkit-scrollbar-thumb:active{background:var(--nv-accent,#4f8ef7)}')   // UX-031 仅拖动拇指时高亮
-    && !clientSrc.includes('::-webkit-scrollbar-thumb:hover')                                                // UX-031 无悬停即显/高亮（用户只允许滚动时显示）
-    && !clientSrc.includes('.nv-scroll:hover::-webkit-scrollbar-thumb')                                          // 无悬停常驻（UX-024 撤除）
-    && !clientSrc.includes('.nv-chlist:hover::-webkit-scrollbar-thumb')
-    && clientSrc.includes("el.classList.add('nv-scl')") && clientSrc.includes("el.classList.remove('nv-scl')")   // 滚动显示/空闲撤除
-    && clientSrc.includes('document.addEventListener(\'scroll\', onScroll, true)')
-    && clientSrc.includes('document.removeEventListener(\'scroll\', onScroll, true)')
-    && clientSrc.includes('setTimeout(() => { el.classList.remove(\'nv-scl\'); timers.delete(el) }, 1500)')        // 1.5s 自动隐藏（用户调长）
-    && clientSrc.includes('for (const t of timers.values()) clearTimeout(t)')                                     // 卸载清理
+check('客户端源码面：UX-022 拖动条（滚动条）默认隐藏 + 滚动隔离（-webkit-scrollbar track/thumb 透明；UX-024 滚动中显示/停止 1.5s 自动隐藏——.nv-scl 滚动事件驱动、无悬停常驻；.nv-scroll 带 overscroll-behavior:contain；S2 稿纸/左栏目录/资料树/下半案卷/文件预览 = 独立 nv-scroll 容器）', (() => {
+  return clientSrc.includes('.nv-scroll::-webkit-scrollbar{width:8px;background:transparent}')
+    && clientSrc.includes('.nv-scroll::-webkit-scrollbar-thumb{background:transparent}')
+    && clientSrc.includes('.nv-scl::-webkit-scrollbar-thumb{background:var(--nv-border-strong,#3a4150)}')
+    && clientSrc.includes('.nv-scl::-webkit-scrollbar-thumb:active{background:var(--nv-accent,#4f8ef7)}')
+    && !clientSrc.includes('::-webkit-scrollbar-thumb:hover')
+    && !clientSrc.includes('.nv-scroll:hover::-webkit-scrollbar-thumb')
+    && !clientSrc.includes('.nv-chlist')
+    && clientSrc.includes("el.classList.add('nv-scl')") && clientSrc.includes("el.classList.remove('nv-scl')")
+    && clientSrc.includes("document.addEventListener('scroll', onScroll, true)")
+    && clientSrc.includes("document.removeEventListener('scroll', onScroll, true)")
+    && clientSrc.includes("setTimeout(() => { el.classList.remove('nv-scl'); timers.delete(el) }, 1500)")
+    && clientSrc.includes('for (const t of timers.values()) clearTimeout(t)')
     && clientSrc.includes('.nv-scroll{overscroll-behavior:contain}')
-    && clientSrc.includes("className: 'nv-scroll'")                                    // 五个滚动容器（正文阅读区/编辑 textarea/正文列/左窗/页签外层）
-    && (clientSrc.match(/className: 'nv-scroll'/g) ?? []).length === 6                    // 六个滚动容器（正文阅读区/编辑 textarea/正文列/左窗树/页签外层/左窗工作流状态）
-    && clientSrc.includes("className: 'nv-scroll', style: { border: '1px solid ' + TK.line")   // 正文阅读区容器纳入（UX-023）
-    && clientSrc.includes('onKeyDown: (e) =>')                                            // 编辑 textarea 同链（类在五项计数内）
-    && clientSrc.includes("padding: '10px 10px 0', boxSizing: 'border-box' }")               // 章节工作台常驻顶部（UX-044/045 内边距下放——分隔线横贯至面板边）
-    && clientSrc.includes("className: 'nv-scroll', style: { flex: 1, minHeight: 0, overflow: 'auto' }")            // UX-042 下半区工作台内容滚动容器
-    && clientSrc.includes('{ style: { display: \'flex\', height: \'100%\' } }')                                        // 命中区紧贴列边缘（UX-032 去 gap）
-    && clientSrc.includes("className: 'nv-scroll', style: { flex: 1, minWidth: 0, overflow: 'auto', paddingLeft: '12px' } }")  // 内容列 paddingLeft 保留间距（UX-032）
+    && clientSrc.includes("className: 'nv-sheet-scroll nv-scroll nv-prose'")
+    && clientSrc.includes("className: 'nv-sheet-scroll nv-scroll'")
+    && clientSrc.includes("className: 'nv-rb-list nv-scroll'")
+    && clientSrc.includes("className: 'nv-bottom-body nv-scroll'")
+    && clientSrc.includes("className: 'nv-sheet-edit nv-scroll'")
+    && clientSrc.includes("el.classList.contains('nv-scroll')")
 })(), 'ux022 scrollbars hidden + scroll isolated + ux024 auto reveal')
 check('客户端源码面：UX-015④ 抽屉小一档（13/12px + 6·8px + 4px 间隙 + 8px 点 + 空态随动；控制台卡片不动）', (() => {
   const css = (cls) => {
@@ -1144,15 +1103,6 @@ check('客户端源码面：UX-015④ 抽屉小一档（13/12px + 6·8px + 4px �
 // UX-017（用户强刷后仍见窄聊天——旧包或 300 下 hero 输入行临界溢出未分辨；Coordinator 定案）：
 //  宽度再让一档——CHAT_MIN 300→320、LEFT_MIN 128→120、CENTER_MIN 320→300（cap=colW−420）；
 //  默认比例 0.45→0.50；存档收敛同按新上下限。常量新值正/负断言都在（旧值不得残留）。
-check('客户端源码面：UX-016/017 小窗聊天钳制重分配（LEFT_MIN=120 / CENTER_MIN=300 / CHAT_MIN=320 / 0.50 默认公式 / 存档钳制共享）', (() => {
-  return clientSrc.includes('const LEFT_MIN = 120') && clientSrc.includes('const CENTER_MIN = 300')
-    && clientSrc.includes('const CHAT_MIN = 320') && clientSrc.includes('CHAT_DEFAULT_RATIO = 0.50')
-    && clientSrc.includes('Math.round(colW0 * CHAT_DEFAULT_RATIO)')
-    && clientSrc.includes('clampNum(saved.chatW, CHAT_MIN, Math.max(CHAT_MIN, colW0 - LEFT_MIN - CENTER_MIN))')
-    && !clientSrc.includes('Math.round(colW0 * 0.34)')
-    && !clientSrc.includes('const LEFT_MIN = 128') && !clientSrc.includes('const CENTER_MIN = 320')
-    && !clientSrc.includes('const CHAT_MIN = 300') && !clientSrc.includes('CHAT_DEFAULT_RATIO = 0.45')
-})(), 'ux016/017 chat min reassign missing')
 check('客户端源码面：UX-019① 可见版本徽标撤离（无 CLIENT_TAG 常量 / 无 .nv-tag 渲染与样式 / 无 nv-tag 字符串残留）', (() => {
   return !clientSrc.includes('CLIENT_TAG')
     && !clientSrc.includes('nv-tag')
@@ -1171,27 +1121,30 @@ check('客户端源码面：UX-019① 可见版本徽标撤离（无 CLIENT_TAG 
 //  UX-063 P0-a（连带迁移）：记录/恢复点由「open + syncAnchor 各一份」收敛为
 //  **snapshotViewArea / restoreViewArea 单点**（规格 §1A 五路径同一还原函数）——本断言的
 //  计数口径随实现收敛 2→1（旧双份内联即「同一事实源两处副本」；边界断言仍要求两串在仓）。
-check('客户端源码面：UX-018 双压注释（根因 margin 不改 content-box + 显式 width 触发宿主重排 + savedWidth 记录恢复点；UX-063 单点化后记录/恢复各 1 处）', (() => {
-  const recordWidth = (clientSrc.match(/this\.savedWidth = viewArea\.style\.width/g) ?? []).length
-  const restoreWidth = (clientSrc.match(/this\.viewArea\.style\.width = this\.savedWidth/g) ?? []).length
-  return clientSrc.includes('UX-018 双压')
-    && clientSrc.includes('content-box')
-    && clientSrc.includes('两种挂载时序统一')
-    && recordWidth === 1   // snapshotViewArea（open / syncAnchor 共用）
-    && restoreWidth === 1  // restoreViewArea（五路径共用）
-})(), 'ux018 double-squeeze restore missing')
-check('客户端源码面：UX-018 applyMargin 写 width = clamp 后 chatW（margin+width 双压；marginTop 仍不写）', (() => {
-  const writes = (clientSrc.match(/viewArea\.style\.width = this\.chatW \+ 'px'/g) ?? []).length
+check('客户端源码面：UX-018 / S2 R2 宿主对话窗快照-恢复单点（DrawerHostAdapter 18 属性：快照读面 ≡ 恢复写面；width/margin 覆盖后按快照还原）', (() => {
+  const i = clientSrc.indexOf('snapshotViewArea(viewArea) {')
+  const j = clientSrc.indexOf('restoreViewArea() {', i)
+  const k = clientSrc.indexOf('applyDrawer() {', j)
+  const snapB = i >= 0 && j > i ? clientSrc.slice(i, j) : ''
+  const restB = j >= 0 && k > j ? clientSrc.slice(j, k) : ''
+  return snapB.includes('saved[prop] = viewArea.style[prop]')
+    && restB.includes('viewArea.style.width = this.saved.width')
+    && restB.includes('viewArea.style.marginLeft = this.saved.marginLeft')
+    && restB.includes('viewArea.style.marginTop = this.saved.marginTop')
+    && clientSrc.includes('const VIEW_AREA_PROPS =')
+})(), 'ux018 snapshot/restore single point missing')
+check('客户端源码面：UX-018 / S2 R2 applyDrawer 写 width = CSS 抽屉宽（marginLeft+width 双压；不写 marginTop）', (() => {
+  const writes = (clientSrc.match(/viewArea\.style\.width = drawerW \+ 'px'/g) ?? []).length
   return writes === 1
-    && clientSrc.includes('viewArea.style.marginLeft = this.lastMarginLeft')
-    && clientSrc.includes('viewArea.style.marginRight = this.lastMarginRight')
+    && clientSrc.includes("viewArea.style.marginLeft = contentW + 'px'")
+    && clientSrc.includes("viewArea.style.marginRight = ''")
     && !clientSrc.includes('viewArea.style.marginTop = this.lastMarginTop')
-})(), 'ux018 applyMargin width write missing')
-check('客户端源码面：UX-018 边界（无根/几何缺失不写 width；视图区内联 width 覆盖后关闭恢复）', (() => {
+})(), 'ux018 drawer width write missing')
+check('客户端源码面：UX-018 / S2 R2 边界（无根/几何缺失不写；快照原值覆盖后关闭恢复）', (() => {
   return clientSrc.includes('if (viewArea === null || g === null) return')
-    && clientSrc.includes('this.savedWidth = viewArea.style.width')
-    && clientSrc.includes('this.viewArea.style.width = this.savedWidth')
-    && clientSrc.includes('this.savedMarginLeft = viewArea.style.marginLeft')
+    && clientSrc.includes('if (viewArea === null || this.saved === null) return')
+    && clientSrc.includes('viewArea.style.width = this.saved.width')
+    && clientSrc.includes('viewArea.style.marginLeft = this.saved.marginLeft')
 })(), 'ux018 boundary missing')
 // UX-018 探针驱动的引擎健壮性修正：会话切换（卡片打开链 sessions.open）后目标视图以
 //  phase='hero' 稳定挂载、宿主重渲染可能替换 viewArea 子节点——原「仅接受 active + 根同
@@ -1199,18 +1152,19 @@ check('客户端源码面：UX-018 边界（无根/几何缺失不写 width；�
 //  有根即锚 + 快路径以 header/viewArea 三元同恒为门槛（子节点被替换走完整重锚定）。
 check('客户端源码面：UX-018 syncAnchor 重锚定修正（hero 相位接受 + 根同但子节点替换走完整重锚）', (() => {
   return clientSrc.includes("phase='hero'")
-    && clientSrc.includes('next === this.root && header === this.header && viewArea === this.viewArea')
+    && clientSrc.includes('next === DrawerHost.root && header === DrawerHost.header && viewArea === DrawerHost.viewArea')
     && !clientSrc.includes("next.dataset.phase !== 'active'")
 })(), 'ux018 syncAnchor re-anchor missing')
 // UX-063 P0-a 第①步（规格 docs/design/UX-063-redesign-spec.md §1A；断言迁移表 #11/#13/#14/F7/F8）：
 //  ①全屏工作台：.nv-split 左缘 = 宿主会话区左缘、宽 = colW（原挤法只覆盖 contentW 内容列）；
-//  ②对话抽屉：默认收起；右缘 48px 唤出条；420 抽屉（z 920：.nv-split 900 < 920 < .nv-console 950）；
-//     localStorage 记开关；**开启态手柄仅在 colW ≥ DRAWER_HANDLE_MIN_COLW(1046) 渲染**（窄带隐藏，
+//  ②对话抽屉：默认收起；420 抽屉（z 920：.nv-split 900 < 920 < .nv-console 950）；
+//     localStorage 记开关；**UX-064 S2 起唯一入口 = 顶栏抽屉按钮**（原右缘 48px 悬浮把手已按用户
+//     2026-11-08 截图删除——与稿纸右缘控件争夺命中区）；
 //     改由「抽屉态 Esc 先关抽屉」+ 提示行告知——REVIEW-UX-063-P0A-DR1 P1-1）；
 //  ③让位：抽屉开 → 文件树/章节列收起 + 正文列 maxWidth = min(544, colW−44−376−24)；真实左偏移 11
 //     （.nv-split border 1 + 上部区 padding 10；rail 44 属底部工作台，不在本区）；
 //  ④恢复保证（五路径逐条具名）：open / syncAnchor / closeDrawer / close / setBook→closeDrawer；
-//     快照 15 读面、恢复 15 写面、applyDrawer chrome 5 写面 = 三处**独立**集合（CR1 P2）；
+//     快照 18 读面、恢复 18 写面、applyDrawer chrome 10 写面 = 三处**独立**集合（CR1 P2）；
 //  ⑤降级：drawerOpen && colW < 1046 提示（含 Esc 出口）；colW<740 提示「建议全屏」。
 // 口径说明：`.nv-home` 880 / CTA 36 属第②步；字体字阶属第③步——本步不实现、不声称。
 // —— 断言判别力纪律（CR1 P2「变异后仍全绿」处置）：路径判据一律**先切函数体再断言**，
@@ -1229,67 +1183,119 @@ const fnBody = (header) => {
   }
   return ''
 }
-check('客户端源码面：UX-063 P0-a① 全屏工作台（左缘→colW 全宽）+ 抽屉常量/默认收起/localStorage + 手柄阈值 1046', (() => {
-  return clientSrc.includes('const DRAWER_W = 420')
-    && clientSrc.includes('const DRAWER_EDGE_W = 48')
-    && clientSrc.includes("const DRAWER_PERSIST_KEY = 'dsh.novel.drawer.v1'")
-    && clientSrc.includes('const DRAWER_HANDLE_MIN_COLW = 1046')
-    && clientSrc.includes('const DRAWER_HINT_H = 23')
-    && clientSrc.includes('drawerOpen: false')
-    && clientSrc.includes('this.drawerOpen = loadDrawerOpen()')
-    && clientSrc.includes('localStorage.getItem(DRAWER_PERSIST_KEY)')
-    && clientSrc.includes('localStorage.setItem(DRAWER_PERSIST_KEY')
+check('客户端源码面：S2 R2 写作台外壳（.nv-split 全宽 z900）+ StudioLayout/dsh.novel.studio.v2 持久化 + v1 一次性迁移 + 唯一抽屉入口文案', (() => {
+  return clientSrc.includes("const STUDIO_PERSIST_KEY = 'dsh.novel.studio.v2'")
+    && clientSrc.includes("const LEGACY_SPLIT_KEY = 'dsh.novel.split.v1'")
+    && clientSrc.includes('function migrateStudioV1()')
+    && clientSrc.includes('railCollapsed: false, drawerOpen: false, panelOpen: false')
+    && clientSrc.includes('this.drawerOpen = saved.drawerOpen === true')
+    && clientSrc.includes('localStorage.setItem(STUDIO_PERSIST_KEY')
     && clientSrc.includes("left: g.left + 'px', top: g.top + 'px', width: colW + 'px'")
     && !clientSrc.includes("width: contentW + 'px'")
     && clientSrc.includes("chatDrawer: '对话'") && clientSrc.includes("chatDrawer: 'Conversation'")
     && clientSrc.includes("chatDrawerClose: '收起对话'") && clientSrc.includes("chatDrawerClose: 'Hide conversation'")
-})(), 'ux063 fullscreen/drawer shell missing')
-check('客户端源码面：UX-063 P0-a① z 三值共存（.nv-split 900 < 抽屉 920 < .nv-console 950）+ 让位公式 min(544, colW−44−376−24)', (() => {
+})(), 's2r2 studio shell missing')
+check('S2 R2 P1-1 专注 × 抽屉不变量（StudioLayout.setFocus 先关抽屉并还原宿主；setDrawer 在 focus 态显式拒绝；渲染层专注隐藏入口；Esc 分层先关抽屉）', (() => {
+  const focusB = fnBody('setFocus(v) {')
+  const drawerB = fnBody('setDrawer(open) {')
+  const closeIdx = focusB.indexOf('this.drawerOpen = false')
+  const setIdx = focusB.indexOf('this.focus = true')
+  return focusB !== '' && drawerB !== ''
+    && closeIdx >= 0 && setIdx > closeIdx                       // 先关抽屉，再置 focus
+    && focusB.includes('DrawerHost.restoreViewArea()')
+    && !focusB.includes('this.drawerOpen = true')               // 退出专注不自动开抽屉
+    && drawerB.includes('if (next === true && this.focus === true) return false')
+    && clientSrc.includes('.nv-split[data-focus=true] .nv-bar-drawer{display:none}')
+    && clientSrc.includes('if (studioLayout.drawerOpen === true) { studioLayout.setDrawer(false); return }')
+})(), 's2r2 focus/drawer invariant missing')
+check('S2 R2 P1-2 章节意图链路（ChapterPanel 收到 focusChapter + onFocusHandled；消费 effect 选中并回调；意图 effect 随 active 翻转；挂载复位不覆盖 incoming 选章）', (() => {
+  const cpFocus = clientSrc.slice(clientSrc.indexOf('function ChapterPanel(props) {'), clientSrc.indexOf('function ChapterPanel(props) {') + 6000)
+  return cpFocus !== ''
+    && clientSrc.includes('focusChapter, onFocusHandled: () => setFocusChapter(null)')
+    && cpFocus.includes('if (typeof props.focusChapter !== \'number\') return undefined')
+    && cpFocus.includes('setSelected(props.focusChapter)')
+    && cpFocus.includes('props.onFocusHandled()')
+    && cpFocus.includes('lastNovelRef.current === props.novelId')
+    && clientSrc.includes('}, [intentKey, snap.active])')
+    && clientSrc.includes('if (homeIntentSink !== null && homeIntentSink(full) === true) return')
+})(), 's2r2 chapter intent chain missing')
+check('S2 R2 布局单模型（StudioLayout 四布尔无像素状态 + DrawerHostAdapter 单点 + 无旧像素常量 + 容器查询主断点 + 弹性稿纸无横向溢出）', (() => {
+  const layoutB = clientSrc.slice(clientSrc.indexOf('const studioLayout = {'), clientSrc.indexOf('studioLayout.init()'))
+  return layoutB.includes('railCollapsed: false,')
+    && layoutB.includes('drawerOpen: false,')
+    && layoutB.includes('focus: false,')
+    && layoutB.includes('panelOpen: false,')
+    && !/leftW|chatW|chapterW|midH|chatSide/.test(layoutB)
+    && clientSrc.includes('const DrawerHost = {')
+    && clientSrc.includes('container-type:inline-size')
+    && clientSrc.includes('@container studio (max-width:1120px)')
+    && clientSrc.includes('.nv-sheet{width:max(var(--nv-sheet-min),min(100%,var(--nv-sheet-max)))')
+    && clientSrc.includes('.nv-sheet-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}')
+    && clientSrc.includes("const STUDIO_PERSIST_KEY = 'dsh.novel.studio.v2'")
+})(), 's2r2 single layout model missing')
+check('UX-064 S2 R3 窄容器布局（≤760 rail 自动 48 + 顶栏 toggle 覆盖层；≤1279 抽屉全幅覆盖；稿纸下限 588/420；无 280 假挤压）', (() => {
+  const sideMinJs = Number((/const DRAWER_SIDE_MIN = (\d+)/.exec(clientSrc) ?? [])[1])
+  const sideMinCss = Number((/@container studio \(min-width:(\d+)px\)\{\.nv-split\[data-drawer=true\] \.nv-main/.exec(clientSrc) ?? [])[1])
+  return sideMinJs === 1280 && sideMinCss === 1280
+    && clientSrc.includes('@container studio (max-width:1279px){.nv-split[data-drawer=true] .nv-main{width:100%}}')
+    && clientSrc.includes('.nv-railbar[data-peek=true]{position:absolute;left:0;top:0;bottom:0;z-index:2;width:var(--nv-rail-w)')
+    && clientSrc.includes('const narrow = containerW > 0 && containerW <= 760')
+    && clientSrc.includes('const railCollapsed = narrow === true')
+    && clientSrc.includes("'data-drawer-mode': layout.drawerOpen === true ? drawerMode : undefined")
+    && clientSrc.includes('--nv-sheet-min:420px')
+    && clientSrc.includes("viewArea.style.marginLeft = '0px'")
+    && clientSrc.includes("viewArea.style.width = containerW + 'px'")
+    && !clientSrc.includes('max(280px')
+})(), 's2r3 narrow container layout missing')
+check('UX-064 S2 R4 布局变量零未消费（.nv-split 单一事实源块内声明的 --nv-* 布局变量每个至少 1 处真实消费；CSS var() 与 JS cssVarNum 双通道；死布局令牌〔如已清理的 rail 窄宽别名〕回归即红）', (() => {
+  // 口径：只解析 `.nv-split{...}` 单一事实源块，不建全局 CSS 解析器；块内 `--nv-*:` 声明
+  // 必须在该块之外至少被 1 处消费（`var(--x)` / `var(--x,fallback)` / `cssVarNum('--x')`）。
+  // 允许清单只收「确实只能由外部 JS/样式持有、无法在本文件出现消费串」的变量；新增必须写理由。
+  // 当前为空：`--nv-drawer-z` 等 JS-only 消费已由 `cssVarNum('--x')` 通道覆盖。
+  const LAYOUT_VAR_ALLOWLIST = new Set()
+  const blockMatch = /\.nv-split\{([^}]*)\}/.exec(clientSrc)
+  if (blockMatch === null) return false
+  const declared = [...blockMatch[1].matchAll(/--nv-[a-z0-9-]+(?=\s*:)/g)].map((m) => m[0])
+  // 已知布局变量集（声明面基线；新增令牌须同批登记此处，防「悄悄定义」再次逃逸）
+  const expected = ['--nv-bar-h', '--nv-status-h', '--nv-rail-w', '--nv-rail-collapsed-w',
+    '--nv-sheet-min', '--nv-sheet-max', '--nv-focus-w', '--nv-drawer-w', '--nv-drawer-z', '--nv-sheet-gap']
+  const outside = clientSrc.replace(blockMatch[0], '')
+  const consumed = (v) => outside.includes('var(' + v + ')') || outside.includes('var(' + v + ',')
+    || outside.includes("cssVarNum('" + v + "')") || outside.includes('cssVarNum("' + v + '")')
+  const unregistered = declared.filter((v) => !expected.includes(v))
+  const missing = expected.filter((v) => !declared.includes(v))
+  const dead = declared.filter((v) => !consumed(v) && !LAYOUT_VAR_ALLOWLIST.has(v))
+  return unregistered.length === 0 && missing.length === 0 && dead.length === 0
+})(), 's2r4 layout variables dead/missing/unregistered')
+check('客户端源码面：S2 R2 z 三值共存（.nv-split 900 < 抽屉 --nv-drawer-z 920 < .nv-console 950）+ 抽屉宽单一事实源 = CSS --nv-drawer-w', (() => {
   const zSplit = Number((/\.nv-split\{[^}]*z-index:(\d+)/.exec(clientSrc) ?? [])[1])
   const zConsole = Number((/\.nv-console\{[^}]*z-index:(\d+)/.exec(clientSrc) ?? [])[1])
-  const zDrawer = Number((/const DRAWER_Z = (\d+)/.exec(clientSrc) ?? [])[1])
-  const textMax = Number((/const DRAWER_TEXT_MAX = (\d+)/.exec(clientSrc) ?? [])[1])
-  const railW = Number((/const DRAWER_RAIL_W = (\d+)/.exec(clientSrc) ?? [])[1])
-  const gutter = Number((/const DRAWER_GUTTER = (\d+)/.exec(clientSrc) ?? [])[1])
-  const drawerW = Number((/const DRAWER_W = (\d+)/.exec(clientSrc) ?? [])[1])
-  const textW = (colW) => Math.max(0, Math.min(textMax, colW - railW - (drawerW - railW) - gutter))
-  return zSplit === 900 && zDrawer === 920 && zConsole === 950 && zSplit < zDrawer && zDrawer < zConsole
-    && clientSrc.includes('const DRAWER_Z = 920')
-    && clientSrc.includes('viewArea.style.zIndex = String(DRAWER_Z)')
-    && textMax === 544 && railW === 44 && gutter === 24 && drawerW === 420
-    && clientSrc.includes('colW - DRAWER_RAIL_W - (DRAWER_W - DRAWER_RAIL_W) - DRAWER_GUTTER')
-    && textW(1400) === 544 && textW(988) === 544 && textW(956) === 512 && textW(800) === 356
-})(), 'ux063 drawer z / text formula missing')
-check('客户端源码面：UX-063 P0-a① 让位（收文件树/章节列 + 正文列 maxWidth）+ 窄窗提示阈值=手柄下限 1046 且文案给 Esc 出口', (() => {
-  return clientSrc.includes('const drawerTextMax = snap.drawerOpen === true ? drawerTextW(colW) : null')
-    && clientSrc.includes("collapsedLeft === true || snap.drawerOpen === true ? null : el('div', { className: 'nv-left'")
-    && clientSrc.includes("navCollapsed === true ? null : el('div', { ref: listRef, className: 'nv-chlist'")
-    && clientSrc.includes('navCollapsed: snap.drawerOpen === true, textMax: drawerTextMax')
-    && clientSrc.includes("maxWidth: textMax !== null ? textMax + 'px' : undefined")
-    && clientSrc.includes("snap.drawerOpen === true && colW < DRAWER_HANDLE_MIN_COLW ? t('drawerNarrowHint')")
-    && clientSrc.includes("drawerNarrowHint: '视口较窄，建议全屏（按 Esc 收起对话）'")
-    && clientSrc.includes("drawerNarrowHint: 'Narrow viewport — full screen recommended (press Esc to hide the conversation)'")
-    && clientSrc.includes("drawerTinyHint: '视口过窄，建议全屏（按 Esc 关闭对话）'")   // 第③步：<740 档手柄隐藏 ⇒ 提示必须给 Esc 出口（DR2(第②步) P2-1）
-    && clientSrc.includes("className: 'nv-drawer-hint'")
-    && !clientSrc.includes("snap.drawerOpen === true && colW < 956 ? t('drawerNarrowHint')")
-})(), 'ux063 yield/hint missing')
-check('客户端源码面：UX-063 P0-a① 开启态手柄按 colW ≥ 1046 渲染（窄带隐藏）+ 收起态唤出条保留 + top 走 contentTop', (() => {
-  const i = clientSrc.indexOf('// UX-063：右缘 48px 抽屉手柄')
-  const blk = i < 0 ? '' : clientSrc.slice(i, i + 1700)
-  return blk !== ''
-    && blk.includes(': (colW >= DRAWER_HANDLE_MIN_COLW')
-    && blk.includes("title: t('chatDrawerClose')")
-    && blk.includes("title: t('chatDrawer')")
-    && blk.includes('top: contentTop + ')
-    && !blk.includes('top: (g.top + TITLE_BAR_H + noticeBoxH)')
-})(), 'ux063 handle gating/geometry missing')
-check('客户端源码面：UX-063 P0-a① 抽屉态 Esc 优先只关抽屉（分层语义；先 closeDrawer 再 closeWorkbench）', (() => {
+  const zDrawerCss = Number((/--nv-drawer-z:(\d+)/.exec(clientSrc) ?? [])[1])
+  const drawerW = Number((/--nv-drawer-w:(\d+)px/.exec(clientSrc) ?? [])[1])
+  return zSplit === 900 && zConsole === 950 && zDrawerCss === 920 && zSplit < zDrawerCss && zDrawerCss < zConsole
+    && drawerW === 420
+    && clientSrc.includes("const zDrawer = cssVarNum('--nv-drawer-z')")
+    && clientSrc.includes('viewArea.style.zIndex = String(zDrawer')
+    && clientSrc.includes("const wantW = cssVarNum('--nv-drawer-w')")
+    && clientSrc.includes('Math.round(wantW !== null ? wantW : colW)')
+})(), 's2r2 drawer z/width single source missing')
+check('UX-064 S2 交互单点：专注/抽屉各 1 个顶栏入口；无右缘 48px 悬浮把手；稿纸头无第二专注钮；无聊天拖线', (() => {
+  return (clientSrc.match(/barButton\('nv-bar-focus'/g) ?? []).length === 1
+    && (clientSrc.match(/className: 'nv-bar-ctl nv-bar-drawer'/g) ?? []).length === 1
+    && clientSrc.includes("el('span', { className: 'nv-bar-ctl-label' }, t('chatDrawer'))")
+    && clientSrc.includes("nvIcon('messageCircle', 14)")
+    && !clientSrc.includes('nv-paper-focus')
+    && !clientSrc.includes("className: 'nv-drawer-edge")
+    && !clientSrc.includes("className: 'nv-chatdiv'")
+})(), 'ux064 single interaction entry missing')
+check('客户端源码面：S2 R2 Esc 分层（抽屉 > 专注 > 沉浸/更多 > 关工作台；先关抽屉再关台）', (() => {
   const i = clientSrc.indexOf('// Esc 全局关闭（仅 active 时挂监听）')
-  const blk = i < 0 ? '' : clientSrc.slice(i, i + 1800)
-  const a = blk.indexOf('novelSplit.closeDrawer()')
+  const blk = i < 0 ? '' : clientSrc.slice(i, i + 2000)
+  const a = blk.indexOf('studioLayout.setDrawer(false)')
   const b = blk.indexOf('closeWorkbench(t)')
   return blk !== '' && a >= 0 && b > a
-    && blk.includes('if (novelSplit.drawerOpen === true) { novelSplit.closeDrawer(); return }')
+    && blk.includes('if (studioLayout.drawerOpen === true) { studioLayout.setDrawer(false); return }')
+    && blk.includes('narrow === true && narrowRailOpen === true')
 })(), 'ux063 esc priority missing')
 
 // ── UX-063 P0-a 第②步：任务流首页（规格 §1B；迁移表 #12/#13/#17+）──
@@ -1659,7 +1665,7 @@ check('客户端源码面：UX-064 首页主 CTA / 新建书 = 真触发工作�
     && promptB.includes('launchMsgOf(novels, novel.id, novel.title, launchOpts ?? null)')
     && launchB.includes('launcher.promptLaunch(sid, current, novels, opt)')
     && launchB.includes('allowStop !== true')                          // 首页发起不抢停运行中的轮次
-    && clientSrc.includes('onClick: () => launchWorkflow(null, true)')  // rail 主按钮仍承担停止
+    && clientSrc.includes('onWfLaunch: () => launchWorkflow(null, true)')  // 左栏主按钮仍承担停止
     // BUG-012 修复形态：消费 effect 上移后首页意图经 launchWfRef 间接调用
     && clientSrc.includes('launchWfRef.current({ mode: wf.mode, chapter: wf.chapter }, false)')
     && clientSrc.includes('launchWfRef.current = launchWorkflow')
@@ -1745,32 +1751,28 @@ check('UX-064 当前书数据未就绪：主 CTA 禁用且不猜章号 / 未知�
     && ux064ErrorRenderOk()
 })(), 'ux064 home unknown-state mismatch')
 // ── UX-063 P0-a 第③步：正文可读性（规格 §1C；迁移表 A 段 #1~#6 / C 段 #15/#16）──
-check('客户端源码面：UX-063 P0-a③ 正文可读性（reading 16 + 行高 1.9 + measure 34em + 中文排版 2em/0.8em + 编辑态同源 + 存量令牌冻结）', (() => {
+check('客户端源码面：UX-063 P0-a③ 正文可读性（reading 16 + 行高 1.95 + measure 34em + 中文排版 2em/0.62em + 编辑态同源 + 存量令牌冻结）', (() => {
   return clientSrc.includes('--nv-fs-reading:16px') && clientSrc.includes('--nv-fs-ui:13px')
     && clientSrc.includes('--nv-measure:34em')
-    // 规则**以字面量存在**（geometry 用 rule() 直接抽取并真量 DOM，不做镜像硬编码）
+    // `.nv-content` 基础规则保留（S1/其他阅读面）；S2 稿纸正文经 `.nv-prose .nv-content` 覆盖行高 1.95
     && clientSrc.includes('.nv-content{font-size:var(--nv-fs-reading,16px);line-height:1.9;color:var(--nv-fg,#e6e8eb)}')
     && clientSrc.includes('.nv-content p{text-indent:2em;margin:0 0 .8em;font-size:inherit;line-height:inherit}')
-    && clientSrc.includes('.nv-edwrap{max-width:calc(var(--nv-measure,34em) + 26px);margin:0 auto;font-size:var(--nv-fs-reading,16px);line-height:1.9}')
-    && clientSrc.includes("fontSize: 'var(--nv-fs-reading,16px)', lineHeight: 1.9")   // 编辑态同源（N-1 裁决 (a)）
-    // DR1 P1-1 标题层级：h2 用存量 display(20) / h3 用存量 display-s(17)，均 > 正文 16（不新增字号档、不改令牌值）
+    && clientSrc.includes('.nv-prose .nv-content{width:100%;max-width:34em;min-width:0;')
+    && clientSrc.includes('font-size:var(--nv-fs-reading,16px);line-height:1.95')
+    && clientSrc.includes('.nv-sheet-edit{display:block;width:100%;min-width:0;max-width:100%;')
     && clientSrc.includes('.nv-content h2{font-size:var(--nv-fs-display);')
     && clientSrc.includes('.nv-content h3{font-size:var(--nv-fs-display-s);')
-    // DR1 P2-1：geometry 静态注入需与组件内联样式同构（内边距/边框漂移则文本宽判据失真，故钉住来源）
-    && clientSrc.includes("minHeight: '420px', padding: '12px'")
-    // 存量令牌白名单冻结（D-3 收口：本步只改正文两件事）
+    && clientSrc.includes('padding:22px 0 8px')
     && clientSrc.includes('--nv-fs-body:15px') && clientSrc.includes('--nv-fs-card:13.5px')
     && clientSrc.includes('--nv-fs-caption:11px') && clientSrc.includes('--nv-fs-display-s:17px')
     && clientSrc.includes('--nv-fs-hero:28px') && clientSrc.includes('--nv-fs-base:12px')
-    // 旧 1em 段距口径零残留（迁移表 #1/#2）
     && !clientSrc.includes('.nv-content p{margin:1em 0')
 })(), 'ux063 reading typography missing')
 check('客户端源码面：UX-063 P0-a① 恢复五路径调用级具名——syncAnchor 内「旧节点还原」单独可判（删该调用必红）', (() => {
   const body = fnBody('syncAnchor() {')
   return body !== ''
-    && body.includes('if (this.viewArea !== null && this.viewArea.isConnected && this.viewArea !== viewArea) this.restoreViewArea()')
-    // 同函数内还有「快照新节点」调用：旧还原 + 新快照成对，缺一即红
-    && body.includes('this.snapshotViewArea(viewArea)')
+    && body.includes('if (DrawerHost.viewArea !== null && DrawerHost.viewArea.isConnected && DrawerHost.viewArea !== viewArea) DrawerHost.restoreViewArea()')
+    && body.includes('DrawerHost.snapshotViewArea(viewArea)')
 })(), 'ux063 syncAnchor restore call missing')
 check('客户端源码面：UX-064 顶栏（仅首页、书籍页不留双顶栏）与首页搜索（combobox ARIA / 未就绪≠无结果）+ 墨纸令牌 light-dark 且蓝色残留零', (() => {
   const ti = clientSrc.indexOf("el('div', { className: 'nv-topbar' }")
@@ -2004,7 +2006,7 @@ const scanHooksViolations = (src) => {
   return { hookFns, violations, braceBalance }
 }
 // golden（brittle-by-design）：含 hook 调用的函数清单——增删组件/hook 必须显式改此值（防扫描面静默萎缩）
-const HOOKS_GUARD_GOLDEN_FNS = 25
+const HOOKS_GUARD_GOLDEN_FNS = 27 // UX-064 S2：+ChapterRail；S2 R2：+useStudioSnap（StudioLayout 订阅）
 const hooksScan = scanHooksViolations(clientSrc)
 check('BUG-012 Rules-of-Hooks 静态守卫：lib/client.js 含 hook 调用的函数 ' + hooksScan.hookFns.length + ' 个（golden ' + HOOKS_GUARD_GOLDEN_FNS + '）全扫——「条件早退早于顶层 hook 调用」违规 = ' + hooksScan.violations.length + '（配平自检 ' + hooksScan.braceBalance + '）',
   hooksScan.violations.length === 0 && hooksScan.hookFns.length === HOOKS_GUARD_GOLDEN_FNS && hooksScan.braceBalance === 0,
@@ -2034,49 +2036,33 @@ check('BUG-012 Rules-of-Hooks 守卫判别力（负例对照，临时字符串�
     && rgb.violations.length >= 1 && rgb.violations.some((v) => v.fn === 'SplitWorkspace')
 })(), '判别力八段在断言内自含；若红请先看上一条守卫读数的 violations 明细')
 
-check('客户端源码面：UX-063 P0-a① 恢复保证五路径逐条具名（open / syncAnchor / closeDrawer / close / setBook）', (() => {
+check('客户端源码面：S2 R2 恢复保证五路径逐条具名（open / syncAnchor / setDrawer(false) / close / setBook）', (() => {
   const openB = fnBody('open(novelId) {')
   const syncB = fnBody('syncAnchor() {')
-  const closeDrawerB = fnBody('closeDrawer() {')
   const closeB = fnBody('close() {')
   const setBookB = fnBody('setBook(novelId) {')
-  return openB !== '' && syncB !== '' && closeDrawerB !== '' && closeB !== '' && setBookB !== ''
-    && openB.includes('this.restoreViewArea()')
-    && syncB.includes('this.restoreViewArea()')
-    && closeDrawerB.includes('this.restoreViewArea()')
-    && closeB.includes('this.restoreViewArea()')
-    && setBookB.includes('if (this.drawerOpen === true) this.closeDrawer()')
+  const drawerB = fnBody('setDrawer(open) {')
+  return openB !== '' && syncB !== '' && closeB !== '' && setBookB !== '' && drawerB !== ''
+    && openB.includes('DrawerHost.restoreViewArea()')
+    && syncB.includes('DrawerHost.restoreViewArea()')
+    && drawerB.includes('DrawerHost.restoreViewArea()')
+    && closeB.includes('DrawerHost.restoreViewArea()')
+    && setBookB.includes('if (studioLayout.drawerOpen === true) studioLayout.setDrawer(false)')
 })(), 'ux063 restore path missing')
-check('客户端源码面：UX-063 P0-a① 三处独立属性集（快照 15 读 / 恢复 15 写 / applyDrawer chrome 5 写）', (() => {
+check('客户端源码面：S2 R2 三处独立属性集（VIEW_AREA_PROPS 18 声明 / 快照 18 读 / 恢复 18 写 / applyDrawer 13 写）', (() => {
   const snapB = fnBody('snapshotViewArea(viewArea) {')
   const restB = fnBody('restoreViewArea() {')
   const drawerB = fnBody('applyDrawer() {')
-  const EXPECT = ['position', 'top', 'right', 'left', 'bottom', 'width', 'height', 'marginLeft', 'marginRight', 'marginTop', 'marginBottom', 'zIndex', 'boxShadow', 'borderLeft', 'background']
+  const EXPECT = ['position', 'top', 'right', 'left', 'bottom', 'width', 'height', 'marginLeft', 'marginRight', 'marginTop', 'marginBottom', 'zIndex', 'boxShadow', 'borderLeft', 'background', 'overflow', 'minHeight', 'maxHeight']
   const same = (arr) => arr.length === EXPECT.length && EXPECT.every((x) => arr.includes(x))
-  const reads = [...snapB.matchAll(/this\.saved[A-Z][A-Za-z]* = viewArea\.style\.([A-Za-z]+)/g)].map((m) => m[1])
-  const writes = [...restB.matchAll(/this\.viewArea\.style\.([A-Za-z]+) = this\.saved[A-Z]/g)].map((m) => m[1])
-  const chrome = ['position', 'zIndex', 'boxShadow', 'borderLeft', 'background']
-  const chromeWrites = drawerB.match(/viewArea\.style\.[A-Za-z]+ = /g) ?? []
-  return same(reads) && same(writes)
-    && chromeWrites.length === 5 && chrome.every((c) => drawerB.includes('viewArea.style.' + c + ' = '))
-    && drawerB.includes('this.applyMargin()')
+  const reads = [...snapB.matchAll(/saved\[prop\] = viewArea\.style/g)].length
+  const writes = [...restB.matchAll(/viewArea\.style\.([A-Za-z]+) = this\.saved\./g)].map((m) => m[1])
+  const chromeWrites = [...new Set((drawerB.match(/viewArea\.style\.([A-Za-z]+) = /g) ?? []).map((x) => x.split('.')[2].split(' ')[0]))]
+  return same(writes) && chromeWrites.length === 13 && chromeWrites.every((p) => EXPECT.includes(p))
+    && reads === 1 && clientSrc.includes('for (const prop of VIEW_AREA_PROPS) saved[prop] = viewArea.style[prop]')
+    && drawerB.includes('const bar = rectOf(\'.nv-split .nv-bar\')')
+    && drawerB.includes('const status = rectOf(\'.nv-split .nv-status\')')
 })(), 'ux063 property sets missing')
-check('客户端源码面：UX-063 P0-a① 抽屉态 resetSplit 强制右缘（P2-1）+ setChatSide 无死分支（P2-5）', (() => {
-  const resetB = fnBody('resetSplit() {')
-  const sideB = fnBody('setChatSide(side) {')
-  const i = resetB.indexOf('if (this.active === true && this.drawerOpen === true) {')
-  return resetB !== '' && sideB !== ''
-    && i >= 0 && resetB.slice(i).includes("this.chatSide = 'right'")
-    && sideB.includes('this.closeDrawer()')
-    && (sideB.match(/this\.applyDrawer\(\)/g) ?? []).length === 0
-})(), 'ux063 resetSplit/setChatSide drift')
-check('客户端源码面：UX-063 P0-a① 告警条 + 提示行占位几何单点（contentTop / bodyH 同扣 noticeBoxH + hintH）', (() => {
-  return clientSrc.includes('const hintH = drawerHintText !== null ? DRAWER_HINT_H : 0')
-    && clientSrc.includes('const bodyH = g.bottom - g.top - TITLE_BAR_H - noticeBoxH - hintH')
-    && clientSrc.includes('const contentTop = g.top + TITLE_BAR_H + noticeBoxH + hintH')
-    && (clientSrc.match(/top: contentTop \+ 'px'/g) ?? []).length >= 2
-    && !clientSrc.includes("top: (g.top + TITLE_BAR_H + noticeBoxH) + 'px'")
-})(), 'ux063 contentTop single source missing')
 // UX-053（DEC-019 方向 B+A 点缀，用户「初步优化但简陋缺设计感，保持布局视觉重构」）：
 //  ①图标体系 = NV_ICONS 集中映射 + nvIcon 助手（24×24 stroke=2 currentColor，12/14/16 三档），
 //    头注释 ISC/Lucide 声明保留；元素级 emoji 图标全部换 Lucide 内联（i18n 字符串内 emoji 拆分渲染，
@@ -2094,14 +2080,14 @@ check('客户端源码面：UX-053 图标体系（NV_ICONS 映射 + nvIcon 助�
     && clientSrc.includes("'aria-hidden': true")
     && clientSrc.includes('Icons: Lucide (https://lucide.dev), ISC License © Lucide contributors')
     && clientSrc.includes("nvIcon('bookOpen', 16)") && clientSrc.includes("nvIcon('search', 16)")     // 16px：控制台/卡片/搜索
-    && clientSrc.includes("nvIcon('link', 14)") && clientSrc.includes("nvIcon('trash2', 14)") && clientSrc.includes("'square' : 'play', 16)") // 14px：22px 钮；16px：rail 启动/停止（三元）
-    && clientSrc.includes("nvIcon('arrowLeftRight', 16)") && clientSrc.includes("nvIcon('rotateCcw', 16)") && clientSrc.includes("nvIcon('star', 16)") && clientSrc.includes("nvIcon('x', 16)") // 16px：32px 控制钮
+    && clientSrc.includes("nvIcon('link', 14)") && clientSrc.includes("nvIcon('trash2', 14)") && clientSrc.includes("nvIcon(props.wfRunning === true ? 'square' : 'play', 14)") // 14px：22px 钮 / 左栏工作流
+    && clientSrc.includes("nvIcon('messageCircle', 14)") && clientSrc.includes("nvIcon('maximize', 15)") && clientSrc.includes("nvIcon('x', 15)") // 14/15px：顶栏对话/专注/关闭
     && clientSrc.includes("nvIcon(appSnap.consoleOpen === true ? 'chevronDown' : 'chevronRight', 12)")   // 12px：抽屉 caret（开/合三元）
     && clientSrc.includes("nvIcon('chevronRight', 12)") && clientSrc.includes('rotate(90deg)')          // 12px：目录箭头（展开 rotate 90°）
     && clientSrc.includes("nvIcon('fileText', 12)")                                                      // 12px：文件树/预览头
     && clientSrc.includes("const stIcon = done ? 'circleCheck' : current ? 'refreshCw' : 'circle'") && clientSrc.includes("nvIcon(stIcon, 12)") // 工作流清单 12px
-    && clientSrc.includes("nvIcon(id === 'data' ? 'database' : id === 'publish' ? 'cloudUpload' : 'inbox', 12)") // 页签 12px（data/publish/requests 三元）
-    && clientSrc.includes("nvIcon('triangleAlert', 12)") && clientSrc.includes("nvIcon('check', 12)")      // 角标/章节标记/审计
+    && clientSrc.includes("nvIcon(id === 'workflow' ? 'refreshCw' : id === 'data' ? 'database' : id === 'publish' ? 'cloudUpload' : 'inbox', 12)") // 案卷页签 12px（workflow/data/publish/requests 四元）
+    && clientSrc.includes("nvIcon('triangleAlert', 12)") && clientSrc.includes("nvIcon('check', 10)")      // 角标/章节标记/审计（S2 左栏行内 10px）
     && clientSrc.includes("nvIcon('folderOpen', 24)")                                                     // 空态 24px 淡图标
     && !clientSrc.includes("'🔍'") && !clientSrc.includes("'🗑'") && !clientSrc.includes("'⇄'") && !clientSrc.includes("'⟳'") && !clientSrc.includes("'☆'")
     && !clientSrc.includes("'✕'") && !clientSrc.includes("'▸'") && !clientSrc.includes("'▾'") && !clientSrc.includes("'📄'")
@@ -2170,7 +2156,7 @@ check('客户端源码面：UX-055① 字阶悬崖（TYPO 单点常量关键值 
     && clientSrc.includes('--nv-fs-display:20px') && clientSrc.includes('--nv-fs-base:12px') && clientSrc.includes('--nv-fs-stat:18px') && clientSrc.includes('--nv-fs-chapter:16px')
     && clientSrc.includes('TYPO.page')        // 页面标题（管理台标题/创作台书名 20px）
     && clientSrc.includes('TYPO.cardTitle')   // 书卡标题 17px
-    && clientSrc.includes('TYPO.stat')        // 统计数字 18px + tabular-nums
+    && clientSrc.includes("stat: 'var(--nv-fs-stat)'")        // 统计字阶常量保留（S2 状态栏不再渲染 18px 统计数字）
     && clientSrc.includes("body: 'var(--nv-fs-body)'") && clientSrc.includes("bodyLh: 'var(--nv-lh-reading)'")   // 常量保留（存量令牌白名单）
     // UX-063 第③步迁移：正文区改走 `--nv-fs-reading`（16/1.9）⇒ TYPO.body/bodyLh **不再被正文消费**
     && !clientSrc.includes('TYPO.body') && !clientSrc.includes('TYPO.bodyLh')
@@ -2191,9 +2177,9 @@ check('客户端源码面：UX-061 P2 rail 状态短标签（DR2 P1：可见文�
   const en = found.filter((v) => !/[\u4e00-\u9fff]/.test(v))
   const maxZh = zh.length === 6 && zh.every((v) => Array.from(v).length <= 6)
   const maxEn = en.length === 6 && en.every((v) => v.length <= 14)
-  const start = clientSrc.indexOf("className: 'nv-rail-status'")
-  const stageIdx = clientSrc.indexOf("className: 'nv-rail-stage'", start >= 0 ? start : 0)
-  const seg = start >= 0 ? clientSrc.slice(start, stageIdx > start ? stageIdx : start + 900) : ''
+  // UX-064 S2：左栏从属状态行 = .nv-rb-wf-status；短标签单点收口在 railStatusText 计算块
+  const start = clientSrc.indexOf('const railStatusText =')
+  const seg = start >= 0 ? clientSrc.slice(start, start + 900) : ''
   // CR3 收紧：段内**每一个** t('...') 调用都必须在 6 键白名单内（换名字的长键也拦得住）
   const calls = Array.from(seg.matchAll(/t\((['"])([A-Za-z]+)\1\)/g)).map((x) => x[2])
   const onlyWhitelisted = calls.length > 0 && calls.every((k) => keys.includes(k))
@@ -2215,7 +2201,7 @@ check('客户端源码面：UX-061 阶段 2 B-10 循环动画全零（@keyframes
 
 check('客户端源码面：UX-061 P2 状态可感知与 CSS 卫生（rail 常驻状态文字 + 焦点双环 + 同选择器不重复定义）', (() => {
   const count = (needle) => clientSrc.split(needle).length - 1
-  return clientSrc.includes("className: 'nv-rail-status'")
+  return clientSrc.includes("className: 'nv-rb-wf-status'")
     && clientSrc.includes("t('railStatusBusy')")
     && clientSrc.includes('.nv-rail .nv-wfctl-btn:focus-visible,.nv-rail .nv-wfctl-btn2:focus-visible{outline:none;box-shadow:0 0 0 2px var(--nv-bg,#0b0e14),0 0 0 4px rgba(79,142,247,.6)')
     && clientSrc.includes("'.nv-chrow{box-sizing:border-box;height:28px") && clientSrc.includes('font:inherit;font-size:var(--nv-fs-base)')
@@ -2275,7 +2261,7 @@ check('客户端源码面：UX-061 1b-2 尺度令牌治理（CSS font-size 字�
   const ctlMd = (clientSrc.match(/var\(--nv-ctl-md\)/g) || []).length
   // P2-1（CR1）：React 内联字号基线冻结（44 处；11.5px×2 属尺度外，归 1b-3）——新增/变更即红，须同批更新基线
   // UX-061-B：章节行/数据面板内联字号随类化迁移（12px 基线 23→18），按实测重冻
-  const INLINE_FS_BASELINE = '11.5px:2,11px:12,12px:18,13px:5,14px:1'
+  const INLINE_FS_BASELINE = '11.5px:2,11px:12,12px:15,13px:4,14px:1' // S2 R2：旧 ChapterPanel 阅读/编辑面退役（-2×12px）
   const inlineSizes = (clientSrc.match(/fontSize:\s*'([0-9.]+)px'/g) || []).map((s) => s.match(/'([0-9.]+)px'/)[1] + 'px')
   const inlineCount = {}
   for (const v of inlineSizes) inlineCount[v] = (inlineCount[v] || 0) + 1
@@ -2337,8 +2323,8 @@ check('客户端源码面：UX-055⑤ 正文阅读排版（第③步迁移：rea
     && clientSrc.includes(".nv-content h2{font-size:var(--nv-fs-display);")             // 第③步 DR1 P1-1：章标题用存量 display 20（> 正文 16）
     && clientSrc.includes('.nv-chapter-sep{')
     && clientSrc.includes("className: 'nv-content'")
-    && clientSrc.includes('fontSize: TYPO.chapter')                    // 阅读区章节标题 16px/600 + tabular
-    && clientSrc.includes("fontSize: 'var(--nv-fs-reading,16px)', lineHeight: 1.9")  // textarea 同步 reading 16/1.9（DR3 N-1 裁决 (a)）
+    && clientSrc.includes('.nv-sheet-title{margin:11px 0 0;font-family:var(--nv-serif);font-size:var(--nv-fs-studio-29)')  // S2 稿纸标题（阅读↔编辑同源）
+    && clientSrc.includes('font-size:var(--nv-fs-reading,16px);line-height:1.95')  // 稿纸正文/编辑同步 reading（DR3 N-1 裁决 (a)）
     && clientSrc.includes("'.nv-chip{flex:none;display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;box-sizing:border-box;font-size:' + TYPO.meta") // P2-1：.nv-chip 11px→TYPO.meta 引用面
 })(), 'ux055 body typography missing')
 check('客户端源码面：UX-055⑥ 细节统一（抽屉小卡 13.5px / 当前阶段行 accent 8% 底+左缘条 / 排序 pill 选中 600 / 数据/表格 tabular-nums / mono 首字块渲染）', (() => {
@@ -3204,13 +3190,13 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
     srcEvents.length === rl.serviceNames.events.length
       && rl.serviceNames.events.every((e) => srcEvents.includes(e)) && srcEvents.every((e) => rl.serviceNames.events.includes(e)),
     'src=' + JSON.stringify(srcEvents) + ' contract=' + JSON.stringify(rl.serviceNames.events))
-  // ⑩ F8 CSS 令牌——宿主令牌族收紧后双向对账（COMPAT-003 F2 修订：族由 --dsw-alias-* 放宽至 alias+shadow，12 → 13）
-  const srcTokens = [...new Set([...codeOnly.matchAll(/--dsw-(?:alias|shadow)-[a-z0-9-]*[a-z0-9]/g)].map((m) => m[0]))]
+  // ⑩ F8 CSS 令牌——宿主令牌族收紧后双向对账（COMPAT-003 F2 修订：族由 --dsw-alias-* 放宽至 alias+shadow 13；S2 R2 再加 specific + business-accent = 17）
+  const srcTokens = [...new Set([...codeOnly.matchAll(/--dsw-(?:alias|shadow|specific)-[a-z0-9-]*[a-z0-9]/g)].map((m) => m[0]))]
   // UX-061 P0：幽灵令牌零引用（宿主 0.2.1-rc.2 声明集内不存在的 6 项——曾 138 调用点静默回落）
   const GHOST_TOKENS = ['--dsw-alias-fill-l1', '--dsw-alias-state-accent-primary', '--dsw-alias-state-success', '--dsw-alias-state-warning', '--dsw-alias-state-danger', '--dsw-alias-bg-elevated']
   const ghostHits = GHOST_TOKENS.filter((t) => srcTokens.includes(t))
   check('COMPAT-002 F8 CSS 令牌对账（UX-061 语义层）：源码去重集合 ≡ 契约清单（双向 ⊆，golden 15 项——两侧同删仍须红）∧ 6 个已知幽灵令牌 0 引用',
-    srcTokens.length === rl.cssTokens.length && rl.cssTokens.length === 15 && srcTokens.length === 15
+    srcTokens.length === rl.cssTokens.length && rl.cssTokens.length === 17 && srcTokens.length === 17
       && rl.cssTokens.every((t) => srcTokens.includes(t)) && srcTokens.every((t) => rl.cssTokens.includes(t))
       && ghostHits.length === 0,
     'src=' + srcTokens.length + ' contract=' + rl.cssTokens.length + ' ghosts=' + JSON.stringify(ghostHits))
@@ -3229,18 +3215,34 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   const DECL_PROPS = Array.isArray(rl.viewAreaProps) ? rl.viewAreaProps : []
   const SRC_PROPS = [...new Set([...codeOnly.matchAll(/(?:this\.)?viewArea\.style\.([A-Za-z]+)\s*=/g)].map((m) => m[1]))]
   const VIEW_KEYS = ['position', 'zIndex', 'boxShadow', 'borderLeft', 'background', 'marginLeft', 'marginRight', 'width']
-  check('P-10 UX-063 契约 item 3.3 双向对账：regionLiterals.viewAreaProps（15 属性）≡ client.js viewArea.style 写面 ∧ position/zIndex/boxShadow 在内 ∧ 48px 唤出条 DOM 登记 ∧ item 3.7 抽屉存储键',
+  check('P-10 UX-063/S2 契约 item 3.3 双向对账：regionLiterals.viewAreaProps（18 属性）≡ client.js viewArea.style 写面 ∧ position/zIndex/boxShadow 在内 ∧ DrawerHostAdapter 单点 ∧ 顶栏唯一抽屉入口（无悬浮右缘把手）∧ item 3.7 S2 R2 存储键',
     it33 !== undefined && it37 !== undefined
-      && DECL_PROPS.length === 15 && SRC_PROPS.length === DECL_PROPS.length
+      && DECL_PROPS.length === 18 && SRC_PROPS.length === DECL_PROPS.length
       && DECL_PROPS.every((p) => SRC_PROPS.includes(p)) && SRC_PROPS.every((p) => DECL_PROPS.includes(p))
       && VIEW_KEYS.every((p) => DECL_PROPS.includes(p))
       && ['position', 'zIndex', 'boxShadow'].every((p) => it33.symbol.includes(p))
-      && it33.symbol.includes('唤出条') && it33.symbol.includes('48')
+      && it33.symbol.includes('DrawerHostAdapter') && it33.symbol.includes('顶栏')
       && it33.note.includes('restoreViewArea')
-      && codeOnly.includes("className: 'nv-drawer-edge'")
-      && codeOnly.includes('const DRAWER_EDGE_W = 48')
-      && it37.symbol.includes('dsh.novel.drawer.v1'),
+      && !codeOnly.includes("className: 'nv-drawer-edge")   // S2 R2：悬浮把手删除（顶栏唯一入口）
+      && codeOnly.includes("className: 'nv-bar-ctl nv-bar-drawer'")
+      && !codeOnly.includes('const DRAWER_EDGE_W')
+      && it37.symbol.includes('dsh.novel.studio.v2'),
     'src=' + JSON.stringify(SRC_PROPS) + ' decl=' + JSON.stringify(DECL_PROPS) + ' it33=' + (it33 !== undefined) + ' it37=' + (it37 !== undefined))
+
+  // UX-064 S2（P-10）：可选宿主布局服务 + 原生会话抽屉稳定 data-* 钩子——双向 ⊆ 对账
+  const RL64 = hostContract.regionLiterals
+  const METHOD64 = RL64.optionalHostMethods !== undefined ? RL64.optionalHostMethods : {}
+  const HOOKS64 = Array.isArray(RL64.conversationHooks) ? RL64.conversationHooks : []
+  const methodList64 = Array.isArray(METHOD64.layout) ? METHOD64.layout : []
+  check('P-10 UX-064 S2：可选宿主布局服务（ctx.get(\'layout\') + toggleSidebar 缺席不渲染）+ 原生抽屉稳定 data-* 钩子（4 项，双向 ⊆；无哈希类名）',
+    RL64.serviceNames.ctxGet.includes('layout')
+      && clientSrc.includes("ctx.get('layout')")
+      && methodList64.length === 1 && methodList64[0] === 'toggleSidebar'
+      && clientSrc.includes("rawService('layout')") && clientSrc.includes("typeof svc.toggleSidebar !== 'function'")
+      && HOOKS64.length === 4 && HOOKS64.every((h) => clientSrc.includes(h))
+      && clientSrc.includes('html[data-nv-drawer="1"][data-nv-theme]')
+      && !/\[class\*="[A-Za-z0-9_]{4,}_/.test(clientSrc),
+    'ctxGet=' + JSON.stringify(RL64.serviceNames.ctxGet) + ' methods=' + JSON.stringify(methodList64) + ' hooks=' + JSON.stringify(HOOKS64))
 }
 
 // ── COMPAT-003：宿主表面 fixtures 离线对账 + ci.yml mock 面钉（F1）+ 契约 file/line 活性（F5）──
@@ -3514,7 +3516,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   //      **残余缝（同次实测，未闭合）**：若 2.13 只删**终点闭合行**（**历史锚点**：COMPAT-013 时期值 `L4429-4460`——6 处注册仍全在范围内）
   //      则 ①②③④⑤ **全绿**（实测 262/0：⑤a 计数仍 6 ≡ 6、④ callPrefix = null、⑤b 无 `键: {` 形态构造）
   //      ⇒ 该形态目前无持续机检力。根治需「构造闭合行」口径，而 JS 范围本就可能是**合法语义片段**
-  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L6654` +1 / 3.8 `L3649-L3660` +1 实测均非配平）——
+  //      （2.1 `L92-94` 花括号净差 +2 / 2.3、3.8 的现行范围为代码片段，实测亦非配平）——
   //      无差别要求配平会误报上述 3 项，故如实留档待另案（非本任务可安全落地）。
   //      **本行 3 个契约行号副本的同步方（CLEAN-006 **N-6** 归属订正，避免审计归因错位）**：本块随
   //      契约 `line` 重基**必须同步**，其**机检执行者 = `COMPAT-015 F3 行号引用对账`**（把本行 2.3
@@ -3702,11 +3704,11 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // 入 golden）范围条目中「起于注释/空行」者 MUST 恰 2 项
   //（历史锚点：COMPAT-013 时期实测——3.1 起于 `/**` JSDoc L1278、3.8 起于 `/**` JSDoc L3418；现行注释起段以本断言动态计算清单为准）。动因 = 该计数原为**人工转写**且写错
   //（CHANGELOG 曾披露「三处」）——与 COMPAT-004 FIND-1 的 tier 串转写漂移同类，故沿用同款处置：实测值
-  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.5 `L1580` `try {` / 4.6 `L17`
+  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.5 `L1895-L1905` `try {` / 4.6 `L17`
   // `"dsh": {` / 5.1 `L1` `name:` / 5.2 `L16` `- id:` / 5.4 `L77` `- id:` / 6.1 `L39`（修正后真值；修正前
   // `L38` 亦非注释）/ 6.2 `L8` `"engines": {` / 6.4 `L105`（ci.yml `#` 注释起段——JS 口径不计为注释，见下句口径边界）。严格面（面 2 = 11 项）已由 ③ 逐项约束，
   // 本项只覆盖未纳入严格面的面（动态生成：实测 3/4/5/6）；注释口径同 ③（JS 风格），YAML `#` 不在识别面内（与 F-5① 同源前提）。
-  const GOLDEN_RANGE_COMMENT_START = 2
+  const GOLDEN_RANGE_COMMENT_START = 0 // S2 R2：全部非严格面范围起点重基到代码行（原 3.1 起点落在注释内）
   const rangeNonStrict = rangeItems.filter((it) => !RANGE_STRICT_FACES.includes(it.face))
   const rangeNonStrictFaces = [...new Set(rangeNonStrict.map((it) => it.face))].sort()
   const GOLDEN_RANGE_NONSTRICT_ITEMS = 11
@@ -4623,7 +4625,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   const probeSrc60 = readFileSync(new URL('../scripts/probe-nv-bar-geometry.mjs', import.meta.url), 'utf8')
   const idxBar60 = clientSrc.indexOf("{ ref: barRef, className: 'nv-bar' }")
   const idxNotice60 = clientSrc.indexOf("className: 'nv-notice'")
-  const idxMain60 = clientSrc.indexOf("el('div', { className: 'nv-main'")
+  const idxMain60 = clientSrc.indexOf("className: 'nv-main'")
   check('UX-060 ①告警形态裁决单一事实源（长文本 > NOTICE_INLINE_MAX 或**实测** chip ∩ 横幅占位区 ⇒ 流式面；短提示保留标题栏 chip）',
     clientSrc.includes('const NOTICE_INLINE_MAX = 24')
       && clientSrc.includes('const noticeStream = barNotice !== null && (barNotice.text.length > NOTICE_INLINE_MAX || noticeEscalate === true)')
@@ -4653,14 +4655,6 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
       && clientSrc.includes("promptFailPrefix: 'Session ready, but sending the start instruction failed: '")
       && clientSrc.includes("presetFailHint: 'Mount that preset inside the session, then send the start instruction.'"),
     'zh/en 成对=' + ((clientSrc.match(/noticeClose: '/g) ?? []).length === 2))
-  check('UX-060 ④告警条占位几何一致（bodyH 与拖线/手柄 top 同点扣减——contentTop 单点，提示行同口径）',
-    clientSrc.includes('const noticeBoxH = noticeStream ? noticeH : 0')
-      && clientSrc.includes('const contentTop = g.top + TITLE_BAR_H + noticeBoxH + hintH')
-      && clientSrc.includes('const bodyH = g.bottom - g.top - TITLE_BAR_H - noticeBoxH - hintH')
-      && clientSrc.includes("top: contentTop + 'px'")
-      && clientSrc.includes('ref: noticeRef')                                          // 高度实测点
-      && clientSrc.includes('ro.observe(node)'),                                       // 高度变化（换行数随视口变）
-    'contentTop=' + clientSrc.includes('const contentTop = g.top + TITLE_BAR_H + noticeBoxH + hintH'))
   check('UX-060 ⑤几何探针资产在仓（P-04 看护：隔离实例 + 无头浏览器 + 两视口交集判据 + 真实环境只读复核；浏览器不在 smoke 内跑）',
     probeSrc60.includes('DSH_HOME') && probeSrc60.includes('containment')
       && probeSrc60.includes("{ name: '1078x593'") && probeSrc60.includes("{ name: '1400x900'")
@@ -5127,13 +5121,13 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   })
   const splitPickerIdx = clientSrc.indexOf("el(ThemePicker, { t, variant: 'split'")
   const consolePickerIdx = clientSrc.indexOf("el(ThemePicker, { t, variant: 'console'")
-  const drawerBtnIdx = clientSrc.indexOf("className: 'nv-bar-ctl', title: t('chatDrawer')")
+  const drawerBtnIdx = clientSrc.indexOf("className: 'nv-bar-ctl nv-bar-drawer'")
   const settingsInsertIdx = clientSrc.indexOf('el(ThemeSettings, { t })')
   const pluginLabelIdx = clientSrc.indexOf("'启用插件'")
   check('UX-065 渲染面：书斋顶栏恰 1 个 palette 按钮（菜单关闭态 0）∧ 设置页 3 张主题卡 + 当前卡唯一 data-on + ✓ 恰 1 ∧ 写作台标题栏 1 个（抽屉按钮之前，avoidRight 以分栏真实右缘 g.right 计）∧ 主题区在「启用插件」之前 ∧ 全仓 ThemePicker 恰 2 处（无重复控件）',
     conThemeBtns === 1 && conMenu === 0 && cardCount === 3 && onCards === 1 && checkMarks === 1
       && splitPickerIdx > 0 && consolePickerIdx > 0 && drawerBtnIdx > splitPickerIdx
-      && clientSrc.includes('DRAWER_W + Math.max(0, (typeof window !== \'undefined\' ? window.innerWidth : 0) - g.right) + 8')
+      && clientSrc.includes("cssVarNum('--nv-drawer-w') ?? 0") && clientSrc.includes('Math.max(0, (typeof window !== \'undefined\' ? window.innerWidth : 0) - g.right) + 8')
       && settingsInsertIdx > 0 && pluginLabelIdx > settingsInsertIdx
       && (clientSrc.match(/el\(ThemePicker, \{/g) ?? []).length === 2,
     'consoleBtns=' + conThemeBtns + ' cards=' + cardCount + ' on=' + onCards + ' checks=' + checkMarks + ' split=' + splitPickerIdx + ' drawer=' + drawerBtnIdx + ' settings=' + settingsInsertIdx + ' plugin=' + pluginLabelIdx)
