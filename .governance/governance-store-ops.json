@@ -1286,6 +1286,117 @@
         "generation": 0,
         "backend": "md"
       }
+    },
+    "op-19319ae164b840d8acc811e9cc9ba426": {
+      "schema_version": 1,
+      "command": "locks-amend",
+      "task_id": "UX-064",
+      "input_fingerprint": "aba77f714112208f8ac061084089478ffde1f2b592a70def8d1ee00b9fe7f95a",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-19319ae164b840d8acc811e9cc9ba426",
+        "code": "ok",
+        "new_revision": 2640,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-08T11:23:49",
+      "updated_at": "2026-11-08T11:23:49"
+    },
+    "op-7ab74de0f1964ac483bed6e17908ef71": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-064",
+      "input_fingerprint": "ab7dceabc74efc72de2cdb689144a9cd98b4e6386eba8eb2b128bb4a77a00d3d",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-7ab74de0f1964ac483bed6e17908ef71",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-08T19:20:52",
+      "updated_at": "2026-11-08T19:20:52",
+      "released_files": [
+        ".scratch-ux064/S1-review-r3.md",
+        "docs/review/UX-064-R3.md",
+        "lib/client.js",
+        "lib/host-contract.mjs",
+        "scripts/verify-visual-geometry.mjs",
+        "test/smoke.mjs"
+      ]
+    },
+    "op-680aa9cb9fed4019b5ed003c7a34d8fa": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-064",
+      "input_fingerprint": "ab7dceabc74efc72de2cdb689144a9cd98b4e6386eba8eb2b128bb4a77a00d3d",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-680aa9cb9fed4019b5ed003c7a34d8fa",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-08T20:11:21",
+      "updated_at": "2026-11-08T20:11:21",
+      "released_files": [
+        ".scratch-ux064/S1-dev-report-r4.md",
+        "lib/client.js",
+        "test/smoke.mjs"
+      ]
+    },
+    "op-c301169469244fada05aa779aff98e54": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-064",
+      "input_fingerprint": "ab7dceabc74efc72de2cdb689144a9cd98b4e6386eba8eb2b128bb4a77a00d3d",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-c301169469244fada05aa779aff98e54",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-08T20:19:46",
+      "updated_at": "2026-11-08T20:19:46",
+      "released_files": [
+        "docs/review/UX-064-R4.md"
+      ]
+    },
+    "op-a9eaedf3eea1416e8ac0d6952d9abaa2": {
+      "schema_version": 1,
+      "command": "evidence-append",
+      "task_id": "UX-064",
+      "input_fingerprint": "5d7155e99a8bfb50fb753a65a2eca2dab115ac467d15e14ec7657b785809e1df",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-a9eaedf3eea1416e8ac0d6952d9abaa2",
+        "code": "ok",
+        "new_revision": 437416,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-08T20:20:15",
+      "updated_at": "2026-11-08T20:20:15"
     }
   }
 }

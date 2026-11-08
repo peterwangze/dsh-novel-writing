@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-11-08T12:00:00",
+  "generated_at": "2026-11-08T14:00:00",
   "packets": {
     "REL-007": {
       "task_id": "REL-007",
@@ -1152,133 +1152,149 @@
     "UX-064": {
       "task_id": "UX-064",
       "priority": "P0",
-      "status": "🎨 设计评审稿已交付（2026-11-08）→ 待用户审核；零产品代码改动。交付：4 个可交互 HTML、9 张 2× 截图 + 总览、空态、专注模式、组件规范、设计提案。验收命令 `python docs/design/UX-064-mockups/verify-mockups.py` 实跑 PASS（exit 0）。S1/S2/S3 未开始；审核通过后才创建实现 lock 与实现任务。",
-      "goal": "按用户 2026-11-08 的判定（当前小说管理工作台与写作台的视觉设计、交互体验「完全不行」）重做：以审美标准 + 人的直觉/易用性为准，不把数据化验收当设计目标；先交付可审阅的九图设计包与设计提案，用户审核通过后再完整重构。方向 = 墨纸/文学编辑体：书斋（当前书 + 上次写到 + 一键续写第 N+1 章 + 书架）、写作台（顶栏 + 章节目录 + 588 稿纸 + 300 协作 + 状态栏 + 专注 680）、空态（一句话 + 一个主按钮 + 开书三步）、组件规范（9 色板、字阶、控件、四态、8pt）。",
+      "status": "🔄 **实施中（2026-11-08 用户审核通过「通过全部，开始 S1–S3 重构」）**。S1 书斋 → S2 写作台 → S3 收口按批派发；每批 Developer 实现 + Reviewer 审查 + Coordinator 真机/回归复核。设计与实现分开记账：设计包 EVD-150 已交付，产品实现尚未完成，不把设计稿截图当实现证据。",
+      "goal": "按用户 2026-11-08 审核通过的设计（DEC-162/DEC-163）完整重构小说工作台：**S1 书斋** = 64px 顶栏（书印 + 书斋 + 搜索/新建/设置/关闭）+ 当前书 hero（正在写 · 第 N 章、书名、题材/篇幅/字数/状态、唯一主 CTA「续写第 N+1 章」+「打开第 N 章」+ 说明）+「上次写到」引文卡 + 书架（真实书目，190×274 书封）+ 书案页脚；**S2 写作台** = 52px 顶栏 + 196px 章节目录栏 + 588px 稿纸（专注 680）+ 300px 协作栏（映射宿主对话抽屉，不伪造消息）+ 36px 状态栏；保留阅读/编辑、手动保存、章节轮询、工作流启动/停止、数据/发布/请求入口；**S3 收口** = 空态/加载/失败/禁用、深浅色、<1100 抽屉、<960 rail 折叠、<760 单列 + 目录抽屉、焦点环/ARIA/reduced-motion、真实数据回归与截图证据。视觉方向 = 墨纸/文学编辑体；字体、色彩、字阶、间距、文案以 `docs/design/UX-064-mockups/` 与 `docs/design/UX-064-redesign-proposal.md` 为准。",
       "product_success_contract": {
-        "user": "使用本插件的中文小说作者（在 DSH 宿主工作台中管理书目与写作）",
-        "job_to_be_done": "打开工作台就知道写哪本、点哪个；进入正文后愿意连续写 30 分钟；需要 AI 时它像页边批注，而不是把稿纸挤窄。",
+        "user": "使用本插件的中文小说作者（在 DSH 宿主工作台中管理书目与写作）。",
+        "job_to_be_done": "打开工作台一眼知道正在写哪本、上次写到哪、下一步点哪里；进入正文后能在安静、宽裕的稿纸上连续写 30 分钟；需要 AI 时它像页边批注，不把稿纸挤窄。",
         "non_goals": [
-          "本轮不改产品代码：不触 lib/client.js、lib/index.js、API、数据结构、localStorage key、安装/发布脚本",
-          "不在设计稿阶段兑现运行时无障碍/性能/回归指标；这些放到 S1–S3 实现批次验收",
-          "不新增书/章节/发布功能；不重做服务端"
+          "不改 lib/index.js、HTTP API、书目/章节数据结构、localStorage key、安装/发布脚本、宿主源码与依赖",
+          "不新增书/章节/发布/同步功能；不重做服务端；不改变轮询/保存语义（仍为手动保存，不承诺自动保存）",
+          "不把设计稿示意数据写进产品：书架只显示真实 novels，对话只显示宿主真实状态，章节位置/字数/保存时间全部从真实数据派生；不硬编码 2/2 页码",
+          "不擅自改设计已定文案（UX-052 红线）；技术不可行处必须在交付说明中逐条标出偏差，不能静默换词",
+          "不顺手重构无关模块；不把治理债 RISK-002/RISK-013 等写成已修复"
         ],
         "success_metrics": [
-          "用户打开九图总览，能不看说明就指出书斋、写作台、专注模式相对旧版至少 5 处结构差异（不是 ±1px 微调）",
-          "用户能从书斋直接续写第 39 章、从写作台回到第 38 章、从空态新建第一本书，路径上不需要找按钮",
-          "用户目检后能明确选择通过、调整被点名屏幕或返工，不需要追问设计意图"
+          "1152×840 工作区下，用户不读说明即可指出：当前书、上次写到、主 CTA、书架、写作台稿纸/目录/协作栏/状态栏；与旧版相比是结构级变化，不是 ±1px 微调",
+          "书斋主 CTA 与「打开第 N 章」动作语义正确：续写指向 max+1 章，打开指向已存在章；detail 未就绪时禁用并给重试，绝不猜章号",
+          "写作台正文列在 1152 宽下稳定 588px（专注 680px），阅读/编辑等价；Esc 退出专注；⌘S 只走既有手动保存",
+          "空态、加载、失败、禁用、浅色、深色六种状态都给出诚实信息；无假书、假聊天、假页码",
+          "真实宿主隔离探针跑通书斋→写作台路径；smoke/geometry 0 failed；用户目检通过"
         ],
-        "competitive_baseline": "DSH 宿主/插件的遮罩、焦点、深色配对与键盘习惯；纸书编辑体（书封、running head、页码、正文 measure）；写作工具的 34em measure 与专注模式（docs/research/UX-063-writing-app-layouts.md、docs/research/UX-053-visual-design-research.md）",
+        "competitive_baseline": "DSH 宿主/插件的遮罩、键盘与深浅色习惯；纸书编辑体（书封、running head、正文 measure、页码）；写作工具 34em measure 与专注模式（docs/research/UX-063-writing-app-layouts.md、docs/research/UX-053-visual-design-research.md）",
         "done_definition": [
-          "设计包完整且可复跑校验通过",
-          "用户完成目检并给出通过/返工结论",
-          "审核通过后另建实现任务与 lock；本 packet 不把「待审核」写成「已实现」"
+          "S1/S2/S3 三批均实现并经独立 Reviewer 审查；阻断项清零或如实登记",
+          "node --check、validate-preset、smoke、geometry、契约锚点、隔离宿主探针全部实跑并登记输出",
+          "真实宿主截图（书斋浅/深、空态、写作台浅/深、专注浅/深、窄屏）落 docs/evidence/UX-064/，与设计稿并排交用户目检",
+          "DEC-163/EVD-151/提案 §12/UX-064-R1 更新；产品验收以用户目检为准，不以指标打勾替代"
         ]
       },
       "acceptance_contract": {
-        "scenario": "打开九图总览与四页可交互稿，逐屏对照旧版截图与设计提案；设计包完整、文案/尺寸/主题标记一致，且产品代码零改动。",
-        "command": "python docs/design/UX-064-mockups/verify-mockups.py",
-        "expected_output": "PASS: UX-064 design artifacts - 4 HTML, 10 PNG, 3 before-images, proposal; product code untouched",
+        "scenario": "在隔离 DSH 宿主打开小说工作台：书斋显示真实当前书、上次写到引文、唯一续写主 CTA 与真实书架；点主 CTA 进入写作台，看到 588px 稿纸、196px 章节栏、宿主协作抽屉与 36px 状态栏；Esc 进入/退出专注 680；切深浅色、空态、失败态与 1152/1086/956/800 宽均不破版。",
+        "command": "node --check lib/client.js && node test/validate-preset.mjs && node test/smoke.mjs && node scripts/verify-visual-geometry.mjs && node scripts/probe-nv-ux064.mjs --out docs/evidence/UX-064",
+        "expected_output": "node --check 0 错；validate-preset PASS；smoke 0 failed（UX-063 旧结构断言已迁移到 UX-064，守卫不减少）；geometry 输出书斋 64/hero/书封 190×274 与写作台 top 52/rail 196/sheet 588/focus 680/chat 300/status 36 实测值；probe W1~W8 全绿且 7 张真实截图落盘；任何一环失败即 exit 非 0。",
         "last_run": {
           "status": "PASS",
           "exit_code": 0,
-          "summary": "2026-11-08 实跑：PASS，exit 0；4 HTML + 10 PNG（尺寸 2480×1920/2480×4800/1824×1716）+ 3 张旧版对照图 + 提案关键标记全部通过；保存时间语义断言通过（统计状态 9月23日 11:37 不得冒充正文保存；本章正文 mtime 8月25日 22:26）；git status 仅 docs/design/UX-064-* 与 .governance 变更，lib/ 无改动。"
+          "summary": "改动前基线（HEAD 1873dac）实跑：node --check 0 错；smoke 342 passed / 0 failed；geometry OK（旧口径 rail 44 / measure 544 / 抽屉 420）。此 PASS 仅证明基线守卫可用，**不代表 UX-064 实现完成**；S1/S2/S3 每批结束必须重跑并更新本字段。"
         },
-        "demo_evidence": "docs/design/UX-064-mockups/shots/00-contact-sheet.png；docs/design/UX-064-redesign-proposal.md"
+        "demo_evidence": "docs/evidence/UX-064/（实现后落 7 张真实宿主截图 + probe 输出）；docs/design/UX-064-mockups/shots/00-contact-sheet.png（设计对照）"
       },
       "quality_budget": {
         "dimensions": {
           "performance": {
-            "threshold": "设计稿为纯静态 HTML/PNG，无运行时、无网络请求、无新依赖",
-            "validation": "python docs/design/UX-064-mockups/verify-mockups.py + git status --short -- lib/",
-            "status": "EXEMPT",
-            "evidence": "设计阶段无运行时代码；lib/ 无改动",
-            "exception": "设计评审包不产生运行时性能面；性能在 S1–S3 实现阶段按原预算验收"
+            "threshold": "不新增首屏网络请求；书斋 overview/detail 轮询与章节 usePoll 周期不变；书封为 CSS，不引入图片请求或新依赖",
+            "validation": "node test/smoke.mjs + git diff --stat 核对轮询/请求行；node scripts/probe-nv-ux064.mjs 记录首屏请求数基线",
+            "status": "planned",
+            "evidence": "基线 smoke 342/0；实现后由 Reviewer 对 diff 逐处核对，不用主观「感觉快」替代",
+            "exception": ""
           },
           "reliability": {
-            "threshold": "设计包可复跑：4 页 HTML 关键文案、10 张 PNG 尺寸、3 张旧版对照、提案关键标记",
-            "validation": "python docs/design/UX-064-mockups/verify-mockups.py",
-            "status": "PASS",
-            "evidence": "2026-11-08 实跑 PASS / exit 0",
+            "threshold": "三批各自可回退；章节数据、当前书、章号、字数、保存时间全部真实派生；加载/失败/空态互斥且可重试",
+            "validation": "node --check lib/client.js && node test/smoke.mjs && node scripts/verify-visual-geometry.mjs",
+            "status": "planned",
+            "evidence": "基线 node --check 0 / smoke 342 passed 0 failed / geometry OK；实现后重跑",
             "exception": ""
           },
           "security": {
-            "threshold": "零产品代码改动、零新增依赖、零宿主源码改动",
-            "validation": "git status --short -- lib/ + verify-mockups.py",
-            "status": "PASS",
-            "evidence": "git status 仅 docs/design/UX-064-* 与 .governance；lib/ 无改动",
+            "threshold": "零新增外部依赖、零宿主源码改动、零新文件系统写路径；不新增 localStorage key；不把 token 或真实路径写入截图/日志",
+            "validation": "git diff -- lib/index.js package.json + node test/smoke.mjs（依赖/宿主面断言）+ probe 输出脱敏检查",
+            "status": "planned",
+            "evidence": "当前 lib/index.js / package.json 零改动；实现只动客户端呈现与契约/测试面",
             "exception": ""
           },
           "accessibility": {
-            "threshold": "设计规格覆盖 ≥32px 命中区、统一焦点环、ARIA、reduced-motion、浅深对比",
-            "validation": "python docs/design/UX-064-mockups/verify-mockups.py（规格落盘与关键标记检查） + 提案 §3.3/§7 的 5 项人工核对（命中区/焦点环/ARIA/reduced-motion/对比度）",
-            "status": "EXEMPT",
-            "evidence": "规格已写入提案；运行时尚未实现，故不在设计包上冒充 PASS",
-            "exception": "设计阶段只验规格完整性；运行时无障碍由 S1–S3 实现批次验收"
+            "threshold": "所有图标按钮带 aria-label/title；可见焦点环统一；书封/书卡键盘可达；小按钮命中区 ≥32px；Esc/⌘S/⌘F/⌘K 符合规格；prefers-reduced-motion 下关闭位移动画；浅深对比可读",
+            "validation": "node scripts/probe-nv-ux064.mjs --a11y（DOM 角色/焦点/命中区/reduced-motion 断言）+ node scripts/verify-contrast.mjs",
+            "status": "planned",
+            "evidence": "设计稿已定义命中区/焦点环/ARIA/reduced-motion；实现后由探针与 Reviewer 复核",
+            "exception": ""
           },
           "ux": {
-            "threshold": "九图可逐屏对照旧版；用户能指出结构差异；审核结论进入 DEC-162",
-            "validation": "contact sheet + 四页 HTML + 用户目检",
-            "status": "EXEMPT",
-            "evidence": "设计评审包已交付；用户审核是最终 gate，尚未发生",
-            "exception": "不以自动指标替代用户审美判断；用户未审核前不宣称通过"
+            "threshold": "打开书斋 5 秒内可指出当前书/上次写到/主 CTA；写作台稿纸 ≥588 宽且聊天不挤正文；六态诚实；用户目检认为相对旧版有结构级提升",
+            "validation": "node scripts/probe-nv-ux064.mjs --out docs/evidence/UX-064（7 张真实截图）+ 用户目检",
+            "status": "planned",
+            "evidence": "设计包已由用户审核通过（DEC-163）；实现截图待交付，不以设计稿冒充",
+            "exception": ""
           },
           "maintainability": {
-            "threshold": "一个提案 + 一个可复跑 verifier；不引入产品代码分支",
-            "validation": "python docs/design/UX-064-mockups/verify-mockups.py",
-            "status": "PASS",
-            "evidence": "提案、9 图、4 HTML、verifier 均在 docs 下；无 lib/ 改动",
+            "threshold": "色/字阶/间距收敛到 --nv-* 单点；新增宿主字面量/令牌登记 lib/host-contract.mjs；smoke 双向对账；旧 UX-063 结构断言迁移而非删除",
+            "validation": "node test/smoke.mjs（契约双向 ⊆）+ node scripts/verify-contract-anchors.mjs",
+            "status": "planned",
+            "evidence": "基线契约锚点 79 段 FAIL=0；实现后同步迁移表并重跑",
             "exception": ""
           }
         }
       },
       "vertical_slice": {
-        "user_visible_slice": "用户打开书斋与写作台页面，能看到当前书、上次写到的段落、续写第 39 章主按钮，以及 588px 稿纸与 300px 协作栏的分工；专注模式按 Esc 退出。",
-        "demo_path": "python docs/design/UX-064-mockups/verify-mockups.py + docs/design/UX-064-mockups/shots/00-contact-sheet.png（九图截图）+ 四页 HTML 浏览器打开",
-        "scope_guard": "仅 docs/design/UX-064-mockups 的四页 HTML、九张截图、设计提案与治理登记；不含 lib/client.js、lib/index.js、API、数据与安装/发布脚本",
-        "rollback_plan": "删除 docs/design/UX-064-* 并 revert governance 登记；无产品代码、无数据、无 localStorage 影响",
-        "status": "PASS",
-        "evidence": "verify-mockups.py PASS / exit 0；九图总览 + 3 张旧版对照已入仓"
+        "user_visible_slice": "用户打开书斋，看到真实当前书、上次写到的段落、唯一「续写第 39 章」主 CTA 与真实书架；点主 CTA 进入写作台，看到 588px 稿纸与章节栏，按 Esc 进入专注 680，再按 Esc 退出；切深色后同一路径可用。",
+        "demo_path": "node scripts/probe-nv-ux064.mjs --out docs/evidence/UX-064（真宿主点击路径 + 7 张截图）；截图对照 docs/design/UX-064-mockups/shots/00-contact-sheet.png",
+        "scope_guard": "仅书斋（NvConsole home）与写作台（SplitWorkspace/ChapterPanel/LeftNav/WorkflowPanel 的外壳与呈现）及其契约、断言、证据；不含服务端 API、数据结构、发布/安装脚本与无关模块",
+        "rollback_plan": "S1/S2/S3 各为一个独立 commit；回退对应 commit 即恢复旧界面，无数据/schema/localStorage 迁移；若视觉回退需保留修复，按 hunk revert，不动 API 与保存链",
+        "status": "NOT_RUN_YET",
+        "evidence": "设计包 EVD-150；实现截图与探针尚未产出"
       },
       "interruption_policy": {
-        "mode": "critical-only: design work proceeds autonomously; the user is interrupted only for the review gate",
+        "mode": "critical-only: implementation proceeds autonomously; user is interrupted only at the final visual review or for a critical decision",
         "critical_triggers": [
-          "Ask the user when product intent is unclear.",
-          "Ask the user when acceptance standard or done criteria are unclear.",
-          "Ask the user before irreversible or destructive actions.",
-          "Ask the user before release, risk acceptance, external dependency, or mode change decisions."
+          "Ask the user when product intent or approved copy must change.",
+          "Ask the user when a technical constraint makes an approved screen impossible as specified.",
+          "Ask the user before irreversible or destructive actions, or before accepting a new risk.",
+          "Ask the user before release, external dependency, architecture, or mode changes."
         ],
         "auto_execute": [
-          "Run routine execution, local validation, and focused design edits when scope is known and reversible.",
-          "Update governance records and commit/push docs-only changes when validation is green."
+          "Run routine implementation, local validation, isolated-host probes, focused refactors and commits when scope is known and reversible.",
+          "Update governance records and commit/push implementation batches when validation is green and review blockers are zero."
         ],
         "assumption_record": {
-          "assumption": "九图使用真实第 38 章结尾原文；书架另 3 本为版式示意数据；对话差异为交互示意。",
-          "basis": "真实项目 D:\\AI\\writing\\novel-001\\novel-project；chapter-038.md；用户此前给出的书名为概念示意",
-          "reversibility": "设计稿可删改；不写产品数据",
-          "validation": "总览图/提案中的「示意数据」标注 + 真实正文逐行核对",
-          "rollback": "删除 docs/design/UX-064-* 即可，无数据影响"
+          "assumption": "设计稿书架另 3 本、聊天差异卡、2/2 页码均为示意；产品只显示真实数据，聊天栏映射宿主真实抽屉状态。",
+          "basis": "DEC-163 明确禁止假数据；真实项目 D:\\AI\\writing\\novel-001\\novel-project；宿主对话由宿主渲染，插件不伪造 transcript",
+          "reversibility": "界面代码可逐批回退；不写产品数据、不改 API",
+          "validation": "smoke 断言真实派生 + probe 读取真实 detail/novels + 截图目检",
+          "rollback": "revert 对应 S1/S2/S3 commit"
         },
-        "interruption_budget": "One user interruption for the review gate; further interruptions only for a new critical trigger."
+        "interruption_budget": "One user interruption at final visual review; further interruptions only for a new critical trigger."
       },
       "allowed_change_scope": [
-        "可改：docs/design/UX-064-mockups 下的 console.html、console-empty.html、studio.html、components.html、assets/、shots/、verify-mockups.py；docs/design/UX-064-redesign-proposal.md；docs/review/UX-064-R1.md（若创建）；.governance 的 plan-tracker、decision-log、evidence-log、session-snapshot、execution-packets",
-        "禁改：lib/client.js、lib/index.js、lib/host-contract.mjs、test/、scripts/、package.json、install 脚本、cordis.patch.yml（审核通过前）"
+        "可改：lib/client.js（仅 NvConsole / SplitWorkspace / ChapterPanel / LeftNav / WorkflowPanel / NV_STYLE / 相关 i18n 文案）",
+        "可改：lib/host-contract.mjs（新增/变更宿主字面量、CSS 令牌族、区域登记与修订说明）",
+        "可改：test/smoke.mjs（UX-063 旧结构断言迁移为 UX-064，新增双向契约/真实派生/六态守卫）；scripts/verify-visual-geometry.mjs（新几何口径）；新增 scripts/probe-nv-ux064.mjs",
+        "可改：docs/evidence/UX-064/**、docs/review/UX-064-*.md、docs/design/UX-064-redesign-proposal.md（§12 实现记录）、docs/design/UX-064-mockups/（仅陈旧说明/对照图，不改已批准视觉）",
+        "可改：.governance/plan-tracker.md、decision-log.md、evidence-log.md、session-snapshot.md、execution-packets.json、agent-locks.json",
+        "禁改：lib/index.js、HTTP API、数据结构、localStorage key、package.json、install 脚本、cordis.patch.yml、agent-presets/、宿主源码或依赖"
       ],
       "required_evidence": [
-        "evidence-log entry with 事实依据、结构化事实 JSON、目标对齐、用户影响",
-        "verify-mockups.py exit_code + concise output",
-        "九图总览 + 四页 HTML + 提案路径",
-        "用户审查状态（DEC-162，待发生）"
+        "每批 evidence-log 条目：事实依据、结构化事实、目标对齐、用户影响、文件清单",
+        "node --check / validate-preset / smoke / geometry / anchors / probe 的 exit code 与摘要",
+        "docs/evidence/UX-064/ 的真实宿主截图（书斋浅深、空态、写作台浅深、专注浅深、窄屏）与 probe JSON",
+        "Reviewer 报告 docs/review/UX-064-S1-CR1.md、S2-CR1.md、S3-CR1.md（或合并稿）与阻断项闭环记录",
+        "用户最终目检结论（DEC-163 之后的新记录，未发生前不写成通过）"
       ],
       "next_commands": [
-        "python docs/design/UX-064-mockups/verify-mockups.py",
-        "git status --short -- lib/ docs/design/UX-064-mockups docs/design/UX-064-redesign-proposal.md",
+        "node --check lib/client.js",
+        "node test/validate-preset.mjs",
+        "node test/smoke.mjs",
+        "node scripts/verify-visual-geometry.mjs",
+        "node scripts/verify-contract-anchors.mjs",
+        "node scripts/probe-nv-ux064.mjs --out docs/evidence/UX-064",
         "python C:\\Users\\peter\\.claude\\plugins\\cache\\spg\\software-project-governance\\0.99.0\\skills\\software-project-governance\\infra\\verify_workflow.py --project-root 'D:\\AI\\agent\\deepseek\\harness\\writing-workflow' check-governance --summary-only --scope full"
       ],
       "done_definition": [
-        "设计包完整且 verify-mockups.py 通过",
-        "用户审查状态记录为 DEC-162（待审查 / 通过 / 返工）；待审查不等于完成",
-        "本 packet 不宣称实现完成；通过后才另建实现任务与 lock"
+        "S1/S2/S3 均实现，旧 UX-063 断言迁移完成且 smoke 0 failed；geometry/anchors 全绿",
+        "隔离宿主 probe 全绿并产出 7 张真实截图；浅/深/空/失败/窄屏无破版；无假数据",
+        "独立 Reviewer 审查通过（阻断 0；非阻断项登记）；Coordinator 复核 diff 与真实数据",
+        "DEC-163/EVD-151/提案 §12/UX-064-R1 更新；用户目检通过后才标记任务完成",
+        "不宣称 RISK-002/RISK-013/18d/18f 等治理债已清；如未清如实保留"
       ],
       "source": "plan-tracker.md##当前活跃事项"
     }

@@ -1293,7 +1293,7 @@ check('客户端源码面：UX-063 P0-a① 抽屉态 Esc 优先只关抽屉（�
 })(), 'ux063 esc priority missing')
 
 // ── UX-063 P0-a 第②步：任务流首页（规格 §1B；迁移表 #12/#13/#17+）──
-check('控制台树：UX-063 P0-a② 默认入口 = 任务流首页（加载态不与空态混淆；网格/搜索行不在首页）', (() => {
+check('控制台树：UX-063 P0-a② 默认入口 = 任务流首页（首轮只出整块加载态；空态/CTA/网格/搜索行一律不在首帧）', (() => {
   const dr = slotRegs.find((r) => r.id === 'novel-drawer')
   const con = slotRegs.find((r) => r.id === 'nv-console')
   if (dr === undefined || con === undefined) return false
@@ -1320,41 +1320,114 @@ check('控制台树：UX-063 P0-a② 默认入口 = 任务流首页（加载态�
     if (Array.isArray(n.children)) for (const c of n.children) walk(c)
   }
   walk(root)
-  // 返工（REVIEW-UX-063-S2-DR1 P1-1 / CR1 P2-1）：mock 初始 poll.data=null = **加载中**，
-  // 必须渲染加载态（.nv-home-loading + 重试），**不得**渲染「无书目」假空态，也不得渲染可点的 CTA。
+  // R2 口径（S1-fix-brief §4/§8）：首轮 poll.data=null = **加载中**，只渲染 `.nv-home-state`（role=status），
+  // 不渲染「无书」假空态、不渲染任何 CTA、不渲染书架/网格/搜索行；顶栏恰一个（不出现双顶栏）。
   return (clsCount['nv-home'] ?? 0) === 1
-    && (clsCount['nv-home-loading'] ?? 0) === 1
+    && (clsCount['nv-home-state'] ?? 0) === 1
+    && (clsCount['nv-home-state-err'] ?? 0) === 0
     && (clsCount['nv-home-empty'] ?? 0) === 0
+    && (clsCount['nv-home-hero'] ?? 0) === 0
+    && (clsCount['nv-shelf-card'] ?? 0) === 0
     && (clsCount['nv-home-cta'] ?? 0) === 0
-    && (clsCount['nv-home-sub'] ?? 0) >= 1          // 加载态提供「重试」入口
-    && (clsCount['nv-cgrid'] ?? 0) === 0             // 网格退到二级页
-    && (clsCount['nv-cfoot'] ?? 0) === 0             // 搜索行仅二级页
+    && (clsCount['nv-cgrid'] ?? 0) === 0
+    && (clsCount['nv-cfoot'] ?? 0) === 0
+    && (clsCount['nv-topbar'] ?? 0) === 1
     && clientSrc.includes("props.initialView === 'books' ? 'books' : 'home'")
     && clientSrc.includes('const homeLoading = poll.data === null')
     && clientSrc.includes('const homeEmpty = poll.data !== null && novels.length === 0')
 })(), 'ux063 home default entry mismatch')
-check('客户端源码面：UX-063 P0-a② 首页四区（当前书 / 今天写什么 / 待办 / 最近章节）+ 唯一主 CTA', (() => {
+check('客户端源码面：UX-064 书斋首页结构（五直接子节点 / 契约类名共存 / 每状态唯一主 CTA / 真实数据派生）', (() => {
   const i = clientSrc.indexOf('const homeBody = () => {')
-  const blk = i < 0 ? '' : clientSrc.slice(i, i + 9000)
-  return blk !== ''
-    && blk.includes('nv-home-sec nv-home-book') && blk.includes('nv-home-sec nv-home-today')
-    && blk.includes('nv-home-sec nv-home-todo') && blk.includes('nv-home-sec nv-home-recent')
-    && blk.includes('nv-home-book-title') && blk.includes('nv-home-chip') && blk.includes('nv-home-stat')
-    && blk.includes('nv-home-cta') && blk.includes('nv-home-sub') && blk.includes('homeContinueCta')
-    && blk.includes("'data-kind': 'requests'") && blk.includes("'data-kind': 'publish'") && blk.includes("'data-kind': 'gate'")
-    && blk.includes('const gateDisabled = todoUnknown === true || homeTodo.gateFails === 0')  // 未就绪/无失败章 ⇒ 置灰
-    && blk.includes('homeTodo.gateFirstNum')                                                  // 门禁项 → 首个失败章
-    && blk.includes("enterWriting({ tab: 'requests' })") && blk.includes("enterWriting({ tab: 'publish' })")
-    && blk.includes('homeRecent.map')
-    && (blk.match(/className: 'nv-home-cta'/g) ?? []).length === 1  // 唯一主按钮
-})(), 'ux063 home sections missing')
-check('UX-063 P0-a② 首页纯派生用例（#region home-model 区段提取后真跑：章号 / 待办 / 最近 / 章数 / 意图可消费）', (() => {
+  const j = i < 0 ? -1 : clientSrc.indexOf('const g = geom !== null', i)
+  const blk = i < 0 || j < 0 ? '' : clientSrc.slice(i, j)
+  if (blk === '') return false
+  // P0-1：`.nv-home` 子节点必须 rest 参数 + 展开（写成 (children) 只转发第一个 ⇒ 网格塌成一行）
+  const shellOk = blk.includes("const shell = (...children) => el('div', { className: 'nv-home' }, ...children)")
+  const shellBad = blk.includes("const shell = (children) =>")
+  // 平铺契约：五个直接子节点在 10 空格缩进上（子节点内层缩进更深，故此判代入缩进层即区分直接子/孙）
+  const direct = /\n {10}el\('(?:section|aside|hr|footer)', \{ className: '(?:nv-home-hero nv-hero|nv-quote nv-quote-card|nv-home-rule|nv-home-shelf nv-shelf|nv-home-deskline)'/g
+  const directCount = (blk.match(direct) ?? []).length
+  return shellOk && !shellBad && directCount === 5
+    // 契约类名共存（S1-review P0-2）：新名 + 旧名同时在，旧 CSS 不能靠改名规避
+    && blk.includes("className: 'nv-home-hero nv-hero empty-hero nv-empty-hero'")
+    // §11.5 空态角色/顺序（h1 不是 eyebrow）：空态 hero 内 eyebrow → homeEmptyTitle → h1 → homeEmptyLead
+    && (() => {
+      const e0 = blk.indexOf("empty-hero nv-empty-hero'")
+      if (e0 < 0) return false
+      const e1 = blk.indexOf("className: 'nv-quote nv-quote-card nv-empty-quote'", e0)
+      const seg = e1 > e0 ? blk.slice(e0, e1) : ''
+      const p = ["className: 'nv-eyebrow'", "t('homeEmptyTitle')", "className: 'nv-hero-title'", "t('homeEmptyLead')"].map((s) => seg.indexOf(s))
+      return p.every((v) => v >= 0) && p[0] < p[1] && p[1] < p[2] && p[2] < p[3]
+    })()
+    && blk.includes("className: 'nv-quote nv-quote-card'") && blk.includes("className: 'nv-quote nv-quote-card nv-empty-quote'")   // 空态三步卡必须有纸卡边框（缺 nv-quote-card ⇒ 视觉不存在）
+    && blk.includes("className: 'nv-home-shelf nv-shelf'") && blk.includes("className: 'nv-home-deskline'")
+    && blk.includes("className: 'nv-shelf-card nv-book-card'")
+    // §9 三态顺序（R3 A）：error 分支必须先于 loading 分支——`homeLoading = poll.data === null`，
+    //   usePoll 失败同时 setData(null)+setError ⇒ 顺序反了错误态永不可达（界面永远「正在读取书目…」）
+    && (() => {
+      const ie = blk.indexOf('if (poll.error !== null)')
+      const il = blk.indexOf('if (homeLoading === true)')
+      return ie >= 0 && il >= 0 && ie < il
+    })()
+    // 英雄区：eyebrow/tick + 书名 + 元信息 + 阶段点 + 动作区（唯一主 CTA + quiet 次级入口）
+    && blk.includes("className: 'nv-hero-left'")
+    && blk.includes("className: 'nv-eyebrow'") && blk.includes("className: 'nv-tick'")
+    && blk.includes("className: 'nv-hero-title'") && blk.includes("className: 'nv-hero-meta'")
+    && blk.includes("className: 'nv-stage'") && blk.includes("className: 'nv-stage-dot'")
+    && blk.includes("className: 'nv-hero-actions'") && blk.includes("className: 'nv-hero-quiet'")
+    && (blk.match(/className: 'nv-home-cta nv-btn-lg'/g) ?? []).length === 2            // 空态 + 有书态各一（每状态唯一）
+    && blk.includes("className: 'nv-home-cta-text'") && blk.includes("nvIcon('penLine', 15)")
+    && blk.includes("nvIcon('arrowRight', 14)")
+    && !blk.includes("workflow: 'new'")                                                  // 首页不再有第二个工作流按钮
+    // 引文卡四态：loading / ok / empty / fail（+ 重试）；正文 = 一段 dim + <br> + 末段（mock 口径）
+    && blk.includes("quoteState === 'ok'") && blk.includes("quoteState === 'loading'")
+    && blk.includes("quoteState === 'fail'") && blk.includes("t('homeQuoteEmpty')")
+    && blk.includes("className: 'nv-quote-dim'") && blk.includes("className: 'nv-quote-kicker'")
+    && blk.includes('el(\'br\', { key: \'qb\' })') && blk.includes("className: 'nv-quote-source'")
+    && blk.includes("t('homeQuoteLabel')") && blk.includes('setQuoteNonce((n) => n + 1)')
+    // 书架：标题 + 计数 + 最近编辑/全部书籍 + 书卡（封面/题材/竖排书名/印章/章数/书签）+ 新建书尾格
+    && blk.includes("t('homeShelfHeading')") && blk.includes("t('homeShelfCount', orderedNovels.length)")
+    && blk.includes("className: 'nv-shelf-count'")
+    && blk.includes("t('homeShelfRecent')") && blk.includes("t('homeShelfAll')")
+    && blk.includes("className: 'nv-shelf-all'")
+    && blk.includes('orderedNovels.slice(0, 6).map')
+    && blk.includes("className: 'nv-cover'") && blk.includes("className: 'nv-cover-genre'")
+    && blk.includes("className: 'nv-cover-frame'") && blk.includes("className: 'nv-cover-title'") && blk.includes("className: 'nv-cover-seal'")
+    && blk.includes("className: 'nv-cover-no'") && blk.includes("className: 'nv-bookmark'")
+    && blk.includes("className: 'nv-book-stat'") && blk.includes("className: 'nv-book-now'")
+    && blk.includes("className: 'nv-shelf-add'") && blk.includes("className: 'nv-shelf-add-t'")
+    && blk.includes("t('homeShelfAddHint')")
+    // 书案线：书案 / 未发布 / 请求 / 阶段 / 最近保存三态（无记录 / 已保存 / 时间未知）
+    && blk.includes("t('homeDesk')") && blk.includes("t('homeDeskUnpublished', homeTodo.unpublished)")
+    && blk.includes("t('homeDeskRequests'") && blk.includes("className: 'nv-deskline-right'")
+    && blk.includes("t('homeNoSave')") && blk.includes("t('homeDeskSaved', homeSaveAt.num, homeSavedFmt.day, homeSavedFmt.time)")
+    && blk.includes("t('homeSaveUnknown')")
+    && clientSrc.includes('deriveHomeWords(')
+    // 真实数据派生：不得写死演示值（8.9 万字 / 长篇 / 38 / 0 由 data 派生，不落源码常量）
+    && !blk.includes('89232') && !blk.includes('长篇') && !blk.includes("'38'")
+    && !blk.includes('homeDeskUnpublished: 38')
+    && !blk.includes('quality_review') && !clientSrc.includes('homeStageChip')            // §11.4/9：阶段一律走 i18n 映射，不直接渲染枚举
+    && !blk.includes('enterWriting({}, n.id)')                                           // §11.11：书卡点击必须带真实 chapter
+    // §3 双顶栏防回归：书籍页保留 .nv-console-head，顶栏只在 home 挂载
+    && clientSrc.includes("view === 'home' ? el('div', { className: 'nv-topbar' }")
+    && clientSrc.includes("className: 'nv-console-head'")
+    // §3 视图标记 + 纸张底色只在 home；`.nv-home-wide` 彻底删除（880 死宽不再有落点）
+    && clientSrc.includes("'data-view': view")
+    && clientSrc.includes('.nv-console[data-view="home"]{background:var(--nv-paper)')
+    && !clientSrc.includes('nv-home-wide')
+    // §10 首页分组一律 `.nv-home` 前缀（压过 books 旧规则）
+    && clientSrc.includes('.nv-home .nv-home-hero{grid-column:1;grid-row:1')
+    && clientSrc.includes('.nv-home .nv-quote-card{grid-column:2;grid-row:1')
+    && clientSrc.includes('.nv-home .nv-home-shelf{grid-column:1/-1;grid-row:3')
+    && clientSrc.includes('.nv-home .nv-home-deskline{grid-column:1/-1;grid-row:4')
+})(), 'ux064 home structure missing')
+check('UX-064 首页纯派生用例（#region home-model 区段提取后真跑：章号 / 待办 / 字数口径 / 保存时间源 / 引文剪裁 / 短名 / 阶段 / 相对日 / 意图可消费）', (() => {
   const a = clientSrc.indexOf('// #region home-model')
   const b = clientSrc.indexOf('// #endregion home-model')
   if (a < 0 || b <= a) return false
   let HM = null
   try {
-    HM = new Function(clientSrc.slice(a, b) + '\nreturn { deriveHomeNextNum, deriveHomeTodo, deriveHomeRecent, deriveHomeChapterTotal, homeIntentConsumable }')()
+    HM = new Function(clientSrc.slice(a, b) + '\nreturn { deriveHomeNextNum, deriveHomeTodo, deriveHomeRecent, deriveHomeChapterTotal, homeIntentConsumable, deriveHomeWords, deriveHomeSaveAt, formatHomeSavedAt, quoteParagraphs, shortWorkType, shortGenre, deriveHomeStage, deriveHomeRelativeDay }')()
   } catch { return false }
   if (HM === null) return false
   const c38 = { chapters: [{ num: 1 }, { num: 38 }] }
@@ -1364,34 +1437,222 @@ check('UX-063 P0-a② 首页纯派生用例（#region home-model 区段提取后
   const recent = { chapters: [{ num: 3 }, { num: 9 }, { num: 1 }, { num: 8 }, { num: 2 }, { num: 7 }] }
   const todo = HM.deriveHomeTodo(mixed)
   const rec = HM.deriveHomeRecent(recent, 5)
+  // 保存时间源：最大章号那条的 updatedAt（顺序无关；不读 statistics.last_updated）
+  const saved = HM.deriveHomeSaveAt({ statistics: { last_updated: '2020-01-01T00:00:00Z' }, chapters: [{ num: 38, updatedAt: '2026-08-25T14:26:00Z' }, { num: 1, updatedAt: '2026-08-01T00:00:00Z' }] })
+  const fmt = HM.formatHomeSavedAt('2026-08-25T14:26:00Z')
+  const paras = HM.quoteParagraphs('---\ntitle: x\n---\n\n# 第 1 章\n\n甲段。\n接续。\n\n\n乙段。')
+  const long = HM.quoteParagraphs('甲'.repeat(200))
+  const now = Date.parse('2026-08-25T12:00:00Z')
   return HM.deriveHomeNextNum(null) === null                       // 未就绪 ⇒ 未知（禁止猜 1）
     && HM.deriveHomeNextNum(undefined) === null
-    && HM.deriveHomeNextNum(emptyCh) === 1                          // 真空章节 ⇒ 第 1 章
-    && HM.deriveHomeNextNum(c38) === 39                             // max+1（不是 count+1）
-    && HM.deriveHomeNextNum(sparse) === 10                          // 稀疏章号：max(9)+1，count+1 会错
-    && HM.deriveHomeNextNum(mixed) === 8                            // 非数字 num 忽略
-    && HM.deriveHomeTodo(null) === null                             // 未就绪 ⇒ 未知（UI 显示 —）
+    && HM.deriveHomeNextNum(emptyCh) === 1                         // 0 章 ⇒ 写第 1 章（真实）
+    && HM.deriveHomeNextNum(c38) === 39 && HM.deriveHomeNextNum(sparse) === 10
     && todo.unpublished === 2 && todo.gateFails === 1 && todo.gateFirstNum === 2
+    && HM.deriveHomeTodo(null) === null                            // 未就绪 ⇒ null（UI 显示 —，不得显示 0）
     && HM.deriveHomeRecent(null) === null
     && rec.length === 5 && rec[0].num === 9 && rec[4].num === 2     // 倒序取 5 条
     && HM.deriveHomeChapterTotal(null, { totalChapters: 38 }) === 38  // 展示口径回退 overview
-    && HM.deriveHomeChapterTotal(emptyCh, { totalChapters: 38 }) === 0
-    && HM.deriveHomeChapterTotal(c38, { totalChapters: 38 }) === 2
+    && HM.deriveHomeChapterTotal(emptyCh, { totalChapters: 38 }) === 38 // stale：detail 空 + overview 38 ⇒ 38（不得报 0）
+    && HM.deriveHomeChapterTotal(emptyCh, { totalChapters: 0 }) === 0   // 真实 0 章新书仍显示 0（不伪造 overview）
+    && HM.deriveHomeChapterTotal(c38, { totalChapters: 38 }) === 2      // detail 有章 ⇒ 真实条数优先
     && HM.homeIntentConsumable({ novelId: 'a' }, 'a') === true
     && HM.homeIntentConsumable({ novelId: 'a' }, 'b') === false     // 跨书不得消费
     && HM.homeIntentConsumable(null, 'a') === false
     && HM.homeIntentConsumable({}, 'a') === false
-})(), 'ux063 home model cases failed')
-check('客户端源码面：UX-063 P0-a② 返工（用户 2026-10-25）首页 CTA / 新建章 = 真触发工作流，指令含第 N 章', (() => {
+    // 字数口径：≥10000 → 万（1 位小数，整万不拖 .0）；否则原字数；非法 → null（UI 显示 —）
+    && HM.deriveHomeWords(89232).wan === '8.9'                      // 书斋首页实读 8.9 万字
+    && HM.deriveHomeWords(10000).wan === '1'                        // 整万 ⇒「1 万字」，不出现「1.0 万字」
+    && HM.deriveHomeWords(8923).chars === 8923
+    && HM.deriveHomeWords(null) === null && HM.deriveHomeWords(NaN) === null && HM.deriveHomeWords(-1) === null
+    // 保存时间：来源 = 末章 updatedAt；缺章 / 坏时间 ⇒ null（不编造）
+    && saved.num === 38 && saved.iso === '2026-08-25T14:26:00Z'
+    && HM.deriveHomeSaveAt({ chapters: [] }) === null
+    && HM.deriveHomeSaveAt({ statistics: { last_updated: '2020-01-01T00:00:00Z' }, chapters: [] }) === null
+    && HM.deriveHomeSaveAt({ chapters: [{ num: 3, updatedAt: 'nope' }] }).iso === null
+    // 真实宿主 chapterList.updatedAt = mtime 毫秒数（不是 ISO 串）：数字也必须出 saveAt，否则书案线永远「保存时间未知」
+    && (() => { const s = HM.deriveHomeSaveAt({ chapters: [{ num: 2, updatedAt: Date.parse('2026-08-25T14:26:00Z') }] }); return s.num === 2 && s.iso === '2026-08-25T14:26:00.000Z' })()
+    && HM.deriveHomeSaveAt({ chapters: [{ num: 2, updatedAt: 0 }] }).iso === null
+    && HM.deriveHomeSaveAt({ chapters: [{ num: 2, updatedAt: null }] }).iso === null
+    && fmt !== null && /^\d+月\d+日$/.test(fmt.day) && /^\d{2}:\d{2}$/.test(fmt.time)
+    && HM.formatHomeSavedAt('nope') === null && HM.formatHomeSavedAt(null) === null
+    // 引文：剥 frontmatter + 标题行，取最后 2 段并合并折行；空正文 → []
+    && paras.length === 2 && paras[0] === '甲段。 接续。' && paras[1] === '乙段。'
+    && HM.quoteParagraphs('').length === 0 && HM.quoteParagraphs(null).length === 0
+    && HM.quoteParagraphs('甲。\n\n乙。\n\n---\n\n本章字数：12字（含标点）\n').join('|') === '甲。|乙。'   // 分隔线/字数尾巴不算正文引文
+    // 超长段落在数据层截断（末 110 字 + 前导 …；总长 111），不做 CSS 裁切冒充
+    && long.length === 1 && long[0].charAt(0) === '…' && long[0].length === 111
+    // 短名：括号/×/斜杠切分 + 去「小说」后缀；缺省 → null（UI 用兜底文案）
+    && HM.shortWorkType('中篇小说（10-50万字）') === '中篇'
+    && HM.shortGenre('规则怪谈×现代职业错位喜剧') === '规则怪谈'
+    && HM.shortGenre('规则怪谈（素材说明）/ 其二') === '规则怪谈'
+    && HM.shortWorkType(null) === null && HM.shortGenre('') === null
+    // 阶段映射：未知枚举不得原样抛给 UI（走 homeStageUnknown），色点语气随阶段
+    && HM.deriveHomeStage('quality_review').key === 'homeStageReview' && HM.deriveHomeStage('quality_review').tone === 'warn'
+    && HM.deriveHomeStage('published').tone === 'ok'
+    && HM.deriveHomeStage('draft').tone === null
+    && HM.deriveHomeStage('nope').key === 'homeStageUnknown' && HM.deriveHomeStage(null).key === 'homeStageUnknown'
+    // 相对日：今天 / 昨天 / N 天前 / 超 30 天或非法 → null（不编造）
+    && HM.deriveHomeRelativeDay('2026-08-25T08:00:00Z', now).key === 'homeToday'
+    && HM.deriveHomeRelativeDay('2026-08-24T08:00:00Z', now).key === 'homeYesterday'
+    && HM.deriveHomeRelativeDay('2026-08-20T08:00:00Z', now).key === 'homeDaysAgo'
+    && HM.deriveHomeRelativeDay('2026-08-20T08:00:00Z', now).n === 5
+    && HM.deriveHomeRelativeDay('2026-06-01T08:00:00Z', now) === null
+    && HM.deriveHomeRelativeDay('nope', now) === null
+})(), 'ux064 home model cases failed')
+// UX-064 R4 P1-2：stale 行为级 render fixture —— 复用本节上方 __ModuleLoader__ + mockReact 装载面，
+// 只把 NvConsole 内的 usePoll 调用替换为固定 poll 数据 / 需要时预置 home 搜索 state，其余 homeBody
+// 渲染逻辑全部真跑（不新建测试框架，也不把渲染结果写成源码镜像）。
+const renderUx064Home = (pollData, patches) => {
+  // 文件里有多个 usePoll（ChapterPanel 也有）；以 overview 请求行定位 NvConsole 那一个。
+  const ovIdx = clientSrc.indexOf("const ov = await apiJson('/novel-writing/api/overview')")
+  const a = ovIdx < 0 ? -1 : clientSrc.lastIndexOf('const poll = usePoll(async () => {', ovIdx)
+  const endMark = '      }, 2500, [open, pollTick], open)'
+  const b = a < 0 ? -1 : clientSrc.indexOf(endMark, a)
+  if (a < 0 || b < 0) return null
+  let src = clientSrc.slice(0, a) + 'const poll = ' + JSON.stringify(pollData) + '\n' + clientSrc.slice(b + endMark.length)
+  for (const [from, to] of (patches ?? [])) {
+    const k = src.indexOf(from)
+    if (k < 0) return null
+    src = src.slice(0, k) + to + src.slice(k + from.length)
+  }
+  let def = null
+  globalThis.window = { __ModuleLoader__: { load(d) { def = d } } }
+  try { new Function(src)() } finally { delete globalThis.window }
+  if (def === null) return null
+  let ex = null
+  try { ex = def.factory((id) => { if (id === 'react') return mockReact; throw new Error('unexpected require: ' + id) }) } catch { return null }
+  if (ex === null) return null
+  const regs = []
+  let pendingSlot = ''
+  const ctx = {
+    get: () => undefined,
+    slots: {
+      inject(name, fn) { pendingSlot = name; fn() },
+      register(d, render) { regs.push({ id: d.id, render }) },
+    },
+  }
+  try { ex.apply(ctx) } catch { return null }
+  const dr = regs.find((r) => r.id === 'novel-drawer')
+  const con = regs.find((r) => r.id === 'nv-console')
+  if (dr === undefined || con === undefined) return null
+  // 走真实入口：抽屉标题行 onClick 打开控制台（不直接改模块内部 store）
+  let head = null
+  const findHead = (n) => {
+    if (n === null || n === undefined || typeof n !== 'object') return
+    if (Array.isArray(n)) { for (const c of n) findHead(c); return }
+    if (n.props !== undefined && n.props.className === 'nv-drawer-head') { head = n; return }
+    if (Array.isArray(n.children)) for (const c of n.children) findHead(c)
+  }
+  findHead(dr.render({ wide: true }))
+  if (head === null || typeof head.props.onClick !== 'function') return null
+  head.props.onClick()
+  return con.render({ initialView: 'home' })
+}
+const walkUx064Tree = (root) => {
+  const out = { cls: {}, texts: [], nodes: [] }
+  const walk = (n) => {
+    if (n === null || n === undefined) return
+    if (Array.isArray(n)) { for (const c of n) walk(c); return }
+    if (typeof n === 'string') { out.texts.push(n); return }
+    if (typeof n !== 'object') return
+    const cn = n.props !== undefined && typeof n.props.className === 'string' ? n.props.className : ''
+    if (cn !== '') {
+      for (const part of cn.split(/\s+/)) if (part !== '') out.cls[part] = (out.cls[part] ?? 0) + 1
+      out.nodes.push({ cls: cn, node: n })
+    }
+    if (Array.isArray(n.children)) for (const c of n.children) walk(c)
+  }
+  walk(root)
+  return out
+}
+const ux064TextOf = (node) => {
+  const parts = []
+  const walk = (n) => {
+    if (n === null || n === undefined) return
+    if (Array.isArray(n)) { for (const c of n) walk(c); return }
+    if (typeof n === 'string') { parts.push(n); return }
+    if (typeof n === 'object' && Array.isArray(n.children)) for (const c of n.children) walk(c)
+  }
+  walk(node)
+  return parts.join('')
+}
+const ux064StaleRenderOk = () => {
+  const fixture = {
+    overview: {
+      root: 'D:\\AI\\writing', bindings: {},
+      novels: [{
+        id: 'novel-stale', title: '诡异副本，先过审', workType: '中篇小说（10-50万字）',
+        genre: '规则怪谈×现代职业错位喜剧', totalChapters: 38, totalWords: 89232,
+        stage: 'quality_review', requests: 0, lastUpdated: '2026-08-25T08:00:00Z',
+      }],
+    },
+    details: { 'novel-stale': { chapters: [] } },
+  }
+  const root = renderUx064Home({ data: fixture, error: null }, [
+    // 搜索行也纳入回归：预置查询词 + 展开，验证书行章数同样走展示口径（38，不是 0）
+    ["const [homeKw, setHomeKw] = useState('')", "const [homeKw, setHomeKw] = useState('诡异')"],
+    ["const [homeSearchOpen, setHomeSearchOpen] = useState(false)", "const [homeSearchOpen, setHomeSearchOpen] = useState(true)"],
+  ])
+  if (root === null) return false
+  const w = walkUx064Tree(root)
+  const joined = w.texts.join('')
+  const cta = w.nodes.find((n) => /\bnv-home-cta\b/.test(n.cls) && /\bnv-btn-lg\b/.test(n.cls))
+  const coverNo = w.nodes.find((n) => /\bnv-cover-no\b/.test(n.cls))
+  const shelfCard = w.nodes.find((n) => /\bnv-shelf-card\b/.test(n.cls))
+  const searchSub = w.nodes.find((n) => /\bnv-tsearch-item-sub\b/.test(n.cls))
+  const staleOk = cta !== undefined && cta.node.props.disabled === true           // stale ⇒ CTA 禁用
+    && !joined.includes('写第 1 章')                                              // 不猜第 1 章
+    && joined.includes('38 章')                                                   // overview 章数上屏（hero/卡/搜索行）
+    && coverNo !== undefined && ux064TextOf(coverNo.node) === '38 章'             // 书架卡不是 0 章
+    && shelfCard !== undefined && String(shelfCard.node.props['aria-label'] ?? '').includes('38 章') // aria-label 用展示口径
+    && searchSub !== undefined && ux064TextOf(searchSub.node).includes('38 章')   // 搜索书行不是 0 章
+    && joined.includes('保存时间未知')                                            // stale 保存时间 = 未知（不是尚无保存记录）
+    && joined.includes('— 章未发布')                                              // 待办未知 = —
+    && !joined.includes('0 章')                                                   // 全树不出现 0 章
+    && !joined.includes('还没有章节')                                             // stale 不得假称无章节
+    && joined.includes('正在写')                                                  // eyebrow 保留「正在写」，由 note 解释
+    && joined.includes('章节数据未就绪') && joined.includes('重试')                 // 既有 stale note + 重试
+  if (!staleOk) return false
+  // 对照组（真实 0 章新书，overview 也是 0）：仍走 homeNoChapters / 写第 1 章 / 尚无保存记录——stale 窄修不得吞掉新书语义。
+  const emptyRoot = renderUx064Home({
+    data: {
+      overview: { root: 'D:\\AI\\writing', bindings: {}, novels: [{ id: 'novel-empty', title: '新书', totalChapters: 0, totalWords: 0, stage: 'draft', requests: 0 }] },
+      details: { 'novel-empty': { chapters: [] } },
+    },
+    error: null,
+  })
+  if (emptyRoot === null) return false
+  const ew = walkUx064Tree(emptyRoot)
+  const ej = ew.texts.join('')
+  const eCta = ew.nodes.find((n) => /\bnv-home-cta\b/.test(n.cls) && /\bnv-btn-lg\b/.test(n.cls))
+  return ej.includes('还没有章节') && ej.includes('写第 1 章') && ej.includes('0 章') && ej.includes('尚无保存记录')
+    && !ej.includes('保存时间未知') && eCta !== undefined && eCta.node.props.disabled !== true
+}
+const ux064ErrorRenderOk = () => {
+  const root = renderUx064Home({ data: null, error: 'boom' })
+  if (root === null) return false
+  const w = walkUx064Tree(root)
+  const joined = w.texts.join('')
+  const stateErr = w.nodes.find((n) => /\bnv-home-state-err\b/.test(n.cls))
+  return (w.cls['nv-home-state'] ?? 0) === 1
+    && (w.cls['nv-home-state-err'] ?? 0) === 1
+    && stateErr !== undefined && stateErr.node.props.role === 'alert'
+    && joined.includes('读取书目失败') && joined.includes('重试')
+    && (w.cls['nv-home-hero'] ?? 0) === 0 && (w.cls['nv-btn-lg'] ?? 0) === 0
+}
+check('客户端源码面：UX-064 首页主 CTA / 新建书 = 真触发工作流，指令含第 N 章（单主 CTA，无第二工作流按钮）', (() => {
   const i = clientSrc.indexOf('const homeBody = () => {')
-  const blk = i < 0 ? '' : clientSrc.slice(i, i + 9000)
+  const j = i < 0 ? -1 : clientSrc.indexOf('const g = geom !== null', i)
+  const blk = i < 0 || j < 0 ? '' : clientSrc.slice(i, j)
   const msgB = fnBody('function launchMsgOf(novels, id, title, launchOpts) {')
   const promptB = fnBody('async promptLaunch(sessionId, novel, novels, launchOpts) {')
   const launchB = fnBody('const launchWorkflow = async (launchOpts, allowStop) => {')
   return blk !== '' && msgB !== '' && promptB !== '' && launchB !== ''
     && blk.includes("enterWriting({ workflow: 'continue', chapter: homeNextNum })")
-    && blk.includes("enterWriting({ workflow: 'new', chapter: homeNextNum })")
-    && !blk.includes('newChapter:')                                   // 编辑面入口已从首页移除
+    && blk.includes("enterWriting({ chapter: lastNum })")              // quiet 次级入口 = 打开上一章
+    && blk.includes("if (homeNextNum !== null) enterWriting(")         // 禁用时不再投递猜测章号
+    && blk.includes("onClick: () => { setCreating(true); setCreateNotice('') }")  // 空态/尾格 CTA = 新建书
+    && !blk.includes('newChapter:')                                    // 编辑面入口已从首页移除
     && msgB.includes("opt.mode === 'new'") && msgB.includes('请新建并撰写第 ${num} 章')
     && msgB.includes("opt.mode === 'continue'") && msgB.includes('继续写第 ${num} 章')
     && msgB.includes('if (num === null) return base')                  // 无 opts 保持历史指令
@@ -1399,11 +1660,11 @@ check('客户端源码面：UX-063 P0-a② 返工（用户 2026-10-25）首页 C
     && launchB.includes('launcher.promptLaunch(sid, current, novels, opt)')
     && launchB.includes('allowStop !== true')                          // 首页发起不抢停运行中的轮次
     && clientSrc.includes('onClick: () => launchWorkflow(null, true)')  // rail 主按钮仍承担停止
-    // BUG-012 修复形态订正：消费 effect 上移后首页意图经 launchWfRef 间接调用（原直调字面量随违规形态退役）
+    // BUG-012 修复形态：消费 effect 上移后首页意图经 launchWfRef 间接调用
     && clientSrc.includes('launchWfRef.current({ mode: wf.mode, chapter: wf.chapter }, false)')
-    && clientSrc.includes('launchWfRef.current = launchWorkflow')      // 渲染期闭包刷新（active 渲染才走到）
-    && clientSrc.includes('}, [pendingWorkflow, snap.active])')        // effect 以 snap.active 门控（保留意图不清空）
-})(), 'ux063 home workflow trigger missing')
+    && clientSrc.includes('launchWfRef.current = launchWorkflow')
+    && clientSrc.includes('}, [pendingWorkflow, snap.active])')
+})(), 'ux064 home workflow trigger missing')
 check('客户端源码面：UX-063 P0-a② 返工：客户端「新建章编辑面」已移除（不建空章节文件）', (() => {
   return !clientSrc.includes('saveNewChapter')
     && !clientSrc.includes('closeNewChapter')
@@ -1416,38 +1677,73 @@ check('客户端源码面：UX-063 P0-a② 返工：客户端「新建章编辑�
     // 既有「章节编辑保存」主通道必须保留（写作视图内编辑 → POST /api/chapter）
     && clientSrc.includes("apiJson('/novel-writing/api/chapter', { novel: props.novelId, chapter: active.num, content: draft, force })")
 })(), 'ux063 new-chapter editor still present')
-check('UX-063 P0-a② 返工 WYSIWYG：detail 未就绪一律禁用（不猜章号）/ 未知值显示 — / 意图同书同步投递且不跨书', (() => {
+check('UX-064 当前书数据未就绪：主 CTA 禁用且不猜章号 / 未知值显示 — / 引文四态 / 意图同书同步投递且不跨书 / 空态文案逐条原样', (() => {
   const i = clientSrc.indexOf('const homeBody = () => {')
-  const blk = i < 0 ? '' : clientSrc.slice(i, i + 9000)
-  const enterB = fnBody('const enterWriting = (intent) => {')
+  const j = i < 0 ? -1 : clientSrc.indexOf('const g = geom !== null', i)
+  const blk = i < 0 || j < 0 ? '' : clientSrc.slice(i, j)
+  const enterB = fnBody('const enterWriting = (intent, targetId = homeCurrentId) => {')
   const applyB = fnBody('const applyHomeIntent = (it) => {')
   return blk !== '' && enterB !== '' && applyB !== ''
-    // 动作面：未就绪禁用 + 不猜章号 + 提示「数据未就绪」
-    && (blk.match(/disabled: homeNextNum === null/g) ?? []).length >= 2
-    && blk.includes("(homeDetailFailed === true ? t('homeDataFailed') : t('homeDataLoading'))")
-    // 第③步：失败态与加载中文案二分 + 分支级重试入口（DR2(第②步) P2-4/P2-5）
-    && blk.includes("className: 'nv-home-sub nv-home-retry', onClick: retryHome")
-    && blk.includes("homeDetailFailed === true ? t('homeRecentFailed') : t('homeRecentLoading')")
-    && clientSrc.includes('const homeDetailFailed = poll.data !== null && novels.length > 0 && homeCurrentId !== null && homeDetail === null')
-    && blk.includes("if (homeNextNum !== null) enterWriting({ workflow: 'continue', chapter: homeNextNum })")
-    // 未知态：待办 — / 最近章节加载中（不是 0 / 「尚无章节」）
-    && blk.includes("const unpublishedText = todoUnknown ? '—' : String(homeTodo.unpublished)")
-    && blk.includes("const gateText = todoUnknown ? '—' : String(homeTodo.gateFails)")
-    && blk.includes('homeRecent === null')
-    && blk.includes("t('homeRecentLoading')")
+    // 动作面：未就绪禁用 + 不猜章号 + 失败/加载二分文案 + 失败态单一重试出口
+    && blk.includes('disabled: homeDetail === null || homeNextNum === null')
+    && blk.includes('const ctaLabel = homeDetail === null')
+    && blk.includes("? t('homeReadingNow')")
+    && blk.includes("? t('homeStartFirstChapter')")
+    && blk.includes(": t('homeContinueCta', homeNextNum)")
+    && blk.includes('if (homeNextNum !== null) enterWriting(')
+    && blk.includes("const detailNote = homeDetailFailed === true") && blk.includes("t('homeDetailFailedNote')")
+    && blk.includes("className: 'nv-hero-note nv-home-note-err'")
+    && blk.includes("className: 'nv-home-retry'")
+    && blk.includes("const lastNum = homeSaveAt !== null ? homeSaveAt.num : null")
+    && clientSrc.includes('const homeDetailFailed = details !== null && homeNovel !== null && homeDetail === null')
+    // 未知态：字数 — / 作品类型兜底 / 待办与请求 — / 保存时间三态（不编造 0 或时间）
+    && blk.includes("const wordsText = homeWords === null ? '—'")
+    && blk.includes("t('homeNovelFallback')")
+    && blk.includes("t('homeNoSave')") && blk.includes("t('homeSaveUnknown')") && clientSrc.includes('formatHomeSavedAt(')
+    && blk.includes("t('homeDeskUnpublished', '—')")
+    && blk.includes("Number.isFinite(homeNovel.requests) ? t('homeDeskRequests', homeNovel.requests) : '—'")
+    && blk.includes("quoteState === 'fail'") && blk.includes("t('homeQuoteFailed')")
+    && blk.includes("quoteState === 'loading'") && blk.includes("t('homeQuoteEmpty')")
+    && blk.includes('setQuoteNonce((n) => n + 1)')
     && clientSrc.includes('function deriveHomeChapterTotal(detail, novel) {')
-    // 意图通道：同步投递 + novelId 绑定 + 跨书拒绝 + 失败路径清理
-    && enterB.includes('const full = { ...(intent ?? {}), novelId: homeCurrentId }')
+    // 意图通道：同步投递 + novelId 绑定目标书 + 跨书拒绝 + 失败路径清理
+    && enterB.includes('const full = { ...(intent ?? {}), novelId: bookId }')
     && enterB.includes('homeIntentSink(full)')
     && enterB.includes('pendingHomeIntent = null')
     && applyB.includes('homeIntentConsumable(it,')
     && clientSrc.includes('function homeIntentConsumable(intent, novelId) {')
-    // 旧「effect 依赖 [snap.active, selectedId]」消费面已退役（同书二次点击不再静默失效）
-    && !clientSrc.includes('}, [snap.active, selectedId])')
-    // 换书集合 = 书目集合
-    && clientSrc.includes("orderedNovels.map((n) => el('button', {")
-    && clientSrc.includes("onClick: () => { setBookMenu(false); store.set({ selected: n.id }) }")
-})(), 'ux063 WYSIWYG mismatch')
+    && !clientSrc.includes('}, [snap.active, selectedId])')            // 旧消费面已退役
+    // 书架卡 = 书目集合前 6 本，点击换书并入写作（不跨书）
+    && blk.includes('orderedNovels.slice(0, 6).map((n) => {')
+    && blk.includes('onClick: () => enterWriting(last !== null ? { chapter: last.num } : {}, n.id)')
+    // 空态批准文案逐条原样（console-empty.html 同源；不许静默改写）
+    && clientSrc.includes("homeEmptyTitle: '还没有书'")
+    && clientSrc.includes("homeEmptyLead: '从第一本书开始。'")
+    && clientSrc.includes("homeEmptySub: '一个工作区，一条从初稿到发布的路。'")
+    && clientSrc.includes("homeEmptyCta: '新建第一本书'")
+    && clientSrc.includes("homeStep1: '起一个书名'")
+    && clientSrc.includes("homeStep2: '写下第一章'")
+    && clientSrc.includes("homeStep3: '随时回来接着写'")
+    && clientSrc.includes("homeEmptyShelf: '书架还空着。'")
+    && clientSrc.includes("homeEmptyShelfCount: '书架 0 本'")
+    && clientSrc.includes("homeEmptyTodo: '还没有待办'")
+    && clientSrc.includes('homeShelfTitle: (n) => `书架 ${n} 本`')
+    && clientSrc.includes('homeContinueCta: (n) => `续写第 ${n} 章`')
+    && clientSrc.includes("homeOpenChapter: (n) => `打开第 ${n} 章`")
+    && clientSrc.includes('homeDeskSaved: (n, md, hm) => `第 ${n} 章保存　${md} ${hm}`')
+    // 空态：「继续写」类文案不得出现在首页动作面（R2 批准文案为「续写第 N 章」）
+    && !blk.includes('继续写')
+    // R4 P1-1 消费面：stale ⇒ 动作面置 null / CTA 禁用 / 保存时间未知 / 搜索书行走展示口径
+    && clientSrc.includes('const homeNextNum = homeDetailStale === true ? null : deriveHomeNextNum(homeDetail)')
+    && clientSrc.includes('const homeTodo = homeDetailStale === true ? null : deriveHomeTodo(homeDetail)')
+    && blk.includes('disabled: homeDetail === null || homeNextNum === null || homeDetailStale === true')
+    && blk.includes(': (homeDetailStale === true // stale')
+    && clientSrc.includes('? deriveHomeChapterTotal(detail, n)')
+    // 行为级 render fixture（R3 P1-1/P1-2 + P2-2）：stale 不渲染 0 章新书 / 错误态 role=alert + 重试。
+    // 并入本断言而非新增 check，保持 README「342 项断言」计数闸同步（改动条数须同 commit 改 README，R4 不改）。
+    && ux064StaleRenderOk()
+    && ux064ErrorRenderOk()
+})(), 'ux064 home unknown-state mismatch')
 // ── UX-063 P0-a 第③步：正文可读性（规格 §1C；迁移表 A 段 #1~#6 / C 段 #15/#16）──
 check('客户端源码面：UX-063 P0-a③ 正文可读性（reading 16 + 行高 1.9 + measure 34em + 中文排版 2em/0.8em + 编辑态同源 + 存量令牌冻结）', (() => {
   return clientSrc.includes('--nv-fs-reading:16px') && clientSrc.includes('--nv-fs-ui:13px')
@@ -1476,14 +1772,52 @@ check('客户端源码面：UX-063 P0-a① 恢复五路径调用级具名——s
     // 同函数内还有「快照新节点」调用：旧还原 + 新快照成对，缺一即红
     && body.includes('this.snapshotViewArea(viewArea)')
 })(), 'ux063 syncAnchor restore call missing')
-check('数据分支结构：UX-063 P0-a② 四区齐备 + CTA 文案取 homeContinueCta(homeNextNum) + 失败态重试仅失败时渲染', (() => {
-  const i = clientSrc.indexOf('const homeBody = () => {')
-  const blk = i < 0 ? '' : clientSrc.slice(i, i + 12000)
-  return blk !== ''
-    && (blk.match(/className: 'nv-home-sec/g) ?? []).length >= 4     // 四区
-    && blk.includes("t('homeContinueCta', homeNextNum)")              // CTA 文案 = 章号同源
-    && blk.includes("homeDetailFailed === true\n                ? el('button', { type: 'button', className: 'nv-home-sub nv-home-retry'")  // 失败态才有重试
-})(), 'ux063 home data-branch structure missing')
+check('客户端源码面：UX-064 顶栏（仅首页、书籍页不留双顶栏）与首页搜索（combobox ARIA / 未就绪≠无结果）+ 墨纸令牌 light-dark 且蓝色残留零', (() => {
+  const ti = clientSrc.indexOf("el('div', { className: 'nv-topbar' }")
+  const top = ti < 0 ? '' : clientSrc.slice(ti, ti + 12000)
+  const ld = (clientSrc.match(/light-dark\(/g) ?? []).length
+  return top !== ''
+    && top.includes("className: 'nv-brand'") && top.includes("className: 'nv-seal nv-brand-seal'")
+    && top.includes("className: 'nv-brand-word'") && top.includes("className: 'nv-brand-sub'")
+    && top.includes("className: 'nv-wsswitch'") && top.includes("className: 'nv-ws-label'")
+    && top.includes("className: 'nv-topbar-right'")
+    && top.includes("className: 'nv-tghost'") && top.includes("className: 'nv-iconbtn'")
+    && top.includes("className: 'nv-iconbtn nv-iconbtn-close'") && top.includes("className: 'nv-topbar-div'")
+    // 顶栏只在 home 挂载；书籍页仍用原 .nv-console-head（否则出现双顶栏）
+    && clientSrc.includes("view === 'home' ? el('div', { className: 'nv-topbar' }")
+    && clientSrc.includes("view === 'home' ? null : el('div', { className: 'nv-console-head' }")
+    // 搜索挂件仅「有书的首页」（加载 / 空态 / 失败不渲染假搜索）+ combobox 键盘可达 + 无结果/未就绪二分
+    && /poll.data !== null && novels.length > 0\s*\n\s*\? el\('div', \{ className: 'nv-tsearch' \}/.test(top)
+    && top.includes("className: 'nv-tsearch-input'") && top.includes("className: 'nv-kbd'")
+    && top.includes("role: 'combobox'") && top.includes("'aria-controls': 'nv-tsearch-list'")
+    && top.includes("role: 'listbox'") && top.includes("role: 'option'")
+    && top.includes("'aria-expanded'") && top.includes("'aria-activedescendant'")
+    && top.includes("className: 'nv-tsearch-pop'") && top.includes("className: 'nv-tsearch-item'")
+    && top.includes("className: 'nv-tsearch-none'") && top.includes("className: 'nv-tsearch-pending'")
+    && top.includes('homeSearchResults.length === 0 && homeSearchPending !== true')   // 未就绪 ≠ 没有找到
+    && top.includes("t('homeNoResult')") && top.includes("t('homeReadingNow')")
+    && clientSrc.includes("String(e.key).toLowerCase() === 'k'")
+    && clientSrc.includes('setHomeSearchOpen(true)') && clientSrc.includes("setHomeKw('')")
+    // 墨纸令牌：正文墨色 / 纸色 / 细线 / 朱砂 + 首页字号 + 大按钮高度，均 light-dark 自适应
+    && clientSrc.includes('--nv-ink:light-dark(') && clientSrc.includes('--nv-paper:light-dark(')
+    && clientSrc.includes('--nv-rule:light-dark(') && clientSrc.includes('--nv-cinnabar:light-dark(')
+    && clientSrc.includes('--nv-fs-hero-lg:36px') && clientSrc.includes('--nv-fs-empty:38px')
+    && clientSrc.includes('--nv-fs-sec:21px') && clientSrc.includes('--nv-ctl-lg:42px')
+    && ld >= 6
+    // §10 首页字号/圆角/封面色令牌齐备（--nv-fs-home-* ≥19 组；封面 6 色）
+    && (clientSrc.match(/--nv-fs-home-\d+:/g) ?? []).length >= 19
+    && clientSrc.includes('--nv-r-home-4:4px') && clientSrc.includes('--nv-r-home-2:2px')
+    && clientSrc.includes('--nv-cover-0:') && clientSrc.includes('--nv-cover-5:')
+    // 旧蓝色主色在顶栏/首页面上零残留（UX-064 墨纸替换）
+    && !/\.nv-topbar[^}]*#4f8ef7/.test(clientSrc) && !/\.nv-home[^}]*#4f8ef7/.test(clientSrc)
+    // 全幅网格：宽度交给容器（无 880 死宽）+ 五子节点行轨 + 三档响应式 + 减动效
+    && !clientSrc.includes('nv-home-wide')
+    && clientSrc.includes('.nv-home{flex:1;min-height:0;width:100%;display:grid;grid-template-columns:minmax(0,1fr) 384px;grid-template-rows:auto 1px auto 1fr;')
+    && clientSrc.includes('.nv-home .nv-cover{position:relative;display:block;width:190px;height:274px')
+    && clientSrc.includes('.nv-home .nv-ghost{position:relative;display:flex;align-items:center;justify-content:flex-start;width:86px;height:124px')
+    && clientSrc.includes('@media (max-width:1100px)') && clientSrc.includes('@media (max-width:900px)')
+    && clientSrc.includes('@media (max-width:760px)') && clientSrc.includes('@media (prefers-reduced-motion:reduce)')
+})(), 'ux064 topbar/search/tokens mismatch')
 
 // ── BUG-012：Rules-of-Hooks 静态守卫（防再犯；证据 docs/evidence/BUG-012/0.2.2-surface-facts.md）────
 // 事故形态：组件函数体内「条件早退」出现在顶层 hook 调用之前 ⇒ 挂载渲染（inactive）hook 数少一个，
@@ -3180,7 +3514,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   //      **残余缝（同次实测，未闭合）**：若 2.13 只删**终点闭合行**（**历史锚点**：COMPAT-013 时期值 `L4429-4460`——6 处注册仍全在范围内）
   //      则 ①②③④⑤ **全绿**（实测 262/0：⑤a 计数仍 6 ≡ 6、④ callPrefix = null、⑤b 无 `键: {` 形态构造）
   //      ⇒ 该形态目前无持续机检力。根治需「构造闭合行」口径，而 JS 范围本就可能是**合法语义片段**
-  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L5971` +1 / 3.8 `L3420-L3431` +1 实测均非配平）——
+  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L6608` +1 / 3.8 `L3645-L3656` +1 实测均非配平）——
   //      无差别要求配平会误报上述 3 项，故如实留档待另案（非本任务可安全落地）。
   //      **本行 3 个契约行号副本的同步方（CLEAN-006 **N-6** 归属订正，避免审计归因错位）**：本块随
   //      契约 `line` 重基**必须同步**，其**机检执行者 = `COMPAT-015 F3 行号引用对账`**（把本行 2.3
@@ -3368,7 +3702,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // 入 golden）范围条目中「起于注释/空行」者 MUST 恰 2 项
   //（历史锚点：COMPAT-013 时期实测——3.1 起于 `/**` JSDoc L1278、3.8 起于 `/**` JSDoc L3418；现行注释起段以本断言动态计算清单为准）。动因 = 该计数原为**人工转写**且写错
   //（CHANGELOG 曾披露「三处」）——与 COMPAT-004 FIND-1 的 tier 串转写漂移同类，故沿用同款处置：实测值
-  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.5 `L1353` `try {` / 4.6 `L17`
+  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.5 `L1578` `try {` / 4.6 `L17`
   // `"dsh": {` / 5.1 `L1` `name:` / 5.2 `L16` `- id:` / 5.4 `L77` `- id:` / 6.1 `L39`（修正后真值；修正前
   // `L38` 亦非注释）/ 6.2 `L8` `"engines": {` / 6.4 `L105`（ci.yml `#` 注释起段——JS 口径不计为注释，见下句口径边界）。严格面（面 2 = 11 项）已由 ③ 逐项约束，
   // 本项只覆盖未纳入严格面的面（动态生成：实测 3/4/5/6）；注释口径同 ③（JS 风格），YAML `#` 不在识别面内（与 F-5① 同源前提）。
