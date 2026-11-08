@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-11-08T20:22:10",
+  "generated_at": "2026-11-08T21:36:33",
   "packets": {
     "REL-007": {
       "task_id": "REL-007",
@@ -1451,6 +1451,153 @@
         "不宣称 RISK-002/RISK-013 等既有治理债已清。"
       ],
       "source": "plan-tracker.md##当前活跃事项 / change-triage/UX-065.json"
+    },
+    "UX-066": {
+      "task_id": "UX-066",
+      "priority": "P1",
+      "status": "⏳ 待实施：S2 收口后开始；设计边界与用户选择已锁定",
+      "goal": "UX-066 写作排版配置：正文与编辑器可在宋体/黑体/楷体/系统与 15/16/17/18 四档字号间切换；纸页头 Aa 与设置页共用；新键 dsh.novel.typography.v1；只改正文/编辑器，不动 UI chrome/布局/主题/API/业务数据。",
+      "product_success_contract": {
+        "user": "使用小说写作工作流、长时间面对稿纸的中文作者。",
+        "job_to_be_done": "按屏幕距离、视力与字体偏好调整正文，同时保持稿纸宽度、行宽与 UI 不动，写完随时回到合适阅读状态。",
+        "non_goals": [
+          "不改 topbar、章节栏、状态栏、设置页主题卡等 UI chrome 的字体与字号。",
+          "不改布局、主题、API、业务数据、既有 localStorage 键、安装/发布脚本。",
+          "不提供外部字体下载或任意字体名输入；只用本机系统字体栈。",
+          "不新增自动保存、阅读进度或排版模板。"
+        ],
+        "success_metrics": [
+          "4 字体 × 4 字号均可在 Aa 与设置页切换，当前项一致，刷新保持。",
+          "正文/编辑器使用相同字体/字号；稿纸宽度/行宽/布局不变，无横向滚动。",
+          "非法/缺失/坏档回落宋体/16，不抛错；主题 3 套、深浅色均正常。",
+          "五门 + 真实截图 + 用户目检通过。"
+        ],
+        "competitive_baseline": "DSH 宿主主题已支持正文字号与字体；写作工具普遍提供阅读字体/字号偏好；本任务只补正文层，不重做 UI。",
+        "done_definition": [
+          "Aa 入口、设置页「写作排版」、持久化、4×4 组合、编辑器/阅读同步实现。",
+          "真实截图与 Aa/设置页状态断言齐备；旧 UI 字号/布局零回归。",
+          "独立 Reviewer 通过，用户目检通过后才标记完成。"
+        ]
+      },
+      "acceptance_contract": {
+        "scenario": "用户打开写作台，点纸页头 Aa 选黑体/17，正文即时变化且稿纸宽度不变；再打开设置页「写作排版」确认当前黑体/17；刷新后仍保持；切回宋体/16 恢复默认；深色主题下同样可读。",
+        "command": "node --check lib/client.js && node test/smoke.mjs && node scripts/verify-visual-geometry.mjs && node scripts/verify-contract-anchors.mjs && python docs/design/UX-064-mockups/verify-mockups.py",
+        "expected_output": "五门 exit 0；smoke 计数与 README 同步；geometry 显示稿纸/布局不变且正文 4×4 无横向滚动；anchors 80 FAIL=0；真实 probe 覆盖 Aa 与设置页、reload 持久化。",
+        "last_run": {
+          "status": "PASS",
+          "exit_code": 0,
+          "summary": "基线（UX-065 commit cb95f84 + S2 未提交）：node --check 0；smoke 353/0；geometry OK；anchors 80 FAIL=0；mockups PASS。此 PASS 仅基线，排版功能尚未开始。"
+        },
+        "demo_evidence": "docs/evidence/UX-066/（实现后）；docs/design/UX-066-typography/README.md（设计边界）。"
+      },
+      "quality_budget": {
+        "dimensions": {
+          "performance": {
+            "threshold": "零新增首屏网络请求；Aa/设置页切换只改变 CSS 变量与 html 属性，不拉数据",
+            "validation": "node test/smoke.mjs + git diff 核对 fetch/usePoll 行零改动",
+            "status": "EXEMPT",
+            "evidence": "基线 commit cb95f84 五门绿；排版实现后重跑",
+            "exception": "实现尚未开始；完成后替换"
+          },
+          "reliability": {
+            "threshold": "非法/缺失/坏 JSON 回落宋体/16；写失败不抛；刷新保持合法值；正文与编辑器一致",
+            "validation": "node test/smoke.mjs（normalize/localStorage/渲染）+ 真实 reload probe",
+            "status": "EXEMPT",
+            "evidence": "基线 commit cb95f84；实现后补 probe",
+            "exception": "实现尚未开始；完成后替换"
+          },
+          "security": {
+            "threshold": "只新增 dsh.novel.typography.v1；不新增网络/外部字体/宿主 settings 写入",
+            "validation": "node test/smoke.mjs + git diff -- lib/index.js package.json",
+            "status": "EXEMPT",
+            "evidence": "基线与设计边界；实现后重跑",
+            "exception": "实现尚未开始；完成后替换"
+          },
+          "accessibility": {
+            "threshold": "Aa/字体行/字号 chip 有 aria-label/pressed；Enter/Space 打开；Esc 关闭并归还焦点；对比度 >=4.5",
+            "validation": "node test/smoke.mjs + 真实键盘 probe",
+            "status": "EXEMPT",
+            "evidence": "设计边界 docs/design/UX-066-typography/README.md",
+            "exception": "实现尚未开始；完成后替换"
+          },
+          "ux": {
+            "threshold": "用户不读说明即可在纸页头找到 Aa；4 字体×4 字号选择即时生效；稿纸宽/行宽/布局不变，无横滑",
+            "validation": "node test/smoke.mjs + 真实 1680/1152 截图目检",
+            "status": "EXEMPT",
+            "evidence": "设计边界与用户四项选择；实现后截图",
+            "exception": "实现尚未开始；完成后替换"
+          },
+          "maintainability": {
+            "threshold": "字体/字号注册表 + CSS 变量单点；新增字体只加一项；正文消费面明确，不污染 UI",
+            "validation": "node scripts/verify-contract-anchors.mjs + node test/smoke.mjs",
+            "status": "EXEMPT",
+            "evidence": "设计边界已定义；实现后重跑",
+            "exception": "实现尚未开始；完成后替换"
+          }
+        }
+      },
+      "vertical_slice": {
+        "user_visible_slice": "用户在纸页头 Aa 选择黑体/17，正文即时变化且稿纸宽度不变；刷新后仍是黑体/17。",
+        "demo_path": "node .scratch-ux064/probe-theme-ux065.mjs --out docs/evidence/UX-066 --port 3094（扩展 Aa/设置页/reload 断言）+ 截图",
+        "scope_guard": "只改正文/编辑器；不改 UI chrome/布局/主题/API/业务数据。",
+        "rollback_plan": "回退 commit；删除 dsh.novel.typography.v1 即回默认宋体/16。",
+        "status": "PLANNED",
+        "evidence": "设计边界 docs/design/UX-066-typography/README.md；实现待 S2 收口"
+      },
+      "interruption_policy": {
+        "mode": "critical-only",
+        "critical_triggers": [
+          "改变用户已选范围/字体/字号（product intent）",
+          "改变验收标准（acceptance）",
+          "不可逆操作（irreversible）",
+          "发布/版本（release）",
+          "接受新风险（risk acceptance）",
+          "新增外部字体或依赖（external dependency）",
+          "治理/权限模式变更（mode change）"
+        ],
+        "auto_execute": [
+          "routine execution：排版实现、测试、契约重基、可逆 commit",
+          "record updates：证据/审查/计划状态更新"
+        ],
+        "assumption_record": {
+          "assumption": "正文/编辑器字体字号存 localStorage 新键，不改 UI chrome",
+          "basis": "用户 AskUserQuestion 选择正文与编辑器",
+          "reversibility": "仅新增 localStorage 键；删除该键/回退 commit 即恢复默认宋体 16，无数据迁移。",
+          "validation": "smoke + reload probe",
+          "rollback": "revert commit / 删除新键"
+        },
+        "interruption_budget": "用户最终目检一次"
+      },
+      "allowed_change_scope": [
+        "lib/client.js（仅正文/编辑器字体字号与 Aa/设置页排版区）",
+        "lib/host-contract.mjs（3.7 新键、必要锚点重基）",
+        "test/smoke.mjs（纯函数/CSS/渲染/持久化；不删旧断言）",
+        "README.md",
+        "CHANGELOG.md",
+        "docs/design/UX-066-typography/README.md",
+        "docs/evidence/UX-066/",
+        "docs/review/UX-066-R1.md"
+      ],
+      "required_evidence": [
+        "EVD row with 事实依据 and 目标对齐/用户影响 fields",
+        "结构化事实 JSON + 文件清单 + 命令 exit code",
+        "真实 Aa/设置页/reload 截图",
+        "独立 Reviewer 报告",
+        "用户目检结论"
+      ],
+      "next_commands": [
+        "node --check lib/client.js",
+        "node test/smoke.mjs",
+        "node scripts/verify-visual-geometry.mjs",
+        "node scripts/verify-contract-anchors.mjs",
+        "python docs/design/UX-064-mockups/verify-mockups.py"
+      ],
+      "done_definition": [
+        "4 字体 × 4 字号 + Aa/设置页 + 持久化实现；无布局/横滑回归",
+        "五门/anchors/真实截图通过",
+        "独立 Reviewer 通过；用户目检通过后标记完成"
+      ],
+      "source": "plan-tracker.md##当前活跃事项"
     }
   }
 }
