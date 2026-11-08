@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UX-064 · 主题系统设计板</title>
+<style>
+  * { box-sizing: border-box; }
+  :root {
+    --page: #E8E1D6;
+    --page-2: #F1ECE4;
+    --ink: #211D18;
+    --ink-2: #4A433A;
+    --ink-3: #6B6155;
+    --rule: #CFC5B5;
+    --serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", STSong, SimSun, serif;
+    --sans: "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei UI", "Microsoft YaHei", system-ui, sans-serif;
+  }
+  html, body { margin: 0; background: var(--page); color: var(--ink); font-family: var(--sans); }
+  body { width: 1440px; padding: 46px 56px 54px; }
+  .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 40px; padding-bottom: 26px; border-bottom: 1px solid var(--rule); }
+  .kicker { font-size: 10px; letter-spacing: .22em; color: var(--ink-3); text-transform: uppercase; margin-bottom: 12px; }
+  h1 { font-family: var(--serif); font-size: 34px; font-weight: 600; letter-spacing: .02em; margin: 0 0 10px; line-height: 1.2; }
+  .sub { margin: 0; font-size: 12.5px; line-height: 1.9; color: var(--ink-2); max-width: 680px; }
+  .legend { flex: none; text-align: right; font-size: 11px; color: var(--ink-3); line-height: 1.9; }
+  .legend strong { color: var(--ink); font-weight: 500; }
+  .theme-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 28px; }
+  .theme-card { border: 1px solid var(--rule); background: var(--paper-2); padding: 18px 18px 16px; min-width: 0; }
+  .theme-card[data-theme="mozhi"] {
+    --paper: #F4EEE3; --paper-2: #FBF8F1; --paper-3: #EFE7DA;
+    --ink: #211D18; --ink-2: #4A433A; --ink-3: #6B6155; --ink-4: #8D8375;
+    --rule: #DDD3C3; --rule-strong: #C9BCA7;
+    --cinnabar: #9E3B2C; --seal: #A63A2A; --accent: #211D18;
+    --ok: #4F6B4A; --warn: #A5762F; --danger: #A33A2E;
+  }
+  .theme-card[data-theme="qingjian"] {
+    --paper: #E9EFE3; --paper-2: #F4F8EE; --paper-3: #E0E8D8;
+    --ink: #1C2A20; --ink-2: #3A4B3F; --ink-3: #5C6F60; --ink-4: #849483;
+    --rule: #C8D4C0; --rule-strong: #B0C1A8;
+    --cinnabar: #8F432D; --seal: #8B4632; --accent: #2F4A38;
+    --ok: #4F6B4A; --warn: #967231; --danger: #A33A2E;
+  }
+  .theme-card[data-theme="yehang"] {
+    --paper: #E9EEF5; --paper-2: #F5F8FC; --paper-3: #DFE7F0;
+    --ink: #18232F; --ink-2: #354657; --ink-3: #5D6E80; --ink-4: #8795A5;
+    --rule: #C7D2DF; --rule-strong: #ADBDCE;
+    --cinnabar: #A04739; --seal: #9A463A; --accent: #2C4A6E;
+    --ok: #4B6B5A; --warn: #9D7532; --danger: #A33A3E;
+  }
+  .theme-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; min-height: 58px; }
+  .theme-name { font-family: var(--serif); font-size: 26px; font-weight: 600; line-height: 1.15; margin: 0 0 6px; color: var(--ink); letter-spacing: .08em; }
+  .theme-mood { margin: 0; font-size: 10.5px; letter-spacing: .08em; color: var(--ink-3); }
+  .badge { flex: none; margin-top: 4px; border: 1px solid var(--rule-strong); color: var(--ink-2); font-size: 9px; line-height: 18px; padding: 0 7px; letter-spacing: .12em; }
+  .badge.default { border-color: var(--cinnabar); color: var(--cinnabar); }
+  .swatches { display: flex; gap: 5px; margin: 14px 0 16px; }
+  .swatch { height: 5px; flex: 1; background: var(--sw); border: 1px solid color-mix(in srgb, var(--sw) 75%, var(--ink)); }
+  .preview { border: 1px solid var(--rule); background: var(--paper); overflow: hidden; }
+  .mini-console { height: 218px; padding: 11px 12px 9px; background: var(--paper); display: flex; flex-direction: column; }
+  .mini-top { display: flex; align-items: center; gap: 6px; padding-bottom: 9px; }
+  .mini-seal { width: 15px; height: 15px; display: grid; place-items: center; border: 1px solid var(--seal); color: var(--seal); font-family: var(--serif); font-size: 8px; transform: rotate(-1.5deg); }
+  .mini-brand { font-family: var(--serif); font-size: 10px; font-weight: 600; letter-spacing: .16em; color: var(--ink); }
+  .mini-top .spacer { flex: 1; }
+  .mini-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--ink-4); }
+  .mini-hero { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, .75fr); gap: 9px; flex: 1; min-height: 0; }
+  .mini-left { min-width: 0; padding-top: 3px; }
+  .mini-eyebrow { display: flex; align-items: center; gap: 4px; font-size: 7px; letter-spacing: .08em; color: var(--ink-3); white-space: nowrap; }
+  .tick { width: 3px; height: 3px; border-radius: 50%; background: var(--cinnabar); }
+  .mini-title { font-family: var(--serif); font-size: 16px; line-height: 1.35; font-weight: 600; color: var(--ink); margin: 4px 0 5px; }
+  .mini-title em { font-style: normal; color: var(--cinnabar); }
+  .mini-meta { font-size: 7px; color: var(--ink-3); line-height: 1.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mini-cta { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; background: var(--ink); color: var(--paper-2); font-size: 7px; line-height: 1; padding: 6px 7px; }
+  .mini-note { margin-top: 5px; font-size: 6.5px; line-height: 1.7; color: var(--ink-3); }
+  .mini-quote { border: 1px solid var(--rule); background: var(--paper-2); padding: 9px 8px 7px; min-width: 0; display: flex; flex-direction: column; }
+  .mini-qk { font-size: 6.5px; letter-spacing: .08em; color: var(--ink-3); }
+  .mini-qline { height: 3px; background: color-mix(in srgb, var(--ink) 13%, transparent); margin-top: 5px; }
+  .mini-qline.short { width: 72%; }
+  .mini-qfoot { margin-top: auto; font-size: 6.5px; color: var(--ink-3); padding-top: 5px; border-top: 1px solid var(--rule); }
+  .mini-shelf { display: flex; gap: 5px; align-items: flex-end; margin-top: 8px; padding-top: 7px; border-top: 1px solid var(--rule); }
+  .mini-cover { width: 22px; height: 32px; background: var(--paper-3); border: 1px solid var(--rule-strong); position: relative; }
+  .mini-cover::before { content: ""; position: absolute; left: 3px; top: 3px; bottom: 3px; width: 1px; background: var(--rule-strong); }
+  .mini-cover.current { outline: 1px solid var(--cinnabar); outline-offset: 1px; }
+  .mini-cover .seal { position: absolute; right: 2px; bottom: 2px; width: 6px; height: 6px; border: 1px solid var(--seal); color: var(--seal); font-family: var(--serif); font-size: 4px; display: grid; place-items: center; }
+  .mini-shelf-text { margin-left: auto; text-align: right; font-size: 6.5px; line-height: 1.8; color: var(--ink-3); }
+  .mini-shelf-text b { display: block; font-family: var(--serif); font-size: 9px; color: var(--ink); font-weight: 600; letter-spacing: .05em; }
+  .mini-desk { display: flex; align-items: center; gap: 5px; padding-top: 7px; margin-top: 7px; border-top: 1px solid var(--rule); font-size: 6px; color: var(--ink-3); }
+  .mini-desk .right { margin-left: auto; color: var(--ink-3); }
+  .mini-studio { height: 148px; margin-top: 0; border-top: 1px solid var(--rule); background: var(--paper-3); display: flex; flex-direction: column; }
+  .mini-studio-bar { height: 22px; display: flex; align-items: center; gap: 4px; padding: 0 7px; border-bottom: 1px solid var(--rule); background: var(--paper); font-size: 6px; color: var(--ink-2); }
+  .mini-studio-bar .st { font-family: var(--serif); font-size: 8px; letter-spacing: .04em; color: var(--ink); }
+  .mini-studio-bar .sp { flex: 1; }
+  .mini-studio-bar .ctl { width: 5px; height: 5px; border: 1px solid var(--rule-strong); }
+  .mini-studio-body { display: flex; flex: 1; min-height: 0; }
+  .mini-rail { width: 60px; border-right: 1px solid var(--rule); background: var(--paper-2); padding: 6px 5px; }
+  .mini-rail .ri { height: 2px; background: var(--rule-strong); margin-bottom: 5px; }
+  .mini-rail .ri.accent { background: var(--cinnabar); width: 58%; }
+  .mini-sheet-wrap { flex: 1; padding: 6px 7px 7px; min-width: 0; }
+  .mini-sheet { height: 100%; background: var(--paper-2); border: 1px solid var(--rule); padding: 9px 10px; position: relative; }
+  .mini-sheet h4 { font-family: var(--serif); font-size: 10px; font-weight: 600; color: var(--ink); margin: 0 0 4px; }
+  .mini-sheet .line { height: 2px; background: color-mix(in srgb, var(--ink) 11%, transparent); margin: 4px 0; }
+  .mini-sheet .line.short { width: 63%; }
+  .mini-sheet .caret { width: 1px; height: 9px; background: var(--cinnabar); position: absolute; left: 10px; bottom: 8px; }
+  .mini-chat { width: 92px; border-left: 1px solid var(--rule); background: var(--paper-2); padding: 6px; display: flex; flex-direction: column; }
+  .mini-chat-head { display: flex; align-items: center; gap: 4px; padding-bottom: 4px; border-bottom: 1px solid var(--rule); font-size: 6px; color: var(--ink-2); }
+  .mini-chat-head b { font-weight: 500; color: var(--ink); }
+  .mini-msg { margin-top: 5px; }
+  .mini-msg .who { font-size: 5px; color: var(--ink-4); margin-bottom: 2px; }
+  .mini-msg .bubble { background: var(--paper); border: 1px solid var(--rule); padding: 4px 4px 3px; }
+  .mini-msg .bubble .l { height: 2px; background: color-mix(in srgb, var(--ink) 13%, transparent); margin: 2px 0; }
+  .mini-msg .bubble .l.s { width: 64%; }
+  .mini-composer { margin-top: auto; border: 1px solid var(--rule-strong); background: var(--paper); height: 18px; display: flex; align-items: center; padding: 0 4px; font-size: 5px; color: var(--ink-4); }
+  .theme-foot { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 9px; color: var(--ink-3); }
+  .theme-foot .pair { display: flex; align-items: center; gap: 3px; }
+  .theme-foot .chip { width: 17px; height: 11px; border: 1px solid var(--rule-strong); }
+  .theme-foot .chip.light { background: var(--paper-2); }
+  .theme-foot .chip.dark { background: #151310; }
+  .theme-card[data-theme="qingjian"] .theme-foot .chip.dark { background: #111713; }
+  .theme-card[data-theme="yehang"] .theme-foot .chip.dark { background: #0F141B; }
+  .theme-foot .follow { margin-left: auto; letter-spacing: .04em; }
+  .section { margin-top: 36px; padding-top: 24px; border-top: 1px solid var(--rule); }
+  .section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 18px; }
+  .section-head h2 { font-family: var(--serif); font-size: 24px; font-weight: 600; letter-spacing: .06em; margin: 0 0 5px; }
+  .section-head p { margin: 0; font-size: 11px; color: var(--ink-3); line-height: 1.8; }
+  .switch-grid { display: grid; grid-template-columns: 720px 1fr; gap: 40px; align-items: start; }
+  .switch-caption { font-size: 10px; letter-spacing: .12em; color: var(--ink-3); margin-bottom: 9px; }
+  .bar-wrap { position: relative; background: var(--page-2); border: 1px solid var(--rule); padding: 0; height: 292px; }
+  .quick-bar { height: 56px; display: flex; align-items: center; gap: 10px; padding: 0 14px 0 18px; border-bottom: 1px solid var(--rule); background: var(--paper); }
+  .quick-bar .seal { width: 20px; height: 20px; border: 1px solid var(--seal); color: var(--seal); font-family: var(--serif); font-size: 9px; display: grid; place-items: center; transform: rotate(-1.5deg); }
+  .quick-bar .bt { font-family: var(--serif); font-size: 15px; font-weight: 600; letter-spacing: .04em; color: var(--ink); }
+  .quick-bar .bd { font-size: 9px; color: var(--ink-3); border-left: 1px solid var(--rule); padding-left: 9px; }
+  .quick-bar .sp { flex: 1; }
+  .icon-btn { width: 30px; height: 30px; border: 1px solid transparent; background: transparent; color: var(--ink-3); display: grid; place-items: center; position: relative; }
+  .icon-btn.on { border-color: var(--rule-strong); background: var(--paper-2); color: var(--ink); }
+  .icon-btn svg { width: 15px; height: 15px; }
+  .popover { position: absolute; top: 66px; right: 14px; width: 310px; border: 1px solid var(--rule-strong); background: var(--paper-2); box-shadow: 0 12px 30px rgba(33, 29, 24, .13); padding: 12px; }
+  .popover-head { display: flex; align-items: baseline; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid var(--rule); }
+  .popover-head b { font-family: var(--serif); font-size: 14px; font-weight: 600; letter-spacing: .06em; }
+  .popover-head span { font-size: 8px; color: var(--ink-3); }
+  .theme-option { display: flex; align-items: center; gap: 9px; width: 100%; border: 1px solid transparent; background: transparent; padding: 9px 7px; text-align: left; color: var(--ink); font-family: var(--sans); }
+  .theme-option + .theme-option { border-top: 1px solid var(--rule); }
+  .theme-option.on { background: var(--paper); border-color: var(--rule-strong); }
+  .theme-option .dots { display: flex; gap: 2px; flex: none; }
+  .theme-option .dots i { width: 8px; height: 8px; display: block; border: 1px solid rgba(0,0,0,.08); }
+  .theme-option .tn { font-family: var(--serif); font-size: 12px; font-weight: 600; letter-spacing: .04em; }
+  .theme-option .td { font-size: 8px; color: var(--ink-3); margin-top: 1px; }
+  .theme-option .check { margin-left: auto; color: var(--cinnabar); font-size: 11px; }
+  .popover-foot { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--rule); font-size: 8px; color: var(--ink-3); display: flex; justify-content: space-between; }
+  .settings-panel {
+    --paper: #F4EEE3; --paper-2: #FBF8F1; --paper-3: #EFE7DA;
+    --ink: #211D18; --ink-2: #4A433A; --ink-3: #6B6155; --ink-4: #8D8375;
+    --rule: #DDD3C3; --rule-strong: #C9BCA7; --cinnabar: #9E3B2C;
+    border: 1px solid var(--rule); background: var(--page-2); padding: 18px;
+  }
+  .settings-title { display: flex; align-items: center; gap: 8px; }
+  .settings-title .st { font-family: var(--serif); font-size: 18px; font-weight: 600; letter-spacing: .06em; }
+  .settings-title .pill { margin-left: auto; border: 1px solid var(--rule); padding: 2px 7px; font-size: 8px; color: var(--ink-3); }
+  .settings-sub { margin-top: 4px; font-size: 9px; color: var(--ink-3); line-height: 1.8; }
+  .setting-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+  .setting-card { border: 1px solid var(--rule); background: var(--paper-2); padding: 8px; text-align: left; color: var(--ink); font-family: var(--sans); position: relative; }
+  .setting-card.on { border-color: var(--cinnabar); }
+  .setting-card .mini-paper { display: block; height: 58px; background: var(--paper); border: 1px solid var(--rule); position: relative; overflow: hidden; }
+  .setting-card .mini-paper::before { content: ""; position: absolute; inset: 7px; border-right: 1px solid var(--rule); }
+  .setting-card .mini-paper::after { content: ""; position: absolute; left: 9px; top: 9px; width: 34%; height: 2px; background: var(--ink); box-shadow: 0 6px 0 color-mix(in srgb, var(--ink) 16%, transparent), 0 11px 0 color-mix(in srgb, var(--ink) 16%, transparent); }
+  .setting-card .sc-name { font-family: var(--serif); font-size: 12px; font-weight: 600; letter-spacing: .04em; margin-top: 7px; }
+  .setting-card .sc-mood { font-size: 8px; color: var(--ink-3); margin-top: 2px; }
+  .setting-card .on-mark { position: absolute; right: 7px; top: 7px; width: 13px; height: 13px; background: var(--cinnabar); color: var(--paper-2); font-size: 8px; display: grid; place-items: center; }
+  .settings-foot { display: flex; align-items: center; gap: 10px; margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--rule); font-size: 8px; color: var(--ink-3); }
+  .settings-foot .btn { border: 1px solid var(--rule-strong); background: transparent; color: var(--ink-2); padding: 4px 8px; font-family: var(--sans); font-size: 8px; }
+  .settings-foot .sp { flex: 1; }
+  .caption { font-size: 9px; line-height: 1.8; color: var(--ink-3); margin: 10px 2px 0; }
+  .dark-section { margin-top: 30px; }
+  .dark-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+  .theme-card.dark[data-theme="mozhi"] {
+    --paper: #151310; --paper-2: #1D1A16; --paper-3: #12100D;
+    --ink: #EDE6D8; --ink-2: #C9BFAF; --ink-3: #A49A8A; --ink-4: #7D7467;
+    --rule: #302B24; --rule-strong: #463F34;
+    --cinnabar: #D07864; --seal: #B4483A; --accent: #EDE6D8;
+    --ok: #8FAE86; --warn: #D0A45C; --danger: #D97868;
+  }
+  .theme-card.dark[data-theme="qingjian"] {
+    --paper: #111713; --paper-2: #19211B; --paper-3: #0D120F;
+    --ink: #E4EBDD; --ink-2: #C1CCB9; --ink-3: #97A693; --ink-4: #71806F;
+    --rule: #29332B; --rule-strong: #3E4C41;
+    --cinnabar: #D0876F; --seal: #C06A50; --accent: #9DB8A1;
+    --ok: #8FAE86; --warn: #D0A45C; --danger: #D97868;
+  }
+  .theme-card.dark[data-theme="yehang"] {
+    --paper: #0F141B; --paper-2: #161D26; --paper-3: #0A0F15;
+    --ink: #E6EBF2; --ink-2: #BFC9D6; --ink-3: #95A2B2; --ink-4: #6E7B8B;
+    --rule: #27313D; --rule-strong: #3A4757;
+    --cinnabar: #D48370; --seal: #C06B5A; --accent: #8FB0D6;
+    --ok: #8FAE9C; --warn: #D0A45C; --danger: #D97868;
+  }
+  .theme-card.dark { background: var(--paper-2); border-color: var(--rule); }
+  .theme-card.dark .badge { border-color: var(--rule-strong); color: var(--ink-3); }
+  .theme-card.dark .badge.default { border-color: var(--cinnabar); color: var(--cinnabar); }
+  .theme-card.dark .theme-foot .chip.light { background: var(--paper-2); }
+  .theme-card.dark .theme-foot .chip.dark { background: var(--paper-3); }
+  .foot { margin-top: 34px; padding-top: 14px; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; font-size: 9px; color: var(--ink-3); letter-spacing: .04em; }
+</style>
+</head>
+<body>
+  <header class="page-head">
+    <div>
+      <div class="kicker">UX-064 · THEME SYSTEM / 主题系统</div>
+      <h1>三套主题，一种文学编辑体</h1>
+      <p class="sub">当前设计是默认主题「墨纸」。三套主题共用同一套版式、字号与交互，只替换纸色、墨色、印章与强调色；每套主题都包含明/暗两态，跟随宿主明暗切换。</p>
+    </div>
+    <div class="legend"><strong>默认主题</strong><br>墨纸 · 暖纸墨色<br>切换不改变布局与内容</div>
+  </header>
+
+  <section class="theme-grid">
+    <article class="theme-card" data-theme="mozhi">
+      <div class="theme-head">
+        <div><h2 class="theme-name">墨纸</h2><p class="theme-mood">暖纸 · 墨色 · 朱砂</p></div>
+        <span class="badge default">默认</span>
+      </div>
+      <div class="swatches">
+        <span class="swatch" style="--sw:#F4EEE3"></span><span class="swatch" style="--sw:#211D18"></span><span class="swatch" style="--sw:#9E3B2C"></span><span class="swatch" style="--sw:#DDD3C3"></span><span class="swatch" style="--sw:#4F6B4A"></span>
+      </div>
+      <div class="preview">
+        <div class="mini-console">
+          <div class="mini-top"><span class="mini-seal">斋</span><span class="mini-brand">书斋</span><span class="spacer"></span><span class="mini-dot"></span><span class="mini-dot"></span><span class="mini-dot"></span></div>
+          <div class="mini-hero">
+            <div class="mini-left">
+              <div class="mini-eyebrow"><span class="tick"></span>正在写 · 第 38 章</div>
+              <div class="mini-title">诡异副本，<br><em>先过审</em></div>
+              <div class="mini-meta">规则怪谈 · 中篇 · 38 章 · 8.9 万字 · ● 质量审查中</div>
+              <div class="mini-cta">✎ 续写第 39 章</div>
+              <div class="mini-note">续写会按大纲生成下一章。</div>
+            </div>
+            <div class="mini-quote">
+              <div class="mini-qk">上次写到</div>
+              <div class="mini-qline"></div><div class="mini-qline"></div><div class="mini-qline short"></div>
+              <div class="mini-qfoot">第 38 章 · 排班表</div>
+            </div>
+          </div>
+          <div class="mini-shelf">
+            <span class="mini-cover current"><span class="seal">诡</span></span>
+            <span class="mini-cover"><span class="seal">长</span></span>
+            <span class="mini-cover"><span class="seal">灯</span></span>
+            <span class="mini-cover"><span class="seal">山</span></span>
+            <span class="mini-shelf-text"><b>书架 4 本</b>最近编辑</span>
+          </div>
+          <div class="mini-desk"><span>书案</span><span>·</span><span>3 章未发布</span><span>·</span><span>质量审查中</span><span class="right">9月23日 11:37</span></div>
+        </div>
+        <div class="mini-studio">
+          <div class="mini-studio-bar"><span class="st">写作台 ·《诡异副本，先过审》</span><span class="sp"></span><span class="ctl"></span><span class="ctl"></span><span class="ctl"></span></div>
+          <div class="mini-studio-body">
+            <div class="mini-rail"><div class="ri accent"></div><div class="ri"></div><div class="ri"></div><div class="ri"></div><div class="ri" style="width:70%"></div></div>
+            <div class="mini-sheet-wrap"><div class="mini-sheet"><h4>第 38 章 · 排班表</h4><div class="line"></div><div class="line"></div><div class="line short"></div><div class="line"></div><div class="line short"></div><span class="caret"></span></div></div>
+            <div class="mini-chat"><div class="mini-chat-head"><b>协作</b><span>·</span><span>原生会话</span></div><div class="mini-msg"><div class="who">你</div><div class="bubble"><div class="l"></div><div class="l s"></div></div></div><div class="mini-msg"><div class="who">助手</div><div class="bubble"><div class="l"></div><div class="l s"></div></div></div><div class="mini-composer">输入…</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="theme-foot"><span class="pair"><i class="chip light"></i>明</span><span class="pair"><i class="chip dark"></i>暗</span><span class="follow">跟随宿主</span></div>
+    </article>
+
+    <article class="theme-card" data-theme="qingjian">
+      <div class="theme-head">
+        <div><h2 class="theme-name">青简</h2><p class="theme-mood">青绿纸 · 松墨 · 苔痕</p></div>
+        <span class="badge">备选</span>
+      </div>
+      <div class="swatches">
+        <span class="swatch" style="--sw:#E9EFE3"></span><span class="swatch" style="--sw:#1C2A20"></span><span class="swatch" style="--sw:#93452F"></span><span class="swatch" style="--sw:#C8D4C0"></span><span class="swatch" style="--sw:#2F4A38"></span>
+      </div>
+      <div class="preview">
+        <div class="mini-console">
+          <div class="mini-top"><span class="mini-seal">斋</span><span class="mini-brand">书斋</span><span class="spacer"></span><span class="mini-dot"></span><span class="mini-dot"></span><span class="mini-dot"></span></div>
+          <div class="mini-hero">
+            <div class="mini-left">
+              <div class="mini-eyebrow"><span class="tick"></span>正在写 · 第 38 章</div>
+              <div class="mini-title">诡异副本，<br><em>先过审</em></div>
+              <div class="mini-meta">规则怪谈 · 中篇 · 38 章 · 8.9 万字 · ● 质量审查中</div>
+              <div class="mini-cta">✎ 续写第 39 章</div>
+              <div class="mini-note">续写会按大纲生成下一章。</div>
+            </div>
+            <div class="mini-quote">
+              <div class="mini-qk">上次写到</div>
+              <div class="mini-qline"></div><div class="mini-qline"></div><div class="mini-qline short"></div>
+              <div class="mini-qfoot">第 38 章 · 排班表</div>
+            </div>
+          </div>
+          <div class="mini-shelf">
+            <span class="mini-cover current"><span class="seal">诡</span></span>
+            <span class="mini-cover"><span class="seal">长</span></span>
+            <span class="mini-cover"><span class="seal">灯</span></span>
+            <span class="mini-cover"><span class="seal">山</span></span>
+            <span class="mini-shelf-text"><b>书架 4 本</b>最近编辑</span>
+          </div>
+          <div class="mini-desk"><span>书案</span><span>·</span><span>3 章未发布</span><span>·</span><span>质量审查中</span><span class="right">9月23日 11:37</span></div>
+        </div>
+        <div class="mini-studio">
+          <div class="mini-studio-bar"><span class="st">写作台 ·《诡异副本，先过审》</span><span class="sp"></span><span class="ctl"></span><span class="ctl"></span><span class="ctl"></span></div>
+          <div class="mini-studio-body">
+            <div class="mini-rail"><div class="ri accent"></div><div class="ri"></div><div class="ri"></div><div class="ri"></div><div class="ri" style="width:70%"></div></div>
+            <div class="mini-sheet-wrap"><div class="mini-sheet"><h4>第 38 章 · 排班表</h4><div class="line"></div><div class="line"></div><div class="line short"></div><div class="line"></div><div class="line short"></div><span class="caret"></span></div></div>
+            <div class="mini-chat"><div class="mini-chat-head"><b>协作</b><span>·</span><span>原生会话</span></div><div class="mini-msg"><div class="who">你</div><div class="bubble"><div class="l"></div><div class="l s"></div></div></div><div class="mini-msg"><div class="who">助手</div><div class="bubble"><div class="l"></div><div class="l s"></div></div></div><div class="mini-composer">输入…</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="theme-foot"><span class="pair"><i class="chip light"></i>明</span><span class="pair"><i class="chip dark"></i>暗</span><span class="follow">跟随宿主</span></div>
+    </article>
+
+    <article class="theme-card" data-theme="yehang">
+      <div class="theme-head">
+        <div><h2 class="theme-name">夜航</h2><p class="theme-mood">月白 · 靛青 · 灯影</p></div>
+        <span class="badge">备选</span>
+      </div>
+      <div class="swatches">
+        <span class="swatch" style="--sw:#E9EEF5"></span><span class="swatch" style="--sw:#18232F"></span><span class="swatch" style="--sw:#A54B3B"></span><span class="swatch" style="--sw:#C7D2DF"></span><span class="swatch" style="--sw:#2C4A6E"></span>
+      </div>
+      <div class="preview">
+        <div class="mini-console">
+          <div class="mini-top"><span class="mini-seal">斋</span><span class="mini-brand">书斋</span><span class="spacer"></span><span class="mini-dot"></span><span class="mini-dot"></span><span class="mini-dot"></span></div>
+          <div class="mini-hero">
+            <div class="mini-left">
+              <div class="mini-eyebrow"><span class="tick"></span>正在写 · 第 38 章</div>
+              <div class="mini-title">诡异副本，<br><em>先过审</em></div>
+              <div class="mini-meta">规则怪谈 · 中篇 · 38 章 · 8.9 万字 · ● 质量审查中</div>
+              <div class="mini-cta">✎ 续写第 39 章</div>
+              <div class="mini-note">续写会按大纲生成下一章。</div>
+            </div>
+            <div class="mini-quote">
+              <div class="mini-qk">上次写到</div>
+              <div class="mini-qline"></div><div class="mini-qline"></div><div class="mini-qline short"></div>
+              <div class="mini-qfoot">第 38 章 · 排班表</div>
+            </div>
+          </div>
+          <div class="mini-shelf">
+            <span class="mini-cover current"><span class="seal">诡</span></span>
+            <span class="mini-cover"><span class="seal">长</span></span>
+            <span class="mini-cover"><span class="seal">灯</span></span>
+            <span class="mini-cover"><span class="seal">山</span></span>
+            <span class="mini-shelf-text"><b>书架 4 本</b>最近编辑</span>
+          </div>
+          <div class="mini-desk"><span>书案</span><span>·</span><span>3 章未发布</span><span>·</span><span>质量审查中</span><span class="right">9月23日 11:37</span></div>
+        </div>
+        <div class="mini-studio">
+          <div class="mini-studio-bar"><span class="st">写作台 ·《诡异副本，先过审》</span><span class="sp"></span><span class="ctl"></span><span class="ctl"></span><span class="ctl"></span></div>
+          <div class="mini-studio-body">
+            <div class="mini-rail"><div class="ri accent"></div><div class="ri"></div><div class="ri"></div><div class="ri"></div><div class="ri" style="width:70%"></div></div>
+            <div class="mini-sheet-wrap"><div class="mini-sheet"><h4>第 38 章 · 排班表</h4><div class="line"></div><div class="line"></div><div class="line short"></div><div class="line"></div><div class="line short"></div><span class="caret"></span></div></div>
+            <div class="mini-chat"><div class="mini-chat-head"><b>协作</b><span>·</span><span>原生会话</span></div><div class="mini-msg"><div class="who">你</div><div class="bubble"><div class="l"></div><div class="l s"></div></div></div><div class="mini-msg"><div class="who">助手</div><div class="bubble"><div class="l"></div><div class="l s"></div></div></div><div class="mini-composer">输入…</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="theme-foot"><span class="pair"><i class="chip light"></i>明</span><span class="pair"><i class="chip dark"></i>暗</span><span class="follow">跟随宿主</span></div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div><h2>切换入口</h2><p>顶栏是快捷键，设置页是管理页；两处共用同一个主题选择，选中即生效、即保存。</p></div>
+    </div>
+    <div class="switch-grid">
+      <div>
+        <div class="switch-caption">顶栏快速切换 · 不离开当前工作台</div>
+        <div class="bar-wrap">
+          <div class="quick-bar">
+            <span class="seal">斋</span><span class="bt">书斋</span><span class="bd">小说写作工作流</span><span class="sp"></span>
+            <button class="icon-btn on" aria-label="主题" title="主题">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18c1.7 0 2.4-1.1 1.7-2.3-.6-1 .1-2.2 1.3-2.2H17a4 4 0 0 0 4-4c0-5.2-4-9.5-9-9.5Z"/><circle cx="7.5" cy="10" r=".8" fill="currentColor" stroke="none"/><circle cx="10.5" cy="7" r=".8" fill="currentColor" stroke="none"/><circle cx="14.5" cy="7.5" r=".8" fill="currentColor" stroke="none"/></svg>
+            </button>
+            <button class="icon-btn" aria-label="设置" title="设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.1 2.1-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21h-3v-.2a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L6.6 17l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H5v-3h.4a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L6.6 8 8.7 5.9l.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6V4h3v.7a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 8l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.4v3H21a1.7 1.7 0 0 0-1.6 1Z"/></svg></button>
+            <button class="icon-btn" aria-label="关闭" title="关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+          </div>
+          <div class="popover">
+            <div class="popover-head"><b>主题</b><span>跟随宿主明暗</span></div>
+            <button class="theme-option on"><span class="dots"><i style="background:#F4EEE3"></i><i style="background:#211D18"></i><i style="background:#9E3B2C"></i></span><span><span class="tn">墨纸</span><span class="td">暖纸 · 墨色 · 朱砂 · 默认</span></span><span class="check">✓</span></button>
+            <button class="theme-option"><span class="dots"><i style="background:#E9EFE3"></i><i style="background:#1F2A22"></i><i style="background:#93452F"></i></span><span><span class="tn">青简</span><span class="td">青绿纸 · 松墨 · 苔痕</span></span></button>
+            <button class="theme-option"><span class="dots"><i style="background:#E9EEF5"></i><i style="background:#1B2430"></i><i style="background:#A54B3B"></i></span><span><span class="tn">夜航</span><span class="td">月白 · 靛青 · 灯影</span></span></button>
+            <div class="popover-foot"><span>Esc 关闭</span><span>选择即保存</span></div>
+          </div>
+        </div>
+        <div class="caption">入口在书斋顶栏右侧、写作台标题栏右侧；打开后即时预览，键盘可到达，Esc 关闭。</div>
+      </div>
+      <div>
+        <div class="switch-caption">设置页管理 · 主题卡片与恢复默认</div>
+        <div class="settings-panel">
+          <div class="settings-title"><span class="st">外观 · 主题</span><span class="pill">3 套</span></div>
+          <div class="settings-sub">主题只改变视觉，不改变布局、内容与数据。每套主题都跟随宿主明暗。</div>
+          <div class="setting-cards">
+            <button class="setting-card on"><span class="mini-paper"></span><span class="sc-name">墨纸</span><span class="sc-mood">暖纸 · 墨色</span><span class="on-mark">✓</span></button>
+            <button class="setting-card"><span class="mini-paper" style="background:#E9EFE3"></span><span class="sc-name">青简</span><span class="sc-mood">青绿 · 松墨</span></button>
+            <button class="setting-card"><span class="mini-paper" style="background:#E9EEF5"></span><span class="sc-name">夜航</span><span class="sc-mood">月白 · 靛青</span></button>
+          </div>
+          <div class="settings-foot"><span>当前：墨纸</span><span class="sp"></span><button class="btn">恢复默认</button></div>
+        </div>
+        <div class="caption">设置页是管理面：预览、当前标记、恢复默认；与顶栏共用同一份选择。</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section dark-section">
+    <div class="section-head">
+      <div><h2>暗色状态</h2><p>同一套主题令牌的暗色档；不反色，纸色保持温度，朱砂降低亮度，正文仍是米白而非纯白。</p></div>
+    </div>
+    <div class="dark-grid" id="darkGrid"></div>
+  </section>
+
+  <footer class="foot"><span>UX-064 / S2 THEME BOARD · v1</span><span>版式、字号、交互不变 · 仅主题令牌变化</span></footer>
+  <script>
+    (() => {
+      const grid = document.getElementById('darkGrid');
+      for (const card of document.querySelectorAll('.theme-grid .theme-card')) {
+        const clone = card.cloneNode(true);
+        clone.classList.add('dark');
+        const badge = clone.querySelector('.badge');
+        if (badge) { badge.className = 'badge'; badge.textContent = '暗色'; }
+        const swatches = clone.querySelector('.swatches');
+        if (swatches) swatches.remove();
+        const foot = clone.querySelector('.theme-foot');
+        if (foot) foot.remove();
+        grid.appendChild(clone);
+      }
+    })();
+  </script>
+</body>
+</html>
