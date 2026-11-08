@@ -1152,8 +1152,8 @@
     "UX-064": {
       "task_id": "UX-064",
       "priority": "P0",
-      "status": "🔄 **实施中（2026-11-08 用户审核通过「通过全部，开始 S1–S3 重构」）**。S1 书斋 → S2 写作台 → S3 收口按批派发；每批 Developer 实现 + Reviewer 审查 + Coordinator 真机/回归复核。设计与实现分开记账：设计包 EVD-150 已交付，产品实现尚未完成，不把设计稿截图当实现证据。",
-      "goal": "按用户 2026-11-08 审核通过的设计（DEC-162/DEC-163）完整重构小说工作台：**S1 书斋** = 64px 顶栏（书印 + 书斋 + 搜索/新建/设置/关闭）+ 当前书 hero（正在写 · 第 N 章、书名、题材/篇幅/字数/状态、唯一主 CTA「续写第 N+1 章」+「打开第 N 章」+ 说明）+「上次写到」引文卡 + 书架（真实书目，190×274 书封）+ 书案页脚；**S2 写作台** = 52px 顶栏 + 196px 章节目录栏 + 588px 稿纸（专注 680）+ 300px 协作栏（映射宿主对话抽屉，不伪造消息）+ 36px 状态栏；保留阅读/编辑、手动保存、章节轮询、工作流启动/停止、数据/发布/请求入口；**S3 收口** = 空态/加载/失败/禁用、深浅色、<1100 抽屉、<960 rail 折叠、<760 单列 + 目录抽屉、焦点环/ARIA/reduced-motion、真实数据回归与截图证据。视觉方向 = 墨纸/文学编辑体；字体、色彩、字阶、间距、文案以 `docs/design/UX-064-mockups/` 与 `docs/design/UX-064-redesign-proposal.md` 为准。",
+      "status": "🔄 S1 书斋已交付并通过 R4（AWN/0，commit b25e730）；S2 写作台开发中（含 UX-065 主题复用、原生抽屉 chrome 主题化、左/右/宿主三侧统一折叠）（native drawer 420 / topbar 56 / rail 196 / sheet 588 / status 40 / focus 680 / 统一折叠）；S3 待办",
+      "goal": "按用户 2026-11-08 审核通过的设计（DEC-162/DEC-163）完整重构小说工作台：**S1 书斋** = 64px 顶栏（书印 + 书斋 + 搜索/新建/设置/关闭）+ 当前书 hero（正在写 · 第 N 章、书名、题材/篇幅/字数/状态、唯一主 CTA「续写第 N+1 章」+「打开第 N 章」+ 说明）+「上次写到」引文卡 + 书架（真实书目，190×274 书封）+ 书案页脚；**S2 写作台** = 56px 顶栏 + 196px 章节目录栏（可收 48）+ 588px 稿纸（专注 680）+ 420px 按需宿主原生对话抽屉（不伪造消息）+ 40px 状态栏；左栏/右抽屉统一折叠语法，宿主左栏可选 layout.toggleSidebar 沉浸；保留阅读/编辑、手动保存、章节轮询、工作流启动/停止、数据/发布/请求入口；**S3 收口** = 空态/加载/失败/禁用、深浅色、<1100 抽屉、<960 rail 折叠、<760 单列 + 目录抽屉、焦点环/ARIA/reduced-motion、真实数据回归与截图证据。视觉方向 = 墨纸/文学编辑体；字体、色彩、字阶、间距、文案以 `docs/design/UX-064-mockups/` 与 `docs/design/UX-064-redesign-proposal.md` 为准。",
       "product_success_contract": {
         "user": "使用本插件的中文小说作者（在 DSH 宿主工作台中管理书目与写作）。",
         "job_to_be_done": "打开工作台一眼知道正在写哪本、上次写到哪、下一步点哪里；进入正文后能在安静、宽裕的稿纸上连续写 30 分钟；需要 AI 时它像页边批注，不把稿纸挤窄。",
@@ -1182,11 +1182,11 @@
       "acceptance_contract": {
         "scenario": "在隔离 DSH 宿主打开小说工作台：书斋显示真实当前书、上次写到引文、唯一续写主 CTA 与真实书架；点主 CTA 进入写作台，看到 588px 稿纸、196px 章节栏、宿主协作抽屉与 36px 状态栏；Esc 进入/退出专注 680；切深浅色、空态、失败态与 1152/1086/956/800 宽均不破版。",
         "command": "node --check lib/client.js && node test/validate-preset.mjs && node test/smoke.mjs && node scripts/verify-visual-geometry.mjs && node scripts/probe-nv-ux064.mjs --out docs/evidence/UX-064",
-        "expected_output": "node --check 0 错；validate-preset PASS；smoke 0 failed（UX-063 旧结构断言已迁移到 UX-064，守卫不减少）；geometry 输出书斋 64/hero/书封 190×274 与写作台 top 52/rail 196/sheet 588/focus 680/chat 300/status 36 实测值；probe W1~W8 全绿且 7 张真实截图落盘；任何一环失败即 exit 非 0。",
+        "expected_output": "node --check 0 错；validate-preset PASS；smoke 0 failed；geometry 输出 S2 topbar 56/rail 196/sheet 588/focus 680/status 40/drawer 420 与六档几何；anchors FAIL=0；真实 probe W1~W8 全绿并落截图。",
         "last_run": {
           "status": "PASS",
           "exit_code": 0,
-          "summary": "改动前基线（HEAD 1873dac）实跑：node --check 0 错；smoke 342 passed / 0 failed；geometry OK（旧口径 rail 44 / measure 544 / 抽屉 420）。此 PASS 仅证明基线守卫可用，**不代表 UX-064 实现完成**；S1/S2/S3 每批结束必须重跑并更新本字段。"
+          "summary": "S1 交付基线（commit b25e730）：smoke 342/0（S1 R4）；S2 尚未开始，旧 52/36/300 口径已废弃，待 S2 完成后重跑更新。"
         },
         "demo_evidence": "docs/evidence/UX-064/（实现后落 7 张真实宿主截图 + probe 输出）；docs/design/UX-064-mockups/shots/00-contact-sheet.png（设计对照）"
       },
@@ -1194,37 +1194,37 @@
         "dimensions": {
           "performance": {
             "threshold": "不新增首屏网络请求；书斋 overview/detail 轮询与章节 usePoll 周期不变；书封为 CSS，不引入图片请求或新依赖",
-            "validation": "node test/smoke.mjs + git diff --stat 核对轮询/请求行；node scripts/probe-nv-ux064.mjs 记录首屏请求数基线",
+            "validation": "node test/smoke.mjs + node scripts/verify-visual-geometry.mjs + 真实 probe 请求数；不新增首屏网络请求",
             "status": "planned",
             "evidence": "基线 smoke 342/0；实现后由 Reviewer 对 diff 逐处核对，不用主观「感觉快」替代",
             "exception": ""
           },
           "reliability": {
             "threshold": "三批各自可回退；章节数据、当前书、章号、字数、保存时间全部真实派生；加载/失败/空态互斥且可重试",
-            "validation": "node --check lib/client.js && node test/smoke.mjs && node scripts/verify-visual-geometry.mjs",
+            "validation": "node --check lib/client.js + node test/smoke.mjs + node scripts/verify-visual-geometry.mjs + node scripts/verify-contract-anchors.mjs",
             "status": "planned",
             "evidence": "基线 node --check 0 / smoke 342 passed 0 failed / geometry OK；实现后重跑",
             "exception": ""
           },
           "security": {
-            "threshold": "零新增外部依赖、零宿主源码改动、零新文件系统写路径；不新增 localStorage key；不把 token 或真实路径写入截图/日志",
+            "threshold": "零新增外部依赖、零宿主源码改动、零新文件系统写路径；只允许现有 split key 新增 leftCollapsed 字段；不把 token/真实路径写入截图/日志",
             "validation": "git diff -- lib/index.js package.json + node test/smoke.mjs（依赖/宿主面断言）+ probe 输出脱敏检查",
             "status": "planned",
             "evidence": "当前 lib/index.js / package.json 零改动；实现只动客户端呈现与契约/测试面",
-            "exception": ""
+            "exception": "主题键 dsh.novel.theme.v1 属 UX-065 已审范围；S2 不新增 storage key"
           },
           "accessibility": {
-            "threshold": "所有图标按钮带 aria-label/title；可见焦点环统一；书封/书卡键盘可达；小按钮命中区 ≥32px；Esc/⌘S/⌘F/⌘K 符合规格；prefers-reduced-motion 下关闭位移动画；浅深对比可读",
+            "threshold": "所有图标按钮 aria-label/title；左/右 toggle 共用 aria-expanded/焦点环/Enter·Space；Esc 只关最上层；prefers-reduced-motion 下无位移动画；浅深对比可读",
             "validation": "node scripts/probe-nv-ux064.mjs --a11y（DOM 角色/焦点/命中区/reduced-motion 断言）+ node scripts/verify-contrast.mjs",
             "status": "planned",
             "evidence": "设计稿已定义命中区/焦点环/ARIA/reduced-motion；实现后由探针与 Reviewer 复核",
             "exception": ""
           },
           "ux": {
-            "threshold": "打开书斋 5 秒内可指出当前书/上次写到/主 CTA；写作台稿纸 ≥588 宽且聊天不挤正文；六态诚实；用户目检认为相对旧版有结构级提升",
+            "threshold": "打开书斋 5 秒内可指出当前书/上次写到/主 CTA；写作台稿纸 588（专注 680）且原生抽屉 420 不挤正文；六态诚实；左栏 196↔48、右抽屉 420↔48、宿主左栏原生折叠统一；用户目检认为相对旧版有结构级提升",
             "validation": "node scripts/probe-nv-ux064.mjs --out docs/evidence/UX-064（7 张真实截图）+ 用户目检",
             "status": "planned",
-            "evidence": "设计包已由用户审核通过（DEC-163）；实现截图待交付，不以设计稿冒充",
+            "evidence": "UX-065 theme screenshots + S2 probe/screenshots pending",
             "exception": ""
           },
           "maintainability": {
@@ -1237,12 +1237,12 @@
         }
       },
       "vertical_slice": {
-        "user_visible_slice": "用户打开书斋，看到真实当前书、上次写到的段落、唯一「续写第 39 章」主 CTA 与真实书架；点主 CTA 进入写作台，看到 588px 稿纸与章节栏，按 Esc 进入专注 680，再按 Esc 退出；切深色后同一路径可用。",
-        "demo_path": "node scripts/probe-nv-ux064.mjs --out docs/evidence/UX-064（真宿主点击路径 + 7 张截图）；截图对照 docs/design/UX-064-mockups/shots/00-contact-sheet.png",
+        "user_visible_slice": "用户从书斋打开一本书，进入 56px 顶栏 + 196px 章节栏 + 588px 稿纸的写作台；左栏收起为 48、右抽屉按需展开为 420、Esc 专注 680；主题与真实章节数据保持。",
+        "demo_path": "node scripts/probe-nv-ux064.mjs --out docs/evidence/UX-064（S2 路径 + 截图）",
         "scope_guard": "仅书斋（NvConsole home）与写作台（SplitWorkspace/ChapterPanel/LeftNav/WorkflowPanel 的外壳与呈现）及其契约、断言、证据；不含服务端 API、数据结构、发布/安装脚本与无关模块",
         "rollback_plan": "S1/S2/S3 各为一个独立 commit；回退对应 commit 即恢复旧界面，无数据/schema/localStorage 迁移；若视觉回退需保留修复，按 hunk revert，不动 API 与保存链",
         "status": "NOT_RUN_YET",
-        "evidence": "设计包 EVD-150；实现截图与探针尚未产出"
+        "evidence": "S1 已交付（b25e730）；S2 实现中，真实截图/探针待产出"
       },
       "interruption_policy": {
         "mode": "critical-only: implementation proceeds autonomously; user is interrupted only at the final visual review or for a critical decision",
@@ -1266,12 +1266,12 @@
         "interruption_budget": "One user interruption at final visual review; further interruptions only for a new critical trigger."
       },
       "allowed_change_scope": [
-        "可改：lib/client.js（仅 NvConsole / SplitWorkspace / ChapterPanel / LeftNav / WorkflowPanel / NV_STYLE / 相关 i18n 文案）",
-        "可改：lib/host-contract.mjs（新增/变更宿主字面量、CSS 令牌族、区域登记与修订说明）",
-        "可改：test/smoke.mjs（UX-063 旧结构断言迁移为 UX-064，新增双向契约/真实派生/六态守卫）；scripts/verify-visual-geometry.mjs（新几何口径）；新增 scripts/probe-nv-ux064.mjs",
-        "可改：docs/evidence/UX-064/**、docs/review/UX-064-*.md、docs/design/UX-064-redesign-proposal.md（§12 实现记录）、docs/design/UX-064-mockups/（仅陈旧说明/对照图，不改已批准视觉）",
+        "可改：lib/client.js（NvConsole 仅复用主题入口；SplitWorkspace/ChapterPanel/LeftNav/WorkflowPanel/相关 i18n/CSS）",
+        "可改：lib/host-contract.mjs（新增宿主字面量/selector/可选 layout 服务、现行锚点重基；P-10）",
+        "可改：test/smoke.mjs（S2 结构/可访问性/主题/折叠/契约断言；不删旧守卫）、scripts/verify-visual-geometry.mjs",
+        "可改：scripts/probe-nv-ux064.mjs、docs/evidence/UX-064/**、docs/review/UX-064-*.md、docs/design/UX-064-redesign-proposal.md（实现记录）、README/CHANGELOG",
         "可改：.governance/plan-tracker.md、decision-log.md、evidence-log.md、session-snapshot.md、execution-packets.json、agent-locks.json",
-        "禁改：lib/index.js、HTTP API、数据结构、localStorage key、package.json、install 脚本、cordis.patch.yml、agent-presets/、宿主源码或依赖"
+        "禁改：lib/index.js、HTTP API、数据结构、existing localStorage keys semantics、package.json、install 脚本、cordis.patch.yml、agent-presets/、宿主源码或依赖"
       ],
       "required_evidence": [
         "每批 evidence-log 条目：事实依据、结构化事实、目标对齐、用户影响、文件清单",
