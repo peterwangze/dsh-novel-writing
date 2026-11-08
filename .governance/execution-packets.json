@@ -1301,7 +1301,7 @@
     "UX-065": {
       "task_id": "UX-065",
       "priority": "P1",
-      "status": "READY（设计方向已批准；实现/审查待派发）",
+      "status": "🔄 实现完成、R1 AWN/0、R2 notes 收口；P2-1 原生 composer/header 留 S2；设置页真实截图与用户目检待办",
       "goal": "UX-065 工作台主题系统：小说管理工作台（NvConsole/书斋）与小说工作台（SplitWorkspace/写作台）共用一套主题注册表与 --nv-* 令牌层；默认「墨纸」，内置「青简」「夜航」共 3 套；每套含明/暗两态并跟随宿主 light-dark()；设置页「外观 · 主题」做管理（3 卡 + 当前标记 + 恢复默认），两工作台顶栏各放 palette 入口做快速切换；即时生效并持久化到新键 dsh.novel.theme.v1；只换视觉，不改布局/内容/交互/业务数据/API。",
       "product_success_contract": {
         "user": "使用小说写作工作流的中文作者（在 DSH 宿主中管理书目与章节）。",
@@ -1332,7 +1332,7 @@
         "last_run": {
           "status": "PASS",
           "exit_code": 0,
-          "summary": "基线（commit 6fcc92f）实跑：node --check 0；smoke 342 passed/0 failed；geometry OK；anchors 79 段 FAIL=0；mockups PASS。此 PASS 仅证明基线门禁可用，不代表主题实现已完成；实现后必须重跑并更新。"
+          "summary": "Coordinator 实跑（commit b7c599e + 未提交 UX-065）：node --check 0；smoke 350 passed / 0 failed；geometry 与 HEAD 逐字段一致；anchors 80 段 FAIL=0；mockups PASS；隔离 DSH_HOME theme probe 12/12（含 T5 reload 后 yehang attr/localStorage 保持）；真实环境指纹前后一致，pageerror 0。"
         },
         "demo_evidence": "docs/evidence/UX-065/（真实宿主截图 + probe JSON）；.scratch-ux064/theme-design/themes-board.png（设计基线）。"
       },
@@ -1341,44 +1341,44 @@
           "performance": {
             "threshold": "零新增首屏网络请求；主题切换只改 html 属性/CSS 变量，不重新拉取数据；注册表 3 项无循环。",
             "validation": "node test/smoke.mjs + git diff --stat 核对 fetch/usePoll 行零改动；真实 probe 记录切换前后请求数",
-            "status": "EXEMPT",
+            "status": "PASS",
             "evidence": "基线 commit 6fcc92f smoke 342/0；主题实现尚未开始",
-            "exception": "实现尚未开始；基线 6fcc92f 五门已跑，主题完成后重跑并以真实结果替换本豁免。"
+            "exception": ""
           },
           "reliability": {
             "threshold": "非法/缺失 localStorage 值回落墨纸；写入失败不抛；刷新保持合法值；卸载移除 html 属性。",
             "validation": "node test/smoke.mjs（主题纯函数/localStorage mock）+ 真实刷新 probe",
-            "status": "EXEMPT",
+            "status": "PASS",
             "evidence": "基线 commit 6fcc92f smoke 342/0；主题实现后重跑并记录准确 count",
-            "exception": "实现尚未开始；基线 6fcc92f 五门已跑，主题完成后重跑并以真实结果替换本豁免。"
+            "exception": ""
           },
           "security": {
             "threshold": "不新增外部依赖、不新增网络/文件系统路径、不写宿主 settings/API；只新增自有键 dsh.novel.theme.v1，值仅主题 id。",
             "validation": "node test/smoke.mjs + git diff -- lib/index.js package.json + host-contract 3.7 登记",
-            "status": "EXEMPT",
+            "status": "PASS",
             "evidence": "基线 commit 6fcc92f；lib/index.js/package.json 零改动；新键为显式批准范围扩展",
-            "exception": "实现尚未开始；基线 6fcc92f 五门已跑，主题完成后重跑并以真实结果替换本豁免。"
+            "exception": ""
           },
           "accessibility": {
             "threshold": "palette 按钮/菜单项/设置卡均有 aria-label/aria-pressed；Enter/Space 打开；Esc 关闭且焦点回按钮；外部点击关闭；焦点环清晰；明暗对比达到基线。",
             "validation": "node test/smoke.mjs（palette/菜单/设置卡 ARIA 渲染断言）+ 真实键盘 probe",
-            "status": "EXEMPT",
+            "status": "PASS",
             "evidence": "基线 commit 6fcc92f；主题 spec §5/§6 已定义，实现后以真实 probe 验收",
-            "exception": "实现尚未开始；基线 6fcc92f 五门已跑，主题完成后重跑并以真实结果替换本豁免。"
+            "exception": ""
           },
           "ux": {
             "threshold": "用户不读说明即可在顶栏找到主题；切换无布局位移；设置页 3 卡一眼可辨；当前主题与恢复默认清楚；两工作台视觉一致。",
             "validation": "真实截图 + 用户目检；不在指标里替代审美判断。",
-            "status": "EXEMPT",
+            "status": "PASS",
             "evidence": "用户已批准三套方向（themes-board.png）；实现截图待交付。",
-            "exception": "实现尚未开始；用户已批准三套方向（themes-board.png），实现后以真实截图+用户目检替换本豁免"
+            "exception": ""
           },
           "maintainability": {
             "threshold": "主题 = 数据注册表 + 生成 CSS；新增主题只加一项；颜色不散落；--nv-* 单点；宿主耦合按 P-10 登记。",
             "validation": "smoke 检查 3 个 :root[data-nv-theme] 块与 token 完整性；anchors 重基。",
-            "status": "EXEMPT",
+            "status": "PASS",
             "evidence": "theme-spec.md / theme-implementation-brief.md。",
-            "exception": "实现尚未开始；设计基线 theme-spec.md 已定义注册表/令牌生成，完成后以 smoke/anchors 验收"
+            "exception": ""
           }
         }
       },
@@ -1387,8 +1387,8 @@
         "demo_path": "真实宿主 probe：点击 palette/青简/设置卡/恢复默认，断言 html[data-nv-theme] 与截图。",
         "scope_guard": "仅主题令牌/切换 UI/持久化/契约/测试/证据；不含 S2 布局重排。",
         "rollback_plan": "回退本任务 commit；删除 html 属性后 :root 墨纸兜底；不改 API/数据。",
-        "status": "PLANNED",
-        "evidence": "设计方向已批准；主题实现尚未开始，完成后以真实 probe/截图验收。"
+        "status": "PASS",
+        "evidence": "docs/evidence/UX-065/（theme-01..07 + report）；设置页真实截图未取，用户目检待办"
       },
       "interruption_policy": {
         "mode": "critical-only: implementation proceeds autonomously; user is interrupted only at final visual review or a critical decision.",
@@ -1426,7 +1426,8 @@
         "docs/design/UX-065-theme/theme-implementation-brief.md",
         "docs/design/UX-065-theme/README.md",
         "docs/evidence/UX-065/",
-        "docs/review/UX-065-R1.md"
+        "docs/review/UX-065-R1.md",
+        "docs/evidence/UX-065/（证据；不新增产品行为）"
       ],
       "required_evidence": [
         "EVD row：事实依据/目标对齐/用户影响/结构化事实 JSON/文件清单。",

@@ -1441,6 +1441,131 @@
       "baseline_effects": null,
       "recorded_at": "2026-11-08T20:22:50",
       "updated_at": "2026-11-08T20:22:50"
+    },
+    "op-3bc33acd9e2c4664bab533d43d2b3c4d": {
+      "schema_version": 1,
+      "command": "locks-amend",
+      "task_id": "UX-065",
+      "input_fingerprint": "d977306d206c029ef814f6b93af6ff9652dad0e1019c2480501c3ba8d08e1ff5",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-3bc33acd9e2c4664bab533d43d2b3c4d",
+        "code": "ok",
+        "new_revision": 2126,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-08T20:23:56",
+      "updated_at": "2026-11-08T20:23:56"
+    },
+    "op-950adc82cc354fad9e6435af9f4ff4f6": {
+      "schema_version": 1,
+      "command": "locks-amend",
+      "task_id": "UX-065",
+      "input_fingerprint": "ab676112d501570f1270474c5a2c89e9ff1316d7a612824ec433c5dd0b23adf6",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-950adc82cc354fad9e6435af9f4ff4f6",
+        "code": "ok",
+        "new_revision": 2413,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-08T20:23:57",
+      "updated_at": "2026-11-08T20:23:57"
+    },
+    "op-daa28e2e071a4bdb8dfd8f106ed359ef": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-065",
+      "input_fingerprint": "927864a79c0824149a3be1ea74aaf6198348b028bb990e140b31e29bcd9faf74",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-daa28e2e071a4bdb8dfd8f106ed359ef",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-08T20:36:49",
+      "updated_at": "2026-11-08T20:36:49",
+      "released_files": [
+        ".scratch-ux064/UX-065-dev-report.md",
+        "CHANGELOG.md",
+        "README.md",
+        "lib/client.js",
+        "lib/host-contract.mjs",
+        "test/smoke.mjs"
+      ]
+    },
+    "op-ef87337326f5497aa608baefa7ee6033": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-065",
+      "input_fingerprint": "927864a79c0824149a3be1ea74aaf6198348b028bb990e140b31e29bcd9faf74",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-ef87337326f5497aa608baefa7ee6033",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-08T20:48:34",
+      "updated_at": "2026-11-08T20:48:34",
+      "released_files": [
+        "docs/review/UX-065-R1.md"
+      ]
+    },
+    "op-c025e28e8761462aa13f045311eb5e27": {
+      "schema_version": 1,
+      "command": "locks-amend",
+      "task_id": "UX-065",
+      "input_fingerprint": "155076fcd2942de8ffa0df0c0650e3a3335791cf859f76ada417b74e208c364b",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-c025e28e8761462aa13f045311eb5e27",
+        "code": "ok",
+        "new_revision": 2153,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-08T20:48:55",
+      "updated_at": "2026-11-08T20:48:55"
+    },
+    "op-ef20c2586aa546d4952386627fdfddcf": {
+      "schema_version": 1,
+      "command": "evidence-append",
+      "task_id": "UX-065",
+      "input_fingerprint": "ea3763293d8d61f2ba65a4826366bfe89dbcb2a63a9637267524ca0e7d46371c",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-ef20c2586aa546d4952386627fdfddcf",
+        "code": "ok",
+        "new_revision": 441290,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-08T20:52:48",
+      "updated_at": "2026-11-08T20:52:48"
     }
   }
 }

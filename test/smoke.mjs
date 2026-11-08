@@ -2004,7 +2004,7 @@ const scanHooksViolations = (src) => {
   return { hookFns, violations, braceBalance }
 }
 // golden（brittle-by-design）：含 hook 调用的函数清单——增删组件/hook 必须显式改此值（防扫描面静默萎缩）
-const HOOKS_GUARD_GOLDEN_FNS = 23
+const HOOKS_GUARD_GOLDEN_FNS = 25
 const hooksScan = scanHooksViolations(clientSrc)
 check('BUG-012 Rules-of-Hooks 静态守卫：lib/client.js 含 hook 调用的函数 ' + hooksScan.hookFns.length + ' 个（golden ' + HOOKS_GUARD_GOLDEN_FNS + '）全扫——「条件早退早于顶层 hook 调用」违规 = ' + hooksScan.violations.length + '（配平自检 ' + hooksScan.braceBalance + '）',
   hooksScan.violations.length === 0 && hooksScan.hookFns.length === HOOKS_GUARD_GOLDEN_FNS && hooksScan.braceBalance === 0,
@@ -3514,7 +3514,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   //      **残余缝（同次实测，未闭合）**：若 2.13 只删**终点闭合行**（**历史锚点**：COMPAT-013 时期值 `L4429-4460`——6 处注册仍全在范围内）
   //      则 ①②③④⑤ **全绿**（实测 262/0：⑤a 计数仍 6 ≡ 6、④ callPrefix = null、⑤b 无 `键: {` 形态构造）
   //      ⇒ 该形态目前无持续机检力。根治需「构造闭合行」口径，而 JS 范围本就可能是**合法语义片段**
-  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L6608` +1 / 3.8 `L3645-L3656` +1 实测均非配平）——
+  //      （2.1 `L92-94` 花括号净差 +2 / 2.3 `L6654` +1 / 3.8 `L3649-L3660` +1 实测均非配平）——
   //      无差别要求配平会误报上述 3 项，故如实留档待另案（非本任务可安全落地）。
   //      **本行 3 个契约行号副本的同步方（CLEAN-006 **N-6** 归属订正，避免审计归因错位）**：本块随
   //      契约 `line` 重基**必须同步**，其**机检执行者 = `COMPAT-015 F3 行号引用对账`**（把本行 2.3
@@ -3702,7 +3702,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // 入 golden）范围条目中「起于注释/空行」者 MUST 恰 2 项
   //（历史锚点：COMPAT-013 时期实测——3.1 起于 `/**` JSDoc L1278、3.8 起于 `/**` JSDoc L3418；现行注释起段以本断言动态计算清单为准）。动因 = 该计数原为**人工转写**且写错
   //（CHANGELOG 曾披露「三处」）——与 COMPAT-004 FIND-1 的 tier 串转写漂移同类，故沿用同款处置：实测值
-  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.5 `L1578` `try {` / 4.6 `L17`
+  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.5 `L1580` `try {` / 4.6 `L17`
   // `"dsh": {` / 5.1 `L1` `name:` / 5.2 `L16` `- id:` / 5.4 `L77` `- id:` / 6.1 `L39`（修正后真值；修正前
   // `L38` 亦非注释）/ 6.2 `L8` `"engines": {` / 6.4 `L105`（ci.yml `#` 注释起段——JS 口径不计为注释，见下句口径边界）。严格面（面 2 = 11 项）已由 ③ 逐项约束，
   // 本项只覆盖未纳入严格面的面（动态生成：实测 3/4/5/6）；注释口径同 ③（JS 风格），YAML `#` 不在识别面内（与 F-5① 同源前提）。
@@ -5002,6 +5002,202 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   check('COMPAT-023 ⑥工作台挂载探针资产在仓：W1 抽屉→W2 控制台（shell.overlay 消费）→W3 建 API→W4 点书卡 .nv-split→W5 autoBindDone 同源断言→W6 零 React #310/零 slot entry crashed ∧ 首跑门处置（GATE_BTN_RE；关不掉=envBlocked≠断言）∧ 命中性校验（elementFromPoint——BUG-012 阶段 A 误诊防再犯）∧ 截图默认落 docs/evidence/COMPAT-023 ∧ token <redacted> ∧ 端口 3080/3081 纪律 ∧ 入口守卫',
     wbOk23,
     'wb=' + wbOk23 + ' bytes=' + wbSrc23.length)
+}
+
+// ── UX-065 工作台主题系统（3 套注册项 + 设置页管理 + 两顶栏快速切换 + 新持久键）──
+{
+  const { hostContract } = await import('../lib/host-contract.mjs')
+  const themeExports = clientExports
+  const NV_THEMES = themeExports.NV_THEMES
+  const NV_THEME_STYLE = themeExports.NV_THEME_STYLE
+  const norm = themeExports.normalizeThemeId
+  const themeStore = themeExports.store
+
+  // ① 纯函数：3 个合法 id + 非法/空/旧值/注入 → 默认墨纸（唯一 id）
+  const validIds = ['mozhi', 'qingjian', 'yehang']
+  const normCases = [
+    ['mozhi', 'mozhi'], ['qingjian', 'qingjian'], ['yehang', 'yehang'],
+    ['sepia', 'mozhi'], [null, 'mozhi'], ['', 'mozhi'], ['mozhi.v0', 'mozhi'], [42, 'mozhi'],
+    ["' onload='alert(1)", 'mozhi'], ['qingjian;--dsw-alias-bg-base:red', 'mozhi'],
+  ]
+  check('UX-065 纯函数 normalizeThemeId：3 个注册 id 原样通过 ∧ 非法/空/null/旧值/注入串 → 默认墨纸 ∧ NV_THEMES 恰 3 项且 id 唯一',
+    Array.isArray(NV_THEMES) && NV_THEMES.length === 3
+      && new Set(NV_THEMES.map((th) => th.id)).size === 3
+      && validIds.every((id) => NV_THEMES.some((th) => th.id === id))
+      && normCases.every(([input, want]) => norm(input) === want),
+    'ids=' + JSON.stringify(NV_THEMES.map((th) => th.id)) + ' bad=' + JSON.stringify(normCases.filter(([i, w]) => norm(i) !== w)))
+
+  // ② 令牌完整性：每套 16 对 light/dark 值 + 派生映射单点 + 无宿主全局覆盖
+  const themeTokenKeys = ['paper', 'paper-2', 'paper-3', 'ink', 'ink-2', 'ink-3', 'ink-4', 'rule', 'rule-strong', 'cinnabar', 'seal', 'accent', 'on-accent', 'ok', 'warn', 'danger']
+  const tokenBad = []
+  for (const th of NV_THEMES) {
+    for (const key of themeTokenKeys) {
+      const lv = th.light[key]
+      const dv = th.dark[key]
+      if (typeof lv !== 'string' || !/^#[0-9A-Fa-f]{6}$/.test(lv)) tokenBad.push(th.id + '.light.' + key)
+      if (typeof dv !== 'string' || !/^#[0-9A-Fa-f]{6}$/.test(dv)) tokenBad.push(th.id + '.dark.' + key)
+    }
+  }
+  const blocks = NV_THEME_STYLE.split(':root[data-nv-theme=').slice(1)
+  const blockBad = []
+  for (const id of validIds) {
+    const block = blocks.find((b) => b.startsWith('"' + id + '"'))
+    if (block === undefined) { blockBad.push(id + ':missing'); continue }
+    for (const key of ['paper', 'ink', 'rule', 'cinnabar', 'accent']) {
+      if (!block.includes('--nv-' + key + ':light-dark(')) blockBad.push(id + ':' + key)
+    }
+    if (!block.includes('--nv-bg:var(--nv-paper-2)') || !block.includes('--nv-surface:var(--nv-surface-hover)') && !block.includes('--nv-surface-hover:color-mix(in srgb,var(--nv-ink) 6%,transparent)')) blockBad.push(id + ':derived')
+  }
+  check('UX-065 主题令牌：3 套 × 16 对 light-dark 值齐备 ∧ 运行时 CSS 恰 3 个 :root[data-nv-theme] 块（含默认墨纸）∧ 每块含 paper/ink/rule/cinnabar/accent + 10 项派生映射 ∧ 零 --dsw-* / color-scheme / data-theme 覆盖',
+    tokenBad.length === 0 && blocks.length === 3 && blockBad.length === 0
+      && NV_THEME_STYLE.includes('data-nv-theme="mozhi"')
+      && NV_THEME_STYLE.includes('--nv-surface-hover:color-mix(in srgb,var(--nv-ink) 6%,transparent)')
+      && NV_THEME_STYLE.includes('--nv-surface-raised:var(--nv-paper)')
+      && NV_THEME_STYLE.includes('--nv-fg:var(--nv-ink)') && NV_THEME_STYLE.includes('--nv-fg-muted:var(--nv-ink-2)')
+      && NV_THEME_STYLE.includes('--nv-fg-subtle:var(--nv-ink-3)') && NV_THEME_STYLE.includes('--nv-border:var(--nv-rule)')
+      && NV_THEME_STYLE.includes('--nv-border-strong:var(--nv-rule-strong)') && NV_THEME_STYLE.includes('--nv-err:var(--nv-danger)')
+      && !NV_THEME_STYLE.includes('--dsw-') && !NV_THEME_STYLE.includes('color-scheme') && !NV_THEME_STYLE.includes('data-theme='),
+    'tokens=' + JSON.stringify(tokenBad) + ' blocks=' + blocks.length + ' bad=' + JSON.stringify(blockBad))
+
+  // ③ store / 持久化：合法写入、非法不写入、读写失败不抛、键名精确、readTheme 缺失/坏档/非法 → 墨纸
+  const themeBefore = themeStore.get().theme
+  const okValid = themeExports.setTheme('qingjian')
+  const afterValid = themeStore.get().theme
+  const okInvalid = themeExports.setTheme('not-a-theme')
+  const afterInvalid = themeStore.get().theme
+  const writes = []
+  let throwOnWrite = false
+  globalThis.localStorage = {
+    getItem: (key) => (key === 'dsh.novel.theme.v1' ? JSON.stringify({ id: 'yehang' }) : null),
+    setItem: (key, value) => { if (throwOnWrite) throw new Error('quota'); writes.push([key, value]) },
+    removeItem: () => {},
+  }
+  const wrote = themeExports.writeTheme('yehang')
+  const readValid = themeExports.readTheme()
+  globalThis.localStorage.getItem = () => 'not-json'
+  const readBroken = themeExports.readTheme()
+  globalThis.localStorage.getItem = () => JSON.stringify({ id: 'evil' })
+  const readInjected = themeExports.readTheme()
+  globalThis.localStorage.getItem = () => null
+  const readMissing = themeExports.readTheme()
+  throwOnWrite = true
+  let writeErr = ''
+  let writeFailed = null
+  try { writeFailed = themeExports.writeTheme('mozhi') } catch (e) { writeErr = e.message }
+  delete globalThis.localStorage
+  const writesOk = writes.length === 1 && writes[0][0] === 'dsh.novel.theme.v1' && writes[0][1] === JSON.stringify({ id: 'yehang' })
+  check('UX-065 store/持久化：setTheme 合法值写 store ∧ 非法值不写入（返回 false）∧ 键名精确 dsh.novel.theme.v1（只存 {id}）∧ readTheme 缺失/坏档/非法 id → 墨纸、合法值 → 原 id ∧ 写入异常返回 false 不抛',
+    themeBefore === 'mozhi' && okValid === true && afterValid === 'qingjian'
+      && okInvalid === false && afterInvalid === 'qingjian'
+      && wrote === true && writesOk && readValid === 'yehang'
+      && readBroken === 'mozhi' && readInjected === 'mozhi' && readMissing === 'mozhi'
+      && writeErr === '' && writeFailed === false,
+    'before=' + themeBefore + ' valid=' + afterValid + ' invalid=' + afterInvalid + ' writes=' + JSON.stringify(writes) + ' reads=' + JSON.stringify([readValid, readBroken, readInjected, readMissing]) + ' writeFailed=' + writeFailed + ' err=' + writeErr)
+
+  // ④ 渲染：书斋顶栏 palette 按钮（1）+ 设置页 3 卡（当前标记）+ 写作台标题栏 1 个（源码面）
+  const walkTheme = (node, visit) => {
+    if (node === null || node === undefined) return
+    if (typeof node === 'string') return
+    if (typeof node !== 'object') return
+    if (Array.isArray(node)) { for (const child of node) walkTheme(child, visit); return }
+    visit(node)
+    if (Array.isArray(node.children)) for (const child of node.children) walkTheme(child, visit)
+  }
+  themeStore.set({ consoleOpen: true, theme: 'yehang' })
+  const conReg = slotRegs.find((r) => r.id === 'nv-console')
+  let conThemeBtns = 0
+  let conMenu = 0
+  if (conReg !== undefined) {
+    walkTheme(conReg.render({ initialView: 'home' }), (node) => {
+      const cls = node.props !== undefined && typeof node.props.className === 'string' ? node.props.className : ''
+      if (/\bnv-theme-btn\b/.test(cls)) conThemeBtns += 1
+      if (/\bnv-theme-menu\b/.test(cls)) conMenu += 1
+    })
+  }
+  const settingsTree = mockReact.createElement(themeExports.ThemeSettings, { t: (key) => key })
+  let cardCount = 0
+  let onCards = 0
+  let checkMarks = 0
+  walkTheme(settingsTree, (node) => {
+    const cls = node.props !== undefined && typeof node.props.className === 'string' ? node.props.className : ''
+    const tokens = cls.split(/\s+/).filter((t) => t !== '')
+    if (tokens.includes('nv-theme-card')) cardCount += 1
+    if (tokens.includes('nv-theme-card') && node.props['data-on'] === 'true') onCards += 1
+    if (tokens.includes('nv-theme-card-check')) checkMarks += 1
+  })
+  const splitPickerIdx = clientSrc.indexOf("el(ThemePicker, { t, variant: 'split'")
+  const consolePickerIdx = clientSrc.indexOf("el(ThemePicker, { t, variant: 'console'")
+  const drawerBtnIdx = clientSrc.indexOf("className: 'nv-bar-ctl', title: t('chatDrawer')")
+  const settingsInsertIdx = clientSrc.indexOf('el(ThemeSettings, { t })')
+  const pluginLabelIdx = clientSrc.indexOf("'启用插件'")
+  check('UX-065 渲染面：书斋顶栏恰 1 个 palette 按钮（菜单关闭态 0）∧ 设置页 3 张主题卡 + 当前卡唯一 data-on + ✓ 恰 1 ∧ 写作台标题栏 1 个（抽屉按钮之前，avoidRight 以分栏真实右缘 g.right 计）∧ 主题区在「启用插件」之前 ∧ 全仓 ThemePicker 恰 2 处（无重复控件）',
+    conThemeBtns === 1 && conMenu === 0 && cardCount === 3 && onCards === 1 && checkMarks === 1
+      && splitPickerIdx > 0 && consolePickerIdx > 0 && drawerBtnIdx > splitPickerIdx
+      && clientSrc.includes('DRAWER_W + Math.max(0, (typeof window !== \'undefined\' ? window.innerWidth : 0) - g.right) + 8')
+      && settingsInsertIdx > 0 && pluginLabelIdx > settingsInsertIdx
+      && (clientSrc.match(/el\(ThemePicker, \{/g) ?? []).length === 2,
+    'consoleBtns=' + conThemeBtns + ' cards=' + cardCount + ' on=' + onCards + ' checks=' + checkMarks + ' split=' + splitPickerIdx + ' drawer=' + drawerBtnIdx + ' settings=' + settingsInsertIdx + ' plugin=' + pluginLabelIdx)
+
+  // ⑤ 菜单可访问性/关闭路径（源码面 + NV_THEMES 行数）：dialog / aria / 3 行 / Escape / 外部 pointerdown / 焦点归位
+  const pickerStart = clientSrc.indexOf('function ThemePicker(props)')
+  const pickerEnd = clientSrc.indexOf('function ThemeSettings(props)')
+  const pickerSrc = pickerStart >= 0 && pickerEnd > pickerStart ? clientSrc.slice(pickerStart, pickerEnd) : ''
+  check('UX-065 主题菜单：role=dialog ∧ aria-label/haspopup/expanded/pressed ∧ 3 行 = NV_THEMES.map（色板 + 名称 + 气质 + 当前 ✓）∧ Escape/外部 pointerdown 关闭 ∧ 打开聚焦当前项、关闭归还按钮焦点',
+    pickerSrc !== ''
+      && pickerSrc.includes("role: 'dialog'") && pickerSrc.includes("'aria-label': t('themeTitle')")
+      && pickerSrc.includes("'aria-haspopup': 'dialog'") && pickerSrc.includes("'aria-expanded'")
+      && pickerSrc.includes("'aria-pressed'") && pickerSrc.includes('NV_THEMES.map')
+      && pickerSrc.includes('nv-theme-sw') && pickerSrc.includes('nv-theme-opt-name') && pickerSrc.includes('nv-theme-opt-mood')
+      && pickerSrc.includes('nv-theme-check')
+      && pickerSrc.includes("e.key !== 'Escape'") && pickerSrc.includes("'pointerdown'")
+      && pickerSrc.includes('focusTarget.focus()') && pickerSrc.includes('btnRef.current.focus()')
+      && pickerSrc.includes('position:fixed') === false // 位置由 CSS .nv-theme-menu 承担（fixed + 钳制坐标）
+      && clientSrc.includes('.nv-theme-menu{position:fixed;'),
+    'pickerSrc=' + pickerSrc.length)
+
+  // ⑥ 设置页/菜单 CSS：只消费 --nv-*（零白/黑 alpha 假设由既有断言覆盖）+ 三卡窄屏单列
+  const themeCssStart = clientSrc.indexOf("'.nv-theme-wrap{")
+  const themeCssEnd = clientSrc.indexOf("'.nv-theme-reset:hover{")
+  const themeCss = themeCssStart >= 0 && themeCssEnd > themeCssStart ? clientSrc.slice(themeCssStart, themeCssEnd) : ''
+  check('UX-065 主题样式：.nv-theme-menu/.nv-theme-opt/.nv-theme-grid/.nv-theme-card 规则在仓 ∧ 菜单 fixed + z-index 990（高于分栏 900/宿主抽屉 920、低于模态 1000）∧ 窄屏 1 列 ∧ 全部色值走 --nv-*（无新 --dsw-* 依赖）∧ 菜单脚注 caption 用 --nv-ink-3（对比度 ≥4.5，非 ink-4）',
+    themeCss !== ''
+      && themeCss.includes('.nv-theme-menu{position:fixed;z-index:990;')
+      && themeCss.includes('.nv-theme-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))')
+      && themeCss.includes('@media (max-width:760px){.nv-theme-grid{grid-template-columns:1fr}}')
+      && /\.nv-theme-menu-foot\{[^}]*color:var\(--nv-ink-3\)\}/.test(themeCss)
+      && !/\.nv-theme-menu-foot\{[^}]*color:var\(--nv-ink-4\)\}/.test(themeCss)
+      && !themeCss.includes('--dsw-'),
+    'css=' + themeCss.length)
+
+  // ⑦ i18n zh/en 成对（气质文案 = 已批准设计板用词；旧词零残留）
+  const moodPairs = [
+    ["themeMozhiMood: '暖纸 · 墨色 · 朱砂'", "themeMozhiMood: 'Warm paper · ink · cinnabar'"],
+    ["themeQingjianMood: '青绿纸 · 松墨 · 苔痕'", "themeQingjianMood: 'Green paper · pine ink · moss trace'"],
+    ["themeYehangMood: '月白 · 靛青 · 灯影'", "themeYehangMood: 'Moon white · indigo · lamp shadow'"],
+  ]
+  const labelPairs = [
+    ["themeMozhi: '墨纸'", "themeMozhi: 'Ink Paper'"],
+    ["themeQingjian: '青简'", "themeQingjian: 'Green Slip'"],
+    ["themeYehang: '夜航'", "themeYehang: 'Night Voyage'"],
+  ]
+  check('UX-065 i18n：主题标题/分组/说明/当前/恢复默认/菜单脚注/3 组名称+气质 zh/en 成对 ∧ 气质用词与设计板一致（松烟/赭石/灯红零残留）',
+    moodPairs.every(([zh, en]) => clientSrc.includes(zh) && clientSrc.includes(en))
+      && labelPairs.every(([zh, en]) => clientSrc.includes(zh) && clientSrc.includes(en))
+      && ['themeTitle:', 'themeFollow:', 'themeGroupTitle:', 'themeGroupHint:', 'themeCurrent:', 'themeReset:', 'themeMenuFoot:'].every((key) => (clientSrc.match(new RegExp(key.replace(/:/g, '\\:'), 'g')) ?? []).length === 2)
+      && !clientSrc.includes('松烟') && !clientSrc.includes('赭石') && !clientSrc.includes('灯红'),
+    'mood=' + moodPairs.map(([zh, en]) => String(clientSrc.includes(zh) && clientSrc.includes(en))).join('/'))
+
+  // ⑧ 契约 P-10：3.7 登记新键 + 键声明行活性（行号由机械重基维护）
+  const themeKeyLine = clientSrc.split('\n').findIndex((line) => line.includes("const THEME_PERSIST_KEY = 'dsh.novel.theme.v1'")) + 1
+  const contract37 = hostContract.items.find((it) => it.item === '3.7')
+  check('UX-065 契约 3.7：dsh.novel.theme.v1 入册（符号 + note + 第 5 个行锚）∧ 键声明行活性命中',
+    contract37 !== undefined && contract37.symbol.includes('dsh.novel.theme.v1')
+      && contract37.note.includes('dsh.novel.theme.v1')
+      && (contract37.line.match(/L\d+/g) ?? []).length === 5
+      && (contract37.line.match(/L\d+/g) ?? []).includes('L' + themeKeyLine),
+    'line=' + (contract37 !== undefined ? contract37.line : 'missing') + ' actual=L' + themeKeyLine)
+
+  themeStore.set({ consoleOpen: false, theme: 'mozhi' })
 }
 //   至少 4 个任务周期（179 vs 276，正落在 COMPAT-007 修改的代码块内）；本断言把「随 smoke 计数变更同步」由
 //   文档纪律升级为机检（改 README 计数与改 smoke 断言数必须同 commit）。**必须保持为本文件最后一条 check**

@@ -1,0 +1,387 @@
+{
+  "tool": "probe-nv-workbench-mount",
+  "task": "COMPAT-023",
+  "startedAt": "2026-11-08T12:51:33.100Z",
+  "isolation": {
+    "root": "C:\\Users\\peter\\AppData\\Local\\Temp\\nvwb-probe-Emfz5a",
+    "dshHome": "C:\\Users\\peter\\AppData\\Local\\Temp\\nvwb-probe-Emfz5a\\dsh-home",
+    "hostCli": {
+      "cmd": "D:\\app\\dsh\\resources\\runtime\\cli\\bin\\dsh.cmd",
+      "source": "桌面运行时 CLI（默认；0.2.2-rc.1）"
+    },
+    "browser": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+    "port": 3093,
+    "containment": {
+      "home": true,
+      "userprofile": true,
+      "appdata": true,
+      "localappdata": true,
+      "edge": true,
+      "tmp": true,
+      "novels": true
+    },
+    "realEnvBefore": {
+      "home": "C:\\Users\\peter\\.dsh",
+      "settingsSha": null,
+      "profiles": "chatgpt,desktop,node_modules,web",
+      "preset": ".dsh-bundle-version:5,agent.cordis.yml:13034,agents:0,preset.yml:410,skills:0"
+    }
+  },
+  "autoBindTemplate": {
+    "prefix": "已为《",
+    "suffix": "》创建并关联新会话。"
+  },
+  "steps": {
+    "firstRunGate": {
+      "dismissed": true,
+      "rounds": 2
+    },
+    "w1": {
+      "drawerSeen": true,
+      "cardBaseline": 0
+    },
+    "w2": {
+      "clickHead": {
+        "ok": true,
+        "hit": {
+          "tag": "SPAN",
+          "cls": "nv-drawer-title",
+          "inside": true
+        }
+      },
+      "consoleSeen": true,
+      "nvCount": 58
+    },
+    "w3": {
+      "httpStatus": 200,
+      "body": {
+        "id": "COMPAT023工作台挂载验证书",
+        "title": "COMPAT023工作台挂载验证书",
+        "state": {
+          "current_stage": "work_type_selection",
+          "completed_stages": [],
+          "project_info": {
+            "title": "COMPAT023工作台挂载验证书"
+          },
+          "files": {},
+          "guardrails": {
+            "continuity_mode": "strict",
+            "latest_passed_chapter": 0,
+            "latest_ai_path": null,
+            "release_allowed": false,
+            "monetization_allowed": false,
+            "latest_drift_score": null
+          },
+          "statistics": {
+            "total_chapters": 0,
+            "total_words": 0,
+            "last_updated": "2026-11-08T12:51:42.757Z"
+          }
+        },
+        "path": "C:\\Users\\peter\\AppData\\Local\\Temp\\nvwb-probe-Emfz5a\\novels\\COMPAT023工作台挂载验证书"
+      },
+      "cardAppeared": true
+    },
+    "w4": {
+      "clickCard": {
+        "ok": true
+      },
+      "splitCount": 1,
+      "noticeSeen": true
+    },
+    "w6": {
+      "consoleErrors": 0,
+      "pageerrors": 0,
+      "react310": 0,
+      "slotCrash": 0,
+      "sample": []
+    },
+    "t5": {
+      "reloadGate": {
+        "dismissed": true,
+        "rounds": 1
+      },
+      "reloadHead": {
+        "ok": true,
+        "hit": {
+          "tag": "SPAN",
+          "cls": "nv-drawer-title",
+          "inside": true
+        }
+      },
+      "reloadConsole": true,
+      "reloadAttr": "yehang",
+      "reloadLs": "{\"id\":\"yehang\"}"
+    },
+    "t6": {
+      "settingsSeen": false,
+      "shot": null
+    }
+  },
+  "assertions": [
+    {
+      "id": "W1-drawer-rendered",
+      "label": "插件抽屉渲染（.nv-drawer 在场）+ 书卡基线 0",
+      "ok": true,
+      "detail": null,
+      "at": "2026-11-08T12:51:42.426Z"
+    },
+    {
+      "id": "W2-console-mounted",
+      "label": "点抽屉头 ⇒ .nv-console=1 ∧ .nv-home=1（shell.overlay 槽消费实证；BUG-012 阶段 B 断言①）",
+      "ok": true,
+      "detail": {
+        "clickHead": {
+          "ok": true,
+          "hit": {
+            "tag": "SPAN",
+            "cls": "nv-drawer-title",
+            "inside": true
+          }
+        },
+        "nvCount": 58
+      },
+      "at": "2026-11-08T12:51:42.514Z"
+    },
+    {
+      "id": "UX065-T1-console-theme",
+      "label": "书斋顶栏 1 个 palette 按钮 ∧ 菜单 3 行 + aria(haspopup/expanded/dialog/pressed) ∧ 当前项 ✓ ∧ 选青简后 html[data-nv-theme]=qingjian + localStorage 精确 ∧ 菜单关闭且焦点回按钮 ∧ 顶栏纸色 = #E9EFE3",
+      "ok": true,
+      "detail": {
+        "themeBtnCount": 1,
+        "clickPalette": {
+          "ok": true,
+          "hit": {
+            "tag": "svg",
+            "cls": "[object SVGAnimatedString]",
+            "inside": true
+          }
+        },
+        "menuSeen": true,
+        "rowCount": 3,
+        "ariaOk": {
+          "haspopup": "dialog",
+          "expanded": "true",
+          "dialog": "dialog",
+          "pressed": 1
+        },
+        "currentRow": "墨纸暖纸 · 墨色 · 朱砂",
+        "clickQing": true,
+        "attrQing": true,
+        "menuClosed": true,
+        "focusBack": true,
+        "lsTheme": "{\"id\":\"qingjian\"}",
+        "qingBg": "rgb(233, 239, 227)"
+      },
+      "at": "2026-11-08T12:51:42.725Z"
+    },
+    {
+      "id": "UX065-T1b-menu-close",
+      "label": "主题菜单 Escape 关闭并归还按钮焦点 ∧ 外部 pointerdown 关闭",
+      "ok": true,
+      "detail": {
+        "escClosed": true,
+        "escFocus": true,
+        "escState": {
+          "tag": "BUTTON",
+          "cls": "nv-iconbtn nv-theme-btn",
+          "console": true
+        },
+        "outsideClosed": true
+      },
+      "at": "2026-11-08T12:51:42.754Z"
+    },
+    {
+      "id": "W3-create-api",
+      "label": "POST novel-create {name} ⇒ HTTP 200 ∧ 书卡出现（返回 id=COMPAT023工作台挂载验证书）",
+      "ok": true,
+      "detail": {
+        "httpStatus": 200,
+        "body": {
+          "id": "COMPAT023工作台挂载验证书",
+          "title": "COMPAT023工作台挂载验证书",
+          "state": {
+            "current_stage": "work_type_selection",
+            "completed_stages": [],
+            "project_info": {
+              "title": "COMPAT023工作台挂载验证书"
+            },
+            "files": {},
+            "guardrails": {
+              "continuity_mode": "strict",
+              "latest_passed_chapter": 0,
+              "latest_ai_path": null,
+              "release_allowed": false,
+              "monetization_allowed": false,
+              "latest_drift_score": null
+            },
+            "statistics": {
+              "total_chapters": 0,
+              "total_words": 0,
+              "last_updated": "2026-11-08T12:51:42.757Z"
+            }
+          },
+          "path": "C:\\Users\\peter\\AppData\\Local\\Temp\\nvwb-probe-Emfz5a\\novels\\COMPAT023工作台挂载验证书"
+        },
+        "cardAppeared": true
+      },
+      "at": "2026-11-08T12:51:43.809Z"
+    },
+    {
+      "id": "W4-split-mounted",
+      "label": "点书卡 ⇒ .nv-split ≥ 1（BUG-012 修复前同路径 = 0——SlotErrorBoundary 卸载）",
+      "ok": true,
+      "detail": {
+        "clickCard": {
+          "ok": true
+        },
+        "splitCount": 1,
+        "noticeSeen": true
+      },
+      "at": "2026-11-08T12:51:44.087Z"
+    },
+    {
+      "id": "W5-auto-bind-notice",
+      "label": "抽屉提示行含「已为《…》创建并关联新会话。」（autoBindDone 文案与产品同源）",
+      "ok": true,
+      "detail": {
+        "noticeSeen": true
+      },
+      "at": "2026-11-08T12:51:44.087Z"
+    },
+    {
+      "id": "UX065-T2-split-theme",
+      "label": "写作台标题栏 1 个 palette 按钮（在抽屉按钮之前）∧ 菜单 3 行 ∧ 选夜航后 html[data-nv-theme]=yehang + localStorage 精确",
+      "ok": true,
+      "detail": {
+        "splitThemeBtnCount": 1,
+        "splitBtnBeforeDrawer": {
+          "themeIdx": 0,
+          "drawerIdx": 1
+        },
+        "clickSplitPalette": {
+          "ok": true,
+          "hit": {
+            "tag": "svg",
+            "cls": "[object SVGAnimatedString]",
+            "inside": true
+          }
+        },
+        "splitMenuSeen": true,
+        "splitRowCount": 3,
+        "clickYehang": true,
+        "attrYehang": true,
+        "lsYehang": "{\"id\":\"yehang\"}"
+      },
+      "at": "2026-11-08T12:51:44.400Z"
+    },
+    {
+      "id": "UX065-T3-drawer-avoid",
+      "label": "抽屉开启时主题菜单右缘 ≤ 抽屉左缘（不被宿主会话抽屉覆盖/裁切）∧ 菜单左缘 ≥ 8",
+      "ok": true,
+      "detail": {
+        "drawerBtnClick": {
+          "ok": true,
+          "hit": {
+            "tag": "svg",
+            "cls": "[object SVGAnimatedString]",
+            "inside": true
+          }
+        },
+        "drawerOpen": true,
+        "clickPaletteDrawer": {
+          "ok": true,
+          "hit": {
+            "tag": "svg",
+            "cls": "[object SVGAnimatedString]",
+            "inside": true
+          }
+        },
+        "drawerMenuSeen": true,
+        "rects": {
+          "splitRight": 1410,
+          "drawerLeft": 990,
+          "menuLeft": 710,
+          "menuRight": 974,
+          "vw": 1410
+        }
+      },
+      "at": "2026-11-08T12:51:44.538Z"
+    },
+    {
+      "id": "UX065-T4-dark-follow",
+      "label": "宿主 prefers-color-scheme=dark 时夜航主题跟随（.nv-split 底色 = 暗纸 #161D26）",
+      "ok": true,
+      "detail": {
+        "darkBg": "rgb(22, 29, 38)"
+      },
+      "at": "2026-11-08T12:51:46.010Z"
+    },
+    {
+      "id": "W6-console-clean",
+      "label": "console 零 React #310 ∧ 零 slot entry crashed（pageerror 计数如实披露：0）",
+      "ok": true,
+      "detail": {
+        "consoleErrors": 0,
+        "pageerrors": 0,
+        "react310": 0,
+        "slotCrash": 0,
+        "sample": []
+      },
+      "at": "2026-11-08T12:51:48.939Z"
+    },
+    {
+      "id": "UX065-T5-reload-persistence",
+      "label": "真实 reload 后 html[data-nv-theme]=yehang ∧ localStorage 仍 {id:yehang} ∧ 控制台可重新打开",
+      "ok": true,
+      "detail": {
+        "reloadGate": {
+          "dismissed": true,
+          "rounds": 1
+        },
+        "reloadHead": {
+          "ok": true,
+          "hit": {
+            "tag": "SPAN",
+            "cls": "nv-drawer-title",
+            "inside": true
+          }
+        },
+        "reloadConsole": true,
+        "reloadAttr": "yehang",
+        "reloadLs": "{\"id\":\"yehang\"}"
+      },
+      "at": "2026-11-08T12:51:54.030Z"
+    }
+  ],
+  "consoleCaptured": {
+    "errors": [],
+    "pageerrors": []
+  },
+  "envBlocked": null,
+  "instanceUrlRedacted": "http://127.0.0.1:3093/?token=<redacted>",
+  "screenshots": {
+    "workbench-01-drawer.png": ".scratch-ux064\\theme-r3\\workbench-01-drawer.png",
+    "workbench-02-console.png": ".scratch-ux064\\theme-r3\\workbench-02-console.png",
+    "theme-01-console-menu-light.png": ".scratch-ux064\\theme-r3\\theme-01-console-menu-light.png",
+    "theme-02-console-qingjian-light.png": ".scratch-ux064\\theme-r3\\theme-02-console-qingjian-light.png",
+    "workbench-03-split.png": ".scratch-ux064\\theme-r3\\workbench-03-split.png",
+    "theme-03-split-menu-qingjian-light.png": ".scratch-ux064\\theme-r3\\theme-03-split-menu-qingjian-light.png",
+    "theme-04-split-yehang-light.png": ".scratch-ux064\\theme-r3\\theme-04-split-yehang-light.png",
+    "theme-05-split-drawer-menu-light.png": ".scratch-ux064\\theme-r3\\theme-05-split-drawer-menu-light.png",
+    "theme-06-split-yehang-dark.png": ".scratch-ux064\\theme-r3\\theme-06-split-yehang-dark.png",
+    "theme-07-console-reload-yehang.png": ".scratch-ux064\\theme-r3\\theme-07-console-reload-yehang.png"
+  },
+  "realEnvAfter": {
+    "home": "C:\\Users\\peter\\.dsh",
+    "settingsSha": null,
+    "profiles": "chatgpt,desktop,node_modules,web",
+    "preset": ".dsh-bundle-version:5,agent.cordis.yml:13034,agents:0,preset.yml:410,skills:0"
+  },
+  "ok": true,
+  "cleanup": {
+    "realEnvUnchanged": true,
+    "port": 3093,
+    "kept": true
+  }
+}
