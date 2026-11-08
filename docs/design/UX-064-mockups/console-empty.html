@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1240">
+<title>UX-064 · 书斋（空状态）</title>
+<script>
+  try {
+    var q = new URLSearchParams(location.search);
+    if (q.get('theme') === 'dark') document.documentElement.dataset.theme = 'dark';
+  } catch (e) {}
+</script>
+<link rel="stylesheet" href="assets/mock.css">
+<style>
+  .review { --stage-bg: #e7e0d4; }
+  html[data-theme="dark"] .review { --stage-bg: #0c0b09; }
+</style>
+</head>
+<body class="stage-page">
+<div class="review">
+  <header class="review-head">
+    <div class="review-title">书斋 <span class="thin">— 空状态</span></div>
+    <div class="review-meta">UX-064<span class="sep">/</span>墨纸 · <span class="theme-label">浅色</span><span class="sep">/</span>DSH 主区域 1152 × 840</div>
+  </header>
+
+  <div class="artboard">
+    <div class="app console">
+      <header class="topbar">
+        <div class="brand">
+          <span class="seal brand-seal" aria-hidden="true">书</span>
+          <span class="brand-word">书斋</span>
+          <span class="brand-sub">小说管理工作台</span>
+        </div>
+
+        <button class="ws-switch" type="button">
+          <svg class="ico ico-14" aria-hidden="true"><use href="#i-folder"></use></svg>
+          <span>默认工作区</span>
+          <span class="ws-path">D:\AI\writing</span>
+          <svg class="ico" style="width:12px;height:12px" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
+        </button>
+
+        <div class="topbar-right">
+          <button class="btn btn-ghost" type="button">
+            <svg class="ico ico-14" aria-hidden="true"><use href="#i-plus"></use></svg>
+            新建书
+          </button>
+          <span class="topbar-div" aria-hidden="true"></span>
+          <button class="icon-btn" type="button" title="设置" aria-label="设置">
+            <svg class="ico" aria-hidden="true"><use href="#i-settings"></use></svg>
+          </button>
+          <button class="icon-btn" type="button" title="关闭（Esc）" aria-label="关闭">
+            <svg class="ico" aria-hidden="true"><use href="#i-x"></use></svg>
+          </button>
+        </div>
+      </header>
+
+      <main class="console-main">
+        <section class="hero empty-hero">
+          <div class="hero-left">
+            <div class="eyebrow">
+              <span class="tick" aria-hidden="true"></span>
+              <span>还没有书</span>
+            </div>
+            <h1 class="hero-title">从第一本书开始。</h1>
+            <div class="hero-meta">
+              <span>一个工作区，一条从初稿到发布的路。</span>
+            </div>
+            <div class="hero-actions">
+              <button class="btn btn-primary btn-lg" type="button">
+                <svg class="ico" aria-hidden="true"><use href="#i-plus"></use></svg>
+                新建第一本书
+              </button>
+            </div>
+            <p class="hero-note">先起一个书名，之后可以慢慢补大纲、人物和章节。</p>
+          </div>
+
+          <aside class="empty-quote" aria-label="开始写作的三步">
+            <div class="empty-cover" aria-hidden="true"><span class="vt">书名</span></div>
+            <div class="empty-steps">
+              <div class="t">开书三步</div>
+              <ol>
+                <li><span class="n">1</span>起一个书名</li>
+                <li><span class="n">2</span>写下第一章</li>
+                <li><span class="n">3</span>随时回来接着写</li>
+              </ol>
+            </div>
+          </aside>
+        </section>
+
+        <hr class="rule-h console-rule">
+
+        <section class="shelf" aria-label="书架">
+          <div class="section-head">
+            <h2>书架 <span class="count">0 本</span></h2>
+            <div class="section-tools">
+              </div>
+          </div>
+
+          <div class="empty-shelf">
+            <div class="ghosts" aria-hidden="true">
+              <span class="ghost"><i></i></span>
+              <span class="ghost"><i></i></span>
+              <span class="ghost"><i></i></span>
+            </div>
+            <div class="txt">
+              <div class="t">书架还空着。</div>
+              <div class="d">第一本书会立在这里，<br>带着它的封面、章数和最近一次保存。</div>
+            </div>
+          </div>
+        </section>
+
+        <footer class="deskline">
+          <span class="deskline-label">书案</span>
+          <span>还没有待办</span>
+          <span class="deskline-right">工作区　D:\AI\writing</span>
+        </footer>
+      </main>
+    </div>
+  </div>
+</div>
+<script>
+  try {
+    if (document.documentElement.dataset.theme === 'dark') {
+      var el = document.querySelector('.theme-label');
+      if (el) el.textContent = '深色';
+    }
+  } catch (e) {}
+</script>
+<script src="assets/sprite.js"></script>
+</body>
+</html>

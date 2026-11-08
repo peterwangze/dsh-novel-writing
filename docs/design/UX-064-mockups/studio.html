@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1240">
+<title>UX-064 · 写作台（浅色）</title>
+<script>
+  try {
+    var q = new URLSearchParams(location.search);
+    if (q.get('theme') === 'dark') document.documentElement.dataset.theme = 'dark';
+    if (q.get('focus') === '1' || q.get('mode') === 'focus-dark') document.documentElement.dataset.focus = '1';
+    if (q.get('mode') === 'focus-dark') document.documentElement.dataset.theme = 'dark';
+  } catch (e) {}
+</script>
+<link rel="stylesheet" href="assets/mock.css">
+<style>
+  .review { --stage-bg: #e7e0d4; }
+  html[data-theme="dark"] .review { --stage-bg: #0c0b09; }
+</style>
+</head>
+<body class="stage-page">
+<div class="review">
+  <header class="review-head">
+    <div class="review-title"><span class="only-normal">写作台 <span class="thin">— 章节目录 · 纸面 · 协作编辑</span></span><span class="only-focus">写作台 <span class="thin">— 专注模式 · 纸面</span></span></div>
+    <div class="review-meta">UX-064<span class="sep">/</span>墨纸 · <span class="theme-label">浅色</span><span class="sep">/</span>DSH 主区域 1152 × 840</div>
+  </header>
+
+  <div class="artboard">
+    <div class="app studio">
+      <header class="bar">
+        <button class="back-btn" type="button">
+          <svg class="ico" aria-hidden="true"><use href="#i-arrow-left"></use></svg>
+          书斋
+        </button>
+        <span class="bar-div" aria-hidden="true"></span>
+        <div class="bar-book">
+          <span class="bar-title">诡异副本，先过审</span>
+          <span class="chip"><span class="dot dot-warn" aria-hidden="true"></span>质量审查</span>
+        </div>
+        <div class="bar-right">
+          <span class="save-state"><span class="dot dot-ok" aria-hidden="true"></span>已保存</span>
+          <button class="btn btn-outline btn-sm" type="button">
+            <svg class="ico" style="width:13px;height:13px" aria-hidden="true"><use href="#i-upload"></use></svg>
+            发布
+          </button>
+          <button class="icon-btn" type="button" aria-label="更多">
+            <svg class="ico" aria-hidden="true"><use href="#i-more-horizontal"></use></svg>
+          </button>
+          <button class="icon-btn" type="button" aria-label="关闭（Esc）">
+            <svg class="ico" aria-hidden="true"><use href="#i-x"></use></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="studio-body">
+        <aside class="rail" aria-label="章节目录">
+          <div class="rail-book">
+            <span class="mini-cover" aria-hidden="true"><span>诡</span></span>
+            <div class="mini-meta">
+              <div class="mini-title">诡异副本，先过审</div>
+              <div class="mini-sub">38 章 · 8.9 万字</div>
+            </div>
+          </div>
+
+          <button class="rail-search" type="button">
+            <svg class="ico" aria-hidden="true"><use href="#i-search"></use></svg>
+            <span>找章节</span>
+            <kbd>⌘F</kbd>
+          </button>
+
+          <div class="rail-head">
+            <span>章节目录</span>
+            <span class="cnt">38</span>
+          </div>
+
+          <nav class="chapter-list">
+            <button class="chapter-more" type="button">
+              <svg class="ico" style="width:10px;height:10px" aria-hidden="true"><use href="#i-chevron-up"></use></svg>
+              前面还有 26 章
+            </button>
+            <button class="chapter" type="button"><span class="num">27</span><span class="nm">无据的单</span></button>
+            <button class="chapter" type="button"><span class="num">28</span><span class="nm">交付暂缓</span></button>
+            <button class="chapter" type="button"><span class="num">29</span><span class="nm">灰褂子</span></button>
+            <button class="chapter" type="button"><span class="num">30</span><span class="nm">无主单</span></button>
+            <button class="chapter" type="button"><span class="num">31</span><span class="nm">笔迹</span></button>
+            <button class="chapter" type="button"><span class="num">32</span><span class="nm">认领权</span></button>
+            <button class="chapter" type="button"><span class="num">33</span><span class="nm">油纸</span></button>
+            <button class="chapter" type="button"><span class="num">34</span><span class="nm">修订记录</span></button>
+            <button class="chapter" type="button"><span class="num">35</span><span class="nm">平静</span></button>
+            <button class="chapter" type="button"><span class="num">36</span><span class="nm">档案室</span></button>
+            <button class="chapter" type="button"><span class="num">37</span><span class="nm">你像一个人</span></button>
+            <button class="chapter active" type="button" aria-current="true">
+              <span class="num">38</span><span class="nm">排班表</span><span class="st st-draft" aria-hidden="true"></span>
+            </button>
+          </nav>
+
+          <div class="rail-foot">
+            <button class="btn btn-outline btn-block" type="button">
+              <svg class="ico" aria-hidden="true"><use href="#i-plus"></use></svg>
+              新建章节
+            </button>
+            <div class="rail-links">
+              <button type="button">大纲</button>
+              <span class="sep">·</span>
+              <button type="button">人物</button>
+              <span class="sep">·</span>
+              <button type="button">设定</button>
+            </div>
+          </div>
+        </aside>
+
+        <main class="paper-area">
+          <div class="paper-top">
+            <div class="left">
+              <span class="crumb">第 38 章 <span class="slash">/</span> 38</span>
+            </div>
+            <div class="right">
+              <span class="words">2,474 字</span>
+              <button class="icon-btn" type="button" aria-label="排版">
+                <svg class="ico" aria-hidden="true"><use href="#i-type"></use></svg>
+              </button>
+              <button class="icon-btn" type="button" aria-label="专注模式">
+                <svg class="ico" aria-hidden="true"><use href="#i-focus"></use></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="sheet-wrap">
+            <article class="sheet">
+              <div class="sheet-head">
+                <div class="sheet-kicker">第 38 章</div>
+                <h1 class="sheet-title">排班表</h1>
+                <div class="sheet-sub">
+                  <span>草稿</span>
+                  <span class="sep">·</span>
+                  <span>本章保存 8月25日 22:26</span>
+                </div>
+                <div class="sheet-rule" aria-hidden="true"></div>
+              </div>
+
+              <div class="prose" contenteditable="true" spellcheck="false" aria-label="第 38 章正文">
+                <p>程叙接过0714老档，先翻目录。检索停在一格——没有柜号，没有卷号，只有五个字：</p>
+                <p>「0714——查无此人。」</p>
+                <p>他愣了。手里的工牌明晃晃挂着0714——系统档案里，查无此人。</p>
+                <p>九点半。下班。路经三楼。</p>
+                <p>走廊尽头——白会议间的灯，亮着。他隔着玻璃看——白桌，白椅，一份材料，封面朝下。</p>
+                <p>走到楼梯口，他停住。他掏出工牌。正面——「程叙」。他把工牌翻过来。背面，两行小字：「本牌为副本执行凭证，请妥善保管」。</p>
+                <p>他看了三秒。他把工牌放回口袋。</p>
+                <p>「……明天，先过审，再说。」<span class="caret" aria-hidden="true"></span></p>
+              </div>
+
+              <div class="sheet-foot">
+                <span>2 / 2</span>
+              </div>
+            </article>
+          </div>
+
+          <div class="paper-foot">
+            <span class="only-focus">专注模式 · Esc 退出</span>
+          </div>
+        </main>
+
+        <aside class="chat" aria-label="协作编辑">
+          <div class="chat-head">
+            <span class="seal seal-sm" aria-hidden="true">编</span>
+            <div class="chat-who">
+              <div class="chat-name">协作编辑</div>
+              <div class="chat-sub">DeepSeek · 长篇模式</div>
+            </div>
+            <div class="chat-acts">
+              <button class="icon-btn" type="button" aria-label="收起">
+                <svg class="ico" aria-hidden="true"><use href="#i-panel-right"></use></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="chat-thread">
+            <div class="ctx">
+              <svg class="ico" aria-hidden="true"><use href="#i-book-open"></use></svg>
+              已读 第 38 章 · 2,474 字
+            </div>
+
+            <div class="msg">
+              <span class="msg-seal" aria-hidden="true">编</span>
+              <div class="msg-body">
+                <p>这一章的收束很稳。最后一句「明天，先过审，再说」把前面所有的条款、档案、规则，都收进了一句日常话里。</p>
+              </div>
+            </div>
+
+            <div class="msg me">
+              <div class="msg-body"><p>留着。前面写巧合那段解释太多了，删掉两句，留白。</p></div>
+            </div>
+
+            <div class="msg">
+              <span class="msg-seal" aria-hidden="true">编</span>
+              <div class="msg-body">
+                <p>好。删掉两句，放在差异里——最后一句没动。</p>
+                <div class="diff-sum">
+                  <svg class="ico" aria-hidden="true"><use href="#i-square-pen"></use></svg>
+                  <span>已压掉 63 字 · 待确认</span>
+                  <span class="link">查看差异</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="quick" aria-label="常用指令">
+            <button type="button">查逻辑</button>
+            <button type="button">润色这段</button>
+            <button type="button">下一章</button>
+          </div>
+
+          <div class="composer">
+            <div class="composer-box">
+              <div class="composer-ph">和编辑说说这一章…</div>
+              <div class="composer-bar">
+                <button class="icon-btn" type="button" aria-label="附加资料">
+                  <svg class="ico" aria-hidden="true"><use href="#i-paperclip"></use></svg>
+                </button>
+                <span class="composer-hint"><kbd>⌘↵</kbd> 发送</span>
+                <button class="send" type="button" aria-label="发送">
+                  <svg class="ico" aria-hidden="true"><use href="#i-send"></use></svg>
+                </button>
+              </div>
+            </div>
+            <div class="composer-note">会读取本章与大纲，未确认的段落不会改动</div>
+          </div>
+        </aside>
+      </div>
+
+      <footer class="statusbar">
+        <div class="status-left">
+          <span class="dot dot-warn" aria-hidden="true"></span>
+          <span class="warn">本章未发布</span>
+          <span class="sep">·</span>
+          <span>门禁未启用</span>
+        </div>
+        <div class="status-tabs">
+          <button class="status-tab" type="button">
+            <svg class="ico" aria-hidden="true"><use href="#i-git-branch"></use></svg>
+            工作流
+          </button>
+          <button class="status-tab" type="button">
+            <svg class="ico" aria-hidden="true"><use href="#i-bar-chart"></use></svg>
+            数据
+          </button>
+          <button class="status-tab" type="button">
+            <svg class="ico" aria-hidden="true"><use href="#i-upload"></use></svg>
+            发布
+            <span class="badge hot">38</span>
+          </button>
+          <button class="status-tab" type="button">
+            <svg class="ico" aria-hidden="true"><use href="#i-inbox"></use></svg>
+            请求
+            <span class="badge">0</span>
+          </button>
+          <button class="status-chev" type="button" aria-label="展开案卷">
+            <svg class="ico" aria-hidden="true"><use href="#i-chevron-up"></use></svg>
+          </button>
+        </div>
+      </footer>
+    </div>
+  </div>
+</div>
+<script>
+  try {
+    if (document.documentElement.dataset.theme === 'dark') {
+      var el = document.querySelector('.theme-label');
+      if (el) el.textContent = '深色';
+    }
+  } catch (e) {}
+</script>
+<script src="assets/sprite.js"></script>
+</body>
+</html>

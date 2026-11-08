@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1240">
+<title>UX-064 · 墨纸设计系统</title>
+<link rel="stylesheet" href="assets/mock.css">
+<style>
+  .review { --stage-bg: #e7e0d4; }
+  html[data-theme="dark"] .review { --stage-bg: #0c0b09; }
+  .artboard { height: auto; }
+  .spec { padding: 34px 44px 44px; }
+  .spec-intro { display: flex; align-items: flex-start; justify-content: space-between; gap: 30px; padding-bottom: 24px; }
+  .spec-intro h1 { font-family: var(--font-serif); font-size: 27px; font-weight: 600; letter-spacing: 0.02em; margin: 6px 0 0; }
+  .spec-intro p { max-width: 500px; font-size: 11.5px; line-height: 1.9; color: var(--ink-3); margin: 26px 0 0; }
+  .spec-row { display: grid; grid-template-columns: 142px 1fr; gap: 34px; padding: 26px 0; border-top: 1px solid var(--rule); }
+  .spec-label .n { font-size: 9px; letter-spacing: 0.18em; color: var(--cinnabar); }
+  .spec-label h2 { font-family: var(--font-serif); font-size: 15px; font-weight: 600; margin: 5px 0 7px; }
+  .spec-label p { font-size: 9.5px; line-height: 1.85; color: var(--ink-4); margin: 0; }
+  .spec-body { min-width: 0; }
+  .spec-note { font-size: 9.5px; color: var(--ink-4); line-height: 1.8; margin-top: 12px; }
+  .spec-note b { color: var(--ink-3); font-weight: 500; }
+
+  .type-big { font-family: var(--font-serif); font-size: 36px; line-height: 1.35; font-weight: 600; letter-spacing: 0.01em; }
+  .type-big em { font-style: normal; color: var(--cinnabar); }
+  .type-row { display: grid; grid-template-columns: 1fr 118px; gap: 16px; align-items: baseline; padding: 10px 0; border-bottom: 1px dashed var(--rule); }
+  .type-row:last-child { border-bottom: 0; }
+  .type-name { font-size: 8.5px; line-height: 1.65; color: var(--ink-4); letter-spacing: 0.04em; text-align: right; font-variant-numeric: tabular-nums; }
+  .prose-demo { font-family: var(--font-serif); font-size: 16.5px; line-height: 1.95; color: var(--ink); max-width: 520px; }
+  .prose-demo p { margin: 0; text-indent: 2em; }
+  .ui-demo { font-size: 13px; color: var(--ink-2); }
+  .label-demo { font-size: 10px; letter-spacing: 0.14em; color: var(--ink-3); }
+
+  .swatches { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .sw { border: 1px solid var(--rule); border-radius: 3px; overflow: hidden; background: var(--paper-2); }
+  .sw i { display: block; height: 46px; }
+  .sw div { padding: 7px 9px 8px; }
+  .sw .t { font-size: 11px; color: var(--ink-2); }
+  .sw .h { font-size: 8px; color: var(--ink-4); letter-spacing: 0.02em; margin-top: 2px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .sw .m { font-size: 8px; color: var(--ink-4); margin-top: 3px; line-height: 1.5; }
+  .dual { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .dual .panel { border: 1px solid var(--rule); border-radius: 3px; padding: 12px; }
+  .dual .panel.dark { background: #151310; color: #EDE6D8; border-color: #302B24; }
+  .dual .ph { font-size: 8.5px; letter-spacing: 0.14em; color: var(--ink-4); margin-bottom: 9px; }
+  .dual .panel.dark .ph { color: #7D7467; }
+  .sw.dark { background: #1D1A16; border-color: #302B24; }
+  .sw.dark .t { color: #EDE6D8; }
+  .sw.dark .h, .sw.dark .m { color: #7D7467; }
+
+  .ctl-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .ctl-grid { display: grid; grid-template-columns: 86px 1fr; gap: 18px 18px; align-items: center; }
+  .ctl-k { font-size: 9px; letter-spacing: 0.12em; color: var(--ink-4); }
+  .ctl-v { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .ctl-note { font-size: 9px; color: var(--ink-4); }
+  .ctl-label { width: 100%; font-size: 8.5px; letter-spacing: 0.12em; color: var(--ink-4); margin: 4px 0 -2px; }
+  .focus-demo { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border: 1px solid var(--rule-strong); border-radius: 3px; font-size: 11px; color: var(--ink-2); box-shadow: 0 0 0 2px var(--paper-2), 0 0 0 3.5px color-mix(in srgb, var(--cinnabar) 55%, transparent); }
+  .seal-row { display: flex; align-items: center; gap: 14px; }
+  .dot-row { display: flex; align-items: center; gap: 18px; font-size: 10px; color: var(--ink-3); }
+  .dot-row span { display: inline-flex; align-items: center; gap: 5px; }
+
+  .chapters-demo { width: 250px; border-left: 1px solid var(--rule); }
+  .chat-demo { width: 300px; border: 1px solid var(--rule); border-radius: 3px; padding: 14px 13px; background: var(--paper-3); }
+  .chat-demo .msg { margin-bottom: 10px; }
+  .state-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .state-box { border: 1px solid var(--rule); border-radius: 3px; padding: 16px; min-height: 126px; background: var(--paper-2); }
+  .state-box .cap { font-size: 8.5px; letter-spacing: 0.12em; color: var(--ink-4); margin-bottom: 12px; }
+  .sk { height: 7px; border-radius: 2px; background: var(--paper-3); margin: 8px 0; }
+  .sk.w1 { width: 42%; } .sk.w2 { width: 86%; } .sk.w3 { width: 68%; }
+  .errbox { border-left: 2px solid var(--danger); padding: 9px 0 9px 12px; background: color-mix(in srgb, var(--danger) 5%, transparent); }
+  .errbox .t { font-size: 11.5px; color: var(--ink); }
+  .errbox .d { font-size: 9.5px; color: var(--ink-3); margin-top: 3px; }
+  .errbox .a { font-size: 9.5px; color: var(--cinnabar); margin-top: 6px; }
+  .scale { display: flex; align-items: flex-end; gap: 10px; }
+  .scale span { background: var(--paper-3); border: 1px solid var(--rule); border-radius: 1px; display: block; }
+  .scale b { font-size: 8px; color: var(--ink-4); font-weight: 400; display: block; text-align: center; margin-top: 5px; }
+  .rules-list { display: grid; grid-template-columns: 1fr 1fr; gap: 7px 26px; font-size: 10px; color: var(--ink-3); line-height: 1.85; }
+  .rules-list span b { color: var(--ink); font-weight: 500; }
+</style>
+</head>
+<body class="stage-page">
+<div class="review">
+  <header class="review-head">
+    <div class="review-title">墨纸 <span class="thin">— 设计系统</span></div>
+    <div class="review-meta">UX-064<span class="sep">/</span>字体 · 色 · 控件 · 状态<span class="sep">/</span>DSH 主区域 1152 宽</div>
+  </header>
+
+  <div class="artboard">
+    <div class="app console">
+      <main class="spec">
+        <div class="spec-intro">
+          <div>
+            <div class="eyebrow"><span class="tick"></span><span>设计标准</span></div>
+            <h1>像一本书，而不是一块仪表盘。</h1>
+          </div>
+          <p>标题用宋，正文用宋，界面用黑。纸上只有墨与朱砂两色；其余颜色只做小面积状态。<br>本页是视觉与交互的验收基线，数值检查只是地板。</p>
+        </div>
+
+        <section class="spec-row">
+          <div class="spec-label">
+            <div class="n">01</div>
+            <h2>字体与排版</h2>
+            <p>宋体承担叙事与标题，黑体承担操作与标签。字号砍到五级，行高留白优先。</p>
+          </div>
+          <div class="spec-body">
+            <div class="type-row">
+              <div class="type-big">诡异副本<em>，</em>先过审</div>
+              <div class="type-name">宋 36/1.35<br>600</div>
+            </div>
+            <div class="type-row">
+              <div class="prose-demo"><p>「……明天，先过审，再说。」</p></div>
+              <div class="type-name">宋 16.5/1.95<br>400 · 缩进 2em</div>
+            </div>
+            <div class="type-row">
+              <div class="ui-demo">续写第 39 章　·　打开第 38 章　·　书架 4 本</div>
+              <div class="type-name">黑 13/1.5<br>400 / 500</div>
+            </div>
+            <div class="type-row">
+              <div class="label-demo">正在写 · 第 38 章　　规则怪谈 · 长篇</div>
+              <div class="type-name">黑 10/1.4<br>500 · 字距 .14em</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="spec-row">
+          <div class="spec-label">
+            <div class="n">02</div>
+            <h2>纸与墨</h2>
+            <p>暖纸中性色 + 墨色文字 + 一点朱砂。所有色从宿主 15 个令牌派生，只映射一次。</p>
+          </div>
+          <div class="spec-body">
+            <div class="dual">
+              <div class="panel">
+                <div class="ph">浅色 · PAPER</div>
+                <div class="swatches">
+                  <div class="sw"><i style="background:#F4EEE3"></i><div><div class="t">纸</div><div class="h">#F4EEE3</div><div class="m">paper · bg-base</div></div></div>
+                  <div class="sw"><i style="background:#FBF8F1;border-bottom:1px solid #DDD3C3"></i><div><div class="t">纸面</div><div class="h">#FBF8F1</div><div class="m">paper-2 · bg-layer-1</div></div></div>
+                  <div class="sw"><i style="background:#EFE7DA"></i><div><div class="t">纸背</div><div class="h">#EFE7DA</div><div class="m">paper-3 · bg-overlay</div></div></div>
+                  <div class="sw"><i style="background:#211D18"></i><div><div class="t">墨</div><div class="h">#211D18</div><div class="m">ink · label-primary</div></div></div>
+                  <div class="sw"><i style="background:#9E3B2C"></i><div><div class="t">朱砂</div><div class="h">#9E3B2C</div><div class="m">accent · 10%</div></div></div>
+                  <div class="sw"><i style="background:#6B6155"></i><div><div class="t">次墨</div><div class="h">#6B6155</div><div class="m">ink-3 · label-tertiary</div></div></div>
+                  <div class="sw"><i style="background:#DDD3C3"></i><div><div class="t">界线</div><div class="h">#DDD3C3</div><div class="m">rule · border-l1</div></div></div>
+                  <div class="sw"><i style="background:#4F6B4A"></i><div><div class="t">通过</div><div class="h">#4F6B4A</div><div class="m">ok · success</div></div></div>
+                  <div class="sw"><i style="background:#A5762F"></i><div><div class="t">待审</div><div class="h">#A5762F</div><div class="m">warn</div></div></div>
+                </div>
+              </div>
+              <div class="panel dark">
+                <div class="ph">深色 · INK</div>
+                <div class="swatches">
+                  <div class="sw dark"><i style="background:#151310"></i><div><div class="t">纸</div><div class="h">#151310</div><div class="m">paper · bg-base</div></div></div>
+                  <div class="sw dark"><i style="background:#1D1A16"></i><div><div class="t">纸面</div><div class="h">#1D1A16</div><div class="m">paper-2 · bg-layer-1</div></div></div>
+                  <div class="sw dark"><i style="background:#12100D"></i><div><div class="t">纸背</div><div class="h">#12100D</div><div class="m">paper-3 · bg-overlay</div></div></div>
+                  <div class="sw dark"><i style="background:#EDE6D8"></i><div><div class="t">墨</div><div class="h">#EDE6D8</div><div class="m">ink · label-primary</div></div></div>
+                  <div class="sw dark"><i style="background:#D07864"></i><div><div class="t">朱砂</div><div class="h">#D07864</div><div class="m">accent · 同源提亮</div></div></div>
+                  <div class="sw dark"><i style="background:#A49A8A"></i><div><div class="t">次墨</div><div class="h">#A49A8A</div><div class="m">ink-3 · label-tertiary</div></div></div>
+                  <div class="sw dark"><i style="background:#302B24"></i><div><div class="t">界线</div><div class="h">#302B24</div><div class="m">rule · border-l1</div></div></div>
+                  <div class="sw dark"><i style="background:#8FAE86"></i><div><div class="t">通过</div><div class="h">#8FAE86</div><div class="m">ok · success</div></div></div>
+                  <div class="sw dark"><i style="background:#D0A45C"></i><div><div class="t">待审</div><div class="h">#D0A45C</div><div class="m">warn</div></div></div>
+                </div>
+              </div>
+            </div>
+            <div class="spec-note">不要在组件里写 <b>rgba(158,59,44,.12)</b>；透明色一律用 <b>color-mix()</b> 从令牌派生，深色自动跟随。</div>
+          </div>
+        </section>
+
+        <section class="spec-row">
+          <div class="spec-label">
+            <div class="n">03</div>
+            <h2>控件</h2>
+            <p>一个主操作，其余克制。按钮高 32 / 42 两档；图标 24 网格，1.75 描边；焦点环统一样式。</p>
+          </div>
+          <div class="spec-body">
+            <div class="ctl-grid">
+              <div class="ctl-k">按钮</div>
+              <div class="ctl-v">
+                <button class="btn btn-primary" type="button"><svg class="ico" aria-hidden="true"><use href="#i-pen-line"></use></svg>续写第 39 章</button>
+                <button class="btn btn-outline" type="button"><svg class="ico" aria-hidden="true"><use href="#i-upload"></use></svg>发布</button>
+                <button class="btn btn-ghost" type="button"><svg class="ico" aria-hidden="true"><use href="#i-plus"></use></svg>新建书</button>
+                <button class="icon-btn" type="button" aria-label="搜索"><svg class="ico" aria-hidden="true"><use href="#i-search"></use></svg></button>
+                <span class="chip">草稿</span>
+                <span class="chip"><span class="dot dot-warn"></span>质量审查</span>
+                <span class="kbd">⌘S</span>
+              </div>
+              <div class="ctl-k">焦点</div>
+              <div class="ctl-v">
+                <span class="focus-demo"><svg class="ico ico-14" aria-hidden="true"><use href="#i-search"></use></svg>搜索书名、章节</span>
+                <span class="ctl-note">1px 墨线 + 2px 朱砂外环；键盘 Tab 与鼠标同形。</span>
+              </div>
+              <div class="ctl-k">印章 / 状态</div>
+              <div class="ctl-v">
+                <span class="seal" aria-hidden="true">书</span>
+                <span class="seal" aria-hidden="true">审</span>
+                <span class="seal" aria-hidden="true">医</span>
+                <span style="width:6px"></span>
+                <span class="dot-row">
+                  <span><i class="dot dot-ok"></i>已保存</span>
+                  <span><i class="dot dot-warn"></i>待审</span>
+                  <span><i class="dot dot-danger"></i>失败</span>
+                  <span><i class="dot"></i>未开始</span>
+                </span>
+              </div>
+            </div>
+            <div class="spec-note">朱砂只用在“当前 / 批注 / 收束”，不做整条按钮；状态色只做 4–6px 点或 2px 竖线。</div>
+          </div>
+        </section>
+
+        <section class="spec-row">
+          <div class="spec-label">
+            <div class="n">04</div>
+            <h2>目录与对话</h2>
+            <p>章节是书的目录，不是导航菜单：编号、名字、状态三点一线；当前章用朱砂竖线，不用整行底色。</p>
+          </div>
+          <div class="spec-body" style="display:flex;gap:24px;align-items:flex-start">
+            <div class="chapters-demo">
+              <div class="rail-head" style="padding-left:12px"><span>章节目录</span><span class="cnt">38</span></div>
+              <button class="chapter" type="button"><span class="num">36</span><span class="nm">档案室</span></button>
+              <button class="chapter" type="button" style="background:var(--paper-2)"><span class="num">37</span><span class="nm">你像一个人</span></button>
+              <button class="chapter active" type="button"><span class="num">38</span><span class="nm">排班表</span><span class="st st-draft"></span></button>
+            </div>
+            <div class="chat-demo">
+              <div class="ctx" style="margin:0 0 10px"><svg class="ico" aria-hidden="true"><use href="#i-book-open"></use></svg>已读 第 38 章 · 2,474 字</div>
+              <div class="msg"><span class="msg-seal">编</span><div class="msg-body"><p>最后一句「明天，先过审，再说」收得很稳。</p></div></div>
+              <div class="msg me"><div class="msg-body"><p>留着。前面解释太多，删两句。</p></div></div>
+              <div class="msg"><span class="msg-seal">编</span><div class="msg-body"><p>好。放在差异里，最后一句没动。</p><div class="diff-sum"><svg class="ico" aria-hidden="true"><use href="#i-square-pen"></use></svg><span>已压掉 63 字 · 待确认</span><span class="link">查看</span></div></div></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="spec-row">
+          <div class="spec-label">
+            <div class="n">05</div>
+            <h2>空白、加载、失败</h2>
+            <p>三种状态都要像纸的一部分：空书架是一张留白的纸，加载是纸的骨架，失败是一行批注，不是红色大警报。</p>
+          </div>
+          <div class="spec-body">
+            <div class="state-grid">
+              <div class="state-box">
+                <div class="cap">空 · EMPTY</div>
+                <div style="border:1px dashed var(--rule-strong);height:74px;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--ink-3);font-size:10.5px">
+                  <span style="width:40px;height:56px;border:1px dashed var(--rule-strong);display:inline-block"></span>
+                  书架还空着。第一本书会立在这里。
+                </div>
+              </div>
+              <div class="state-box">
+                <div class="cap">加载 · LOADING</div>
+                <div class="sk w1"></div><div class="sk w2"></div><div class="sk w3"></div>
+                <div style="font-size:9px;color:var(--ink-4);margin-top:10px">正在读取书稿… 不用转圈，不先渲染 0。</div>
+              </div>
+              <div class="state-box">
+                <div class="cap">失败 · ERROR</div>
+                <div class="errbox">
+                  <div class="t">这一章的记录读不出来。</div>
+                  <div class="d">书稿还在工作区里，没有丢。可能是索引暂时不可用。</div>
+                  <div class="a">重试　·　打开所在文件夹</div>
+                </div>
+              </div>
+              <div class="state-box">
+                <div class="cap">禁用 · DISABLED</div>
+                <div class="ctl-row">
+                  <button class="btn btn-primary" type="button" disabled><svg class="ico" aria-hidden="true"><use href="#i-pen-line"></use></svg>续写第 39 章</button>
+                </div>
+                <div style="font-size:9px;color:var(--ink-4);margin-top:10px;line-height:1.7">正在读取第 38 章的结尾…<br>读完才知道 39 章从哪里接。</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="spec-row" style="border-bottom:1px solid var(--rule)">
+          <div class="spec-label">
+            <div class="n">06</div>
+            <h2>尺度与动效</h2>
+            <p>间距只用 4 的倍数；圆角只有纸、控件、卡片三档；动效 150ms，尊重 reduced-motion。</p>
+          </div>
+          <div class="spec-body">
+            <div class="scale" aria-label="间距尺度">
+              <div><span style="width:4px;height:4px"></span><b>4</b></div>
+              <div><span style="width:8px;height:8px"></span><b>8</b></div>
+              <div><span style="width:12px;height:12px"></span><b>12</b></div>
+              <div><span style="width:16px;height:16px"></span><b>16</b></div>
+              <div><span style="width:24px;height:24px"></span><b>24</b></div>
+              <div><span style="width:32px;height:32px"></span><b>32</b></div>
+              <div><span style="width:48px;height:48px"></span><b>48</b></div>
+            </div>
+            <div class="rules-list" style="margin-top:18px">
+              <span><b>圆角</b>　2 纸页 / 3 控件 / 8 浮层 · 不做 12/14 混用</span>
+              <span><b>描边</b>　1px rule；焦点 1px 墨 + 2px 朱砂外环</span>
+              <span><b>动效</b>　150ms cubic-bezier(.4,0,.2,1)；抽屉 220ms</span>
+              <span><b>阴影</b>　只有纸页与浮层；不做发光、玻璃、渐变按钮</span>
+              <span><b>图标</b>　Lucide 24 网格，1.75 描边；不混用 emoji</span>
+              <span><b>色占比</b>　朱砂 ≤10%，状态色只做 4–6px 点或 2px 竖线</span>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+</div>
+<script src="assets/sprite.js"></script>
+<script id="components-theme">
+  (function () {
+    var q = new URLSearchParams(location.search);
+    if (q.get("theme") === "dark") document.documentElement.dataset.theme = "dark";
+  })();
+</script>
+</body>
+</html>

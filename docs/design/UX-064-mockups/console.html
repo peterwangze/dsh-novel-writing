@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1240">
+<title>UX-064 · 书斋（浅色）</title>
+<script>
+  try {
+    var q = new URLSearchParams(location.search);
+    if (q.get('theme') === 'dark') document.documentElement.dataset.theme = 'dark';
+  } catch (e) {}
+</script>
+<link rel="stylesheet" href="assets/mock.css">
+<style>
+  .review { --stage-bg: #e7e0d4; }
+  html[data-theme="dark"] .review { --stage-bg: #0c0b09; }
+</style>
+</head>
+<body class="stage-page">
+<div class="review">
+  <header class="review-head">
+    <div class="review-title">书斋 <span class="thin">— 小说管理工作台</span></div>
+    <div class="review-meta">UX-064<span class="sep">/</span>墨纸 · <span class="theme-label">浅色</span><span class="sep">/</span>DSH 主区域 1152 × 840</div>
+  </header>
+
+  <div class="artboard">
+    <div class="app console">
+      <header class="topbar">
+        <div class="brand">
+          <span class="seal brand-seal" aria-hidden="true">书</span>
+          <span class="brand-word">书斋</span>
+          <span class="brand-sub">小说管理工作台</span>
+        </div>
+
+        <button class="ws-switch" type="button">
+          <svg class="ico ico-14" aria-hidden="true"><use href="#i-folder"></use></svg>
+          <span>默认工作区</span>
+          <span class="ws-path">D:\AI\writing</span>
+          <svg class="ico" style="width:12px;height:12px" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
+        </button>
+
+        <div class="topbar-right">
+          <button class="search" type="button" aria-label="搜索书名、章节">
+            <svg class="ico ico-14" aria-hidden="true"><use href="#i-search"></use></svg>
+            <span>搜索书名、章节</span>
+            <kbd>⌘K</kbd>
+          </button>
+          <button class="btn btn-ghost" type="button">
+            <svg class="ico ico-14" aria-hidden="true"><use href="#i-plus"></use></svg>
+            新建书
+          </button>
+          <span class="topbar-div" aria-hidden="true"></span>
+          <button class="icon-btn" type="button" title="设置" aria-label="设置">
+            <svg class="ico" aria-hidden="true"><use href="#i-settings"></use></svg>
+          </button>
+          <button class="icon-btn" type="button" title="关闭（Esc）" aria-label="关闭">
+            <svg class="ico" aria-hidden="true"><use href="#i-x"></use></svg>
+          </button>
+        </div>
+      </header>
+
+      <main class="console-main">
+        <section class="hero">
+          <div class="hero-left">
+            <div class="eyebrow">
+              <span class="tick" aria-hidden="true"></span>
+              <span>正在写</span>
+              <span class="sep">·</span>
+              <span>第 38 章</span>
+            </div>
+            <h1 class="hero-title">诡异副本<span class="comma">，</span>先过审</h1>
+            <div class="hero-meta">
+              <span>规则怪谈 · 长篇</span>
+              <span class="sep">·</span>
+              <span>38 章</span>
+              <span class="sep">·</span>
+              <span>8.9 万字</span>
+              <span class="sep">·</span>
+              <span class="stage"><span class="dot dot-warn" aria-hidden="true"></span>质量审查中</span>
+            </div>
+            <div class="hero-actions">
+              <button class="btn btn-primary btn-lg" type="button">
+                <svg class="ico" aria-hidden="true"><use href="#i-pen-line"></use></svg>
+                续写第 39 章
+              </button>
+              <button class="btn-quiet" type="button">
+                打开第 38 章
+                <svg class="ico" aria-hidden="true"><use href="#i-arrow-right"></use></svg>
+              </button>
+            </div>
+            <p class="hero-note">续写会按大纲生成下一章；打开上一章可继续修改正文。</p>
+          </div>
+
+          <aside class="quote-card" aria-label="上次写到的内容">
+            <div class="quote-kicker">
+              <svg class="ico" aria-hidden="true"><use href="#i-pen-line"></use></svg>
+              上次写到
+            </div>
+            <p class="quote-text"><span class="dim">他看了三秒。他把工牌放回口袋。</span><br>「……明天，先过审，再说。」</p>
+            <div class="quote-foot">
+              <span class="quote-source">第 38 章 · 排班表</span>
+            </div>
+          </aside>
+        </section>
+
+        <hr class="rule-h console-rule">
+
+        <section class="shelf" aria-label="书架">
+          <div class="section-head">
+            <h2>书架 <span class="count">4 本</span></h2>
+            <div class="section-tools">
+              <span class="sort">
+                最近编辑
+                <svg class="ico" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
+              </span>
+              <button class="text-btn" type="button">全部书籍</button>
+            </div>
+          </div>
+
+          <div class="shelf-row">
+            <a class="book-card" href="#" aria-label="诡异副本，先过审，38 章，在读">
+              <div class="cover" style="--cover-bg:#232a33">
+                <span class="cover-frame" aria-hidden="true"></span>
+                <span class="cover-genre">规则怪谈</span>
+                <span class="cover-title">诡异副本，先过审</span>
+                <span class="cover-seal" aria-hidden="true">审</span>
+                <span class="cover-no">38 章</span>
+                <span class="bookmark" aria-hidden="true"></span>
+              </div>
+              <div class="book-caption">
+                <span class="book-stat">8.9 万字</span>
+                <span class="now"><span class="dot" aria-hidden="true"></span>在读</span>
+              </div>
+            </a>
+
+            <a class="book-card" href="#" aria-label="法医仙途，12 章">
+              <div class="cover" style="--cover-bg:#3d4a3b">
+                <span class="cover-frame" aria-hidden="true"></span>
+                <span class="cover-genre">古风悬疑</span>
+                <span class="cover-title" style="top:50%;transform:translateY(-50%)">法医仙途</span>
+                <span class="cover-seal" aria-hidden="true">医</span>
+                <span class="cover-no">12 章</span>
+              </div>
+              <div class="book-caption">
+                <span class="book-stat">3.4 万字</span>
+                <span>3 天前</span>
+              </div>
+            </a>
+
+            <a class="book-card" href="#" aria-label="这账对不上，7 章">
+              <div class="cover" style="--cover-bg:#5a3029">
+                <span class="cover-frame" aria-hidden="true"></span>
+                <span class="cover-genre">都市悬疑</span>
+                <span class="cover-title" style="top:50%;transform:translateY(-50%)">这账对不上</span>
+                <span class="cover-seal" aria-hidden="true">账</span>
+                <span class="cover-no">7 章</span>
+              </div>
+              <div class="book-caption">
+                <span class="book-stat">1.9 万字</span>
+                <span>上周</span>
+              </div>
+            </a>
+
+            <a class="book-card" href="#" aria-label="别怕，我是物业，3 章">
+              <div class="cover" style="--cover-bg:#4c4030">
+                <span class="cover-frame" aria-hidden="true"></span>
+                <span class="cover-genre">民俗奇谈</span>
+                <span class="cover-title">别怕，我是物业</span>
+                <span class="cover-seal" aria-hidden="true">安</span>
+                <span class="cover-no">3 章</span>
+              </div>
+              <div class="book-caption">
+                <span class="book-stat">0.8 万字</span>
+                <span>上月</span>
+              </div>
+            </a>
+
+            <div class="book-add-wrap">
+              <button class="book-add" type="button">
+                <svg class="ico" aria-hidden="true"><use href="#i-plus"></use></svg>
+                <span class="t">新建书</span>
+                <span class="s">从书名开始</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <footer class="deskline">
+          <span class="deskline-label">书案</span>
+          <button type="button">38 章未发布</button>
+          <span class="sep">·</span>
+          <button type="button">0 个请求</button>
+          <span class="sep">·</span>
+          <span>质量审查中</span>
+          <span class="deskline-right">第 38 章保存　8月25日 22:26</span>
+        </footer>
+      </main>
+    </div>
+  </div>
+</div>
+<script>
+  try {
+    if (document.documentElement.dataset.theme === 'dark') {
+      var el = document.querySelector('.theme-label');
+      if (el) el.textContent = '深色';
+    }
+  } catch (e) {}
+</script>
+<script src="assets/sprite.js"></script>
+</body>
+</html>
