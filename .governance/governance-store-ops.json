@@ -1816,6 +1816,122 @@
       "released_files": [
         "docs/review/UX-064-S2-R4.md"
       ]
+    },
+    "op-bef7676ca80a487fafef5b78c431a5a2": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-066",
+      "input_fingerprint": "a9673a7596170f827bcd0e4bb07cb6ee41d670834ce7458f9e8d67feb59d8868",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-bef7676ca80a487fafef5b78c431a5a2",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-08T23:45:04",
+      "updated_at": "2026-11-08T23:45:04",
+      "released_files": [
+        ".scratch-ux064/UX-066-dev-report.md",
+        "CHANGELOG.md",
+        "README.md",
+        "lib/client.js",
+        "lib/host-contract.mjs",
+        "scripts/verify-visual-geometry.mjs",
+        "test/smoke.mjs"
+      ]
+    },
+    "op-bf26cb037f9f44a29765a2ce56f6cb06": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-066",
+      "input_fingerprint": "a9673a7596170f827bcd0e4bb07cb6ee41d670834ce7458f9e8d67feb59d8868",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-bf26cb037f9f44a29765a2ce56f6cb06",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-08T23:58:32",
+      "updated_at": "2026-11-08T23:58:32",
+      "released_files": [
+        "docs/review/UX-066-R1.md"
+      ]
+    },
+    "op-4a2e7733579246858793dc0d891ffbd9": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-066",
+      "input_fingerprint": "a9673a7596170f827bcd0e4bb07cb6ee41d670834ce7458f9e8d67feb59d8868",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-4a2e7733579246858793dc0d891ffbd9",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-09T00:01:15",
+      "updated_at": "2026-11-09T00:01:15",
+      "released_files": [
+        ".scratch-ux064/UX-066-R2-dev-report.md",
+        "README.md",
+        "scripts/verify-visual-geometry.mjs",
+        "test/smoke.mjs"
+      ]
+    },
+    "op-ea01d1e7b5574fa58483a6c7d4a6a696": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-066",
+      "input_fingerprint": "a9673a7596170f827bcd0e4bb07cb6ee41d670834ce7458f9e8d67feb59d8868",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-ea01d1e7b5574fa58483a6c7d4a6a696",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-09T00:07:47",
+      "updated_at": "2026-11-09T00:07:47",
+      "released_files": [
+        "docs/review/UX-066-R2.md"
+      ]
+    },
+    "op-af2eae348296433bbb704aee404033e4": {
+      "schema_version": 1,
+      "command": "evidence-append",
+      "task_id": "UX-066",
+      "input_fingerprint": "e5c6da6fd86cf75195bab64975b951893d336a18837ecf5b6460a98bc75861bf",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-af2eae348296433bbb704aee404033e4",
+        "code": "ok",
+        "new_revision": 445813,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-09T00:08:09",
+      "updated_at": "2026-11-09T00:08:09"
     }
   }
 }

@@ -38,7 +38,29 @@ function rule(sel, mustHave) {
 
 const rootMatch = /':root\{([^\n]*?)\}',/.exec(clientSrc)
 if (rootMatch === null) throw new Error('root token block not found')
-const rootCss = ':root{' + rootMatch[1] + '}'
+// UX-066 R2（R1 P2-1）：根块在源码里是 JS 单引号字符串，字体栈写的是 \'Noto Serif SC\'。
+// 注入 CSS 前必须还原 JS 求值结果（\\' → '），否则 CSS 会把 \' 当作标识符内的字面引号，
+// 族名变成 "'Noto Serif SC'"，匹配不到已安装字体而回退 generic——测试保真缺陷。只做这一种
+// 确定性反转义，不 eval 任意源码。
+const rootCss = ':root{' + rootMatch[1].replace(/\\'/g, "'") + '}'
+if (rootCss.includes("\\'")) throw new Error("rootCss still contains literal \\' escape after JS-unescape")
+// 字体令牌语法守卫：族名只能是单/双引号字符串、合法标识符（可含空格/连字符），不允许残余
+// 反斜杠转义或裸引号；--nv-prose-family 必须引用四族令牌之一。
+const FONT_TOKENS = ['--nv-serif', '--nv-sans', '--nv-kai', '--nv-system']
+for (const token of FONT_TOKENS) {
+  const m = new RegExp(token + ':([^;}]+)[;}]').exec(rootCss)
+  if (m === null) throw new Error('font token missing: ' + token)
+  for (const rawFam of m[1].split(',')) {
+    const fam = rawFam.trim()
+    if (/^'[^'\\]+'$/.test(fam) || /^"[^"\\]+"$/.test(fam)) continue
+    if (/^-?[A-Za-z_][A-Za-z0-9_-]*(?: [A-Za-z_][A-Za-z0-9_-]*)*$/.test(fam)) continue
+    throw new Error('font token ' + token + ' has invalid family: ' + JSON.stringify(fam))
+  }
+}
+const proseFamily = /--nv-prose-family:([^;}]+)[;}]/.exec(rootCss)
+if (proseFamily === null || !/^var\(--nv-(?:serif|sans|kai|system)\)$/.test(proseFamily[1].trim())) {
+  throw new Error('--nv-prose-family is not a valid font-token reference')
+}
 
 // ── UX-064 S2 R2：写作台几何（尺寸单一事实源 = .nv-split 上的 CSS 变量）──────────────
 // 口径：抽屉宽/层级从 CSS 变量抽取（JS 已不再持有 DRAWER_W 等常量）；「让位公式」随旧像素
@@ -124,6 +146,17 @@ const rules = [
   // 这样「值被改坏」会得到**具名断言失败**而不是抽取期抛错（判别信号更准，仍 fail-closed）。
   rule('.nv-content', 'font-size:var(--nv-fs-reading'),
   rule('.nv-content', 'max-width:var(--nv-measure'),
+  // UX-066：正文/编辑器排版消费者（prose 令牌）+ 根属性覆盖块（从源码逐行抽取，不镜像）
+  rule('.nv-prose .nv-content', 'font-family:var(--nv-prose-family)'),
+  rule('.nv-prose .nv-content', 'font-size:var(--nv-prose-size)'),
+  rule('.nv-prose .nv-content', 'line-height:var(--nv-prose-lh)'),
+  rule('.nv-sheet-edit', 'font-family:var(--nv-prose-family)'),
+  rule('.nv-sheet-edit', 'font-size:var(--nv-prose-size)'),
+  rule('.nv-sheet-edit', 'line-height:var(--nv-prose-lh)'),
+  ...clientSrc.split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l.startsWith("':root[data-nv-font=\"") || l.startsWith("':root[data-nv-fs=\""))
+    .map((l) => l.replace(/^'/, '').replace(/',?$/, '')),
   rule('.nv-content p', 'margin:0 0 .8em'),
   // DR1 P1-1：标题层级（h2 20 / h3 17 > 正文 16）——同样从源码抽取后实测 computed
   rule('.nv-content h2', 'font-size:'),
@@ -162,7 +195,7 @@ function s2PaperHtml(prefix, vw) {
       <div class="nv-paper-area">
         <div class="nv-sheet-wrap" id="${prefix}wrap${vw}">
           <article class="nv-sheet" id="${prefix}sheet${vw}">
-            <div class="nv-paper-top"><div class="nv-paper-crumb">第 1 章 / 2</div><div class="nv-paper-actions"><span class="nv-paper-words">88 字</span><button class="nv-paper-btn">编辑</button></div></div>
+            <div class="nv-paper-top"><div class="nv-paper-crumb">第 1 章 / 2</div><div class="nv-paper-actions"><span class="nv-paper-words">88 字</span><span class="nv-paper-save">已保存</span><button type="button" class="nv-paper-btn nv-paper-aa">Aa</button><button class="nv-paper-btn">编辑</button></div></div>
             <div class="nv-sheet-scroll nv-scroll nv-prose" id="${prefix}scroll${vw}"><div class="nv-content" id="${prefix}content${vw}"><p>中文正文测试段落，用于测量稿纸内宽是否产生横向溢出；这一行故意写得比较长，模拟真实章节正文的换行行为与行宽约束。</p><p>第二段同样用于测量段距与行宽。</p></div></div>
             <div class="nv-sheet-foot">1 / 1</div>
           </article>
@@ -194,6 +227,28 @@ const S2_CASES_HTML = S2_CASES.map((c) => {
   </div>`
     : ''
   return base + '\n' + focus + '\n' + drawer + '\n' + peek
+}).join('\n')
+
+// UX-066：排版 fixture（稿纸 450 / 680 两档；同页顺序切换 data-nv-font/data-nv-fs 后量算 computed）
+// 正文 + textarea 共用 prose 令牌；长中文段落用于验证 15/18px 下 scrollWidth ≤ clientWidth。
+const TYPO_TEXT = '中文正文测试段落用于验证写作排版在不同字体与字号下的换行与横向溢出行为这一行故意写得足够长以覆盖窄稿纸内的完整换行路径并检查行高与字号的联动变化第二段继续测量段落间距与实际行宽约束不产生任何横向滚动。'
+// UX-066 R2（R1 P2-1）：四族 computed font-family 必须命中目标族名，且不得含单引号字面量
+// （旧 fixture 的非法签名）。只断言字体栈语法/族名，不要求本机已安装字体文件。
+const TYPO_FAMILY_TARGET = {
+  serif: /Noto Serif|Songti|SimSun/i,
+  sans: /Noto Sans|YaHei/i,
+  kai: /Kaiti|STKaiti/i,
+  system: /system-ui|Segoe|YaHei/i,
+}
+const TYPO_FIXTURE = [450, 680].map((w) => {
+  const wrapW = w + 20
+  return `<div class="nv-sheet-wrap" id="typoWrap${w}" style="width:${wrapW}px;--nv-sheet-min:420px;--nv-sheet-gap:10px">
+    <article class="nv-sheet" id="typoSheet${w}" style="height:620px">
+      <div class="nv-paper-top"><div class="nv-paper-crumb">第 1 章</div><div class="nv-paper-actions"><span class="nv-paper-save">已保存</span><button type="button" class="nv-paper-btn nv-paper-aa" id="typoAa${w}">Aa</button><button type="button" class="nv-paper-btn">编辑</button></div></div>
+      <div class="nv-sheet-scroll nv-scroll nv-prose" id="typoScroll${w}"><div class="nv-content" id="typoContent${w}"><p>${TYPO_TEXT}</p><p>${TYPO_TEXT}</p><p>${TYPO_TEXT}</p></div></div>
+      <textarea class="nv-sheet-edit" id="typoEdit${w}" style="height:110px;min-height:110px">${TYPO_TEXT}${TYPO_TEXT}</textarea>
+    </article>
+  </div>`
 }).join('\n')
 
 const html = `<!doctype html><html><head><meta charset="utf-8"><style>
@@ -291,6 +346,8 @@ ${rules.join('\n')}
 ${u63StageHtml}
 <!-- UX-064 S2 R3：真实容器宽六档（1680:1400 … 800:520）+ 专注 + 抽屉 side/overlay + 窄态 peek -->
 ${S2_CASES_HTML}
+<!-- UX-066：写作排版 fixture（稿纸 450 / 680；按 data-nv-font/data-nv-fs 顺序量算 15/16/17/18） -->
+${TYPO_FIXTURE}
 <script>
 const S2_CASES = ${JSON.stringify(S2_CASES)};
 window.addEventListener('load', function () {
@@ -473,8 +530,17 @@ window.addEventListener('load', function () {
         paperContentW,
         sheetExpected,
         paperHit: (() => {
-          const b = split.querySelector('.nv-paper-btn')
-          window.scrollTo(0, window.scrollY + b.getBoundingClientRect().top - 120)
+          const b = split.querySelector('.nv-paper-btn:not(.nv-paper-aa)')
+          const br = b.getBoundingClientRect()
+          window.scrollTo(0, window.scrollY + br.top - 120)
+          const r = b.getBoundingClientRect()
+          return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) === b
+        })(),
+        paperAaHit: (() => {
+          const b = split.querySelector('.nv-paper-aa')
+          if (b === null) return false
+          const br = b.getBoundingClientRect()
+          window.scrollTo(0, window.scrollY + br.top - 120)
           const r = b.getBoundingClientRect()
           return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) === b
         })(),
@@ -504,6 +570,56 @@ window.addEventListener('load', function () {
         peek,
       }
     }),
+    // UX-066：同一页顺序切换根属性后量算（默认 / serif15 / sans16 / kai17 / system18 × 稿纸 450/680）
+    typo: (() => {
+      const variants = [
+        { font: 'serif', size: 15 },
+        { font: 'sans', size: 16 },
+        { font: 'kai', size: 17 },
+        { font: 'system', size: 18 },
+      ]
+      const rows = []
+      for (const v of variants) {
+        document.documentElement.setAttribute('data-nv-font', v.font)
+        document.documentElement.setAttribute('data-nv-fs', String(v.size))
+        for (const w of [450, 680]) {
+          const content = document.getElementById('typoContent' + w)
+          const scroll = document.getElementById('typoScroll' + w)
+          const edit = document.getElementById('typoEdit' + w)
+          const ccs = getComputedStyle(content)
+          const ecs = getComputedStyle(edit)
+          rows.push({
+            font: v.font, size: v.size, sheet: w,
+            fontFamily: ccs.fontFamily, fontSize: ccs.fontSize, lineHeight: ccs.lineHeight,
+            contentOverflow: content.scrollWidth > content.clientWidth + 1,
+            scrollOverflow: scroll.scrollWidth > scroll.clientWidth + 1,
+            editFontFamily: ecs.fontFamily, editFontSize: ecs.fontSize,
+            editOverflow: edit.scrollWidth > edit.clientWidth + 1,
+            contentW: Math.round(content.getBoundingClientRect().width),
+          })
+        }
+      }
+      document.documentElement.removeAttribute('data-nv-font')
+      document.documentElement.removeAttribute('data-nv-fs')
+      const dc = getComputedStyle(document.getElementById('typoContent450'))
+      const de = getComputedStyle(document.getElementById('typoEdit450'))
+      const btn = document.getElementById('typoAa450')
+      const b0 = btn.getBoundingClientRect()
+      window.scrollTo(0, window.scrollY + b0.top - 120)
+      const br = btn.getBoundingClientRect()
+      return {
+        rows,
+        defaultFontSize: dc.fontSize,
+        defaultFontFamily: dc.fontFamily,
+        defaultLineHeight: dc.lineHeight,
+        defaultEditFontSize: de.fontSize,
+        aa: {
+          w: Math.round(br.width),
+          h: Math.round(br.height),
+          hit: document.elementFromPoint(br.left + br.width / 2, br.top + br.height / 2) === btn,
+        },
+      }
+    })(),
     s2Collapsed: (() => {
       const el = document.getElementById('s2rail1152')
       el.style.transition = 'none'
@@ -655,7 +771,23 @@ try {
     s2NoHorizontalScroll: data.s2.every((x) => x.sheetScrollX === false && x.contentOverflowX === false
       && x.focus.sheetScrollX === false && x.drawer.sheetScrollX === false && x.drawer.contentOverflowX === false
       && (x.peek === null || (x.peek.sheetScrollX === false && x.peek.contentOverflowX === false))),
-    s2PaperControlHit: data.s2.every((x) => x.paperHit === true),
+    s2PaperControlHit: data.s2.every((x) => x.paperHit === true && x.paperAaHit === true),
+    // UX-066：排版默认 16/1.95；4 组字体/字号 × 450/680 稿纸 —— computed font-family/font-size 命中
+    // 对应字体栈与字号，行高恒 1.95；正文/滚动容器/textarea 均无横向溢出；450 稿纸 Aa 可命中。
+    typoDefault: data.typo.defaultFontSize === '16px'
+      && Math.abs(parseFloat(data.typo.defaultLineHeight) - 31.2) <= 0.6
+      && TYPO_FAMILY_TARGET.serif.test(data.typo.defaultFontFamily)
+      && !data.typo.defaultFontFamily.includes("'")
+      && data.typo.defaultEditFontSize === '16px',
+    typoVariants: data.typo.rows.length === 8
+      && data.typo.rows.every((r) => r.fontSize === r.size + 'px' && r.editFontSize === r.size + 'px')
+      && data.typo.rows.every((r) => Math.abs(parseFloat(r.lineHeight) - r.size * 1.95) <= 0.6)
+      // 四族目标 token 必须真实出现在 computed 栈（正文与 textarea 各自检查），且无单引号字面量
+      && data.typo.rows.every((r) => TYPO_FAMILY_TARGET[r.font].test(r.fontFamily)
+        && TYPO_FAMILY_TARGET[r.font].test(r.editFontFamily)
+        && !r.fontFamily.includes("'") && !r.editFontFamily.includes("'")),
+    typoNoOverflow: data.typo.rows.every((r) => r.contentOverflow === false && r.scrollOverflow === false && r.editOverflow === false),
+    typoAaReachable: data.typo.aa.w > 0 && data.typo.aa.h > 0 && data.typo.aa.hit === true,
     // 模式阈值单一事实源：JS 常量 ≡ CSS 容器查询字面量；旧 max(280px) 假挤压不得回归
     s2DrawerThreshold: DRAWER_SIDE_MIN_JS === 1280 && DRAWER_SIDE_MIN_CSS === 1280
       && clientSrc.includes('@container studio (max-width:1279px){.nv-split[data-drawer=true] .nv-main{width:100%}}')
@@ -737,7 +869,11 @@ try {
     + ' / empty quote ' + data.u64.empty.quote.w + '×/border ' + data.u64.empty.quote.border + '/' + data.u64.empty.quote.dir + '/bg ' + data.u64.empty.quote.bg
     + ' / empty cover ' + data.u64.empty.cover.w + '×' + data.u64.empty.cover.h + ' / shelf dir ' + data.u64.empty.shelfDir
     + ' / shelf title ' + data.u64.empty.shelfTFont + ' · desc ' + data.u64.empty.shelfDFont
-    + ' / ux063 z 900<' + data.u63.zDrawer + '<950')
+    + ' / ux063 z 900<' + data.u63.zDrawer + '<950'
+    + ' / UX-066 排版 默认 ' + data.typo.defaultFontSize + '/' + data.typo.defaultLineHeight
+    + ' 变体 ' + data.typo.rows.map((r) => r.font + r.size + '@' + r.sheet + ':' + r.fontSize).join(',')
+    + ' 横向溢出 ' + data.typo.rows.filter((r) => r.contentOverflow || r.scrollOverflow || r.editOverflow).length
+    + ' / 450 稿纸 Aa ' + (data.typo.aa.hit === true ? 'hit' : 'miss'))
   process.exit(0)
 } finally {
   try { fs.unlinkSync(tmp) } catch { /* ignore */ }

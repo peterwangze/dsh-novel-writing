@@ -1,0 +1,879 @@
+{
+  "tool": "probe-ux066-typography",
+  "task": "UX-066",
+  "startedAt": "2026-11-08T15:41:50.886Z",
+  "isolation": {
+    "root": "C:\\Users\\peter\\AppData\\Local\\Temp\\nvtypo-probe-fOPael",
+    "dshHome": "C:\\Users\\peter\\AppData\\Local\\Temp\\nvtypo-probe-fOPael\\dsh-home",
+    "hostCli": {
+      "cmd": "D:\\app\\dsh\\resources\\runtime\\cli\\bin\\dsh.cmd",
+      "source": "桌面运行时 CLI（默认）"
+    },
+    "browser": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+    "port": 3080,
+    "containment": {
+      "home": true,
+      "userprofile": true,
+      "appdata": true,
+      "localappdata": true,
+      "edge": true,
+      "tmp": true,
+      "novels": true
+    },
+    "realEnvBefore": {
+      "home": "C:\\Users\\peter\\.dsh",
+      "settingsSha": null,
+      "profiles": "chatgpt,desktop,node_modules,web",
+      "preset": ".dsh-bundle-version:5,agent.cordis.yml:13034,agents:0,preset.yml:410,skills:0"
+    }
+  },
+  "steps": {
+    "firstRunGate": {
+      "dismissed": true,
+      "rounds": 2
+    },
+    "setup": {
+      "drawerSeen": true,
+      "clickHead": {
+        "ok": true,
+        "hit": {
+          "tag": "SPAN",
+          "cls": "nv-drawer-title",
+          "inside": true
+        }
+      },
+      "consoleSeen": true,
+      "createStatus": 200,
+      "bookId": "UX066排版验证书",
+      "saveStatus": 200,
+      "cardAppeared": true,
+      "cardClick": true,
+      "splitSeen": true,
+      "aaSeen": true
+    },
+    "settingsEntry": {
+      "clicked": false,
+      "candidates": [
+        "新建会话|",
+        "收起侧边栏|",
+        "新建会话|新会话Ctrl+Alt+N",
+        "插件|插件",
+        "自动化任务|自动化任务",
+        "更多|更多",
+        "搜索会话|",
+        "视图选项|",
+        "添加工作区|",
+        "工作区“默认工作区”的操作|",
+        "在“默认工作区”中新建会话|",
+        "在“未分组”中新建会话|"
+      ]
+    },
+    "settingsMenuCandidates": [
+      {
+        "openedWith": "更多",
+        "sub": {
+          "clicked": false,
+          "candidates": [
+            "新建会话|",
+            "收起侧边栏|",
+            "新建会话|新会话Ctrl+Alt+N",
+            "插件|插件",
+            "自动化任务|自动化任务",
+            "更多|更多",
+            "搜索会话|",
+            "视图选项|",
+            "添加工作区|",
+            "工作区“默认工作区”的操作|",
+            "在“默认工作区”中新建会话|",
+            "在“未分组”中新建会话|",
+            "📖 小说管理工作台|小说管理工作台",
+            "|UX066排版验证书work_type_selection · 1章 · 174字",
+            "|更多",
+            "账号菜单|更多"
+          ]
+        }
+      },
+      {
+        "openedWith": "插件",
+        "sub": {
+          "clicked": false,
+          "candidates": [
+            "新建会话|",
+            "收起侧边栏|",
+            "新建会话|新会话Ctrl+Alt+N",
+            "插件|插件",
+            "自动化任务|自动化任务",
+            "更多|更多",
+            "搜索会话|",
+            "视图选项|",
+            "添加工作区|",
+            "工作区“默认工作区”的操作|",
+            "在“默认工作区”中新建会话|",
+            "在“未分组”中新建会话|",
+            "📖 小说管理工作台|小说管理工作台",
+            "|UX066排版验证书work_type_selection · 1章 · 174字",
+            "|更多",
+            "账号菜单|更多"
+          ]
+        }
+      },
+      {
+        "openedWith": "视图选项",
+        "sub": {
+          "clicked": false,
+          "candidates": [
+            "新建会话|",
+            "收起侧边栏|",
+            "新建会话|新会话Ctrl+Alt+N",
+            "插件|插件",
+            "自动化任务|自动化任务",
+            "更多|更多",
+            "搜索会话|",
+            "视图选项|",
+            "添加工作区|",
+            "工作区“默认工作区”的操作|",
+            "在“默认工作区”中新建会话|",
+            "在“未分组”中新建会话|",
+            "📖 小说管理工作台|小说管理工作台",
+            "|UX066排版验证书work_type_selection · 1章 · 174字",
+            "|更多",
+            "账号菜单|更多"
+          ]
+        }
+      }
+    ],
+    "settingsAccountMenu": {
+      "account": {
+        "clicked": true,
+        "label": "账号菜单"
+      },
+      "sub": {
+        "clicked": true,
+        "label": "|设置Ctrl+Alt+,",
+        "candidates": [
+          "新建会话|",
+          "收起侧边栏|",
+          "新建会话|新会话Ctrl+Alt+N",
+          "插件|插件",
+          "自动化任务|自动化任务",
+          "更多|更多",
+          "搜索会话|",
+          "视图选项|",
+          "添加工作区|",
+          "工作区“默认工作区”的操作|",
+          "在“默认工作区”中新建会话|",
+          "在“未分组”中新建会话|",
+          "📖 小说管理工作台|小说管理工作台",
+          "|UX066排版验证书work_type_selection · 1章 · 174字",
+          "|更多",
+          "账号菜单|更多",
+          "插件说明|",
+          "刷新|刷新",
+          "添加插件|添加插件",
+          "选择添加插件方式|"
+        ]
+      }
+    },
+    "settingsProbeFacts": {
+      "textHasPluginSettings": false,
+      "textHasTypo": false,
+      "panelCount": 0,
+      "inputCount": 1,
+      "dialogs": [
+        "AnXs9G_panel"
+      ],
+      "snippet": "工作树隔离任务。GitHub 功能需要本机安装 gh 并登录。已安装插件dsh-novel-writingDSH (DeepSeek Harness) 自动化小说写作发布流水线插件：项目管理 + Agent 预设 + 可视化工作台 + 多平台发布配置与数据闭环空面板 设置通用设置模型内置插件小说写作Agent 预设打开配置文件关闭权限选择新会话的默认权限模式工作区内修改语言中文外观浅色深色跟随系统字号大小仅影响会话内容的字号14px工作步骤展示选择希望看到多少工具调用细节详细工作步骤收起时机选择何时自动收起工作步骤回答结束后收起后显示的回复工作步骤收起后，保留哪些助手回复全部回复显示代码工作视图开启后，显示轨迹、本轮代码差异，可选择完整的 Agent 预设切换快捷键查看和编辑当前可用的快捷键和输入操作编辑快捷键繁忙时的发送行为智能体运行时 Enter 键和发送按钮的行为；Cmd/Ctrl+Enter 使用另一行为排队发送性能与用量选择性能与用量信息展示的详细程度详细在使用官方模型 API 时上传 Session Log帮助改进 DeepSeek 模型与产品当前版本：0.2.2-rc.1"
+    },
+    "settingsPluginTab": {
+      "clicked": true,
+      "label": "小说写作"
+    },
+    "settings": {
+      "reachable": true,
+      "reset": true
+    },
+    "console": {
+      "errors": 0,
+      "pageerrors": 0,
+      "react310": 0,
+      "slotCrash": 0,
+      "sample": []
+    }
+  },
+  "assertions": [
+    {
+      "id": "UX066-A1-aa-entry",
+      "label": "纸页头 Aa 恰 1 个、位于「编辑」之前、文字 Aa/aria-label 写作排版/aria-haspopup=dialog/aria-expanded=false；启动即 html[data-nv-font=serif][data-nv-fs=16]（缺省回落）且 localStorage 尚未写入、正文默认 16px/1.95",
+      "ok": true,
+      "detail": {
+        "aaRight": 1316,
+        "menuW": null,
+        "menuLeft": null,
+        "menuRight": null,
+        "attrFont": "serif",
+        "attrFs": "16",
+        "contentFontSize": "16px",
+        "contentFontFamily": "\"Noto Serif SC\", \"Source Han Serif SC\", \"Songti SC\", STSong, SimSun, serif",
+        "contentLineHeight": "31.2px",
+        "contentOverflow": false,
+        "sheetOverflow": false,
+        "scrollOverflow": false,
+        "editFontSize": null,
+        "editFontFamily": null,
+        "editOverflow": null,
+        "previewFontSize": null,
+        "previewFontFamily": null,
+        "previewText": null,
+        "aaText": "Aa",
+        "aaLabel": "写作排版",
+        "aaHaspopup": "dialog",
+        "aaExpanded": "false",
+        "aaVisible": true,
+        "aaCount": 1,
+        "menuOpen": false,
+        "menuRole": null,
+        "fonts": [],
+        "sizes": [],
+        "checks": 0,
+        "order": [
+          "aa",
+          "编辑"
+        ],
+        "localStorage": null,
+        "sheetW": 680,
+        "barTitleFontSize": "16px",
+        "statusFontSize": "16px",
+        "vw": 1650
+      },
+      "at": "2026-11-08T15:41:59.225Z"
+    },
+    {
+      "id": "UX066-A2-aa-menu",
+      "label": "Aa 打开 role=dialog 的 240px 右对齐 popover：4 字体行（serif/sans/kai/system，各自 data-font）+ 4 字号 chip（15/16/17/18）+ 当前 serif/16 ✓/aria-pressed + 「正文预览」16px + 选择即保存脚注/恢复默认",
+      "ok": true,
+      "detail": {
+        "aaRight": 1316,
+        "menuW": 240,
+        "menuLeft": 1076,
+        "menuRight": 1316,
+        "attrFont": "serif",
+        "attrFs": "16",
+        "contentFontSize": "16px",
+        "contentFontFamily": "\"Noto Serif SC\", \"Source Han Serif SC\", \"Songti SC\", STSong, SimSun, serif",
+        "contentLineHeight": "31.2px",
+        "contentOverflow": false,
+        "sheetOverflow": false,
+        "scrollOverflow": false,
+        "editFontSize": null,
+        "editFontFamily": null,
+        "editOverflow": null,
+        "previewFontSize": "16px",
+        "previewFontFamily": "\"Noto Serif SC\", \"Source Han Serif SC\", \"Songti SC\", STSong, SimSun, serif",
+        "previewText": "正文预览",
+        "aaText": "Aa",
+        "aaLabel": "写作排版",
+        "aaHaspopup": "dialog",
+        "aaExpanded": "true",
+        "aaVisible": true,
+        "aaCount": 1,
+        "menuOpen": true,
+        "menuRole": "dialog",
+        "fonts": [
+          {
+            "font": "serif",
+            "on": "true",
+            "pressed": "true",
+            "text": "宋体"
+          },
+          {
+            "font": "sans",
+            "on": "false",
+            "pressed": "false",
+            "text": "黑体"
+          },
+          {
+            "font": "kai",
+            "on": "false",
+            "pressed": "false",
+            "text": "楷体"
+          },
+          {
+            "font": "system",
+            "on": "false",
+            "pressed": "false",
+            "text": "系统"
+          }
+        ],
+        "sizes": [
+          {
+            "size": "15",
+            "on": "false",
+            "pressed": "false",
+            "text": "15"
+          },
+          {
+            "size": "16",
+            "on": "true",
+            "pressed": "true",
+            "text": "16"
+          },
+          {
+            "size": "17",
+            "on": "false",
+            "pressed": "false",
+            "text": "17"
+          },
+          {
+            "size": "18",
+            "on": "false",
+            "pressed": "false",
+            "text": "18"
+          }
+        ],
+        "checks": 1,
+        "order": [
+          "aa",
+          "编辑"
+        ],
+        "localStorage": null,
+        "sheetW": 680,
+        "barTitleFontSize": "16px",
+        "statusFontSize": "16px",
+        "vw": 1650
+      },
+      "at": "2026-11-08T15:41:59.346Z"
+    },
+    {
+      "id": "UX066-A3-sans17",
+      "label": "选黑体 + 17 后 popover 保持打开 ∧ html[data-nv-font=sans][data-nv-fs=17] ∧ localStorage={\"font\":\"sans\",\"size\":17} ∧ .nv-content computed 17px 且 sans 栈 ∧ 预览 17px ∧ 正文/滚动容器无横向溢出 ∧ UI chrome（bar/status）字号不变",
+      "ok": true,
+      "detail": {
+        "aaRight": 1316,
+        "menuW": 240,
+        "menuLeft": 1076,
+        "menuRight": 1316,
+        "attrFont": "sans",
+        "attrFs": "17",
+        "contentFontSize": "17px",
+        "contentFontFamily": "\"Noto Sans SC\", \"Source Han Sans SC\", \"Microsoft YaHei UI\", \"Microsoft YaHei\", system-ui, sans-serif",
+        "contentLineHeight": "33.15px",
+        "contentOverflow": false,
+        "sheetOverflow": false,
+        "scrollOverflow": false,
+        "editFontSize": null,
+        "editFontFamily": null,
+        "editOverflow": null,
+        "previewFontSize": "17px",
+        "previewFontFamily": "\"Noto Sans SC\", \"Source Han Sans SC\", \"Microsoft YaHei UI\", \"Microsoft YaHei\", system-ui, sans-serif",
+        "previewText": "正文预览",
+        "aaText": "Aa",
+        "aaLabel": "写作排版",
+        "aaHaspopup": "dialog",
+        "aaExpanded": "true",
+        "aaVisible": true,
+        "aaCount": 1,
+        "menuOpen": true,
+        "menuRole": "dialog",
+        "fonts": [
+          {
+            "font": "serif",
+            "on": "false",
+            "pressed": "false",
+            "text": "宋体"
+          },
+          {
+            "font": "sans",
+            "on": "true",
+            "pressed": "true",
+            "text": "黑体"
+          },
+          {
+            "font": "kai",
+            "on": "false",
+            "pressed": "false",
+            "text": "楷体"
+          },
+          {
+            "font": "system",
+            "on": "false",
+            "pressed": "false",
+            "text": "系统"
+          }
+        ],
+        "sizes": [
+          {
+            "size": "15",
+            "on": "false",
+            "pressed": "false",
+            "text": "15"
+          },
+          {
+            "size": "16",
+            "on": "false",
+            "pressed": "false",
+            "text": "16"
+          },
+          {
+            "size": "17",
+            "on": "true",
+            "pressed": "true",
+            "text": "17"
+          },
+          {
+            "size": "18",
+            "on": "false",
+            "pressed": "false",
+            "text": "18"
+          }
+        ],
+        "checks": 1,
+        "order": [
+          "aa",
+          "编辑"
+        ],
+        "localStorage": "{\"font\":\"sans\",\"size\":17}",
+        "sheetW": 680,
+        "barTitleFontSize": "16px",
+        "statusFontSize": "16px",
+        "vw": 1650
+      },
+      "at": "2026-11-08T15:41:59.451Z"
+    },
+    {
+      "id": "UX066-A4-edit-sync",
+      "label": "Esc 关闭 popover 且焦点归还 Aa ∧ 进编辑态后 textarea computed 17px 且 sans 栈（与阅读同源）∧ textarea 无横向溢出 ∧ 页面滚动容器无横向溢出",
+      "ok": true,
+      "detail": {
+        "escClosed": true,
+        "focusBack": true,
+        "clickEdit": true,
+        "editSeen": true,
+        "editFacts": {
+          "editFontSize": "17px",
+          "editFontFamily": "\"Noto Sans SC\", \"Source Han Sans SC\", \"Microsoft YaHei UI\", \"Microsoft YaHei\", system-ui, sans-serif",
+          "editOverflow": false
+        }
+      },
+      "at": "2026-11-08T15:41:59.536Z"
+    },
+    {
+      "id": "UX066-A5-kai18-1152",
+      "label": "视口 1152（真实容器 872）Aa 仍可达 ∧ 选楷体/18 后 html[data-nv-font=kai][data-nv-fs=18] ∧ localStorage 精确 ∧ .nv-content/预览 computed 18px 且 Kaiti 栈 ∧ 正文与滚动容器无横向溢出",
+      "ok": true,
+      "detail": {
+        "v1152": {
+          "aaRight": 1054,
+          "menuW": null,
+          "menuLeft": null,
+          "menuRight": null,
+          "attrFont": "sans",
+          "attrFs": "17",
+          "contentFontSize": "17px",
+          "contentFontFamily": "\"Noto Sans SC\", \"Source Han Sans SC\", \"Microsoft YaHei UI\", \"Microsoft YaHei\", system-ui, sans-serif",
+          "contentLineHeight": "33.15px",
+          "contentOverflow": false,
+          "sheetOverflow": false,
+          "scrollOverflow": false,
+          "editFontSize": null,
+          "editFontFamily": null,
+          "editOverflow": null,
+          "previewFontSize": null,
+          "previewFontFamily": null,
+          "previewText": null,
+          "aaText": "Aa",
+          "aaLabel": "写作排版",
+          "aaHaspopup": "dialog",
+          "aaExpanded": "false",
+          "aaVisible": true,
+          "aaCount": 1,
+          "menuOpen": false,
+          "menuRole": null,
+          "fonts": [],
+          "sizes": [],
+          "checks": 0,
+          "order": [
+            "aa",
+            "编辑"
+          ],
+          "localStorage": "{\"font\":\"sans\",\"size\":17}",
+          "sheetW": 654,
+          "barTitleFontSize": "16px",
+          "statusFontSize": "16px",
+          "vw": 1152
+        },
+        "open1152": {
+          "ok": true,
+          "hit": {
+            "tag": "BUTTON",
+            "cls": "nv-paper-btn nv-paper-aa",
+            "inside": true
+          }
+        },
+        "menu1152": true,
+        "clickKai": true,
+        "click18": true,
+        "kai18": {
+          "aaRight": 1054,
+          "menuW": 240,
+          "menuLeft": 814,
+          "menuRight": 1054,
+          "attrFont": "kai",
+          "attrFs": "18",
+          "contentFontSize": "18px",
+          "contentFontFamily": "\"Kaiti SC\", STKaiti, KaiTi, \"Noto Serif SC\", serif",
+          "contentLineHeight": "35.1px",
+          "contentOverflow": false,
+          "sheetOverflow": false,
+          "scrollOverflow": false,
+          "editFontSize": null,
+          "editFontFamily": null,
+          "editOverflow": null,
+          "previewFontSize": "18px",
+          "previewFontFamily": "\"Kaiti SC\", STKaiti, KaiTi, \"Noto Serif SC\", serif",
+          "previewText": "正文预览",
+          "aaText": "Aa",
+          "aaLabel": "写作排版",
+          "aaHaspopup": "dialog",
+          "aaExpanded": "true",
+          "aaVisible": true,
+          "aaCount": 1,
+          "menuOpen": true,
+          "menuRole": "dialog",
+          "fonts": [
+            {
+              "font": "serif",
+              "on": "false",
+              "pressed": "false",
+              "text": "宋体"
+            },
+            {
+              "font": "sans",
+              "on": "false",
+              "pressed": "false",
+              "text": "黑体"
+            },
+            {
+              "font": "kai",
+              "on": "true",
+              "pressed": "true",
+              "text": "楷体"
+            },
+            {
+              "font": "system",
+              "on": "false",
+              "pressed": "false",
+              "text": "系统"
+            }
+          ],
+          "sizes": [
+            {
+              "size": "15",
+              "on": "false",
+              "pressed": "false",
+              "text": "15"
+            },
+            {
+              "size": "16",
+              "on": "false",
+              "pressed": "false",
+              "text": "16"
+            },
+            {
+              "size": "17",
+              "on": "false",
+              "pressed": "false",
+              "text": "17"
+            },
+            {
+              "size": "18",
+              "on": "true",
+              "pressed": "true",
+              "text": "18"
+            }
+          ],
+          "checks": 1,
+          "order": [
+            "aa",
+            "编辑"
+          ],
+          "localStorage": "{\"font\":\"kai\",\"size\":18}",
+          "sheetW": 654,
+          "barTitleFontSize": "16px",
+          "statusFontSize": "16px",
+          "vw": 1152
+        }
+      },
+      "at": "2026-11-08T15:42:00.606Z"
+    },
+    {
+      "id": "UX066-A6-system15",
+      "label": "选系统/15 后 html[data-nv-font=system][data-nv-fs=15] ∧ localStorage 精确 ∧ .nv-content/预览 computed 15px 且 system-ui 栈 ∧ 无横向溢出 ∧ UI chrome 字号不变",
+      "ok": true,
+      "detail": {
+        "clickSystem": true,
+        "click15": true,
+        "system15": {
+          "aaRight": 1054,
+          "menuW": 240,
+          "menuLeft": 814,
+          "menuRight": 1054,
+          "attrFont": "system",
+          "attrFs": "15",
+          "contentFontSize": "15px",
+          "contentFontFamily": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", sans-serif",
+          "contentLineHeight": "29.25px",
+          "contentOverflow": false,
+          "sheetOverflow": false,
+          "scrollOverflow": false,
+          "editFontSize": null,
+          "editFontFamily": null,
+          "editOverflow": null,
+          "previewFontSize": "15px",
+          "previewFontFamily": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", sans-serif",
+          "previewText": "正文预览",
+          "aaText": "Aa",
+          "aaLabel": "写作排版",
+          "aaHaspopup": "dialog",
+          "aaExpanded": "true",
+          "aaVisible": true,
+          "aaCount": 1,
+          "menuOpen": true,
+          "menuRole": "dialog",
+          "fonts": [
+            {
+              "font": "serif",
+              "on": "false",
+              "pressed": "false",
+              "text": "宋体"
+            },
+            {
+              "font": "sans",
+              "on": "false",
+              "pressed": "false",
+              "text": "黑体"
+            },
+            {
+              "font": "kai",
+              "on": "false",
+              "pressed": "false",
+              "text": "楷体"
+            },
+            {
+              "font": "system",
+              "on": "true",
+              "pressed": "true",
+              "text": "系统"
+            }
+          ],
+          "sizes": [
+            {
+              "size": "15",
+              "on": "true",
+              "pressed": "true",
+              "text": "15"
+            },
+            {
+              "size": "16",
+              "on": "false",
+              "pressed": "false",
+              "text": "16"
+            },
+            {
+              "size": "17",
+              "on": "false",
+              "pressed": "false",
+              "text": "17"
+            },
+            {
+              "size": "18",
+              "on": "false",
+              "pressed": "false",
+              "text": "18"
+            }
+          ],
+          "checks": 1,
+          "order": [
+            "aa",
+            "编辑"
+          ],
+          "localStorage": "{\"font\":\"system\",\"size\":15}",
+          "sheetW": 654,
+          "barTitleFontSize": "16px",
+          "statusFontSize": "16px",
+          "vw": 1152
+        }
+      },
+      "at": "2026-11-08T15:42:00.710Z"
+    },
+    {
+      "id": "UX066-A7-reload-persistence",
+      "label": "真实 Page.reload 后 html[data-nv-font=system][data-nv-fs=15] ∧ localStorage 仍 {\"font\":\"system\",\"size\":15} ∧ 重开工作台后 .nv-content computed 15px/system-ui ∧ 无横向溢出",
+      "ok": true,
+      "detail": {
+        "reloadGate": {
+          "dismissed": true,
+          "rounds": 1
+        },
+        "reloadConsole": true,
+        "reloadCardClick": true,
+        "reloadSplit": true,
+        "reloaded": {
+          "aaRight": 1054,
+          "menuW": null,
+          "menuLeft": null,
+          "menuRight": null,
+          "attrFont": "system",
+          "attrFs": "15",
+          "contentFontSize": "15px",
+          "contentFontFamily": "system-ui, -apple-system, \"Segoe UI\", \"Microsoft YaHei\", sans-serif",
+          "contentLineHeight": "29.25px",
+          "contentOverflow": false,
+          "sheetOverflow": false,
+          "scrollOverflow": false,
+          "editFontSize": null,
+          "editFontFamily": null,
+          "editOverflow": null,
+          "previewFontSize": null,
+          "previewFontFamily": null,
+          "previewText": null,
+          "aaText": "Aa",
+          "aaLabel": "写作排版",
+          "aaHaspopup": "dialog",
+          "aaExpanded": "false",
+          "aaVisible": true,
+          "aaCount": 1,
+          "menuOpen": false,
+          "menuRole": null,
+          "fonts": [],
+          "sizes": [],
+          "checks": 0,
+          "order": [
+            "aa",
+            "编辑"
+          ],
+          "localStorage": "{\"font\":\"system\",\"size\":15}",
+          "sheetW": 654,
+          "barTitleFontSize": "16px",
+          "statusFontSize": "16px",
+          "vw": 1152
+        }
+      },
+      "at": "2026-11-08T15:42:06.098Z"
+    },
+    {
+      "id": "UX066-A8-settings",
+      "label": "设置页「写作排版」与 Aa 同状态：4 字体 + 4 字号 + 当前 system/15 + 说明含「只影响正文与编辑器」∧ 点恢复默认后 html/localStorage/正文回到 serif/16",
+      "ok": true,
+      "detail": {
+        "settingsFacts": {
+          "fonts": [
+            {
+              "font": "serif",
+              "on": "false"
+            },
+            {
+              "font": "sans",
+              "on": "false"
+            },
+            {
+              "font": "kai",
+              "on": "false"
+            },
+            {
+              "font": "system",
+              "on": "true"
+            }
+          ],
+          "sizes": [
+            {
+              "size": "15",
+              "on": "true"
+            },
+            {
+              "size": "16",
+              "on": "false"
+            },
+            {
+              "size": "17",
+              "on": "false"
+            },
+            {
+              "size": "18",
+              "on": "false"
+            }
+          ],
+          "checks": 1,
+          "text": "写作排版只影响正文与编辑器，不影响界面字号字体宋体黑体楷体系统字号15161718当前：系统 · 15px恢复默认"
+        },
+        "resetClick": true,
+        "afterReset": {
+          "attrFont": "serif",
+          "attrFs": "16",
+          "localStorage": "{\"font\":\"serif\",\"size\":16}",
+          "contentFontSize": null
+        },
+        "resetState": {
+          "fonts": [
+            "serif"
+          ],
+          "sizes": [
+            "16"
+          ]
+        }
+      },
+      "at": "2026-11-08T15:42:30.730Z"
+    },
+    {
+      "id": "UX066-A9-console-clean",
+      "label": "console 零 React #310 ∧ 零 slot entry crashed（pageerror 计数如实披露：0）",
+      "ok": true,
+      "detail": {
+        "errors": 0,
+        "pageerrors": 0,
+        "react310": 0,
+        "slotCrash": 0,
+        "sample": []
+      },
+      "at": "2026-11-08T15:42:33.155Z"
+    }
+  ],
+  "consoleCaptured": {
+    "errors": [],
+    "pageerrors": []
+  },
+  "envBlocked": null,
+  "instanceUrlRedacted": "http://127.0.0.1:3080/?token=<redacted>",
+  "screenshots": {
+    "ux066-01-1680-aa-entry.png": "D:\\AI\\agent\\deepseek\\harness\\writing-workflow\\.scratch-ux064\\UX-066-evidence\\ux066-01-1680-aa-entry.png",
+    "ux066-02-1680-aa-menu.png": "D:\\AI\\agent\\deepseek\\harness\\writing-workflow\\.scratch-ux064\\UX-066-evidence\\ux066-02-1680-aa-menu.png",
+    "ux066-03-1680-sans17.png": "D:\\AI\\agent\\deepseek\\harness\\writing-workflow\\.scratch-ux064\\UX-066-evidence\\ux066-03-1680-sans17.png",
+    "ux066-04-1680-edit-sans17.png": "D:\\AI\\agent\\deepseek\\harness\\writing-workflow\\.scratch-ux064\\UX-066-evidence\\ux066-04-1680-edit-sans17.png",
+    "ux066-05-1152-kai18.png": "D:\\AI\\agent\\deepseek\\harness\\writing-workflow\\.scratch-ux064\\UX-066-evidence\\ux066-05-1152-kai18.png",
+    "ux066-06-1152-system15.png": "D:\\AI\\agent\\deepseek\\harness\\writing-workflow\\.scratch-ux064\\UX-066-evidence\\ux066-06-1152-system15.png",
+    "ux066-07-reload-system15.png": "D:\\AI\\agent\\deepseek\\harness\\writing-workflow\\.scratch-ux064\\UX-066-evidence\\ux066-07-reload-system15.png",
+    "ux066-08-settings-attempt.png": "D:\\AI\\agent\\deepseek\\harness\\writing-workflow\\.scratch-ux064\\UX-066-evidence\\ux066-08-settings-attempt.png",
+    "ux066-08-settings-system15.png": "D:\\AI\\agent\\deepseek\\harness\\writing-workflow\\.scratch-ux064\\UX-066-evidence\\ux066-08-settings-system15.png",
+    "ux066-09-settings-reset.png": "D:\\AI\\agent\\deepseek\\harness\\writing-workflow\\.scratch-ux064\\UX-066-evidence\\ux066-09-settings-reset.png"
+  },
+  "staticSettings": {
+    "title": true,
+    "fourFonts": true,
+    "fourSizes": true,
+    "reset": true,
+    "hint": true,
+    "noSettingsApi": true
+  },
+  "settingsUnreachable": false,
+  "realEnvAfter": {
+    "home": "C:\\Users\\peter\\.dsh",
+    "settingsSha": null,
+    "profiles": "chatgpt,desktop,node_modules,web",
+    "preset": ".dsh-bundle-version:5,agent.cordis.yml:13034,agents:0,preset.yml:410,skills:0"
+  },
+  "ok": true,
+  "cleanup": {
+    "realEnvUnchanged": true,
+    "port": 3080,
+    "kept": false
+  }
+}

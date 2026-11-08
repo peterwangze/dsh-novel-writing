@@ -1757,8 +1757,8 @@ check('客户端源码面：UX-063 P0-a③ 正文可读性（reading 16 + 行高
     // `.nv-content` 基础规则保留（S1/其他阅读面）；S2 稿纸正文经 `.nv-prose .nv-content` 覆盖行高 1.95
     && clientSrc.includes('.nv-content{font-size:var(--nv-fs-reading,16px);line-height:1.9;color:var(--nv-fg,#e6e8eb)}')
     && clientSrc.includes('.nv-content p{text-indent:2em;margin:0 0 .8em;font-size:inherit;line-height:inherit}')
-    && clientSrc.includes('.nv-prose .nv-content{width:100%;max-width:34em;min-width:0;')
-    && clientSrc.includes('font-size:var(--nv-fs-reading,16px);line-height:1.95')
+    && clientSrc.includes('.nv-prose .nv-content{width:100%;max-width:min(34em,100%);min-width:0;')
+    && clientSrc.includes('font-family:var(--nv-prose-family);font-size:var(--nv-prose-size);line-height:var(--nv-prose-lh)')
     && clientSrc.includes('.nv-sheet-edit{display:block;width:100%;min-width:0;max-width:100%;')
     && clientSrc.includes('.nv-content h2{font-size:var(--nv-fs-display);')
     && clientSrc.includes('.nv-content h3{font-size:var(--nv-fs-display-s);')
@@ -2006,7 +2006,7 @@ const scanHooksViolations = (src) => {
   return { hookFns, violations, braceBalance }
 }
 // golden（brittle-by-design）：含 hook 调用的函数清单——增删组件/hook 必须显式改此值（防扫描面静默萎缩）
-const HOOKS_GUARD_GOLDEN_FNS = 27 // UX-064 S2：+ChapterRail；S2 R2：+useStudioSnap（StudioLayout 订阅）
+const HOOKS_GUARD_GOLDEN_FNS = 29 // UX-064 S2：+ChapterRail；S2 R2：+useStudioSnap；UX-066：+TypographyPicker/+TypographySettings
 const hooksScan = scanHooksViolations(clientSrc)
 check('BUG-012 Rules-of-Hooks 静态守卫：lib/client.js 含 hook 调用的函数 ' + hooksScan.hookFns.length + ' 个（golden ' + HOOKS_GUARD_GOLDEN_FNS + '）全扫——「条件早退早于顶层 hook 调用」违规 = ' + hooksScan.violations.length + '（配平自检 ' + hooksScan.braceBalance + '）',
   hooksScan.violations.length === 0 && hooksScan.hookFns.length === HOOKS_GUARD_GOLDEN_FNS && hooksScan.braceBalance === 0,
@@ -2324,7 +2324,7 @@ check('客户端源码面：UX-055⑤ 正文阅读排版（第③步迁移：rea
     && clientSrc.includes('.nv-chapter-sep{')
     && clientSrc.includes("className: 'nv-content'")
     && clientSrc.includes('.nv-sheet-title{margin:11px 0 0;font-family:var(--nv-serif);font-size:var(--nv-fs-studio-29)')  // S2 稿纸标题（阅读↔编辑同源）
-    && clientSrc.includes('font-size:var(--nv-fs-reading,16px);line-height:1.95')  // 稿纸正文/编辑同步 reading（DR3 N-1 裁决 (a)）
+    && clientSrc.includes('font-family:var(--nv-prose-family);font-size:var(--nv-prose-size);line-height:var(--nv-prose-lh)')  // UX-066：稿纸正文/编辑共用排版令牌（默认仍 16/1.95）
     && clientSrc.includes("'.nv-chip{flex:none;display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;box-sizing:border-box;font-size:' + TYPO.meta") // P2-1：.nv-chip 11px→TYPO.meta 引用面
 })(), 'ux055 body typography missing')
 check('客户端源码面：UX-055⑥ 细节统一（抽屉小卡 13.5px / 当前阶段行 accent 8% 底+左缘条 / 排序 pill 选中 600 / 数据/表格 tabular-nums / mono 首字块渲染）', (() => {
@@ -3704,7 +3704,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // 入 golden）范围条目中「起于注释/空行」者 MUST 恰 2 项
   //（历史锚点：COMPAT-013 时期实测——3.1 起于 `/**` JSDoc L1278、3.8 起于 `/**` JSDoc L3418；现行注释起段以本断言动态计算清单为准）。动因 = 该计数原为**人工转写**且写错
   //（CHANGELOG 曾披露「三处」）——与 COMPAT-004 FIND-1 的 tier 串转写漂移同类，故沿用同款处置：实测值
-  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.5 `L1895-L1905` `try {` / 4.6 `L17`
+  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.5 `L1898-L1908` `try {` / 4.6 `L17`
   // `"dsh": {` / 5.1 `L1` `name:` / 5.2 `L16` `- id:` / 5.4 `L77` `- id:` / 6.1 `L39`（修正后真值；修正前
   // `L38` 亦非注释）/ 6.2 `L8` `"engines": {` / 6.4 `L105`（ci.yml `#` 注释起段——JS 口径不计为注释，见下句口径边界）。严格面（面 2 = 11 项）已由 ③ 逐项约束，
   // 本项只覆盖未纳入严格面的面（动态生成：实测 3/4/5/6）；注释口径同 ③（JS 风格），YAML `#` 不在识别面内（与 F-5① 同源前提）。
@@ -5187,11 +5187,285 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   check('UX-065 契约 3.7：dsh.novel.theme.v1 入册（符号 + note + 第 5 个行锚）∧ 键声明行活性命中',
     contract37 !== undefined && contract37.symbol.includes('dsh.novel.theme.v1')
       && contract37.note.includes('dsh.novel.theme.v1')
-      && (contract37.line.match(/L\d+/g) ?? []).length === 5
+      && (contract37.line.match(/L\d+/g) ?? []).length === 6
       && (contract37.line.match(/L\d+/g) ?? []).includes('L' + themeKeyLine),
     'line=' + (contract37 !== undefined ? contract37.line : 'missing') + ' actual=L' + themeKeyLine)
 
   themeStore.set({ consoleOpen: false, theme: 'mozhi' })
+}
+// ── UX-066 写作排版（4 字体 × 4 字号；Aa popover + 设置页同 store；新持久键）──
+{
+  const { hostContract } = await import('../lib/host-contract.mjs')
+  const tx = clientExports
+  const NV_TYPO = tx.NV_TYPOGRAPHY
+  const normT = tx.normalizeTypography
+  const normPatch = tx.normalizeTypographyPatch
+  const typoStore = tx.store
+  const fontIds = ['serif', 'sans', 'kai', 'system']
+  const sizeIds = [15, 16, 17, 18]
+
+  // ① 注册表 + normalizeTypography：4×4 合法、其余一律默认
+  const regOk = NV_TYPO !== null && typeof NV_TYPO === 'object'
+    && Array.isArray(NV_TYPO.fonts) && NV_TYPO.fonts.length === 4
+    && NV_TYPO.fonts.every((f) => fontIds.includes(f.id) && typeof f.labelKey === 'string' && typeof f.stack === 'string')
+    && Array.isArray(NV_TYPO.sizes) && JSON.stringify(NV_TYPO.sizes) === JSON.stringify(sizeIds)
+    && NV_TYPO.default.font === 'serif' && NV_TYPO.default.size === 16
+  let combos = 0
+  const comboBad = []
+  for (const font of fontIds) for (const size of sizeIds) {
+    const n = normT({ font, size })
+    if (n.font === font && n.size === size) combos += 1
+    else comboBad.push(font + '/' + size)
+  }
+  const badInputs = [null, undefined, {}, [], 'serif', 42, { font: 'serif' }, { font: 'serif', size: 16.5 }, { font: 'serif', size: '16' }, { font: 'evil', size: 16 }, { font: 'sans', size: 19 }, { font: "serif' onload='alert(1)", size: 16 }, { font: 'serif', size: NaN }]
+  const badNorm = badInputs.filter((v) => { const n = normT(v); return n.font !== 'serif' || n.size !== 16 })
+  check('UX-066 纯函数 normalizeTypography：4 字体 × 4 字号 = 16 组合全通过 ∧ null/缺字段/坏类型/未知/注入/越界一律回落 {serif,16} ∧ NV_TYPOGRAPHY 注册表 4+4+默认',
+    regOk && combos === 16 && badNorm.length === 0,
+    'combos=' + combos + ' bad=' + JSON.stringify(badNorm) + ' reg=' + regOk)
+
+  // ② patch 合并 + setTypography 三面同步/非法零写入 + 持久化键/读写降级
+  typoStore.set({ typography: { font: 'serif', size: 16 } })
+  const p1 = normPatch({ font: 'kai' })
+  const p2 = normPatch({ size: 18 })
+  typoStore.set({ typography: { font: 'kai', size: 18 } })
+  const p3 = normPatch({ size: 17 })
+  const p4 = normPatch({ font: 'evil' })
+  const p5 = normPatch(null)
+  const patchOk = p1.font === 'kai' && p1.size === 16 && p2.font === 'serif' && p2.size === 18
+    && p3.font === 'kai' && p3.size === 17 && p4.font === 'kai' && p4.size === 18
+    && p5.font === 'kai' && p5.size === 18
+  const writes = []
+  let throwWrite = false
+  let raw = null
+  globalThis.localStorage = {
+    getItem: () => raw,
+    setItem: (key, value) => { if (throwWrite) throw new Error('quota'); writes.push([key, value]) },
+    removeItem: () => {},
+  }
+  typoStore.set({ typography: { font: 'serif', size: 16 } })
+  const okSet = tx.setTypography({ font: 'sans', size: 17 })
+  const afterSet = { ...tx.store.get().typography }
+  const okBadFont = tx.setTypography({ font: 'evil' })
+  const okBadSize = tx.setTypography({ size: 19 })
+  const okNull = tx.setTypography(null)
+  const okEmpty = tx.setTypography({})
+  const afterBad = { ...tx.store.get().typography }
+  const writesAfterIllegal = writes.length
+  const writeValid = tx.writeTypography({ font: 'kai', size: 15 })
+  throwWrite = true
+  let writeThrew = ''
+  let writeQuota = null
+  try { writeQuota = tx.writeTypography({ font: 'serif', size: 16 }) } catch (e) { writeThrew = e.message }
+  raw = JSON.stringify({ font: 'kai', size: 18 })
+  const readValid = tx.readTypography()
+  raw = 'not-json'
+  const readBroken = tx.readTypography()
+  raw = JSON.stringify({ font: 'evil', size: 16 })
+  const readInjected = tx.readTypography()
+  raw = null
+  const readMissing = tx.readTypography()
+  delete globalThis.localStorage
+  const persistOk = writes.length === 2
+    && writes[0][0] === 'dsh.novel.typography.v1' && writes[0][1] === JSON.stringify({ font: 'sans', size: 17 })
+    && writes[1][1] === JSON.stringify({ font: 'kai', size: 15 })
+    && writesAfterIllegal === 1
+  check('UX-066 store/持久化：normalizeTypographyPatch 以当前 store 为基合并合法字段（非法字段保留原值）∧ setTypography 合法 = store 同步，非法（未知字体/越界字号/null/空 patch）返回 false 且零写入 ∧ 键名精确 dsh.novel.typography.v1（只存 {font,size}）∧ read 缺失/坏档/未知 → 默认、合法 → 原值 ∧ 写入异常返回 false 不抛',
+    patchOk && okSet === true && afterSet.font === 'sans' && afterSet.size === 17
+      && okBadFont === false && okBadSize === false && okNull === false && okEmpty === false
+      && afterBad.font === 'sans' && afterBad.size === 17
+      && writeValid === true && writeQuota === false && writeThrew === '' && persistOk
+      && readValid.font === 'kai' && readValid.size === 18
+      && readBroken.font === 'serif' && readBroken.size === 16
+      && readInjected.font === 'serif' && readInjected.size === 16
+      && readMissing.font === 'serif' && readMissing.size === 16,
+    'patch=' + JSON.stringify([p1, p2, p3, p4, p5]) + ' afterSet=' + JSON.stringify(afterSet) + ' invalid=' + JSON.stringify([okBadFont, okBadSize, okNull, okEmpty]) + ' writes=' + JSON.stringify(writes) + ' reads=' + JSON.stringify([readValid, readBroken, readInjected, readMissing]) + ' quota=' + writeQuota)
+
+  // ③ 根属性三面同步 + apply 初始化/订阅/清理（可逆性）
+  const attrs = new Map()
+  globalThis.document = {
+    documentElement: {
+      setAttribute: (name, value) => attrs.set(name, value),
+      removeAttribute: (name) => attrs.delete(name),
+    },
+  }
+  tx.syncTypographyAttrs({ font: 'kai', size: 18 })
+  const attrsAfter = { font: attrs.get('data-nv-font'), fs: attrs.get('data-nv-fs') }
+  tx.clearTypographyAttrs()
+  const attrsCleared = attrs.size === 0
+  delete globalThis.document
+  const applyInitOk = clientSrc.includes('const initialTypography = readTypography()')
+    && clientSrc.includes('store.set({ typography: initialTypography })')
+    && clientSrc.includes('syncTypographyAttrs(initialTypography)')
+    && clientSrc.includes('const offTypography = store.subscribe((snap) => syncTypographyAttrs(snap.typography))')
+    && clientSrc.includes('try { offTypography() }')
+    && clientSrc.includes('clearTypographyAttrs()')
+  check('UX-066 根属性与生命周期：syncTypographyAttrs 写 <html data-nv-font="kai" data-nv-fs="18"> ∧ clearTypographyAttrs 移除两者 ∧ apply 初始化读 localStorage + store + 订阅同步 ∧ cleanup 退订并移除属性',
+    attrsAfter.font === 'kai' && attrsAfter.fs === '18' && attrsCleared === true && applyInitOk,
+    'attrs=' + JSON.stringify(attrsAfter) + ' cleared=' + attrsCleared + ' init=' + applyInitOk)
+
+  // ④ CSS：4 字体块 + 3 字号块 + 根令牌 + 仅正文/编辑器消费（UI chrome 零 prose 令牌）
+  const ruleBody = (sel) => {
+    const re = new RegExp(sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{([^}]*)\\}')
+    const m = re.exec(clientSrc)
+    return m === null ? '' : m[1]
+  }
+  const fontBlocks = (clientSrc.match(/:root\[data-nv-font="/g) ?? []).length
+  const sizeBlocks = (clientSrc.match(/:root\[data-nv-fs="/g) ?? []).length
+  const rootTokens = ['--nv-kai:', '--nv-system:', '--nv-prose-family:var(--nv-serif)', '--nv-prose-size:16px', '--nv-prose-lh:1.95'].every((s) => clientSrc.includes(s))
+  const proseBody = ruleBody('.nv-prose .nv-content')
+  const editBody = ruleBody('.nv-sheet-edit')
+  const consumerOk = ['font-family:var(--nv-prose-family)', 'font-size:var(--nv-prose-size)', 'line-height:var(--nv-prose-lh)'].every((s) => proseBody.includes(s) && editBody.includes(s))
+  const proseWidthOk = proseBody.includes('width:100%') && proseBody.includes('max-width:min(34em,100%)') && proseBody.includes('min-width:0')
+  const proseLines = clientSrc.split('\n').filter((line) => line.includes('var(--nv-prose-'))
+  const chromeOk = proseLines.length === 3 && proseLines.every((line) => /^\s*'\.nv-prose \.nv-content/.test(line) || /^\s*'\.nv-sheet-edit\{/.test(line))
+  const chromeBodies = ['.nv-bar-title', '.nv-rail-status', '.nv-status', '.nv-theme-menu'].map(ruleBody)
+  const chromeClean = chromeBodies.filter((b) => b !== '').length === 4 && chromeBodies.every((b) => !b.includes('--nv-prose-'))
+  const typoCssLines = clientSrc.split('\n').filter((line) => /':root\[data-nv-(?:font|fs)="|'\.nv-(?:paper-aa|typo-)/.test(line))
+  const typoNoHost = typoCssLines.length >= 20 && typoCssLines.every((line) => !line.includes('--dsw-') && !line.includes('color-scheme'))
+  check('UX-066 CSS：根令牌 --nv-prose-family/--nv-prose-size/--nv-prose-lh + --nv-kai/--nv-system ∧ 4 个 data-nv-font 块 + 3 个 data-nv-fs 块 ∧ 正文/编辑器两处消费者用 prose 令牌（max-width:min(34em,100%)）∧ 仅 3 行消费 prose 令牌（全文 UI chrome 零漏用）∧ 排版 CSS 零 --dsw-*/color-scheme',
+    fontBlocks === 4 && sizeBlocks === 3 && rootTokens && consumerOk && proseWidthOk && chromeOk && chromeClean && typoNoHost,
+    'fontBlocks=' + fontBlocks + ' sizeBlocks=' + sizeBlocks + ' root=' + rootTokens + ' consumer=' + consumerOk + ' width=' + proseWidthOk + ' proseLines=' + proseLines.length + ' chrome=' + chromeClean + ' dsw=' + typoNoHost)
+
+  // ⑤ 纸页头 Aa（唯一按钮）在「编辑」之前 + popover 4+4/状态/关闭路径
+  const cpStart = clientSrc.indexOf('function ChapterPanel(props)')
+  const cpEnd = clientSrc.indexOf('\n    function ', cpStart + 10)
+  const cpSrc = cpStart >= 0 && cpEnd > cpStart ? clientSrc.slice(cpStart, cpEnd) : ''
+  const pickerUseIdx = cpSrc.indexOf('el(TypographyPicker, { t })')
+  const editIdx = cpSrc.indexOf("title: mode === 'read' ? t('edit')")
+  const pickerStart = clientSrc.indexOf('function TypographyPicker(props)')
+  const pickerEnd = clientSrc.indexOf('function TypographySettings(props)')
+  const pickerSrc = pickerStart >= 0 && pickerEnd > pickerStart ? clientSrc.slice(pickerStart, pickerEnd) : ''
+  const pickerOk = pickerSrc !== ''
+    && pickerSrc.includes("className: 'nv-paper-btn nv-paper-aa'")
+    && pickerSrc.includes("'aria-haspopup': 'dialog'") && pickerSrc.includes("'aria-expanded'")
+    && pickerSrc.includes("role: 'dialog'") && pickerSrc.includes("'aria-pressed'")
+    && pickerSrc.includes('TYPOGRAPHY_FONTS.map') && pickerSrc.includes('TYPOGRAPHY_SIZES.map')
+    && pickerSrc.includes("'data-font': font.id") && pickerSrc.includes("'data-size': String(size)")
+    && pickerSrc.includes('nv-typo-check') && pickerSrc.includes('nv-typo-preview-text')
+    && pickerSrc.includes("t('typePreview')") && pickerSrc.includes("t('typeMenuFoot')")
+    && pickerSrc.includes("e.key !== 'Escape'") && pickerSrc.includes("'pointerdown'")
+    && pickerSrc.includes('focusTarget.focus()') && pickerSrc.includes('btnRef.current.focus()')
+    && pickerSrc.includes('rect.right - mw')
+    && clientSrc.includes('.nv-typo-menu{position:fixed;z-index:990;width:240px;')
+  check('UX-066 纸页头 Aa：ChapterPanel 稿纸头恰 1 个 TypographyPicker 且在「编辑」之前（同 .nv-paper-actions）∧ 按钮 Aa + aria-label/haspopup/expanded ∧ popover role=dialog 240px 右对齐 ∧ 4 字体行（各自字体栈/当前 ✓/aria-pressed）+ 4 字号 chip + 正文预览 + 选择即保存脚注 ∧ Escape/外点关闭且焦点归还 Aa',
+    cpSrc !== '' && pickerUseIdx > 0 && editIdx > pickerUseIdx && pickerOk,
+    'pickerUse=' + pickerUseIdx + ' edit=' + editIdx + ' pickerSrc=' + pickerSrc.length)
+
+  // ⑥ 渲染面：TypographyPicker 关闭态 1 个 Aa；TypographySettings 4+4 + 当前标记 + 恢复默认
+  const walkT = (node, visit) => {
+    if (node === null || node === undefined) return
+    if (typeof node === 'string') return
+    if (typeof node !== 'object') return
+    if (Array.isArray(node)) { for (const child of node) walkT(child, visit); return }
+    visit(node)
+    if (Array.isArray(node.children)) for (const child of node.children) walkT(child, visit)
+  }
+  const collectText = (node, out) => {
+    if (node === null || node === undefined) return
+    if (typeof node === 'string') { out.push(node); return }
+    if (typeof node !== 'object') return
+    if (Array.isArray(node)) { for (const child of node) collectText(child, out); return }
+    if (Array.isArray(node.children)) for (const child of node.children) collectText(child, out)
+  }
+  typoStore.set({ typography: { font: 'serif', size: 16 } })
+  const pickerTree = mockReact.createElement(tx.TypographyPicker, { t: (key) => key })
+  let aaCount = 0
+  let aaLabel = null
+  let aaPopup = null
+  let pickerMenus = 0
+  walkT(pickerTree, (node) => {
+    const cls = node.props !== undefined && typeof node.props.className === 'string' ? node.props.className : ''
+    const tokens = cls.split(/\s+/).filter((t) => t !== '')
+    if (tokens.includes('nv-paper-aa')) {
+      aaCount += 1
+      aaLabel = node.props['aria-label']
+      aaPopup = node.props['aria-haspopup']
+    }
+    if (tokens.includes('nv-typo-menu')) pickerMenus += 1
+  })
+  const settingsTree = mockReact.createElement(tx.TypographySettings, { t: (key) => key })
+  let fontRows = 0
+  let sizeChips = 0
+  let onFontRows = 0
+  let onSizeChips = 0
+  let marks = 0
+  let resetBtns = 0
+  walkT(settingsTree, (node) => {
+    const cls = node.props !== undefined && typeof node.props.className === 'string' ? node.props.className : ''
+    const tokens = cls.split(/\s+/).filter((t) => t !== '')
+    if (tokens.includes('nv-typo-font')) {
+      fontRows += 1
+      if (node.props['data-on'] === 'true') onFontRows += 1
+    }
+    if (tokens.includes('nv-typo-size')) {
+      sizeChips += 1
+      if (node.props['data-on'] === 'true') onSizeChips += 1
+    }
+    if (tokens.includes('nv-typo-check')) marks += 1
+    if (tokens.includes('nv-typo-reset')) resetBtns += 1
+  })
+  const settingsTexts = []
+  collectText(settingsTree, settingsTexts)
+  const settingsText = settingsTexts.join('|')
+  check('UX-066 渲染面：Aa 关闭态恰 1 个按钮（aria-label/haspopup=dialog、无菜单）∧ 设置页「写作排版」4 字体行 + 4 字号 chip + 当前标记恰 1 ∧ 默认宋体/16 当前命中 ∧ 恢复默认按钮 ∧ 说明只影响正文与编辑器',
+    aaCount === 1 && aaLabel === 'typeAa' && aaPopup === 'dialog' && pickerMenus === 0
+      && fontRows === 4 && sizeChips === 4 && onFontRows === 1 && onSizeChips === 1 && marks === 1 && resetBtns === 1
+      && settingsText.includes('typeSerif') && settingsText.includes('16px') && settingsText.includes('typeHint'),
+    'aa=' + aaCount + '/' + aaLabel + '/' + aaPopup + ' menu=' + pickerMenus + ' rows=' + fontRows + ' sizes=' + sizeChips + ' on=' + onFontRows + '/' + onSizeChips + ' marks=' + marks + ' reset=' + resetBtns)
+
+  // ⑦ 设置页安插位置 + i18n zh/en 成对 + 无未本地化新增文案
+  const themeInsertIdx = clientSrc.indexOf('el(ThemeSettings, { t })')
+  const typoInsertIdx = clientSrc.indexOf('el(TypographySettings, { t })')
+  const pluginInsertIdx = clientSrc.indexOf("'启用插件'")
+  const settingsSrcStart = pickerEnd
+  const settingsSrcEnd = clientSrc.indexOf('\n    exports.apply = apply', settingsSrcStart)
+  const settingsSrc = settingsSrcStart >= 0 && settingsSrcEnd > settingsSrcStart ? clientSrc.slice(settingsSrcStart, settingsSrcEnd) : ''
+  const typeKeys = ['typeTitle', 'typeAa', 'typeFont', 'typeSize', 'typeSerif', 'typeSans', 'typeKai', 'typeSystem', 'typePreview', 'typeCurrent', 'typeReset', 'typeHint', 'typeMenuFoot']
+  const i18nBad = typeKeys.filter((key) => (clientSrc.match(new RegExp('\\b' + key + ':', 'g')) ?? []).length !== 2)
+  check('UX-066 设置页与 i18n：设置页 TypographySettings 紧接 ThemeSettings 且在「启用插件」之前 ∧ 组件含 4+4 映射/当前标记/恢复默认/仅正文说明且不调用 settings API ∧ 13 个排版键 zh/en 成对（各 2 次）',
+    themeInsertIdx > 0 && typoInsertIdx > themeInsertIdx && pluginInsertIdx > typoInsertIdx
+      && settingsSrc.includes('TYPOGRAPHY_FONTS.map') && settingsSrc.includes('TYPOGRAPHY_SIZES.map')
+      && settingsSrc.includes('setTypography(DEFAULT_TYPOGRAPHY)') && settingsSrc.includes("t('typeHint')")
+      && !settingsSrc.includes('api.settings')
+      && i18nBad.length === 0,
+    'insert=' + themeInsertIdx + '/' + typoInsertIdx + '/' + pluginInsertIdx + ' i18nBad=' + JSON.stringify(i18nBad))
+
+  // ⑧ 契约 3.7：新键入册（符号 + note + 第 6 个行锚 = 键声明行活性）
+  const c37 = hostContract.items.find((it) => it.item === '3.7')
+  const typoKeyLine = clientSrc.split('\n').findIndex((line) => line.includes("const TYPOGRAPHY_PERSIST_KEY = 'dsh.novel.typography.v1'")) + 1
+  const anchors37 = c37 !== undefined ? (c37.line.match(/L\d+/g) ?? []) : []
+  check('UX-066 契约 3.7：dsh.novel.typography.v1 入册（symbol + note + 默认 serif/16 与「不写宿主 settings/API」口径 + data-nv-font 根属性 P-10 说明）∧ 第 6 个行锚活性命中',
+    c37 !== undefined && c37.symbol.includes('dsh.novel.typography.v1')
+      && c37.note.includes('dsh.novel.typography.v1')
+      && c37.note.includes('data-nv-font') && c37.note.includes('不写宿主 settings/API')
+      && anchors37.length === 6 && anchors37.includes('L' + typoKeyLine),
+    'line=' + (c37 !== undefined ? c37.line : 'missing') + ' actual=L' + typoKeyLine)
+
+  // ⑨ apply 真实驱动（fake DOM + localStorage）：初始化读→store→根属性；cleanup 退订并移除两属性
+  const attrs2 = new Map()
+  let applied2 = null
+  let applyErr2 = ''
+  let cleanupErr2 = ''
+  globalThis.localStorage = { getItem: () => JSON.stringify({ font: 'kai', size: 18 }), setItem: () => {}, removeItem: () => {} }
+  globalThis.document = {
+    documentElement: { setAttribute: (name, value) => attrs2.set(name, value), removeAttribute: (name) => attrs2.delete(name) },
+    getElementById: () => null,
+    head: null,
+  }
+  const ctx2 = { get: () => undefined, slots: { inject: (name, fn) => fn(), register: () => {} } }
+  try { applied2 = tx.apply(ctx2) } catch (e) { applyErr2 = e.message }
+  const applyStore2 = { ...tx.store.get().typography }
+  const applyAttrs2 = { font: attrs2.get('data-nv-font'), fs: attrs2.get('data-nv-fs') }
+  try { if (typeof applied2 === 'function') applied2() } catch (e) { cleanupErr2 = e.message }
+  const applyCleared2 = attrs2.size === 0
+  delete globalThis.document
+  delete globalThis.localStorage
+  typoStore.set({ typography: { font: 'serif', size: 16 } })
+  check('UX-066 apply 真实驱动：初始化 readTypography（kai/18）→ store → html 根属性同步 ∧ cleanup 退订并移除 data-nv-font/data-nv-fs（无残留）',
+    applyErr2 === '' && applyStore2.font === 'kai' && applyStore2.size === 18
+      && applyAttrs2.font === 'kai' && applyAttrs2.fs === '18'
+      && cleanupErr2 === '' && applyCleared2 === true,
+    'err=' + applyErr2 + ' store=' + JSON.stringify(applyStore2) + ' attrs=' + JSON.stringify(applyAttrs2) + ' cleared=' + applyCleared2 + ' cleanupErr=' + cleanupErr2)
 }
 //   至少 4 个任务周期（179 vs 276，正落在 COMPAT-007 修改的代码块内）；本断言把「随 smoke 计数变更同步」由
 //   文档纪律升级为机检（改 README 计数与改 smoke 断言数必须同 commit）。**必须保持为本文件最后一条 check**
