@@ -562,3 +562,5 @@
 | TRIAGE-UX-066 | UX-066 | 变更控制 | change-triage CLI 机器写入 triage 记录（依赖/优先级/冲突/版本/执行副作用五步分析）〔用户点名〕 | 事实依据：change-triage 输出摘要（机器写入；命令输出 JSON 快照见 change-triage/UX-066.json） | UX-066.json | change-triage | 2026-11-08 | G11 | TRIAGED |
 
 | REVIEW-UX-064-R5 | UX-064 | 治理记录 | review-record CLI 机器写入 review 结论记录（round 5） | 事实依据：review-record 输出摘要（机器写入） | docs/review/UX-064-S2-R1.md; review-UX-064-R5.md; report_sha256=f4e889cff783; commit=488066963515; obligation=RECHECK-UX-064-R6 | Reviewer | 2026-11-08 | G11 | NEEDS_CHANGE |
+
+| REVIEW-UX-064-R6 | UX-064 | 治理记录 | review-record CLI 机器写入 review 结论记录（round 6） | 事实依据：review-record 输出摘要（机器写入） | docs/review/UX-064-S2-R2.md; review-UX-064-R6.md; report_sha256=0e55cc924040; commit=b07765704648; obligation=RECHECK-UX-064-R7 | Reviewer | 2026-11-08 | G11 | NEEDS_CHANGE |
