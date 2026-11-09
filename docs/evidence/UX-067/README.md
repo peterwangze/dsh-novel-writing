@@ -11,8 +11,9 @@
 - `ux067-06-settings-800-mozhi-light.png`：800 设置页。
 - `ux067-09-settings-1680-bottom-light.png`：底部运行 switch/诊断折叠/业务提示，无截断。
 - `ux067-10-settings-1680-mozhi-dark.png`：暗色设置页。
-- `ux067-01-drawer-1680-mozhi-light.png`：新抽屉 1680 side，paper-3 底、1px 缝、暖墨影。
-- `ux067-02-drawer-1152-mozhi-light.png`：1152 overlay，真实宿主内容。
+- `ux067-01-drawer-1680-mozhi-light.png`：最终抽屉 1680 side，**paper-2 浅纸底**、1px 缝、暖墨影。
+- `ux067-02-drawer-1152-mozhi-light.png`：1152 overlay，真实宿主内容；paper-2 浅纸底。
+- `ux067-03-drawer-800-mozhi-light.png`：800 窄窗 overlay。
 - `ux067-15-drawer-1680-qingjian-light.png`：青简浅色抽检。
 
 ## 门禁

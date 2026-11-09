@@ -844,7 +844,7 @@ try {
     u63ZCoexist: data.u63.zSplit === '900' && data.u63.zDrawer === '920' && data.u63.zConsole === '950',
     u63DrawerWidthCss: data.s2Styles.drawerW === '420px' && data.s2Styles.drawerZ === '920',
     // UX-067：宿主会话抽屉纸色作用域——不依赖 [data-nv-theme]；viewArea 11 项宿主令牌内联兜底；
-    // 纸-3/rule-strong 1px 缝/暖墨软影，避免白/黑/宿主蓝大面。设置页以插件墨纸令牌铺暖纸面。
+    // 纸-2/rule-strong 1px 缝/暖墨软影，避免白/黑/宿主蓝大面。设置页以插件墨纸令牌铺暖纸面。
     u67DrawerTokenScope: !clientSrc.includes('html[data-nv-drawer="1"][data-nv-theme]')
       && clientSrc.includes('html[data-nv-drawer="1"] [data-phase]')
       && U67_TOKEN_PROPS.length === 11
@@ -852,7 +852,7 @@ try {
       && clientSrc.includes('const value = viewArea.style.getPropertyValue(prop)')
       && clientSrc.includes('rememberTokens(viewArea, savedTokens)')
       && clientSrc.includes('node.style.removeProperty(prop)'),
-    u67DrawerPaperSeam: clientSrc.includes("viewArea.style.background = 'var(--nv-paper-3)'")
+    u67DrawerPaperSeam: clientSrc.includes("viewArea.style.background = 'var(--nv-paper-2)'")
       && clientSrc.includes("viewArea.style.borderLeft = '1px solid var(--nv-rule-strong)'")
       && clientSrc.includes("viewArea.style.boxShadow = '-8px 0 24px color-mix(in srgb, var(--nv-ink) 20%, transparent)'")
       && !clientSrc.includes("viewArea.style.background = 'var(--nv-bg,#0b0e14)'")

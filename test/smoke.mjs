@@ -5656,19 +5656,26 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   const drawerSrcStart = clientSrc.indexOf('applyDrawer() {')
   const drawerSrcEnd = clientSrc.indexOf('\n    // ── StudioLayout', drawerSrcStart)
   const drawerSrc = drawerSrcStart >= 0 && drawerSrcEnd > drawerSrcStart ? clientSrc.slice(drawerSrcStart, drawerSrcEnd) : ''
-  check('UX-067 抽屉作用域/外壳：不再依赖 [data-nv-theme] ∧ viewArea 11 宿主令牌内联覆盖（快照/恢复同生命周期）∧ 纸-3 底 + rule-strong 1px 缝 + 暖墨软影 ∧ 无白/黑/宿主蓝大面',
+  check('UX-067 抽屉作用域/外壳：不再依赖 [data-nv-theme] ∧ viewArea 11 宿主令牌内联覆盖（快照/恢复同生命周期）∧ 纸-2 底 + rule-strong 1px 缝 + 暖墨软影 ∧ 无白/黑/宿主蓝大面',
     !clientSrc.includes('html[data-nv-drawer="1"][data-nv-theme]')
       && clientSrc.includes('html[data-nv-drawer="1"] [data-phase]')
       && (ux067.VIEW_AREA_TOKEN_PROPS ?? []).length === 11
       && (rl.viewAreaCustomProps ?? []).length === 11
       && ux067.VIEW_AREA_TOKEN_PROPS.every((p) => rl.viewAreaCustomProps.includes(p))
       && rl.viewAreaCustomProps.every((p) => ux067.VIEW_AREA_TOKEN_PROPS.includes(p))
-      && clientSrc.includes("viewArea.style.background = 'var(--nv-paper-3)'")
+      && clientSrc.includes("viewArea.style.background = 'var(--nv-paper-2)'")
+      // UX-067 R5：抽屉壳与模型对话宿主面从纸-3（#EFE7DA）提亮到纸-2（#FBF8F1）；layer-1/overlay 同步纸-2，
+      // [data-phase] CSS 兜底与 viewArea 内联映射双处同值，输入面（specific-input-major）仍留纸-3 形成暖纸边界。
+      && clientSrc.includes("'--dsw-alias-bg-base': 'var(--nv-paper-2)'")
+      && clientSrc.includes('--dsw-alias-bg-base:var(--nv-paper-2);--dsw-alias-bg-layer-1:var(--nv-paper-2);--dsw-alias-bg-overlay:var(--nv-paper-2)')
+      && !clientSrc.includes("'--dsw-alias-bg-base': 'var(--nv-paper-3)'")
+      && !clientSrc.includes('--dsw-alias-bg-base:var(--nv-paper-3)')
       // UX-067 R2（P2-4）：input-major 从 paper-2（#FBF8F1 暖近白）降到 paper-3；内联映射与 CSS 兜底同值。
       && clientSrc.includes("'--dsw-specific-input-major': 'var(--nv-paper-3)'")
       && clientSrc.includes('--dsw-specific-input-major:var(--nv-paper-3)')
       && !clientSrc.includes('--dsw-specific-input-major:var(--nv-paper-2)')
       && !clientSrc.includes("'--dsw-specific-input-major': 'var(--nv-paper-2)'")
+      && clientSrc.includes('html[data-nv-drawer="1"] [data-composer-seat]{background:var(--nv-paper-3)')
       && clientSrc.includes("viewArea.style.borderLeft = '1px solid var(--nv-rule-strong)'")
       && clientSrc.includes("viewArea.style.boxShadow = '-8px 0 24px color-mix(in srgb, var(--nv-ink) 20%, transparent)'")
       && drawerSrc.includes('for (const prop of VIEW_AREA_TOKEN_PROPS)') && drawerSrc.includes('viewArea.style.setProperty(prop, VIEW_AREA_TOKEN_VALUES[prop])')

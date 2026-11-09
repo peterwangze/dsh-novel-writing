@@ -2303,6 +2303,44 @@
       "released_files": [
         "docs/review/UX-067-R4.md"
       ]
+    },
+    "op-235e5bea034e4b1798ece8cdce425568": {
+      "schema_version": 1,
+      "command": "locks-amend",
+      "task_id": "UX-067",
+      "input_fingerprint": "f49186c516490404142633a5b2ac4f2cd65a1f7c76de8063b5bcf641fa407755",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-235e5bea034e4b1798ece8cdce425568",
+        "code": "ok",
+        "new_revision": 2069,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-09T14:08:27",
+      "updated_at": "2026-11-09T14:08:27"
+    },
+    "op-4f1d94e57a424361981e4dc9a4422b4b": {
+      "schema_version": 1,
+      "command": "locks-amend",
+      "task_id": "UX-067",
+      "input_fingerprint": "56b6d9dda89f94b0b1996d1917430978428bb6e025eb30ccafb99b4f27b9bd36",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-4f1d94e57a424361981e4dc9a4422b4b",
+        "code": "ok",
+        "new_revision": 2414,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-09T14:08:27",
+      "updated_at": "2026-11-09T14:08:27"
     }
   }
 }
