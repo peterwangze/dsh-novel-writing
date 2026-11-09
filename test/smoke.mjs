@@ -357,6 +357,22 @@ check('createProject 重名拒绝', dup)
 let badName = false
 try { svc.createProject('a/b') } catch { badName = true }
 check('createProject 非法名拒绝', badName)
+// BUG-008：初始化失败必须回滚——残留 dir 会变成「不可见（无 state.json 被 listNovels 跳过）/
+// 不可删 / 同名重建被拒」的幽灵书目。断言注入失败后目录消失、列表无条目、同名可重建。
+{
+  const origUpdateState = svc.updateState
+  svc.updateState = () => { throw new Error('inject: writeState failed') }
+  let threw = false
+  try { svc.createProject('probe-rollback-book', '回滚演练') } catch { threw = true }
+  svc.updateState = origUpdateState
+  const dirGone = !existsSync(join(workspace, 'probe-rollback-book'))
+  const notListed = !svc.listNovels().novels.some((n) => n.id === 'probe-rollback-book')
+  let rebuildOk = false
+  try { svc.createProject('probe-rollback-book', '重建'); rebuildOk = true } catch { rebuildOk = false }
+  if (rebuildOk) svc.deleteProject('probe-rollback-book')
+  check('BUG-008 createProject 失败回滚：不留幽灵目录（目录消失 ∧ 不入列表 ∧ 同名可重建）', threw === true && dirGone && notListed && rebuildOk,
+    JSON.stringify({ threw, dirGone, notListed, rebuildOk }))
+}
 
 // ── UX-011：删除小说（novel-delete 服务 + API 注册 + id 校验链）──────────
 check('deleteProject id 校验与 createProject 同规（../x / .. / 空串 / null / a\\b / con / 点开头）', (() => {
