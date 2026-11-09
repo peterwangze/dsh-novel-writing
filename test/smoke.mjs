@@ -5704,6 +5704,25 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
 //   至少 4 个任务周期（179 vs 276，正落在 COMPAT-007 修改的代码块内）；本断言把「随 smoke 计数变更同步」由
 //   文档纪律升级为机检（改 README 计数与改 smoke 断言数必须同 commit）。**必须保持为本文件最后一条 check**
 //   （断言式用 `passed + 1` 计入自身；后续新增 check 会使其红——这正是期望的提示信号）。
+check('BUG-014 抽屉会话对齐：抽屉打开前把宿主 current 对齐到本书绑定会话（绑定新会话后不再显示旧会话）', (() => {
+  const drawerSrc = fnBody('const toggleDrawerAligned = () => {')
+  const bindSrc = fnBody('const bindNewSessionCtl = async () => {')
+  return drawerSrc !== ''
+    && drawerSrc.includes("if (layout.drawerOpen === true) { studioLayout.setDrawer(false); return }")
+    && drawerSrc.includes('splitCurrent !== boundId')
+    && drawerSrc.includes('launcher.open(boundId)')
+    && drawerSrc.includes('studioLayout.setDrawer(true)')
+    // 绑定成功后宿主 current 必须跟随新会话（否则抽屉/宿主会话面仍是旧会话）
+    && bindSrc.includes('setBoundOverride({ novelId: current.id, sessionId: r.sessionId })')
+    && bindSrc.includes('launcher.open(r.sessionId)')
+    // 本地覆盖只为挡住 overview 轮询窗口：追上同值必须让位；切书必须清零
+    && clientSrc.includes('if (boundOverride.novelId !== curId || boundIdServer === boundOverride.sessionId) setBoundOverride(null)')
+    && clientSrc.includes('const boundId = boundOverride !== null ? boundOverride.sessionId : boundIdServer')
+    // 抽屉入口必须走对齐版（禁止绕过直接 toggleDrawer）
+    && clientSrc.includes('onClick: toggleDrawerAligned,')
+    && !clientSrc.includes('onClick: () => studioLayout.toggleDrawer(),')
+})(), 'drawer=' + fnBody('const toggleDrawerAligned = () => {').slice(0, 80))
+
 check('BUG-013 预设 prompt 变量仅使用宿主已注册的 provider/model（cwd 等未知变量会在 persona 渲染时整轮失败）', (() => {
   const allow = new Set(['provider', 'model'])
   const sources = [
