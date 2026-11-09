@@ -1267,6 +1267,67 @@ check('UX-064 S2 R4 布局变量零未消费（.nv-split 单一事实源块内�
   const dead = declared.filter((v) => !consumed(v) && !LAYOUT_VAR_ALLOWLIST.has(v))
   return unregistered.length === 0 && missing.length === 0 && dead.length === 0
 })(), 's2r4 layout variables dead/missing/unregistered')
+check('UX-064 S3 panelHeight 纯模型与持久化（唯一新增像素状态；缺失/坏值/非有限/越界→null；运行期 clamp 180..min(父列 60%,520)；studio.v2 读回归一）', (() => {
+  // 口径：只提取 S3 纯函数区段真跑（不依赖 DOM），再核持久化三处读/写归一。
+  const start = clientSrc.indexOf('const PANEL_MIN_H = 180')
+  const end = clientSrc.indexOf('function persistStudioState', start)
+  if (start < 0 || end < 0) return false
+  const pureSrc = clientSrc.slice(start, end)
+  let api = null
+  try {
+    api = new Function('clampNum', pureSrc + '\nreturn { normalizePanelHeight, clampPanelHeight, defaultPanelHeight }')((v, lo, hi) => Math.min(Math.max(v, lo), hi))
+  } catch { return false }
+  const n = api.normalizePanelHeight
+  const c = api.clampPanelHeight
+  const d = api.defaultPanelHeight
+  return n(null) === null && n(undefined) === null && n(Number.NaN) === null && n(Number.POSITIVE_INFINITY) === null
+    && n('300') === null && n(179) === null && n(521) === null
+    && n(180) === 180 && n(300.4) === 300 && n(520) === 520
+    && c(600, 421) === 421 && c(100, 421) === 180 && c(300, 421) === 300 && c(300, 0) === 180
+    && d(865) === 260 && d(702) === 211 && d(0) === 180
+    && clientSrc.includes('panelHeight: normalizePanelHeight(state.panelHeight)')
+    && clientSrc.includes('panelHeight: normalizePanelHeight(s.panelHeight)')
+    && clientSrc.includes('this.panelHeight = normalizePanelHeight(saved.panelHeight)')
+    && clientSrc.includes('panelHeight: this.panelHeight === null ? null : this.panelHeight')
+    && clientSrc.includes('setPanelHeight(v, persist)')
+    && !/midH|setMidH/.test(pureSrc)
+})(), 'ux064 s3 panel height model/persistence missing')
+check('UX-064 S3 面板分隔条 ARIA/键盘/指针/Esc（4px visible + role=separator + aria-valuemin/max/now + pointer capture + ArrowUp/Down/Home/End + 双击重置 + focus 隐藏 + Esc 只关面板不连带关台/抽屉）', (() => {
+  const sepStart = clientSrc.indexOf("key: 'panel-sep'")
+  const sepEnd = clientSrc.indexOf("key: 'panel'", sepStart)
+  if (sepStart < 0 || sepEnd < 0) return false
+  const sep = clientSrc.slice(sepStart, sepEnd)
+  const escIdx = clientSrc.indexOf('// Esc 全局关闭（仅 active 时挂监听）')
+  const escBlk = escIdx < 0 ? '' : clientSrc.slice(escIdx, escIdx + 2600)
+  const drawerAt = escBlk.indexOf('studioLayout.setDrawer(false); return')
+  const panelAt = escBlk.indexOf('studioLayout.setPanelOpen(false); return')
+  return sep.includes("role: 'separator'") && sep.includes("'aria-orientation': 'horizontal'")
+    && sep.includes("'aria-valuemin': PANEL_MIN_H") && sep.includes("'aria-valuemax': panelMax")
+    && sep.includes("'aria-valuenow': panelNow") && sep.includes('tabIndex: 0')
+    && clientSrc.includes('setPointerCapture(e.pointerId)') && clientSrc.includes('releasePointerCapture(e.pointerId)')
+    && clientSrc.includes("if (e.key === 'ArrowUp')") && clientSrc.includes("if (e.key === 'ArrowDown')")
+    && clientSrc.includes("if (e.key === 'Home')") && clientSrc.includes("if (e.key === 'End')")
+    && clientSrc.includes('onDoubleClick: () => panelResize(null, true)')
+    && clientSrc.includes('panelResize(next, false)') && clientSrc.includes('panelResize(next, true)')
+    && clientSrc.includes('.nv-bottom{flex:0 0 clamp(180px,30%,60%)')
+    && clientSrc.includes('.nv-panel-sep{flex:none;height:4px;') && clientSrc.includes('touch-action:none')
+    && clientSrc.includes('.nv-panel-sep:hover::before,.nv-panel-sep:focus-visible::before')
+    && clientSrc.includes('.nv-split[data-focus=true] .nv-panel-sep{display:none}')
+    && escBlk !== '' && drawerAt >= 0 && panelAt > drawerAt
+})(), 'ux064 s3 panel separator/aria/keyboard/esc missing')
+check('UX-064 S3 页码只随真实可滚正文出现（内容不足一屏 ⇒ 隐藏 .nv-sheet-foot，不渲染假「1 / 1」；空章/加载/文件视图不显示）', (() => {
+  const start = clientSrc.indexOf('UX-064 S2：稿纸真实页码')
+  const end = clientSrc.indexOf('// ── UX-064 S2：稿纸（paper sheet）', start)
+  const pageBlock = start < 0 || end <= start ? '' : clientSrc.slice(start, end)
+  return pageBlock !== ''
+    && pageBlock.includes('if (sh <= h + 1) {')
+    && pageBlock.includes('setPaperPage(null)')
+    && pageBlock.includes('const total = Math.max(2, Math.ceil(sh / h))')
+    && pageBlock.includes('props.fileSel === null && mode === \'read\'')
+    && /paperPage !== null\s*\?\s*el\('div', \{ className: 'nv-sheet-foot' \}/.test(clientSrc)
+    && clientSrc.includes("t('studioPageOf', paperPage.cur, paperPage.total)")
+    && !pageBlock.includes("'1 / 1'")
+})(), 'ux064 s3 page count scroll-only guard missing')
 check('客户端源码面：S2 R2 z 三值共存（.nv-split 900 < 抽屉 --nv-drawer-z 920 < .nv-console 950）+ 抽屉宽单一事实源 = CSS --nv-drawer-w', (() => {
   const zSplit = Number((/\.nv-split\{[^}]*z-index:(\d+)/.exec(clientSrc) ?? [])[1])
   const zConsole = Number((/\.nv-console\{[^}]*z-index:(\d+)/.exec(clientSrc) ?? [])[1])
@@ -3704,7 +3765,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // 入 golden）范围条目中「起于注释/空行」者 MUST 恰 2 项
   //（历史锚点：COMPAT-013 时期实测——3.1 起于 `/**` JSDoc L1278、3.8 起于 `/**` JSDoc L3418；现行注释起段以本断言动态计算清单为准）。动因 = 该计数原为**人工转写**且写错
   //（CHANGELOG 曾披露「三处」）——与 COMPAT-004 FIND-1 的 tier 串转写漂移同类，故沿用同款处置：实测值
-  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.5 `L1898-L1908` `try {` / 4.6 `L17`
+  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.5 `L1955-L1965` `try {` / 4.6 `L17`
   // `"dsh": {` / 5.1 `L1` `name:` / 5.2 `L16` `- id:` / 5.4 `L77` `- id:` / 6.1 `L39`（修正后真值；修正前
   // `L38` 亦非注释）/ 6.2 `L8` `"engines": {` / 6.4 `L105`（ci.yml `#` 注释起段——JS 口径不计为注释，见下句口径边界）。严格面（面 2 = 11 项）已由 ③ 逐项约束，
   // 本项只覆盖未纳入严格面的面（动态生成：实测 3/4/5/6）；注释口径同 ③（JS 风格），YAML `#` 不在识别面内（与 F-5① 同源前提）。
