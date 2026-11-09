@@ -7,6 +7,14 @@
 ### 未发布
 - 无
 
+## [0.6.1] - 2026-11-09
+
+### 修复
+- **BUG-013（P0）基础启动回归：工作流 prompt 渲染报 `unknown prompt variable "{{cwd}}"`**：`cordis.patch.yml` 与 legacy `agent.cordis.yml` 的 persona prefix 都注入了 `{{cwd}}`，当前宿主只注册 `provider`/`model`，导致预设挂载成功后整轮 prompt 渲染失败。两源删除 `{{cwd}}`，保留 `{{model}}`；工作目录由会话/工作区承载。新增 `validate-preset` prompt 变量白名单与 smoke 断言（366→367），README 计数同步；负向注入 `{{cwd}}` 实测 validate-preset exit=1。
+
+### 文档
+- README 工作台/设置页截图改为**裁掉宿主左侧会话栏与宿主顶栏**的当前 UI 截图，并使用新文件名避免旧图缓存；新增 `docs/release/release-checklist-0.6.1.md`。
+
 ## [0.6.0] - 2026-11-09
 
 > 本版承载 UX-064「墨纸」S1–S3 重构、UX-065 主题系统、UX-066 写作排版、UX-067 设置页/原生会话视觉整合，以及 COMPAT 兼容性架构。界面为一次大改，但继承既有业务/数据/API 与自动迁移，新增 `studio.v2`、`typography.v1` 存储并保留旧键迁移。
