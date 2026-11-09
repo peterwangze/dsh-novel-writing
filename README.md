@@ -52,7 +52,7 @@
 - 下方面板：工作流、数据、发布、请求；可开关、可拖动调高度。
 - 专注：隐藏插件左栏、抽屉和状态栏，把空间还给正文，但不遮挡宿主 chrome。
 
-![写作台与对话抽屉](docs/evidence/UX-067/ux067-01-drawer-1680-mozhi-light.png)
+![写作台与对话抽屉](docs/evidence/UX-067/readme-workbench.png)
 
 ### 视觉与可读性
 
@@ -60,7 +60,7 @@
 - 正文与编辑器可独立选择宋体/黑体/楷体/系统和 15/16/17/18 字号；只影响正文，不影响界面 chrome。
 - 稿纸、对话框、设置页共用同一色系，避免白色宿主面板和工作台暖纸面割裂。
 
-![墨纸设置页](docs/evidence/UX-067/ux067-04-settings-1680-mozhi-light.png)
+![墨纸设置页](docs/evidence/UX-067/readme-settings.png)
 
 ### 交互原则
 
