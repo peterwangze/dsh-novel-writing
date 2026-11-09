@@ -585,3 +585,5 @@
 | REVIEW-UX-067-R2 | UX-067 | 治理记录 | review-record CLI 机器写入 review 结论记录（round 2） | 事实依据：review-record 输出摘要（机器写入） | docs/review/UX-067-R2.md; review-UX-067-R2.md; report_sha256=1ab02188cf32; commit=aad6d1251762 | Reviewer | 2026-11-09 | G11 | APPROVED_WITH_NOTES | unresolved_blockers=0 |
 
 | REVIEW-UX-067-R3 | UX-067 | 治理记录 | review-record CLI 机器写入 review 结论记录（round 3） | 事实依据：review-record 输出摘要（机器写入） | docs/review/UX-067-R3.md; review-UX-067-R3.md; report_sha256=05897baf5220; commit=aad6d1251762 | Reviewer | 2026-11-09 | G11 | APPROVED_WITH_NOTES | unresolved_blockers=0 |
+
+| REVIEW-UX-067-R4 | UX-067 | 治理记录 | review-record CLI 机器写入 review 结论记录（round 4） | 事实依据：review-record 输出摘要（机器写入） | docs/review/UX-067-R4.md; review-UX-067-R4.md; report_sha256=c188db2435f3; commit=14f65feeebf3 | Reviewer | 2026-11-09 | G11 | APPROVED_WITH_NOTES | unresolved_blockers=0 |

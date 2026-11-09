@@ -91,8 +91,8 @@ const S2_CASES = [
 // review P1 的验收下限（真实容器）：956/1086/1152/1440/1680 ≥588；800 ≥420。
 const S2_REQUIRED_FLOOR = { 1680: 588, 1440: 588, 1152: 588, 1086: 588, 956: 588, 800: 420 }
 const U63_RULES = [rule('.nv-split', 'z-index:900'), rule('.nv-console', 'z-index:950')]
-// UX-067：抽屉宿主令牌兜底 + 设置页中性面——从源码抽取（不镜像），几何脚本至少守住
-// 「无 data-nv-theme 依赖 / 纸色外壳 / 11 项内联 token / 页面中性面」这些结构性前提。
+// UX-067：抽屉宿主令牌兜底 + 设置页墨纸暖面——从源码抽取（不镜像），几何脚本至少守住
+// 「无 data-nv-theme 依赖 / 纸色外壳 / 11 项内联 token / 页面暖纸面」这些结构性前提。
 const U67_TOKEN_PROPS = (() => {
   const block = /const VIEW_AREA_TOKEN_PROPS = \[([\s\S]*?)\]/.exec(clientSrc)
   return block === null ? [] : [...block[1].matchAll(/'([^']+)'/g)].map((m) => m[1])
@@ -844,7 +844,7 @@ try {
     u63ZCoexist: data.u63.zSplit === '900' && data.u63.zDrawer === '920' && data.u63.zConsole === '950',
     u63DrawerWidthCss: data.s2Styles.drawerW === '420px' && data.s2Styles.drawerZ === '920',
     // UX-067：宿主会话抽屉纸色作用域——不依赖 [data-nv-theme]；viewArea 11 项宿主令牌内联兜底；
-    // 纸-3/rule-strong 1px 缝/暖墨软影，避免白/黑/宿主蓝大面。设置页只以宿主 token 铺中性面。
+    // 纸-3/rule-strong 1px 缝/暖墨软影，避免白/黑/宿主蓝大面。设置页以插件墨纸令牌铺暖纸面。
     u67DrawerTokenScope: !clientSrc.includes('html[data-nv-drawer="1"][data-nv-theme]')
       && clientSrc.includes('html[data-nv-drawer="1"] [data-phase]')
       && U67_TOKEN_PROPS.length === 11
@@ -857,8 +857,10 @@ try {
       && clientSrc.includes("viewArea.style.boxShadow = '-8px 0 24px color-mix(in srgb, var(--nv-ink) 20%, transparent)'")
       && !clientSrc.includes("viewArea.style.background = 'var(--nv-bg,#0b0e14)'")
       && !clientSrc.includes('viewArea.style.boxShadow = \'0 0 24px 0 rgba(0,0,0,.35)\''),
-    u67SettingsNeutral: /\.nv-settings\{[^}]*max-width:760px[^}]*padding:24px 28px 28px/.test(clientSrc)
-      && /\.nv-settings\{[^}]*--nvs-card:var\(--dsw-alias-bg-layer-1/.test(clientSrc)
+    u67SettingsPaper: /\.nv-settings\{[^}]*max-width:760px[^}]*padding:24px 28px 28px/.test(clientSrc)
+      && /\.nv-settings\{[^}]*--nvs-card:var\(--nv-paper\)/.test(clientSrc)
+      && /\.nv-settings\{[^}]*--nvs-fg:var\(--nv-ink\)/.test(clientSrc)
+      && /\.nv-settings\{[^}]*border:1px solid var\(--nv-rule\)/.test(clientSrc)
       && clientSrc.includes('.nv-set-switch[data-on=true]')
       && !clientSrc.includes("style: { padding: '16px', maxWidth: '760px' }"),
   }

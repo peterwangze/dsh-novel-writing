@@ -7,7 +7,7 @@
 
 - `before-settings-1680-mozhi-light.png`：旧设置页（暖纸卡夹在宿主白框、字体选项只有选中项有边界、顶部密集说明）。
 - `before-drawer-1680-mozhi-light.png`：旧抽屉。**注意：本机 before 已经是暖色 `#FBF8F1`，不是用户截图里的纯白；用户白色未能逐像素复现。**
-- `ux067-04-settings-1680-mozhi-light.png`：新设置页（宿主中性面、状态 pill、外观/运行/诊断/业务配置）。
+- `ux067-04-settings-1680-mozhi-light.png`：最终设置页（**墨纸暖面**、纸卡/衬线标题、状态 pill、外观/运行/诊断/业务配置；宿主设置外壳保留为桌面）。
 - `ux067-06-settings-800-mozhi-light.png`：800 设置页。
 - `ux067-09-settings-1680-bottom-light.png`：底部运行 switch/诊断折叠/业务提示，无截断。
 - `ux067-10-settings-1680-mozhi-dark.png`：暗色设置页。

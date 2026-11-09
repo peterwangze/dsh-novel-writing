@@ -5614,16 +5614,34 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
       sizeChipContrast.push({ theme: theme.id, mode, ratio: contrast(theme[mode].cinnabar, theme[mode]['paper-2']) })
     }
   }
-  check('UX-067 设置页 CSS：宿主 --dsw-alias-* 中性面（页面/卡片/文本/边框/开关）∧ 最大宽 760 ∧ 底部 padding 28 ∧ 页面无固定高度/嵌套滚动 ∧ 主题/字体样本才用 --nv-* 暖纸色',
+  // UX-067 R4（用户 2026-11-09 反馈）：设置页不再消费宿主 --dsw-alias-* 中性灰白，改为插件墨纸
+  // 语言——页面 paper-2 暖底 + 1px rule 边框 + 12px 圆角 + 软纸影；卡片 paper / 次卡纸-3、
+  // 文本 ink/ink-2/ink-3、强调朱砂、开关 on 纸色。宿主对话框外壳仍是页面外的白色「桌面」。
+  check('UX-067 设置页 CSS：插件 --nv-* 墨纸暖面（paper-2 页/paper 卡/paper-3 次卡/ink 文本/rule 边框/朱砂强调）∧ 1px 边框 + 12px 圆角 + 软纸影 ∧ 标题衬线 ∧ 最大宽 760 ∧ 底部 padding 28 ∧ 无固定高度/嵌套滚动 ∧ 零宿主 --dsw-alias-* 映射',
     setRule !== ''
       && setRule.includes('max-width:760px') && setRule.includes('padding:24px 28px 28px')
-      && setRule.includes('--nvs-card:var(--dsw-alias-bg-layer-1')
-      && setRule.includes('--nvs-border:var(--dsw-alias-border-l1')
-      && setRule.includes('--nvs-fg:var(--dsw-alias-label-primary')
-      && setRule.includes('background:var(--nvs-bg)')
+      && setRule.includes('--nvs-bg:var(--nv-paper-2)')
+      && setRule.includes('--nvs-card:var(--nv-paper)')
+      && setRule.includes('--nvs-card-2:var(--nv-paper-3)')
+      && setRule.includes('--nvs-hover:color-mix(in srgb,var(--nv-ink) 5%,transparent)')
+      && setRule.includes('--nvs-fg:var(--nv-ink)')
+      && setRule.includes('--nvs-fg-2:var(--nv-ink-2)')
+      && setRule.includes('--nvs-fg-3:var(--nv-ink-3)')
+      && setRule.includes('--nvs-border:var(--nv-rule)')
+      && setRule.includes('--nvs-border-2:var(--nv-rule-strong)')
+      && setRule.includes('--nvs-accent:var(--nv-cinnabar)')
+      && setRule.includes('--nvs-on-accent:var(--nv-paper-2)')
+      && setRule.includes('--nvs-ok:var(--nv-home-ok)')
+      && setRule.includes('--nvs-warn:var(--nv-home-warn)')
+      && setRule.includes('--nvs-err:var(--nv-danger)')
+      && setRule.includes('background:var(--nv-paper-2)')
+      && setRule.includes('border:1px solid var(--nv-rule)')
+      && setRule.includes('border-radius:12px')
+      && /\.nv-settings\{[^}]*box-shadow:[^}]*color-mix\(in srgb,#000/.test(setRule)
+      && !setRule.includes('--dsw-alias-')
       && !/\.nv-settings\{[^}]*height:/.test(setRule)
       && !/\.nv-settings\{[^}]*overflow:/.test(setRule)
-      && clientSrc.includes('.nv-settings{--nvs-bg:var(--dsw-alias-bg-base')
+      && clientSrc.includes('.nv-set-title{margin:0;font-family:var(--nv-serif)')
       && clientSrc.includes('.nv-settings .nv-typo-settings-preview') && clientSrc.includes('background:var(--nv-paper-2)')
       && clientSrc.includes('.nv-set-switch[data-on=true]') && clientSrc.includes('.nv-set-row-help')
       // UX-067 R3（P2-5）：选中字号 = 插件朱砂实底 + 纸色文字（不透明填充，宿主 --dsw-alias-bg-overlay

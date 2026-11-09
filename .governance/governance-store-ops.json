@@ -2236,6 +2236,73 @@
       "released_files": [
         "docs/review/UX-067-R3.md"
       ]
+    },
+    "op-f6bd4112531b46efb6d978b6e48f257d": {
+      "schema_version": 1,
+      "command": "locks-amend",
+      "task_id": "UX-067",
+      "input_fingerprint": "da94bb7d11fd562d0e560e2be3a11347c3632b94ba302779ac7d8575318fc562",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-f6bd4112531b46efb6d978b6e48f257d",
+        "code": "ok",
+        "new_revision": 2136,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-09T13:54:48",
+      "updated_at": "2026-11-09T13:54:48"
+    },
+    "op-fea0e43064fd473eb63f74f0e6844f0f": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-067",
+      "input_fingerprint": "e6b9a4f3e154cfd40e5aa5ce0a96dade174411e82e66e23e08447db6b015af84",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-fea0e43064fd473eb63f74f0e6844f0f",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-09T13:58:09",
+      "updated_at": "2026-11-09T13:58:09",
+      "released_files": [
+        ".scratch-ux067/UX-067-R4-dev-report.md",
+        "CHANGELOG.md",
+        "lib/client.js",
+        "scripts/verify-visual-geometry.mjs",
+        "test/smoke.mjs"
+      ]
+    },
+    "op-d170ecd706e24e45a937a714ac9e0a90": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-067",
+      "input_fingerprint": "e6b9a4f3e154cfd40e5aa5ce0a96dade174411e82e66e23e08447db6b015af84",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-d170ecd706e24e45a937a714ac9e0a90",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-09T14:04:04",
+      "updated_at": "2026-11-09T14:04:04",
+      "released_files": [
+        "docs/review/UX-067-R4.md"
+      ]
     }
   }
 }
