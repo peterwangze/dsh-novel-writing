@@ -573,7 +573,7 @@ async function main() {
     } finally {
       await stopAll()
       report.realEnvAfter = realFingerprint(realHome)
-      report.isolation.realEnvUnchanged = JSON.stringify(report.realEnvBefore) === JSON.stringify(report.realEnvAfter)
+      report.isolation.realEnvUnchanged = JSON.stringify(report.isolation.realEnvBefore) === JSON.stringify(report.realEnvAfter)
       report.ok = report.assertions.length > 0 && report.assertions.every((a) => a.status !== 'FAIL')
       report.finishedAt = new Date().toISOString()
       try {
