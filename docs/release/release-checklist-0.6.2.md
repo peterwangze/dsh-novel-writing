@@ -48,7 +48,7 @@
 | `node test/smoke.mjs` | **377 passed / 0 failed** |
 | `node scripts/verify-visual-geometry.mjs --strict` | OK（1680/1440/1152/1086/956/800 六档） |
 | `node scripts/verify-contract-anchors.mjs` | 78 段 / FAIL=0 / WARN=19 |
-| `node scripts/probe-ops-matrix.mjs` | **18 OK / 0 SKIP / 0 FAIL**（隔离实例；真实 `$DSH_HOME` 指纹未变） |
+| `node scripts/probe-ops-matrix.mjs` | **18 OK / 3 SKIP / 0 FAIL**（隔离实例；真实 `$DSH_HOME` 指纹未变；3 项 SKIP = 新建/删除书目与专注模式在无头环境视图状态受限，已在探针内实现但如实不计数） |
 | `npm pack --dry-run` | PASS（见发布记录） |
 
 ## 已知边界
