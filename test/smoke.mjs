@@ -1142,7 +1142,8 @@ check('客户端源码面：UX-018 / S2 R2 applyDrawer 写 width = CSS 抽屉宽
 })(), 'ux018 drawer width write missing')
 check('客户端源码面：UX-018 / S2 R2 边界（无根/几何缺失不写；快照原值覆盖后关闭恢复）', (() => {
   return clientSrc.includes('if (viewArea === null || g === null) return')
-    && clientSrc.includes('if (viewArea === null || this.saved === null) return')
+    && clientSrc.includes('if (this.saved === null) {')
+    && clientSrc.includes("viewArea.removeAttribute('data-nv-drawer-host')")
     && clientSrc.includes('viewArea.style.width = this.saved.width')
     && clientSrc.includes('viewArea.style.marginLeft = this.saved.marginLeft')
 })(), 'ux018 boundary missing')
@@ -2078,17 +2079,18 @@ check('BUG-012 Rules-of-Hooks 守卫判别力（负例对照，临时字符串�
   const good = scanHooksViolations(['function Good(props) {', '  const [x, sx] = useState(0)', '  useEffect(() => {', '    if (x === 0) return', '    sx(1)', '  }, [x])', '  if (props.hide) return null', '  return x', '}'].join('\n'))
   const okayBlock = scanHooksViolations(['function OkayBlock(props) {', '  const [x, sx] = useState(0)', '  useEffect(() => {', '    if (x === 0) {', '      return', '    }', '    sx(1)', '  }, [x])', '  return x', '}'].join('\n'))
   const method = scanHooksViolations(['function M(props) {', '  const ctl = {', '    run(n) {', '      if (n === 0) return', '      return n', '    },', '  }', '  const [x, sx] = useState(0)', '  return x', '}'].join('\n'))
-  const reverted = clientSrc.replace(
+  const clientLfGuard = clientSrc.replace(/\r\n/g, '\n')
+  const reverted = clientLfGuard.replace(
     '      const launchWfRef = useRef(null)\n      useEffect(() => {\n        if (snap.active !== true) return // 分栏未开：意图保留，开启后由本 deps 变化消费\n        if (pendingWorkflow === null) return\n        const wf = pendingWorkflow\n        setPendingWorkflow(null)\n        if (launchWfRef.current !== null) launchWfRef.current({ mode: wf.mode, chapter: wf.chapter }, false)\n      }, [pendingWorkflow, snap.active])\n\n      if (snap.active !== true) return null',
     '      if (snap.active !== true) return null\n      const [fake, sfake] = useState(null)',
   )
   const rg = scanHooksViolations(reverted)
-  const revertedBlock = clientSrc.replace(
+  const revertedBlock = clientLfGuard.replace(
     '      const launchWfRef = useRef(null)\n',
     '      if (snap.active !== true) {\n        return null\n      }\n      const launchWfRef = useRef(null)\n',
   )
   const rgb = scanHooksViolations(revertedBlock)
-  return reverted !== clientSrc && revertedBlock !== clientSrc
+  return reverted !== clientLfGuard && revertedBlock !== clientLfGuard
     && bad.violations.length === 1 && bad.violations[0].fn === 'Bad' && bad.violations[0].hook === 'useState'
     && badBlock.violations.length === 1 && badBlock.violations[0].fn === 'BadBlock'
     && good.violations.length === 0 && good.hookFns.length === 1
@@ -3290,30 +3292,37 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
       && it37.symbol.includes('dsh.novel.studio.v2'),
     'src=' + JSON.stringify(SRC_PROPS) + ' decl=' + JSON.stringify(DECL_PROPS) + ' it33=' + (it33 !== undefined) + ' it37=' + (it37 !== undefined))
 
-  // UX-064 S2（P-10）：可选宿主布局服务 + 原生会话抽屉稳定 data-* 钩子——双向 ⊆ 对账
+  // UX-064 S2 / UX-067 R7（P-10）：可选宿主布局服务 + viewArea 11 宿主令牌内联兜底（唯一作用域）。
+  // R7：删除 html[data-nv-drawer="1"] 下的全部全局宿主选择器——不再有 conversationHooks CSS 消费面。
   const RL64 = hostContract.regionLiterals
   const METHOD64 = RL64.optionalHostMethods !== undefined ? RL64.optionalHostMethods : {}
-  const HOOKS64 = Array.isArray(RL64.conversationHooks) ? RL64.conversationHooks : []
   const CUSTOM64 = Array.isArray(RL64.viewAreaCustomProps) ? RL64.viewAreaCustomProps : []
   const SRC_CUSTOM64 = Array.isArray(clientExports.VIEW_AREA_TOKEN_PROPS) ? clientExports.VIEW_AREA_TOKEN_PROPS : []
   const methodList64 = Array.isArray(METHOD64.layout) ? METHOD64.layout : []
-  check('P-10 UX-064 S2 / UX-067：可选宿主布局服务（ctx.get(\'layout\') + toggleSidebar 缺席不渲染）+ 原生抽屉稳定 data-* 钩子（4 项，双向 ⊆；无哈希类名）+ viewArea 11 宿主令牌内联兜底（双向 ⊆，不依赖 [data-nv-theme]）',
+  const GLOBAL_DRAWER_CSS = /html\[data-nv-drawer/.test(clientSrc)
+    || /\[data-phase\][^{}\n]*\{/.test(clientSrc)
+    || /\[data-conversation-[^{}\n]*\{/.test(clientSrc)
+    || /\[data-composer-seat\][^{}\n]*\{/.test(clientSrc)
+    || /header:has\(\[data-conversation-header-leading\]\)/.test(clientSrc)
+  check('P-10 UX-064 S2 / UX-067 R7：可选宿主布局服务（ctx.get(\'layout\') + toggleSidebar 缺席不渲染）+ viewArea 11 宿主令牌内联兜底（双向 ⊆，不依赖 [data-nv-theme]）+ 零全局抽屉宿主选择器',
     RL64.serviceNames.ctxGet.includes('layout')
       && clientSrc.includes("ctx.get('layout')")
       && methodList64.length === 1 && methodList64[0] === 'toggleSidebar'
       && clientSrc.includes("rawService('layout')") && clientSrc.includes("typeof svc.toggleSidebar !== 'function'")
-      && HOOKS64.length === 4 && HOOKS64.every((h) => clientSrc.includes(h))
+      && RL64.conversationHooks === undefined
       && CUSTOM64.length === 11 && SRC_CUSTOM64.length === 11
       && CUSTOM64.every((p) => SRC_CUSTOM64.includes(p)) && SRC_CUSTOM64.every((p) => CUSTOM64.includes(p))
-      && clientSrc.includes('html[data-nv-drawer="1"] [data-phase]')
-      && !clientSrc.includes('html[data-nv-drawer="1"][data-nv-theme]')
+      && !GLOBAL_DRAWER_CSS && !clientSrc.includes('html[data-nv-drawer="1"][data-nv-theme]')
+      && clientSrc.includes('viewArea.setAttribute(\'data-nv-drawer-host\', \'1\')')
+      && clientSrc.includes("viewArea.removeAttribute('data-nv-drawer-host')")
+      && !clientSrc.includes("document.documentElement.setAttribute('data-nv-drawer'")
       && clientSrc.includes('const value = viewArea.style.getPropertyValue(prop)')
       && clientSrc.includes('savedTokens[prop] = value === VIEW_AREA_TOKEN_VALUES[prop]')
       && clientSrc.includes('viewArea.style.setProperty(prop, VIEW_AREA_TOKEN_VALUES[prop])')
       && clientSrc.includes('rememberTokens(viewArea)')
       && clientSrc.includes('node.style.removeProperty(prop)')
       && !/\[class\*="[A-Za-z0-9_]{4,}_/.test(clientSrc),
-    'ctxGet=' + JSON.stringify(RL64.serviceNames.ctxGet) + ' methods=' + JSON.stringify(methodList64) + ' hooks=' + JSON.stringify(HOOKS64) + ' custom=' + SRC_CUSTOM64.length)
+    'ctxGet=' + JSON.stringify(RL64.serviceNames.ctxGet) + ' methods=' + JSON.stringify(methodList64) + ' hooks=' + JSON.stringify(RL64.conversationHooks) + ' custom=' + SRC_CUSTOM64.length + ' globalCss=' + GLOBAL_DRAWER_CSS)
 }
 
 // ── COMPAT-003：宿主表面 fixtures 离线对账 + ci.yml mock 面钉（F1）+ 契约 file/line 活性（F5）──
@@ -3775,7 +3784,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // 入 golden）范围条目中「起于注释/空行」者 MUST 恰 2 项
   //（历史锚点：COMPAT-013 时期实测——3.1 起于 `/**` JSDoc L1278、3.8 起于 `/**` JSDoc L3418；现行注释起段以本断言动态计算清单为准）。动因 = 该计数原为**人工转写**且写错
   //（CHANGELOG 曾披露「三处」）——与 COMPAT-004 FIND-1 的 tier 串转写漂移同类，故沿用同款处置：实测值
-  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.5 `L2033-L2042` `const taClose` / 4.6 `L17`
+  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.5 `L2047-L2056` `const taClose` / 4.6 `L17`
   // `"dsh": {` / 5.1 `L1` `name:` / 5.2 `L16` `- id:` / 5.4 `L77` `- id:` / 6.1 `L39`（修正后真值；修正前
   // `L38` 亦非注释）/ 6.2 `L8` `"engines": {` / 6.4 `L105`（ci.yml `#` 注释起段——JS 口径不计为注释，见下句口径边界）。严格面（面 2 = 11 项）已由 ③ 逐项约束，
   // 本项只覆盖未纳入严格面的面（动态生成：实测 3/4/5/6）；注释口径同 ③（JS 风格），YAML `#` 不在识别面内（与 F-5① 同源前提）。
@@ -5656,26 +5665,33 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   const drawerSrcStart = clientSrc.indexOf('applyDrawer() {')
   const drawerSrcEnd = clientSrc.indexOf('\n    // ── StudioLayout', drawerSrcStart)
   const drawerSrc = drawerSrcStart >= 0 && drawerSrcEnd > drawerSrcStart ? clientSrc.slice(drawerSrcStart, drawerSrcEnd) : ''
-  check('UX-067 抽屉作用域/外壳：不再依赖 [data-nv-theme] ∧ viewArea 11 宿主令牌内联覆盖（快照/恢复同生命周期）∧ 纸-2 底 + rule-strong 1px 缝 + 暖墨软影 ∧ 无白/黑/宿主蓝大面',
-    !clientSrc.includes('html[data-nv-drawer="1"][data-nv-theme]')
-      && clientSrc.includes('html[data-nv-drawer="1"] [data-phase]')
+  check('UX-067 R7 抽屉作用域/外壳：零全局抽屉宿主选择器（无 html[data-nv-drawer] / [data-phase] CSS）∧ 唯一作用域 = viewArea 11 宿主令牌内联覆盖（快照/恢复同生命周期，含 data-nv-drawer-host 撤除）∧ 纸-2 底 + rule-strong 1px 缝 + 暖墨软影 ∧ 无白/黑/宿主蓝大面',
+    !clientSrc.includes('html[data-nv-drawer')
+      && !/\[data-phase\][^{}\n]*\{/.test(clientSrc)
+      && !/\[data-conversation-[^{}\n]*\{/.test(clientSrc)
+      && !/\[data-composer-seat\][^{}\n]*\{/.test(clientSrc)
+      && !clientSrc.includes('header:has([data-conversation-header-leading])')
+      && !clientSrc.includes("document.documentElement.setAttribute('data-nv-drawer'")
+      && !drawerSrc.includes('document.documentElement') && !drawerSrc.includes('data-phase')
+      && drawerSrc.includes("viewArea.setAttribute('data-nv-drawer-host', '1')")
+      && clientSrc.includes("viewArea.removeAttribute('data-nv-drawer-host')")
+      // R7 自愈：带遗留插件标记的节点不得把 overflow:hidden/height 当作宿主原值再快照
+      && clientSrc.includes("viewArea.hasAttribute('data-nv-drawer-host')")
+      && clientSrc.includes("if (stalePluginGeometry) for (const prop of VIEW_AREA_PROPS) saved[prop] = ''")
       && (ux067.VIEW_AREA_TOKEN_PROPS ?? []).length === 11
       && (rl.viewAreaCustomProps ?? []).length === 11
       && ux067.VIEW_AREA_TOKEN_PROPS.every((p) => rl.viewAreaCustomProps.includes(p))
       && rl.viewAreaCustomProps.every((p) => ux067.VIEW_AREA_TOKEN_PROPS.includes(p))
       && clientSrc.includes("viewArea.style.background = 'var(--nv-paper-2)'")
-      // UX-067 R5：抽屉壳与模型对话宿主面从纸-3（#EFE7DA）提亮到纸-2（#FBF8F1）；layer-1/overlay 同步纸-2，
-      // [data-phase] CSS 兜底与 viewArea 内联映射双处同值，输入面（specific-input-major）仍留纸-3 形成暖纸边界。
+      // UX-067 R5：抽屉壳与模型对话宿主面从纸-3（#EFE7DA）提亮到纸-2（#FBF8F1）；R7 只保留
+      // viewArea 内联映射（不再有 [data-phase] CSS 兜底），输入面（specific-input-major）仍留纸-3。
       && clientSrc.includes("'--dsw-alias-bg-base': 'var(--nv-paper-2)'")
-      && clientSrc.includes('--dsw-alias-bg-base:var(--nv-paper-2);--dsw-alias-bg-layer-1:var(--nv-paper-2);--dsw-alias-bg-overlay:var(--nv-paper-2)')
       && !clientSrc.includes("'--dsw-alias-bg-base': 'var(--nv-paper-3)'")
       && !clientSrc.includes('--dsw-alias-bg-base:var(--nv-paper-3)')
-      // UX-067 R2（P2-4）：input-major 从 paper-2（#FBF8F1 暖近白）降到 paper-3；内联映射与 CSS 兜底同值。
+      // UX-067 R2（P2-4）：input-major 从 paper-2（#FBF8F1 暖近白）降到 paper-3（仅内联映射）。
       && clientSrc.includes("'--dsw-specific-input-major': 'var(--nv-paper-3)'")
-      && clientSrc.includes('--dsw-specific-input-major:var(--nv-paper-3)')
       && !clientSrc.includes('--dsw-specific-input-major:var(--nv-paper-2)')
       && !clientSrc.includes("'--dsw-specific-input-major': 'var(--nv-paper-2)'")
-      && clientSrc.includes('html[data-nv-drawer="1"] [data-composer-seat]{background:var(--nv-paper-3)')
       && clientSrc.includes("viewArea.style.borderLeft = '1px solid var(--nv-rule-strong)'")
       && clientSrc.includes("viewArea.style.boxShadow = '-8px 0 24px color-mix(in srgb, var(--nv-ink) 20%, transparent)'")
       && drawerSrc.includes('for (const prop of VIEW_AREA_TOKEN_PROPS)') && drawerSrc.includes('viewArea.style.setProperty(prop, VIEW_AREA_TOKEN_VALUES[prop])')

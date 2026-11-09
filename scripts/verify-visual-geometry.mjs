@@ -843,10 +843,17 @@ try {
     // z 三值共存：.nv-split 900 < 抽屉 --nv-drawer-z 920 < .nv-console 950（CSS 单一来源）
     u63ZCoexist: data.u63.zSplit === '900' && data.u63.zDrawer === '920' && data.u63.zConsole === '950',
     u63DrawerWidthCss: data.s2Styles.drawerW === '420px' && data.s2Styles.drawerZ === '920',
-    // UX-067：宿主会话抽屉纸色作用域——不依赖 [data-nv-theme]；viewArea 11 项宿主令牌内联兜底；
-    // 纸-2/rule-strong 1px 缝/暖墨软影，避免白/黑/宿主蓝大面。设置页以插件墨纸令牌铺暖纸面。
-    u67DrawerTokenScope: !clientSrc.includes('html[data-nv-drawer="1"][data-nv-theme]')
-      && clientSrc.includes('html[data-nv-drawer="1"] [data-phase]')
+    // UX-067 R7：宿主会话抽屉纸色唯一作用域 = viewArea 内联令牌；零全局 html[data-nv-drawer]
+    // 选择器（R6 事故根因：全局属性 × 每个会话都有的 [data-phase] ⇒ 其他会话被染色）。
+    u67DrawerTokenScope: !clientSrc.includes('html[data-nv-drawer')
+      && !/\[data-phase\][^{}\n]*\{/.test(clientSrc)
+      && !/\[data-conversation-[^{}\n]*\{/.test(clientSrc)
+      && !/\[data-composer-seat\][^{}\n]*\{/.test(clientSrc)
+      && !clientSrc.includes('header:has([data-conversation-header-leading])')
+      && clientSrc.includes("viewArea.setAttribute('data-nv-drawer-host', '1')")
+      && clientSrc.includes("viewArea.removeAttribute('data-nv-drawer-host')")
+      && clientSrc.includes('stalePluginGeometry')
+      && !clientSrc.includes("document.documentElement.setAttribute('data-nv-drawer'")
       && U67_TOKEN_PROPS.length === 11
       && U67_TOKEN_PROPS.every((p) => clientSrc.includes("'" + p + "'"))
       && clientSrc.includes('const value = viewArea.style.getPropertyValue(prop)')
