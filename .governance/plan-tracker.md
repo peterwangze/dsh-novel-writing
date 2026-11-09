@@ -195,7 +195,7 @@
 | **P2** | CLEAN-012 | **legacy 迁移触发时机演进**（REVIEW-BUG-011-R2 留票）：P2-19 headless 不迁移（现仅首个 HTTP 请求触发）；改 idle 触发须避开 RISK-011② HMR 竞态，需隔离实例真机验证 | BUG-011 | v0.6.0 | open | ⏳ 待执行（triage = change-triage/CLEAN-012.json） |
 | **P1** | CLEAN-013 | **隔离矩阵可审计化**（REVIEW-BUG-011-R3 P2-22/P2-23 + P3-25）：矩阵脚本入仓（四态 decl/legacy/unknown/非法值可复跑）、`DSH_HOME` 必须 `%TEMP%` 前缀守卫**加负例**、CreationTime/哈希证据固化入 evidence、CI 断言 PS major=5 | BUG-011 | v0.6.0 | open | ⏳ 待执行（triage = change-triage/CLEAN-013.json；RISK-013 防复发面：守卫不可复跑等于没守卫） |
 
-| **P1** | REL-010 | **发布 v0.6.2（BUG-014 抽屉对齐 + BUG-008 回滚 + BUG-015 操作矩阵审计修复批）**：package 0.6.1→0.6.2；CHANGELOG/COMPATIBILITY/发布检查清单同步；annotated tag `v0.6.2` + push（该包不在 npm registry，不 npm publish） | BUG-015 | v0.6.2 | in_progress | ⏳ 门禁全绿（smoke 377/0、validate PASS、anchors FAIL=0、geometry OK、探针 12/12、npm pack 59 entries）；待 tag 与 push |
+| **P1** | REL-010 | **发布 v0.6.2（BUG-014 抽屉对齐 + BUG-008 回滚 + BUG-015 操作矩阵审计修复批）**：package 0.6.1→0.6.2；CHANGELOG/COMPATIBILITY/发布检查清单同步；annotated tag `v0.6.2` + push（该包不在 npm registry，不 npm publish） | BUG-015 | v0.6.2 | ✅ 已发布 | commit d66bd1c；annotated tag `v0.6.2`（对象 2998251 → peel d66bd1c）已 push；门禁 smoke 377/0、validate-preset PASS、anchors 78 段 FAIL=0、geometry --strict 六档 OK、probe-ops-matrix 12/12、npm pack 59 entries（0.6.2）；EVD-163 |
 > **说明**：本表为 canonical 7 列优先级一览（`task-priority-analysis` 权威解析源）；任务详情（输入/输出/验收标准/审查状态）由 evidence-log / decision-log / risk-log 关联承载。RISK-002 为 cross-entity 引用（上下文，不阻塞执行）。
 
 ## 版本规划
