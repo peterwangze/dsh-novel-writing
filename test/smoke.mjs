@@ -2322,7 +2322,7 @@ check('客户端源码面：UX-061 1b-2 尺度令牌治理（CSS font-size 字�
   const ctlMd = (clientSrc.match(/var\(--nv-ctl-md\)/g) || []).length
   // P2-1（CR1）：React 内联字号基线冻结（44 处；11.5px×2 属尺度外，归 1b-3）——新增/变更即红，须同批更新基线
   // UX-061-B：章节行/数据面板内联字号随类化迁移（12px 基线 23→18），按实测重冻
-  const INLINE_FS_BASELINE = '11.5px:2,11px:12,12px:15,13px:4,14px:1' // S2 R2：旧 ChapterPanel 阅读/编辑面退役（-2×12px）
+  const INLINE_FS_BASELINE = '11.5px:2,11px:12,12px:15,13px:3,14px:1' // UX-067：旧设置页 loading 内联 13px 随重构退役（-1×13px）
   const inlineSizes = (clientSrc.match(/fontSize:\s*'([0-9.]+)px'/g) || []).map((s) => s.match(/'([0-9.]+)px'/)[1] + 'px')
   const inlineCount = {}
   for (const v of inlineSizes) inlineCount[v] = (inlineCount[v] || 0) + 1
@@ -3294,16 +3294,26 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   const RL64 = hostContract.regionLiterals
   const METHOD64 = RL64.optionalHostMethods !== undefined ? RL64.optionalHostMethods : {}
   const HOOKS64 = Array.isArray(RL64.conversationHooks) ? RL64.conversationHooks : []
+  const CUSTOM64 = Array.isArray(RL64.viewAreaCustomProps) ? RL64.viewAreaCustomProps : []
+  const SRC_CUSTOM64 = Array.isArray(clientExports.VIEW_AREA_TOKEN_PROPS) ? clientExports.VIEW_AREA_TOKEN_PROPS : []
   const methodList64 = Array.isArray(METHOD64.layout) ? METHOD64.layout : []
-  check('P-10 UX-064 S2：可选宿主布局服务（ctx.get(\'layout\') + toggleSidebar 缺席不渲染）+ 原生抽屉稳定 data-* 钩子（4 项，双向 ⊆；无哈希类名）',
+  check('P-10 UX-064 S2 / UX-067：可选宿主布局服务（ctx.get(\'layout\') + toggleSidebar 缺席不渲染）+ 原生抽屉稳定 data-* 钩子（4 项，双向 ⊆；无哈希类名）+ viewArea 11 宿主令牌内联兜底（双向 ⊆，不依赖 [data-nv-theme]）',
     RL64.serviceNames.ctxGet.includes('layout')
       && clientSrc.includes("ctx.get('layout')")
       && methodList64.length === 1 && methodList64[0] === 'toggleSidebar'
       && clientSrc.includes("rawService('layout')") && clientSrc.includes("typeof svc.toggleSidebar !== 'function'")
       && HOOKS64.length === 4 && HOOKS64.every((h) => clientSrc.includes(h))
-      && clientSrc.includes('html[data-nv-drawer="1"][data-nv-theme]')
+      && CUSTOM64.length === 11 && SRC_CUSTOM64.length === 11
+      && CUSTOM64.every((p) => SRC_CUSTOM64.includes(p)) && SRC_CUSTOM64.every((p) => CUSTOM64.includes(p))
+      && clientSrc.includes('html[data-nv-drawer="1"] [data-phase]')
+      && !clientSrc.includes('html[data-nv-drawer="1"][data-nv-theme]')
+      && clientSrc.includes('const value = viewArea.style.getPropertyValue(prop)')
+      && clientSrc.includes('savedTokens[prop] = value === VIEW_AREA_TOKEN_VALUES[prop]')
+      && clientSrc.includes('viewArea.style.setProperty(prop, VIEW_AREA_TOKEN_VALUES[prop])')
+      && clientSrc.includes('rememberTokens(viewArea)')
+      && clientSrc.includes('node.style.removeProperty(prop)')
       && !/\[class\*="[A-Za-z0-9_]{4,}_/.test(clientSrc),
-    'ctxGet=' + JSON.stringify(RL64.serviceNames.ctxGet) + ' methods=' + JSON.stringify(methodList64) + ' hooks=' + JSON.stringify(HOOKS64))
+    'ctxGet=' + JSON.stringify(RL64.serviceNames.ctxGet) + ' methods=' + JSON.stringify(methodList64) + ' hooks=' + JSON.stringify(HOOKS64) + ' custom=' + SRC_CUSTOM64.length)
 }
 
 // ── COMPAT-003：宿主表面 fixtures 离线对账 + ci.yml mock 面钉（F1）+ 契约 file/line 活性（F5）──
@@ -3765,7 +3775,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // 入 golden）范围条目中「起于注释/空行」者 MUST 恰 2 项
   //（历史锚点：COMPAT-013 时期实测——3.1 起于 `/**` JSDoc L1278、3.8 起于 `/**` JSDoc L3418；现行注释起段以本断言动态计算清单为准）。动因 = 该计数原为**人工转写**且写错
   //（CHANGELOG 曾披露「三处」）——与 COMPAT-004 FIND-1 的 tier 串转写漂移同类，故沿用同款处置：实测值
-  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.5 `L1955-L1965` `try {` / 4.6 `L17`
+  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.5 `L2033-L2042` `const taClose` / 4.6 `L17`
   // `"dsh": {` / 5.1 `L1` `name:` / 5.2 `L16` `- id:` / 5.4 `L77` `- id:` / 6.1 `L39`（修正后真值；修正前
   // `L38` 亦非注释）/ 6.2 `L8` `"engines": {` / 6.4 `L105`（ci.yml `#` 注释起段——JS 口径不计为注释，见下句口径边界）。严格面（面 2 = 11 项）已由 ③ 逐项约束，
   // 本项只覆盖未纳入严格面的面（动态生成：实测 3/4/5/6）；注释口径同 ③（JS 风格），YAML `#` 不在识别面内（与 F-5① 同源前提）。
@@ -5183,7 +5193,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   const splitPickerIdx = clientSrc.indexOf("el(ThemePicker, { t, variant: 'split'")
   const consolePickerIdx = clientSrc.indexOf("el(ThemePicker, { t, variant: 'console'")
   const drawerBtnIdx = clientSrc.indexOf("className: 'nv-bar-ctl nv-bar-drawer'")
-  const settingsInsertIdx = clientSrc.indexOf('el(ThemeSettings, { t })')
+  const settingsInsertIdx = clientSrc.indexOf('el(ThemeSettings, { t')
   const pluginLabelIdx = clientSrc.indexOf("'启用插件'")
   check('UX-065 渲染面：书斋顶栏恰 1 个 palette 按钮（菜单关闭态 0）∧ 设置页 3 张主题卡 + 当前卡唯一 data-on + ✓ 恰 1 ∧ 写作台标题栏 1 个（抽屉按钮之前，avoidRight 以分栏真实右缘 g.right 计）∧ 主题区在「启用插件」之前 ∧ 全仓 ThemePicker 恰 2 处（无重复控件）',
     conThemeBtns === 1 && conMenu === 0 && cardCount === 3 && onCards === 1 && checkMarks === 1
@@ -5475,7 +5485,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
     'aa=' + aaCount + '/' + aaLabel + '/' + aaPopup + ' menu=' + pickerMenus + ' rows=' + fontRows + ' sizes=' + sizeChips + ' on=' + onFontRows + '/' + onSizeChips + ' marks=' + marks + ' reset=' + resetBtns)
 
   // ⑦ 设置页安插位置 + i18n zh/en 成对 + 无未本地化新增文案
-  const themeInsertIdx = clientSrc.indexOf('el(ThemeSettings, { t })')
+  const themeInsertIdx = clientSrc.indexOf('el(ThemeSettings, { t')
   const typoInsertIdx = clientSrc.indexOf('el(TypographySettings, { t })')
   const pluginInsertIdx = clientSrc.indexOf("'启用插件'")
   const settingsSrcStart = pickerEnd
@@ -5527,6 +5537,128 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
       && applyAttrs2.font === 'kai' && applyAttrs2.fs === '18'
       && cleanupErr2 === '' && applyCleared2 === true,
     'err=' + applyErr2 + ' store=' + JSON.stringify(applyStore2) + ' attrs=' + JSON.stringify(applyAttrs2) + ' cleared=' + applyCleared2 + ' cleanupErr=' + cleanupErr2)
+}
+
+// ── UX-067：设置页重构（宿主原生分区）+ 原生会话抽屉纸色作用域 ─────────────────────
+{
+  const ux067 = clientExports
+  const hostContract = (await import('../lib/host-contract.mjs')).hostContract
+  const rl = hostContract.regionLiterals
+  const viewTree = mockReact.createElement(ux067.SettingsPageView, {
+    t: (key) => key,
+    api: {},
+    value: { enabled: true, pollMs: 2000, presetAutoSync: true, apiPublic: false },
+    notice: '',
+    change: () => {},
+  })
+  const all = []
+  const walk = (node) => {
+    if (node === null || node === undefined || typeof node !== 'object') return
+    if (Array.isArray(node)) { node.forEach(walk); return }
+    all.push(node)
+    if (Array.isArray(node.children)) node.children.forEach(walk)
+  }
+  walk(viewTree)
+  const clsOf = (n) => (n !== null && n !== undefined && n.props !== undefined && typeof n.props.className === 'string') ? n.props.className : ''
+  const hasCls = (n, c) => clsOf(n).split(/\s+/).includes(c)
+  const fonts = all.filter((n) => hasCls(n, 'nv-set-font'))
+  const samples = all.filter((n) => hasCls(n, 'nv-set-font-sample'))
+  const sizes = all.filter((n) => hasCls(n, 'nv-typo-size'))
+  const runRows = all.filter((n) => n.props !== undefined && n.props['data-run-row'] !== undefined)
+  const sections = all.filter((n) => n.props !== undefined && n.props['data-settings-section'] !== undefined)
+    .map((n) => n.props['data-settings-section'])
+  const details = all.filter((n) => n.type === 'details' && n.props !== undefined && n.props['data-settings-disclosure'] === 'diagnostics')
+  const summaries = all.filter((n) => n.type === 'summary')
+  const themeCards = all.filter((n) => hasCls(n, 'nv-theme-card'))
+  const viewText = all.flatMap((n) => (n.children ?? []).filter((c) => typeof c === 'string')).join('|')
+  const viewSrcStart = clientSrc.indexOf('function SettingsPageView(props) {')
+  const viewSrcEnd = clientSrc.indexOf('\n    function SettingsPage(props) {', viewSrcStart)
+  const viewSrc = viewSrcStart >= 0 && viewSrcEnd > viewSrcStart ? clientSrc.slice(viewSrcStart, viewSrcEnd) : ''
+  check('UX-067 设置页结构（真实渲染树）：外观/运行/诊断/业务配置四段顺序 ∧ 主题 3 卡 + 写作排版 4 字体卡（各自「文」样本 + 字体栈）+ 4 字号 ∧ 4 运行行（switch/数字+ms）∧ 诊断默认折叠 details + summary ∧ 无旧密集说明段 ∧ 头部状态 pill',
+    all.length > 40
+      && JSON.stringify(sections) === JSON.stringify(['appearance', 'run', 'diagnostics', 'where'])
+      && themeCards.length === 3
+      && fonts.length === 4 && samples.length === 4 && samples.every((n) => (n.children ?? []).includes('文') && typeof n.props.style.fontFamily === 'string')
+      && sizes.length === 4
+      && runRows.length === 4 && JSON.stringify(runRows.map((n) => n.props['data-run-row'])) === JSON.stringify(['enabled', 'poll', 'presetAutoSync', 'apiPublic'])
+      && details.length === 1 && details[0].props.open !== true && summaries.length === 1
+      && all.some((n) => hasCls(n, 'nv-set-switch') && n.props.role === 'switch' && n.props['aria-checked'] === 'true')
+      && all.some((n) => hasCls(n, 'nv-set-pill') && n.props['data-on'] === 'true')
+      && all.some((n) => hasCls(n, 'nv-set-input') && n.props.type === 'number')
+      && viewText.includes('小说写作') && viewText.includes('工作台外观、运行与诊断')
+      && !viewText.includes('业务相关的配置不在本页')
+      && viewSrc !== '' && !viewSrc.includes('style: {'),
+    'nodes=' + all.length + ' sections=' + JSON.stringify(sections) + ' fonts=' + fonts.length + ' sizes=' + sizes.length
+      + ' rows=' + JSON.stringify(runRows.map((n) => n.props['data-run-row'])) + ' details=' + details.length + ' theme=' + themeCards.length)
+
+  const setRule = (() => {
+    const i = clientSrc.indexOf("'.nv-settings{")
+    const j = clientSrc.indexOf("'", i + 2)
+    return i >= 0 && j > i ? clientSrc.slice(i, j) : ''
+  })()
+  // UX-067 R3（P2-5 机检）：选中字号文字色 = --nv-paper-2、底 = 不透明 --nv-cinnabar；
+  // 对三套主题 × 明暗逐对算 WCAG 2.x 对比度（必须 ≥4.5，排除再按错令牌层假设）。
+  const relLum = (hex) => {
+    const ch = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+    const lin = ch.map((c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)))
+    return lin[0] * 0.2126 + lin[1] * 0.7152 + lin[2] * 0.0722
+  }
+  const contrast = (a, b) => {
+    const la = relLum(a)
+    const lb = relLum(b)
+    return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05)
+  }
+  const sizeChipContrast = []
+  for (const theme of ux067.NV_THEMES) {
+    for (const mode of ['light', 'dark']) {
+      sizeChipContrast.push({ theme: theme.id, mode, ratio: contrast(theme[mode].cinnabar, theme[mode]['paper-2']) })
+    }
+  }
+  check('UX-067 设置页 CSS：宿主 --dsw-alias-* 中性面（页面/卡片/文本/边框/开关）∧ 最大宽 760 ∧ 底部 padding 28 ∧ 页面无固定高度/嵌套滚动 ∧ 主题/字体样本才用 --nv-* 暖纸色',
+    setRule !== ''
+      && setRule.includes('max-width:760px') && setRule.includes('padding:24px 28px 28px')
+      && setRule.includes('--nvs-card:var(--dsw-alias-bg-layer-1')
+      && setRule.includes('--nvs-border:var(--dsw-alias-border-l1')
+      && setRule.includes('--nvs-fg:var(--dsw-alias-label-primary')
+      && setRule.includes('background:var(--nvs-bg)')
+      && !/\.nv-settings\{[^}]*height:/.test(setRule)
+      && !/\.nv-settings\{[^}]*overflow:/.test(setRule)
+      && clientSrc.includes('.nv-settings{--nvs-bg:var(--dsw-alias-bg-base')
+      && clientSrc.includes('.nv-settings .nv-typo-settings-preview') && clientSrc.includes('background:var(--nv-paper-2)')
+      && clientSrc.includes('.nv-set-switch[data-on=true]') && clientSrc.includes('.nv-set-row-help')
+      // UX-067 R3（P2-5）：选中字号 = 插件朱砂实底 + 纸色文字（不透明填充，宿主 --dsw-alias-bg-overlay
+      // 暗色 #61666b 不再透出；旧 6% 透明软底在暗色仅 1.75:1）。对比度按三主题 × 明暗机检 ≥4.5。
+      && clientSrc.includes('.nv-settings .nv-typo-size[data-on=true]{background:var(--nv-cinnabar);color:var(--nv-paper-2);box-shadow:inset 0 0 0 1px var(--nv-cinnabar);font-weight:600}')
+      && !clientSrc.includes('.nv-settings .nv-typo-size[data-on=true]{background:color-mix(in srgb,var(--nv-cinnabar) 6%,transparent)')
+      && !clientSrc.includes('.nv-settings .nv-typo-size[data-on=true]{background:var(--nvs-accent)')
+      && sizeChipContrast.length === 6 && sizeChipContrast.every((c) => c.ratio >= 4.5)
+      && !clientSrc.includes('style: { padding: \'16px\', maxWidth: \'760px\' }'),
+    'rule=' + setRule.slice(0, 260) + ' sizeContrast=' + JSON.stringify(sizeChipContrast.map((c) => c.theme + '/' + c.mode + '=' + c.ratio.toFixed(2))))
+
+  const drawerSrcStart = clientSrc.indexOf('applyDrawer() {')
+  const drawerSrcEnd = clientSrc.indexOf('\n    // ── StudioLayout', drawerSrcStart)
+  const drawerSrc = drawerSrcStart >= 0 && drawerSrcEnd > drawerSrcStart ? clientSrc.slice(drawerSrcStart, drawerSrcEnd) : ''
+  check('UX-067 抽屉作用域/外壳：不再依赖 [data-nv-theme] ∧ viewArea 11 宿主令牌内联覆盖（快照/恢复同生命周期）∧ 纸-3 底 + rule-strong 1px 缝 + 暖墨软影 ∧ 无白/黑/宿主蓝大面',
+    !clientSrc.includes('html[data-nv-drawer="1"][data-nv-theme]')
+      && clientSrc.includes('html[data-nv-drawer="1"] [data-phase]')
+      && (ux067.VIEW_AREA_TOKEN_PROPS ?? []).length === 11
+      && (rl.viewAreaCustomProps ?? []).length === 11
+      && ux067.VIEW_AREA_TOKEN_PROPS.every((p) => rl.viewAreaCustomProps.includes(p))
+      && rl.viewAreaCustomProps.every((p) => ux067.VIEW_AREA_TOKEN_PROPS.includes(p))
+      && clientSrc.includes("viewArea.style.background = 'var(--nv-paper-3)'")
+      // UX-067 R2（P2-4）：input-major 从 paper-2（#FBF8F1 暖近白）降到 paper-3；内联映射与 CSS 兜底同值。
+      && clientSrc.includes("'--dsw-specific-input-major': 'var(--nv-paper-3)'")
+      && clientSrc.includes('--dsw-specific-input-major:var(--nv-paper-3)')
+      && !clientSrc.includes('--dsw-specific-input-major:var(--nv-paper-2)')
+      && !clientSrc.includes("'--dsw-specific-input-major': 'var(--nv-paper-2)'")
+      && clientSrc.includes("viewArea.style.borderLeft = '1px solid var(--nv-rule-strong)'")
+      && clientSrc.includes("viewArea.style.boxShadow = '-8px 0 24px color-mix(in srgb, var(--nv-ink) 20%, transparent)'")
+      && drawerSrc.includes('for (const prop of VIEW_AREA_TOKEN_PROPS)') && drawerSrc.includes('viewArea.style.setProperty(prop, VIEW_AREA_TOKEN_VALUES[prop])')
+      && clientSrc.includes('const value = viewArea.style.getPropertyValue(prop)')
+      && clientSrc.includes('rememberTokens(viewArea, savedTokens)')
+      && clientSrc.includes('node.style.removeProperty(prop)')
+      && !drawerSrc.includes('rgba(0,0,0') && !drawerSrc.includes('#fff') && !drawerSrc.includes('#0b0e14') && !drawerSrc.includes('#4f8ef7'),
+    'props=' + JSON.stringify(ux067.VIEW_AREA_TOKEN_PROPS) + ' contract=' + JSON.stringify(rl.viewAreaCustomProps))
 }
 //   至少 4 个任务周期（179 vs 276，正落在 COMPAT-007 修改的代码块内）；本断言把「随 smoke 计数变更同步」由
 //   文档纪律升级为机检（改 README 计数与改 smoke 断言数必须同 commit）。**必须保持为本文件最后一条 check**

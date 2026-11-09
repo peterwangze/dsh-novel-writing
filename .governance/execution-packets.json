@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-11-08T21:36:33",
+  "generated_at": "2026-11-09T13:32:36",
   "packets": {
     "REL-007": {
       "task_id": "REL-007",
@@ -1596,6 +1596,150 @@
         "4 字体 × 4 字号 + Aa/设置页 + 持久化实现；无布局/横滑回归",
         "五门/anchors/真实截图通过",
         "独立 Reviewer 通过；用户目检通过后标记完成"
+      ],
+      "source": "plan-tracker.md##当前活跃事项"
+    },
+    "UX-067": {
+      "task_id": "UX-067",
+      "priority": "P1",
+      "status": "🔄 待用户目视：代码/门禁通过，抽屉白色用户复现已待用户刷新确认",
+      "goal": "UX-067 设置页重构 + 原生会话抽屉视觉整合：插件设置页改为宿主中性四段式；原生会话抽屉改为纸色作用域/侧页，真实宿主内容；不改 API/数据/业务。",
+      "product_success_contract": {
+        "user": "在 DSH 桌面/Web 宿主中使用小说写作工作台、需要打开插件设置与右侧会话的作者。",
+        "job_to_be_done": "在宿主设置对话框里快速管理主题/字体/运行开关/诊断，不感到插件与宿主割裂；打开右侧会话时看到工作台纸色侧页，而不是一块白色外来面板。",
+        "non_goals": [
+          "不改宿主 app 顶栏/左栏/设置对话框外壳/业务 API/数据/存储键。",
+          "不伪造对话、差异、数据、页码。",
+          "不把宿主内容重写成插件自定义聊天。"
+        ],
+        "success_metrics": [
+          "node test/smoke.mjs 366/0；node scripts/verify-visual-geometry.mjs --strict OK；anchors 78/FAIL=0；真实 probe 8/8。",
+          "设置四段/字体卡全边界/无裁切；抽屉纸色+真实宿主内容；用户刷新目视。"
+        ],
+        "competitive_baseline": "宿主设置对话框是宿主原生 UI；插件设置应沿用其表面/控件语言；原生会话是真实内容，不能改造成假聊天。",
+        "done_definition": [
+          "设置页重构、抽屉 token 作用域、契约/测试、真实截图完成。",
+          "独立 Reviewer AWN/0；用户目视确认（尤其白色抽屉是否消失）。"
+        ]
+      },
+      "acceptance_contract": {
+        "scenario": "用户在 DSH 桌面设置里打开 小说写作：看到中性设置页的外观/运行/诊断/业务配置四段，字体卡有边界；刷新后打开右侧对话，抽屉为纸色侧页且真实宿主会话内容，顶栏/状态仍可见。",
+        "command": "node --check lib/client.js && node test/smoke.mjs && node scripts/verify-visual-geometry.mjs --strict && node scripts/verify-contract-anchors.mjs && python docs/design/UX-064-mockups/verify-mockups.py",
+        "expected_output": "五门 exit 0；smoke 366/0；geometry OK；anchors 78/FAIL=0；真实探针 8/8；设置/抽屉截图。",
+        "last_run": {
+          "status": "PASS",
+          "exit_code": 0,
+          "summary": "R1 AWN/0、R2 AWN/0（待 review）；smoke 366/0；geometry --strict OK；anchors 78/FAIL=0；真实探针 8/8；用户目视待。"
+        },
+        "demo_evidence": "docs/evidence/UX-067/README.md；.scratch-ux067/evidence/；.scratch-ux067/UX-067-dev-report.md。"
+      },
+      "quality_budget": {
+        "dimensions": {
+          "performance": {
+            "threshold": "设置页/抽屉不新增首屏网络请求；主题/字体仍即时 localStorage",
+            "validation": "node test/smoke.mjs + 真实 probe",
+            "status": "EXEMPT",
+            "evidence": "docs/evidence/UX-067/README.md",
+            "exception": "视觉重构已实现，用户白色复现/设置写入等残余待用户目视；基线与真实探针已跑"
+          },
+          "reliability": {
+            "threshold": "设置读失败可读错误；抽屉 token 快照/恢复无泄漏；宿主内容真实",
+            "validation": "node test/smoke.mjs + real probe",
+            "status": "EXEMPT",
+            "evidence": "docs/evidence/UX-067/README.md",
+            "exception": "视觉重构已实现，用户白色复现/设置写入等残余待用户目视；基线与真实探针已跑"
+          },
+          "security": {
+            "threshold": "无新 API/网络/宿主 settings 写入；无全局 --dsw 覆盖",
+            "validation": "node test/smoke.mjs && node scripts/verify-contract-anchors.mjs",
+            "status": "EXEMPT",
+            "evidence": "lib/host-contract.mjs",
+            "exception": "视觉重构已实现，用户白色复现/设置写入等残余待用户目视；基线与真实探针已跑"
+          },
+          "accessibility": {
+            "threshold": "设置/抽屉对比度 ≥4.5；语义控件；焦点可见",
+            "validation": "node test/smoke.mjs + 真实 probe 对比度",
+            "status": "EXEMPT",
+            "evidence": "docs/evidence/UX-067/README.md",
+            "exception": "视觉重构已实现，用户白色复现/设置写入等残余待用户目视；基线与真实探针已跑"
+          },
+          "ux": {
+            "threshold": "四段设置无裁切；字体卡全边界；抽屉纸色且真实宿主内容",
+            "validation": "node .scratch-ux067/probe-ux067.mjs --out docs/evidence/UX-067",
+            "status": "EXEMPT",
+            "evidence": "docs/evidence/UX-067/README.md",
+            "exception": "视觉重构已实现，用户白色复现/设置写入等残余待用户目视；基线与真实探针已跑"
+          },
+          "maintainability": {
+            "threshold": "设置页单一视图组件 + 宿主 token 契约 11 项；无死 CSS/旧 inline 大块",
+            "validation": "node scripts/verify-contract-anchors.mjs + smoke",
+            "status": "EXEMPT",
+            "evidence": "docs/design/UX-067-settings-drawer/README.md",
+            "exception": "视觉重构已实现，用户白色复现/设置写入等残余待用户目视；基线与真实探针已跑"
+          }
+        }
+      },
+      "vertical_slice": {
+        "user_visible_slice": "用户打开小说写作设置看到中性四段式；打开右侧对话看到纸色侧页和真实宿主内容。",
+        "demo_path": "node .scratch-ux067/probe-ux067.mjs --out docs/evidence/UX-067 --port 3080",
+        "scope_guard": "只改插件设置页与宿主会话 token 作用域；不改 API/数据/业务。",
+        "rollback_plan": "回退 UX-067 commit；旧设置页/抽屉 token 自动恢复。",
+        "status": "PASS",
+        "evidence": "docs/evidence/UX-067/README.md；真实 8/8；用户目视待。"
+      },
+      "interruption_policy": {
+        "mode": "critical-only",
+        "critical_triggers": [
+          "改变用户已选范围/字体/字号（product intent）",
+          "改变验收标准（acceptance）",
+          "不可逆操作（irreversible）",
+          "发布/版本（release）",
+          "接受新风险（risk acceptance）",
+          "新增外部字体或依赖（external dependency）",
+          "治理/权限模式变更（mode change）"
+        ],
+        "auto_execute": [
+          "routine execution：排版实现、测试、契约重基、可逆 commit",
+          "record updates：证据/审查/计划状态更新"
+        ],
+        "assumption_record": {
+          "assumption": "用户白色抽屉由作用域/token 缺失导致，内联 11 token 可覆盖",
+          "basis": "本地 before 为暖近白，用户原图纯白未复现；设计为兜底",
+          "reversibility": "仅视觉 CSS/内联 token，回退 commit 即恢复",
+          "validation": "真实 probe 8/8 + 用户刷新目视",
+          "rollback": "revert commit"
+        },
+        "interruption_budget": "用户最终目检一次"
+      },
+      "allowed_change_scope": [
+        "lib/client.js（设置页/抽屉 token/CSS）",
+        "lib/host-contract.mjs（viewAreaCustomProps/行号）",
+        "test/smoke.mjs",
+        "scripts/verify-visual-geometry.mjs",
+        "README.md",
+        "CHANGELOG.md",
+        "docs/design/UX-067-settings-drawer/README.md",
+        "docs/evidence/UX-067/"
+      ],
+      "required_evidence": [
+        "事实依据 + 结构化事实（截图/探针/门禁）",
+        "目标对齐 + 用户影响 fields",
+        "真实 1680/1152/800 设置/抽屉浅深截图",
+        "独立 Reviewer AWN/0",
+        "用户刷新目视（尤其白色抽屉）"
+      ],
+      "next_commands": [
+        "node --check lib/client.js",
+        "node test/smoke.mjs",
+        "node scripts/verify-visual-geometry.mjs --strict",
+        "node scripts/verify-contract-anchors.mjs",
+        "python docs/design/UX-064-mockups/verify-mockups.py"
+      ],
+      "done_definition": [
+        "设置/抽屉视觉重构 + token 契约/测试完成",
+        "五门/真实探针/截图通过",
+        "独立 Reviewer AWN/0",
+        "用户刷新目视确认后才完成"
       ],
       "source": "plan-tracker.md##当前活跃事项"
     }

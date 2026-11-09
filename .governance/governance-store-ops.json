@@ -2090,6 +2090,152 @@
       "baseline_effects": null,
       "recorded_at": "2026-11-09T09:14:59",
       "updated_at": "2026-11-09T09:14:59"
+    },
+    "op-ce2e960bc892417795cf6b816b61a58b": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-067",
+      "input_fingerprint": "e6b9a4f3e154cfd40e5aa5ce0a96dade174411e82e66e23e08447db6b015af84",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-ce2e960bc892417795cf6b816b61a58b",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-09T13:04:36",
+      "updated_at": "2026-11-09T13:04:36",
+      "released_files": [
+        ".scratch-ux067/UX-067-dev-report.md",
+        "CHANGELOG.md",
+        "README.md",
+        "docs/design/UX-067-settings-drawer/README.md",
+        "lib/client.js",
+        "lib/host-contract.mjs",
+        "scripts/verify-visual-geometry.mjs",
+        "test/smoke.mjs"
+      ]
+    },
+    "op-4b22b96001bf4fe295f462949ce545d6": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-067",
+      "input_fingerprint": "e6b9a4f3e154cfd40e5aa5ce0a96dade174411e82e66e23e08447db6b015af84",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-4b22b96001bf4fe295f462949ce545d6",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-09T13:25:11",
+      "updated_at": "2026-11-09T13:25:11",
+      "released_files": [
+        "docs/review/UX-067-R1.md"
+      ]
+    },
+    "op-9036ed6749a04457b9171f0a15711edf": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-067",
+      "input_fingerprint": "e6b9a4f3e154cfd40e5aa5ce0a96dade174411e82e66e23e08447db6b015af84",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-9036ed6749a04457b9171f0a15711edf",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-09T13:29:41",
+      "updated_at": "2026-11-09T13:29:41",
+      "released_files": [
+        ".scratch-ux067/UX-067-R2-dev-report.md",
+        "CHANGELOG.md",
+        "README.md",
+        "lib/client.js",
+        "test/smoke.mjs"
+      ]
+    },
+    "op-4982bab081a24fd4936aae74d4205481": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-067",
+      "input_fingerprint": "e6b9a4f3e154cfd40e5aa5ce0a96dade174411e82e66e23e08447db6b015af84",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-4982bab081a24fd4936aae74d4205481",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-09T13:34:05",
+      "updated_at": "2026-11-09T13:34:05",
+      "released_files": [
+        "docs/review/UX-067-R2.md"
+      ]
+    },
+    "op-ec7018e9d13a4a33aa700477c79c9951": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-067",
+      "input_fingerprint": "e6b9a4f3e154cfd40e5aa5ce0a96dade174411e82e66e23e08447db6b015af84",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-ec7018e9d13a4a33aa700477c79c9951",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-09T13:38:37",
+      "updated_at": "2026-11-09T13:38:37",
+      "released_files": [
+        ".scratch-ux067/UX-067-R3-dev-report.md",
+        "CHANGELOG.md",
+        "lib/client.js",
+        "test/smoke.mjs"
+      ]
+    },
+    "op-d73cde6c5f9d4217ab19da79471a483e": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-067",
+      "input_fingerprint": "e6b9a4f3e154cfd40e5aa5ce0a96dade174411e82e66e23e08447db6b015af84",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-d73cde6c5f9d4217ab19da79471a483e",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-09T13:48:20",
+      "updated_at": "2026-11-09T13:48:20",
+      "released_files": [
+        "docs/review/UX-067-R3.md"
+      ]
     }
   }
 }
