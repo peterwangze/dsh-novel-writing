@@ -2046,6 +2046,50 @@
       "baseline_effects": null,
       "recorded_at": "2026-11-09T08:45:24",
       "updated_at": "2026-11-09T08:45:24"
+    },
+    "op-5ff55e65c24147dbaf636b887867ed35": {
+      "schema_version": 1,
+      "command": "decision-append",
+      "task_id": "",
+      "input_fingerprint": "67117241b3f2fecd30d1fc8c0a3ed23c2225eb731e7191017fa7616ed93fe37e",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-5ff55e65c24147dbaf636b887867ed35",
+        "code": "ok",
+        "new_revision": 51608,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-09T09:14:53",
+      "updated_at": "2026-11-09T09:14:53",
+      "authority": {
+        "state": "MD_ACTIVE",
+        "epoch": 0,
+        "generation": 0,
+        "backend": "md"
+      }
+    },
+    "op-bc26b1e305d54ee09d72b4264b65e699": {
+      "schema_version": 1,
+      "command": "evidence-append",
+      "task_id": "UX-064",
+      "input_fingerprint": "9ae596fdd9b007cd13a62488d288fdb5233961ff8439cd472acd042dc0ec81e8",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-bc26b1e305d54ee09d72b4264b65e699",
+        "code": "ok",
+        "new_revision": 448883,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-09T09:14:59",
+      "updated_at": "2026-11-09T09:14:59"
     }
   }
 }
