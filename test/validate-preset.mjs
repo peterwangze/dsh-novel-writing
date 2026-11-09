@@ -64,6 +64,35 @@ if (!existsSync(compositionPath)) {
   fail('agent.cordis.yml missing')
   process.exit(1)
 }
+
+// ── 0b. prompt 变量白名单（BUG-013）──────────────────────────────────────────
+// 宿主在 deployment:persona-prefix 渲染阶段只注册 provider/model；未注册的 {{cwd}}
+// 会让整轮 prompt 失败。此检查在预设源侧 fail-closed，防止下次再靠用户实机发现。
+const PROMPT_VAR_ALLOW = new Set(['provider', 'model'])
+const promptSources = [
+  { label: 'cordis.patch.yml', path: join(root, 'cordis.patch.yml') },
+  { label: 'agent-presets/novel-writing/agent.cordis.yml', path: compositionPath }
+]
+let promptVarFailed = false
+for (const source of promptSources) {
+  if (!existsSync(source.path)) {
+    fail('prompt 变量检查：源文件缺失 ' + source.label)
+    promptVarFailed = true
+    continue
+  }
+  const text = readFileSync(source.path, 'utf8')
+  const lines = text.split(/\r?\n/)
+  for (let i = 0; i < lines.length; i += 1) {
+    for (const match of lines[i].matchAll(/\{\{\s*([a-zA-Z0-9_.-]+)\s*\}\}/g)) {
+      if (!PROMPT_VAR_ALLOW.has(match[1])) {
+        fail(`prompt 变量未注册：${source.label}:${i + 1} {{${match[1]}}}（允许：${[...PROMPT_VAR_ALLOW].join(', ')}）`)
+        promptVarFailed = true
+      }
+    }
+  }
+}
+if (!promptVarFailed) ok('prompt 变量白名单：两源均 ⊆ {provider, model}（BUG-013）')
+
 await schemaFace(compositionPath)
 let yamlLoad = null
 try {

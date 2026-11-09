@@ -5704,6 +5704,32 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
 //   至少 4 个任务周期（179 vs 276，正落在 COMPAT-007 修改的代码块内）；本断言把「随 smoke 计数变更同步」由
 //   文档纪律升级为机检（改 README 计数与改 smoke 断言数必须同 commit）。**必须保持为本文件最后一条 check**
 //   （断言式用 `passed + 1` 计入自身；后续新增 check 会使其红——这正是期望的提示信号）。
+check('BUG-013 预设 prompt 变量仅使用宿主已注册的 provider/model（cwd 等未知变量会在 persona 渲染时整轮失败）', (() => {
+  const allow = new Set(['provider', 'model'])
+  const sources = [
+    { label: 'cordis.patch.yml', url: new URL('../cordis.patch.yml', import.meta.url) },
+    { label: 'agent-presets/novel-writing/agent.cordis.yml', url: new URL('../agent-presets/novel-writing/agent.cordis.yml', import.meta.url) }
+  ]
+  const bad = []
+  for (const source of sources) {
+    const lines = readFileSync(source.url, 'utf8').split(/\r?\n/)
+    for (let i = 0; i < lines.length; i += 1) {
+      for (const match of lines[i].matchAll(/\{\{\s*([a-zA-Z0-9_.-]+)\s*\}\}/g)) {
+        if (!allow.has(match[1])) bad.push(`${source.label}:${i + 1}:{{${match[1]}}}`)
+      }
+    }
+  }
+  return bad.length === 0
+})(), 'unknown=' + JSON.stringify((() => {
+  const allow = new Set(['provider', 'model'])
+  const bad = []
+  for (const url of [new URL('../cordis.patch.yml', import.meta.url), new URL('../agent-presets/novel-writing/agent.cordis.yml', import.meta.url)]) {
+    const lines = readFileSync(url, 'utf8').split(/\r?\n/)
+    for (let i = 0; i < lines.length; i += 1) for (const m of lines[i].matchAll(/\{\{\s*([a-zA-Z0-9_.-]+)\s*\}\}/g)) if (!allow.has(m[1])) bad.push(m[1])
+  }
+  return bad
+})()))
+
 const readmeSmokeDeclared = Number((/node test\/smoke\.mjs\s+#[^\n]*?(\d+)\s*项断言/.exec(readFileSync(new URL('../README.md', import.meta.url), 'utf8')) ?? [])[1] ?? NaN)
 check('COMPAT-014 A-F9 README smoke 断言计数同步：声明 ' + (Number.isNaN(readmeSmokeDeclared) ? '缺失' : readmeSmokeDeclared) + ' ≡ 实测 ' + (passed + 1) + '（含本断言自身；陈旧即红）',
   readmeSmokeDeclared === passed + 1,
