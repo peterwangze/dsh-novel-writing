@@ -2341,6 +2341,182 @@
       "baseline_effects": null,
       "recorded_at": "2026-11-09T14:08:27",
       "updated_at": "2026-11-09T14:08:27"
+    },
+    "op-93e330dbd6db483f8d8a4d13c25675ab": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-067",
+      "input_fingerprint": "e6b9a4f3e154cfd40e5aa5ce0a96dade174411e82e66e23e08447db6b015af84",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-93e330dbd6db483f8d8a4d13c25675ab",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-09T14:19:36",
+      "updated_at": "2026-11-09T14:19:36",
+      "released_files": [
+        ".scratch-ux067/UX-067-R5-dev-report.md",
+        ".scratch-ux067/probe-ux067.mjs",
+        "CHANGELOG.md",
+        "lib/client.js",
+        "scripts/verify-visual-geometry.mjs",
+        "test/smoke.mjs"
+      ]
+    },
+    "op-eef7d7575ba04806840eaf7aadbe7cf5": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-067",
+      "input_fingerprint": "e6b9a4f3e154cfd40e5aa5ce0a96dade174411e82e66e23e08447db6b015af84",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-eef7d7575ba04806840eaf7aadbe7cf5",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-09T14:26:19",
+      "updated_at": "2026-11-09T14:26:19",
+      "released_files": [
+        ".scratch-ux067/UX-067-R6-dev-report.md",
+        "CHANGELOG.md",
+        "lib/client.js",
+        "scripts/verify-visual-geometry.mjs",
+        "test/smoke.mjs"
+      ]
+    },
+    "op-460f411113eb41dea8e90b19f44a3007": {
+      "schema_version": 1,
+      "command": "locks-release",
+      "task_id": "UX-067",
+      "input_fingerprint": "e6b9a4f3e154cfd40e5aa5ce0a96dade174411e82e66e23e08447db6b015af84",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-460f411113eb41dea8e90b19f44a3007",
+        "code": "ok",
+        "new_revision": 49,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-09T14:39:24",
+      "updated_at": "2026-11-09T14:39:24",
+      "released_files": [
+        ".scratch-ux067/UX-067-R7-dev-report.md",
+        ".scratch-ux067/probe-ux067.mjs",
+        "CHANGELOG.md",
+        "lib/client.js",
+        "lib/host-contract.mjs",
+        "scripts/verify-visual-geometry.mjs",
+        "test/smoke.mjs"
+      ]
+    },
+    "op-f8e5b693028f4761bd1815b12394e24e": {
+      "schema_version": 1,
+      "command": "evidence-append",
+      "task_id": "REL-008",
+      "input_fingerprint": "f7685553a47c99aa76001707c3724416d12a93fd345ffe36b53a759cb0b5ee91",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-f8e5b693028f4761bd1815b12394e24e",
+        "code": "ok",
+        "new_revision": 451993,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-09T14:46:09",
+      "updated_at": "2026-11-09T14:46:09"
+    },
+    "op-f0461a35990a48d698b96e9fc7a9242c": {
+      "schema_version": 1,
+      "command": "evidence-append",
+      "task_id": "BUG-013",
+      "input_fingerprint": "896d77d2f3d9dc0ce88138d9de630609844fa08b8a84707c0f40b6ee43d1642d",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-f0461a35990a48d698b96e9fc7a9242c",
+        "code": "ok",
+        "new_revision": 453460,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-09T19:02:12",
+      "updated_at": "2026-11-09T19:02:12"
+    },
+    "op-3aea5f6047c44834be2c9ff72259352c": {
+      "schema_version": 1,
+      "command": "evidence-append",
+      "task_id": "REL-009",
+      "input_fingerprint": "165ada4c0323b2bd2034223a96d86d755fbf7a6081280fcbfb5efedc71e6b738",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-3aea5f6047c44834be2c9ff72259352c",
+        "code": "ok",
+        "new_revision": 454622,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-09T19:03:08",
+      "updated_at": "2026-11-09T19:03:08"
+    },
+    "op-80b0e7bda099484585f62c21f35c7151": {
+      "schema_version": 1,
+      "command": "evidence-append",
+      "task_id": "BUG-014",
+      "input_fingerprint": "127ece6969179dc3991edfd00fb66f4623eca163db87a3006e1015a8de71ea64",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-80b0e7bda099484585f62c21f35c7151",
+        "code": "ok",
+        "new_revision": 455842,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-09T19:21:26",
+      "updated_at": "2026-11-09T19:21:26"
+    },
+    "op-4ed640fb3a244207960247eb00454b92": {
+      "schema_version": 1,
+      "command": "evidence-append",
+      "task_id": "BUG-008",
+      "input_fingerprint": "a704eb048f4beb9a1b0a7f9ad47c8726182976837c43c14a74126208518a6e0f",
+      "status": "ok",
+      "result": {
+        "operation_id": "op-4ed640fb3a244207960247eb00454b92",
+        "code": "ok",
+        "new_revision": 456881,
+        "observed_revision": null,
+        "execution": "succeeded",
+        "detail": null
+      },
+      "pending_effects": null,
+      "baseline_effects": null,
+      "recorded_at": "2026-11-09T19:23:57",
+      "updated_at": "2026-11-09T19:23:57"
     }
   }
 }

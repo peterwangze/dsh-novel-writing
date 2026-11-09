@@ -1054,7 +1054,7 @@ check('客户端源码面：UX-034 文件显示复用章节内容列（fileSel �
     && !clientSrc.includes("borderTop: '1px solid ' + TK.line, marginTop: '8px'")       // 无左窗嵌卡样式残留
     && clientSrc.includes('fileSel, onFileSel: setFileSel')                             // 左窗受控选择
     && clientSrc.includes('fileSel, onFileClose: () => setFileSel(null)')
-    && (clientSrc.match(/if \(props\.fileSel !== null && typeof props\.onFileClose === 'function'\) props\.onFileClose\(\)/g) ?? []).length === 3   // UX-035 点章节/点编辑退出文件视图 + S2 R2 章节意图跳转
+    && (clientSrc.match(/if \(props\.fileSel !== null && typeof props\.onFileClose === 'function'\) props\.onFileClose\(\)/g) ?? []).length === 4   // UX-035 点章节/点编辑退出文件视图 + S2 R2 章节意图跳转 + 审查 WB-02 选章复位
 })(), 'ux034 file view reuses chapter column')
 check('客户端源码面：UX-036/S2 工作流与数据面板（按需下半案卷；WorkflowPanel/DataPanel/PublishPanel/RequestPanel 真实数据；状态栏轻入口）', (() => {
   return clientSrc.includes("['workflow', t('studioWorkflow')], ['data', t('studioData')], ['publish', t('studioPublish')], ['requests', t('studioRequests')]")
@@ -1284,7 +1284,7 @@ check('UX-064 S2 R4 布局变量零未消费（.nv-split 单一事实源块内�
   const dead = declared.filter((v) => !consumed(v) && !LAYOUT_VAR_ALLOWLIST.has(v))
   return unregistered.length === 0 && missing.length === 0 && dead.length === 0
 })(), 's2r4 layout variables dead/missing/unregistered')
-check('UX-064 S3 panelHeight 纯模型与持久化（唯一新增像素状态；缺失/坏值/非有限/越界→null；运行期 clamp 180..min(父列 60%,520)；studio.v2 读回归一）', (() => {
+check('UX-064 S3 panelHeight 纯模型与持久化（唯一新增像素状态；缺失/坏值/非有限/越界→null；运行期 clamp 180..min(父列 60%,520,父列−稿纸 220)；studio.v2 读回归一）', (() => {
   // 口径：只提取 S3 纯函数区段真跑（不依赖 DOM），再核持久化三处读/写归一。
   const start = clientSrc.indexOf('const PANEL_MIN_H = 180')
   const end = clientSrc.indexOf('function persistStudioState', start)
@@ -1300,7 +1300,10 @@ check('UX-064 S3 panelHeight 纯模型与持久化（唯一新增像素状态；
   return n(null) === null && n(undefined) === null && n(Number.NaN) === null && n(Number.POSITIVE_INFINITY) === null
     && n('300') === null && n(179) === null && n(521) === null
     && n(180) === 180 && n(300.4) === 300 && n(520) === 520
-    && c(600, 421) === 421 && c(100, 421) === 180 && c(300, 421) === 300 && c(300, 0) === 180
+    && c(600, 421) === 201 && c(100, 421) === 180 && c(300, 421) === 201 && c(300, 0) === 180
+    // WB-09：上限必须先给稿纸留 PAPER_MIN_H(220)——421 高的父列只能给面板 201（原 421×60%=253 也压过它），
+    // 400 高的父列留下限 180；极端矮窗（父列 0）仍不小于 180。
+    && c(520, 400) === 180 && c(520, 240) === 180 && c(700, 1000) === 520
     && d(865) === 260 && d(702) === 211 && d(0) === 180
     && clientSrc.includes('panelHeight: normalizePanelHeight(state.panelHeight)')
     && clientSrc.includes('panelHeight: normalizePanelHeight(s.panelHeight)')
@@ -2245,8 +2248,10 @@ check('客户端源码面：UX-055① 字阶悬崖（TYPO 单点常量关键值 
     && !clientSrc.includes('font-size:16px;font-weight:600;color:var(--nv-fg,#e6e8eb);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}')  // 旧书卡标题 16px 无残留
     && !clientSrc.includes('.nv-console-title{flex:none;display:inline-flex;align-items:center;gap:6px;font-size:16px')
 })(), 'ux055 typography missing')
-check('客户端源码面：UX-061 P2 rail 状态短标签（DR2 P1：可见文字只经 railStatus*、6 态 × zh/en 成对、长度上限 zh≤6 / en≤14）', (() => {
-  const keys = ['railStatusIdle', 'railStatusRunning', 'railStatusBusy', 'railStatusUnbound', 'railStatusStale', 'railStatusDegraded']
+check('客户端源码面：UX-061 P2 rail 状态短标签（DR2 P1：可见文字只经 railStatus*、8 态 × zh/en 成对、长度上限 zh≤6 / en≤14）', (() => {
+  // 8 态（原 6 态 + 审查 QA-07「同步中」+ QA-08「待确认」）：新态用于「刚绑定、会话镜像未追上」
+  // 与「助手等待用户确认」，避免把这两种情形误显示为「会话失效 / 空闲」。
+  const keys = ['railStatusIdle', 'railStatusRunning', 'railStatusBusy', 'railStatusUnbound', 'railStatusStale', 'railStatusDegraded', 'railStatusSettling', 'railStatusNeed']
   const found = []
   const re = /railStatus[A-Za-z]+: ['"]([^'"]*)['"]/g
   let m
@@ -2254,8 +2259,8 @@ check('客户端源码面：UX-061 P2 rail 状态短标签（DR2 P1：可见文�
   const hasEach = keys.every((k) => clientSrc.includes("t('" + k + "')"))
   const zh = found.filter((v) => /[\u4e00-\u9fff]/.test(v))
   const en = found.filter((v) => !/[\u4e00-\u9fff]/.test(v))
-  const maxZh = zh.length === 6 && zh.every((v) => Array.from(v).length <= 6)
-  const maxEn = en.length === 6 && en.every((v) => v.length <= 14)
+  const maxZh = zh.length === 8 && zh.every((v) => Array.from(v).length <= 6)
+  const maxEn = en.length === 8 && en.every((v) => v.length <= 14)
   // UX-064 S2：左栏从属状态行 = .nv-rb-wf-status；短标签单点收口在 railStatusText 计算块
   const start = clientSrc.indexOf('const railStatusText =')
   const seg = start >= 0 ? clientSrc.slice(start, start + 900) : ''
@@ -2264,7 +2269,7 @@ check('客户端源码面：UX-061 P2 rail 状态短标签（DR2 P1：可见文�
   const onlyWhitelisted = calls.length > 0 && calls.every((k) => keys.includes(k))
   const banned = /t\((['"])(sessionsMissing|wfRunning|wfIdle|unbound|stale|railBusy)\1\)/
   const onlyShort = seg !== '' && !banned.test(seg)
-  return hasEach && found.length === 12 && maxZh && maxEn && onlyWhitelisted && onlyShort
+  return hasEach && found.length === 16 && maxZh && maxEn && onlyWhitelisted && onlyShort
 })(), 'ux061 rail status labels')
 
 check('客户端源码面：UX-061 阶段 2 B-9 阅读宽度令牌（--nv-measure 定义 + .nv-content/.nv-edwrap 消费 + 居中口径）', (() => {
@@ -3800,7 +3805,7 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
   // 入 golden）范围条目中「起于注释/空行」者 MUST 恰 2 项
   //（历史锚点：COMPAT-013 时期实测——3.1 起于 `/**` JSDoc L1278、3.8 起于 `/**` JSDoc L3418；现行注释起段以本断言动态计算清单为准）。动因 = 该计数原为**人工转写**且写错
   //（CHANGELOG 曾披露「三处」）——与 COMPAT-004 FIND-1 的 tier 串转写漂移同类，故沿用同款处置：实测值
-  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.5 `L2047-L2056` `const taClose` / 4.6 `L17`
+  // 入 golden（事实源 = 本断言消息内的实读清单）。逐项实读的非注释起段：3.5 `const taClose` / 4.6 `L17`
   // `"dsh": {` / 5.1 `L1` `name:` / 5.2 `L16` `- id:` / 5.4 `L77` `- id:` / 6.1 `L39`（修正后真值；修正前
   // `L38` 亦非注释）/ 6.2 `L8` `"engines": {` / 6.4 `L105`（ci.yml `#` 注释起段——JS 口径不计为注释，见下句口径边界）。严格面（面 2 = 11 项）已由 ③ 逐项约束，
   // 本项只覆盖未纳入严格面的面（动态生成：实测 3/4/5/6）；注释口径同 ③（JS 风格），YAML `#` 不在识别面内（与 F-5① 同源前提）。
@@ -5723,17 +5728,27 @@ const pkgJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
 check('BUG-014 抽屉会话对齐：抽屉打开前把宿主 current 对齐到本书绑定会话（绑定新会话后不再显示旧会话）', (() => {
   const drawerSrc = fnBody('const toggleDrawerAligned = () => {')
   const bindSrc = fnBody('const bindNewSessionCtl = async () => {')
+  const projSrc = fnBody('const bindProjection = {')
   return drawerSrc !== ''
     && drawerSrc.includes("if (layout.drawerOpen === true) { studioLayout.setDrawer(false); return }")
     && drawerSrc.includes('splitCurrent !== boundId')
     && drawerSrc.includes('launcher.open(boundId)')
     && drawerSrc.includes('studioLayout.setDrawer(true)')
+    // 会话已失效时不对齐（QA-05：不切到死会话，也不用「服务不可用」误报）
+    && drawerSrc.includes('boundEntry !== null')
     // 绑定成功后宿主 current 必须跟随新会话（否则抽屉/宿主会话面仍是旧会话）
-    && bindSrc.includes('setBoundOverride({ novelId: current.id, sessionId: r.sessionId })')
+    && bindSrc.includes('bindProjection.note(current.id, r.sessionId, boundIdServer)')
     && bindSrc.includes('launcher.open(r.sessionId)')
-    // 本地覆盖只为挡住 overview 轮询窗口：追上同值必须让位；切书必须清零
-    && clientSrc.includes('if (boundOverride.novelId !== curId || boundIdServer === boundOverride.sessionId) setBoundOverride(null)')
-    && clientSrc.includes('const boundId = boundOverride !== null ? boundOverride.sessionId : boundIdServer')
+    // 投影只在确认写入成功后登记（QA-02：失败不得产生永久「已绑定」假象）
+    && bindSrc.includes('if (r.bound === true) bindProjection.note(')
+    // 投影是唯一读口径：UI 状态与动作目标同源（QA-01），且服务器追上即让位（QA-10）
+    && projSrc.includes('if (server === e.sessionId) return server')
+    && projSrc.includes('if (server !== null && server !== e.prevServer) return server')
+    && clientSrc.includes('const boundId = current !== undefined ? bindProjection.value(current.id, boundIdServer) : null')
+    && clientSrc.includes('const sid = boundId')
+    && !clientSrc.includes('const sid = bindings[current.id]')
+    // 投影让位在渲染后 effect 内执行（不在渲染期改写模块状态）
+    && clientSrc.includes('bindProjection.sweep(current !== undefined ? current.id : null, boundIdServer)')
     // 抽屉入口必须走对齐版（禁止绕过直接 toggleDrawer）
     && clientSrc.includes('onClick: toggleDrawerAligned,')
     && !clientSrc.includes('onClick: () => studioLayout.toggleDrawer(),')
@@ -5764,6 +5779,119 @@ check('BUG-013 预设 prompt 变量仅使用宿主已注册的 provider/model（
   }
   return bad
 })()))
+
+// ═══ 审查修复批次（BUG-014 复核 + QA/WB 全量审计）：新增看护 ═══════════════════════════
+// 覆盖「用户可见的低级问题」缺陷类：缺键 ⇒ 整块渲染崩溃、切章串稿、保存无反馈、
+// 绑定投影分裂、Esc 连关两层、首页无反馈/未绑定绕过创建链。
+check('i18n 键完整性：每个 t(\'字面量\') 在 zh 与 en 两个词典（含 Object.assign 追加块）中都存在 ∧ makeT 缺键兜底不返回 undefined', (() => {
+  // 词典抽取：主词典 zh/en 块 + 所有 Object.assign(LANG.xx, {...}) 追加块（主题/排版是后置追加，
+  // 早期只扫主词典的检查因此漏掉了 closeSplit / homeDetailLoading —— 正是 F-01 崩溃与 F-08 无名按钮）。
+  const lines = clientSrc.split('\n')
+  const blockFrom = (i0) => {
+    let depth = 0
+    let started = false
+    const out = []
+    for (let i = i0; i < lines.length; i += 1) {
+      out.push(lines[i])
+      for (const ch of lines[i]) { if (ch === '{') { depth += 1; started = true } else if (ch === '}') depth -= 1 }
+      if (started && depth === 0) return out.join('\n')
+    }
+    return out.join('\n')
+  }
+  const strip = (s) => s.replace(/'(?:[^'\\]|\\.)*'/g, "''").replace(/`(?:[^`\\]|\\.)*`/g, '``')
+  const keysIn = (blk) => [...strip(blk).matchAll(/([a-zA-Z_$][\w$]*)\s*:/g)].map((m) => m[1])
+  const zh = new Set()
+  const en = new Set()
+  for (let i = 0; i < lines.length; i += 1) {
+    const t = lines[i].trim()
+    if (t === 'zh: {') for (const k of keysIn(blockFrom(i))) zh.add(k)
+    if (t === 'en: {') for (const k of keysIn(blockFrom(i))) en.add(k)
+    if (t.startsWith('Object.assign(LANG.zh, {')) for (const k of keysIn(blockFrom(i))) zh.add(k)
+    if (t.startsWith('Object.assign(LANG.en, {')) for (const k of keysIn(blockFrom(i))) en.add(k)
+  }
+  const used = new Set([...clientSrc.matchAll(/\bt\(\s*'([a-zA-Z_$][\w$]*)'/g)].map((m) => m[1]))
+  const missing = [...used].filter((k) => !zh.has(k) || !en.has(k)).sort()
+  // 兜底：缺键返回键名本身（绝不 undefined——否则 text.length 之类访问会在渲染期抛错）
+  return zh.size > 300 && en.size > 300 && used.size > 250 && missing.length === 0
+    && clientSrc.includes("if (v === undefined) return String(key)")
+})(), 'i18n=' + (() => {
+  const used = new Set([...clientSrc.matchAll(/\bt\(\s*'([a-zA-Z_$][\w$]*)'/g)].map((m) => m[1]))
+  return 'used=' + used.size
+})())
+
+check('WB-01/WB-02 切章复位（P0 数据损坏）：ChapterPanel 在 selected 变化时退出编辑态、清草稿、退出文件视图 ∧ 父级左栏 onSelect 先做脏稿确认（取消不改选择）', (() => {
+  const selEffect = fnBody('const lastSelRef = useRef(selected)')
+  const railSelect = clientSrc.slice(clientSrc.indexOf('onSelect: (num) => {'), clientSrc.indexOf('onSelect: (num) => {') + 700)
+  return selEffect.includes('if (lastSelRef.current === selected) return')
+    && selEffect.includes("setMode('read')")
+    && selEffect.includes("setDraft('')")
+    && selEffect.includes("setBaseDraft('')")
+    && selEffect.includes('props.onFileClose()')
+    // 依赖数组 = [selected]（复位只在选择变化时发生）
+    && clientSrc.includes('      }, [selected])\n')
+    // 父级：脏稿确认必须在 setSelectedNum 之前，且取消即 return
+    && railSelect.includes('store.get().chapterDirty === true')
+    && railSelect.includes("window.confirm(t('dirtyConfirm'))")
+    && railSelect.indexOf('if (ok !== true) return') < railSelect.indexOf('setSelectedNum(num)')
+})(), 'wb01 selEffect=' + fnBody('const lastSelRef = useRef(selected)').length)
+
+check('WB-03/WB-04 保存反馈：空正文保存给出可读原因（不再静默 return）∧ 保存成功提示在阅读态也可见 ∧ 字数即时更新', (() => {
+  const saveBody = fnBody('const save = (force) => {')
+  return saveBody.includes("if (draft === '') {")
+    && saveBody.includes('保存失败：正文不能为空')
+    && saveBody.includes('setWordsNow(')
+    // 提示节点位于 studioHead（两种模式都渲染），不再只在编辑态 actions 行
+    && clientSrc.includes("className: 'nv-sheet-notice', 'data-kind': notice.startsWith('保存失败') ? 'err' : 'ok', role: 'status'")
+    && clientSrc.includes("`${wordsNow !== null ? wordsNow : active.words} ${t('words')}`")
+})(), 'wb03/04')
+
+check('WB-05/WB-08 章节面降级：章节加载失败显示错误（不再永久「正在载入」）∧ 新建章按钮在章号不可派生时真的禁用', (() => {
+  const bodyStart = clientSrc.indexOf("const studioBody = active === null")
+  const body = bodyStart >= 0 ? clientSrc.slice(bodyStart, bodyStart + 420) : ''
+  return body.includes('poll.error !== null') && body.includes("t('studioLoadFailPrefix')")
+    && clientSrc.includes('newDisabled: deriveHomeNextNum(detail) === null,')
+    && !clientSrc.includes('newDisabled: deriveHomeNextNum(detail) === null && chapters.length > 0')
+})(), 'wb05/08')
+
+check('WB-06/WB-11 状态数字与告警一致：请求徽标只计 pending（与总览卡同口径）∧ 切书复位顶栏告警', (() => {
+  const pendStart = clientSrc.indexOf('const pendingRequests =')
+  const pend = pendStart >= 0 ? clientSrc.slice(pendStart, pendStart + 240) : ''
+  const reset = clientSrc.slice(clientSrc.indexOf('useEffect(() => {\n        setFileSel(null)'), clientSrc.indexOf('}, [selectedId])'))
+  return pend.includes("r.status === 'pending'")
+    && !pend.includes('(detail.requests ?? []).length')
+    && reset.includes('setBarNotice(null)')
+})(), 'wb06/11')
+
+check('WB-07/WB-10/WB-13 死代码与状态脱同步：moreOpen 死状态已删除 ∧ 切书还原宿主侧栏（沉浸镜像）∧ 外部接管同样过脏稿守卫', (() => {
+  const claim = fnBody('claimHandler = (e) => {')
+  return !clientSrc.includes('moreOpen')
+    && clientSrc.includes('let immersiveOn = false')
+    && clientSrc.includes('immersiveOn = next')
+    && clientSrc.includes('if (immersiveOn === true) {')
+    && claim.includes('chapterDirty === true')
+    && claim.includes('ok !== true) return')
+})(), 'wb07/10/13')
+
+check('QA-04/QA-09 绑定链序与根校验：预设挂载先于写绑定（同一不变量）∧ 工作区根未知时禁止建会话（不落到相对 cwd）', (() => {
+  const fb = fnBody('const finishBind = async (sessionId, withLaunch) => {')
+  const cb = fnBody('const createAndBind = async () => {')
+  return fb.indexOf('agentPresets.select') > -1
+    && fb.indexOf('agentPresets.select') < fb.indexOf('launcher.bindSession(target.novelId, sessionId)')
+    && cb.includes("if (meta.root === '') {")
+    && !cb.includes("meta.root !== '' ? joinNovelRoot(meta.root, target.novelId) : target.novelId")
+})(), 'qa04/09 bind=' + fnBody('const finishBind = async (sessionId, withLaunch) => {').length)
+
+check('F-02/F-03/F-04 首页与控制台：首页有 notice 宿主 ∧ 未绑定书走同一创建链（不经「直接开台」）∧ 搜索 Esc 只关下拉', (() => {
+  const homeBody = clientSrc.slice(clientSrc.indexOf("'nv-cbody nv-cbody-home'"), clientSrc.indexOf("'nv-cbody nv-cbody-home'") + 700)
+  const enter = fnBody('const enterWriting = (intent, targetId = homeCurrentId) => {')
+  const searchKeys = clientSrc.slice(clientSrc.indexOf('// 审查 F-04：搜索层 Esc 只关下拉'), clientSrc.indexOf('// 审查 F-04：搜索层 Esc 只关下拉') + 900)
+  return homeBody.includes("className: 'nv-caction-msg nv-home-notice'")
+    && enter.includes('bindings[bookId] === undefined && degraded !== true')
+    && enter.includes("openBook(book, 'none')")
+    && searchKeys.includes('stopImmediatePropagation')
+    // 第二道保险：控制台 Esc 在搜索下拉打开时让位
+    && clientSrc.includes("if (homeSearchOpen === true && homeSearchQ !== '') return")
+})(), 'f02/03/04')
 
 const readmeSmokeDeclared = Number((/node test\/smoke\.mjs\s+#[^\n]*?(\d+)\s*项断言/.exec(readFileSync(new URL('../README.md', import.meta.url), 'utf8')) ?? [])[1] ?? NaN)
 check('COMPAT-014 A-F9 README smoke 断言计数同步：声明 ' + (Number.isNaN(readmeSmokeDeclared) ? '缺失' : readmeSmokeDeclared) + ' ≡ 实测 ' + (passed + 1) + '（含本断言自身；陈旧即红）',
