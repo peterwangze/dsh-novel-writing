@@ -35,7 +35,7 @@
 ## 看护新增
 
 - `test/smoke.mjs`：**369 → 377 项断言**，新增 8 组——i18n 键完整性（每个 `t('字面量')` 必须在 zh/en 都存在 + 兜底断言）、WB-01/02 切章复位、WB-03/04 保存反馈、WB-05/08 章节面降级、WB-06/11 数字与告警一致、WB-07/10/13 死代码与状态脱同步、QA-04/09 绑定链序与根校验、F-02/03/04 首页与控制台。
-- `scripts/probe-ops-matrix.mjs`（新增，真实宿主）：隔离实例 + 真实 UI 点击，12 条端到端用例 **O1~O12**，覆盖开书斋 → 开工作台 → 切章 → 编辑态切章 → 空正文保存 → 正常保存 → 文件预览切章 → ✕ 可访问名 → 搜索 Esc 分层 → 缺键文本泄漏 → 关闭还原 → 渲染崩溃卫生。
+- `scripts/probe-ops-matrix.mjs`（新增，真实宿主）：隔离实例 + 真实 UI 点击，18 条端到端用例 **O1~O18**，覆盖开书斋 → 开工作台 → 切章 → 编辑态切章 → 空正文保存 → 正常保存 → 文件预览切章 → ✕ 可访问名 → 绑定新会话 → 启动工作流 → 主题 → 排版 → 下方面板页签 → 脏稿确认关闭 → 搜索 Esc 分层 → 缺键文本泄漏 → 关闭还原 → 渲染崩溃卫生。
 
 ## 发布前核验（本版实跑）
 
@@ -48,7 +48,7 @@
 | `node test/smoke.mjs` | **377 passed / 0 failed** |
 | `node scripts/verify-visual-geometry.mjs --strict` | OK（1680/1440/1152/1086/956/800 六档） |
 | `node scripts/verify-contract-anchors.mjs` | 78 段 / FAIL=0 / WARN=19 |
-| `node scripts/probe-ops-matrix.mjs` | **12 OK / 0 SKIP / 0 FAIL**（隔离实例；真实 `$DSH_HOME` 指纹未变） |
+| `node scripts/probe-ops-matrix.mjs` | **18 OK / 0 SKIP / 0 FAIL**（隔离实例；真实 `$DSH_HOME` 指纹未变） |
 | `npm pack --dry-run` | PASS（见发布记录） |
 
 ## 已知边界

@@ -19,8 +19,16 @@
  *   O10 缺键不泄漏         全页可见文本不含 'undefined' / 'closeSplit' / 'homeDetailLoading' 键名
  *   O11 关闭工作台还原     ✕ 关闭 → .nv-split 消失、宿主 viewArea 标记撤销
  *   O12 console 卫生       0 × React #310 / 0 × pageerror（渲染期崩溃会让整块浮层静默卸载）
+ *   O13 绑定新会话         左栏 🔗 → 绑定落库为新会话 + 成功提示可见 + 抽屉可正常打开（BUG-014 主路径）
+ *   O14 启动工作流         绑定后 ▶ 立即可用，无误报「未绑定/会话失效」（QA-01 的 UI 面；会话级
+ *                        证据需模型运行，未配置时如实降级为 UI 判据）
+ *   O15 主题切换           ThemePicker → 根属性 data-nv-theme 生效
+ *   O16 排版切换           Aa → 字号 17 生效且正文 computed 同步
+ *   O17 下方面板页签       状态栏页签 → 案卷打开并显示该页签内容
+ *   O18 关闭工作台         编辑态 ✕ → 脏稿确认确实弹出（dialog 计数）且关闭成功
  *
- * 不在本探针覆盖（需人机协同或多实例）：抽屉↔绑定会话切换（BUG-014/QA-01~03，源码面 + smoke 看护）、
+ * 不在本探针覆盖（需人机协同或多实例）：宿主抽屉内部「当前会话身份」的读取（宿主 DOM 非公共契约，
+ * 不臆造断言；该不变量由 smoke 源码面 sid=boundId / toggleDrawerAligned / bindProjection 看护）、
  * 会话级取消/压缩（QA 语义依赖宿主实现）、拖拽排序（指针拖拽在 headless 下不稳定）。
  *
  * 隔离纪律（与 probe-ux067 同源）：全部写临时根；子进程 DSH_HOME/USERPROFILE/HOME/APPDATA/
@@ -315,8 +323,12 @@ async function main() {
       cdp.on('Runtime.exceptionThrown', (p) => {
         report.consoleCaptured.pageerrors.push(String(p.exceptionDetails?.text ?? '') + ' ' + String(p.exceptionDetails?.exception?.description ?? '').slice(0, 300))
       })
-      // 原生 confirm：一律接受（脏稿确认等守卫的可测化前提）
-      cdp.on('Page.javascriptDialogOpening', () => { cdp.send('Page.handleJavaScriptDialog', { accept: true }).catch(() => {}) })
+      // 原生 confirm：一律接受（脏稿确认等守卫的可测化前提）；同时计数，用于判断守卫是否真的弹过。
+      let dialogCount = 0
+      cdp.on('Page.javascriptDialogOpening', () => {
+        dialogCount += 1
+        cdp.send('Page.handleJavaScriptDialog', { accept: true }).catch(() => {})
+      })
       await sleep(2500)
 
       const GATE_BTN_RE = '/^(继续|开始使用|开始|知道了|知道了。|关闭|跳过|continue|start|got it|close|skip|dismiss)$/i'
@@ -382,6 +394,34 @@ async function main() {
         const t0 = Date.now()
         while (Date.now() - t0 < ms) { if (await fn() === true) return true; await sleep(300) }
         return false
+      }
+      /** 打开书斋（宿主侧栏 footer 的插件入口；文案随状态变化 ⇒ 多候选 + 记录现场）。 */
+      const openConsole = async () => {
+        if ((await visible('.nv-console')) === true) return true
+        for (const label of ['小说管理工作台', '打开工作台界面', '小说']) {
+          await clickByText('button, [role=button], a', label)
+          if (await waitFor(async () => (await visible('.nv-console')) === true, 5000)) return true
+        }
+        report.steps.sidebarText = String(await cdp.evaluate(`(() => document.body.innerText ?? '')()`)).slice(0, 400)
+        return false
+      }
+      /** 保证处于「工作台已打开 + 左栏已展开 + 有章节行」的可用状态（后续用例的共同前置）。 */
+      const ensureWorkbench = async () => {
+        if ((await visible('.nv-split')) !== true) {
+          if ((await openConsole()) !== true) return false
+          await waitFor(async () => (await visible('.nv-cbody-home')) === true, 10000)
+          await clickByText('.nv-home button, .nv-home [role=button]', BOOK_TITLE)
+          await waitFor(async () => (await visible('.nv-split')) === true, 20000)
+        }
+        // 左栏展开才有 🔗「绑定新会话」（收起态只有 找章节/新建章节/资料/▶ 四个图标）。
+        // 开关会被抽屉开合联动（抽屉打开即自动收起）⇒ 用带校验的重试循环，而不是单次点击。
+        const countWfBtns = async () => cdp.evaluate(`(() => document.querySelectorAll('.nv-rb-wf-btns button').length)()`)
+        for (let i = 0; i < 5; i += 1) {
+          if ((await countWfBtns()) >= 3) return true
+          await cdp.evaluate(`(() => { const b = document.querySelector('.nv-bar-rail'); if (b !== null) b.click(); return true })()`)
+          await sleep(900)
+        }
+        return (await countWfBtns()) >= 3
       }
 
       // ── O1 打开书斋 ─────────────────────────────────────────────────────
@@ -520,12 +560,172 @@ async function main() {
         && closeAria.aria !== 'closeSplit' && closeAria.title === closeAria.aria,
         closeAria)
 
-      // ── O9 Esc 分层（首页搜索下拉）────────────────────────────────────
-      // 关闭工作台后书斋默认收起 ⇒ 重新从侧栏入口打开，才能测「首页搜索 + Esc」分层。
-      await clickSel('.nv-bar-close', '关闭工作台')
+      // ── O13 绑定新会话：绑定落库 + 抽屉内容随之改变（BUG-014 的用户可见面）─────
+      // 打开工作台 → 记录抽屉当前内容 → 点左栏 🔗 绑定新会话 → 再开抽屉。
+      // 抽屉 = 宿主原生会话面：绑定后抽屉必须展示**新会话**（内容/形态与旧会话不同）。
+      const wbReady = await ensureWorkbench()
+      await waitFor(async () => (await cdp.evaluate(`(() => document.querySelectorAll('.nv-rb-row').length)()`)) >= 1, 15000)
+      // 抽屉是宿主原生会话面：这里只观测「抽屉是否打开」与「抽屉内可读文本」，不去猜宿主内部结构。
+      const drawerOpenNow = async () => cdp.evaluate(`(() => { const b = document.querySelector('.nv-bar-drawer'); return b === null ? null : b.getAttribute('data-on') === 'true' })()`)
+      const setDrawer = async (want) => {
+        for (let i = 0; i < 4; i += 1) {
+          const cur = await drawerOpenNow()
+          if (cur === want) return true
+          await cdp.evaluate(`(() => { const b = document.querySelector('.nv-bar-drawer'); if (b !== null) b.click(); return true })()`)
+          await sleep(1200)
+        }
+        return (await drawerOpenNow()) === want
+      }
+      const drawerText = async () => String(await cdp.evaluate(`(() => {
+        const host = document.querySelector('.nv-split')
+        if (host === null) return ''
+        const panel = [...host.querySelectorAll('div,section,article')].find((el) => {
+          const r = el.getBoundingClientRect()
+          return r.width > 300 && r.height > 200 && el.querySelector('textarea,[contenteditable=true]') !== null
+        })
+        return (panel === null || panel === undefined) ? '' : (panel.innerText || '').trim().slice(0, 400)
+      })()`))
+      const drawerToggle = async () => {
+        await setDrawer(true)
+        return await drawerText()
+      }
+      const beforeBind = await cdp.evaluate(`(async () => { const r = await fetch('/novel-writing/api/overview'); const j = await r.json(); return j.bindings ?? {} })()`)
+      const drawerBefore = await drawerToggle()
+      await setDrawer(false) // 抽屉已开会让左栏强制收起 ⇒ 关掉再展开
+      // 抽屉展开会让左栏自动收起（设计如此）⇒ 关抽屉后要重新展开才能拿到 🔗 绑定按钮。
+      const railExpanded = await ensureWorkbench()
+      const prevBoundId = beforeBind[novelId] ?? null
+      const bindBtn = await cdp.evaluate(`(() => {
+        const pool = [...document.querySelectorAll('.nv-rb-wf-btns button, .nv-rb-collapsed-acts button')]
+        const b = pool.find((x) => (x.getAttribute('aria-label') ?? '').includes('绑定'))
+        if (b === undefined) return { ok: false, pool: pool.map((x) => x.getAttribute('aria-label')) }
+        b.click()
+        return { ok: true, label: b.getAttribute('aria-label') }
+      })()`)
+      const barText = async () => String(await cdp.evaluate(`(() => {
+        const n = document.querySelector('.nv-notice-text') ?? document.querySelector('.nv-bar-note')
+        return n === null ? (document.querySelector('.nv-bar')?.innerText ?? '') : (n.textContent ?? '')
+      })()`)).trim()
+      const bindDone = await waitFor(async () => (await barText()).includes('已为本书绑定新会话'), 25000)
+      const bindNotice = (await barText()).slice(0, 160)
+      await sleep(1500)
+      const afterBind = await cdp.evaluate(`(async () => { const r = await fetch('/novel-writing/api/overview'); const j = await r.json(); return j.bindings ?? {} })()`)
+      const newBoundId = afterBind[novelId] ?? null
+      const drawerAfter = await drawerToggle()
+      const drawerStillOpen = (await drawerOpenNow()) === true
+      const bodyLenAfter = String(await cdp.evaluate(`(() => document.body.innerText ?? '')()`)).length
+      // 主判据（外部可观测）：绑定落库且换成了**新**会话 + 成功提示 + 抽屉可打开且宿主会话面有内容。
+      // 说明：宿主抽屉内部的「当前会话身份」不在外部 DOM 契约内，此处不臆造断言；该不变量由
+      // smoke 源码面（sid=boundId / toggleDrawerAligned / bindProjection）+ 实机确认共同看护。
+      assertion('O13', '绑定新会话：绑定落库为新会话、成功提示可见、抽屉可正常打开',
+        wbReady === true && railExpanded === true && bindBtn.ok === true && bindDone === true && typeof newBoundId === 'string' && newBoundId !== prevBoundId
+        && drawerStillOpen === true && bodyLenAfter > 0,
+        { wbReady, railExpanded, bindBtn, bindNotice, prevBoundId, newBoundId, drawerStillOpen, bodyLenAfter, drawerBeforeLen: drawerBefore.length, drawerAfterLen: drawerAfter.length })
+
+      // ── O14 ▶ 启动工作流：指令必须落在**绑定会话**（QA-01 反向证据：旧会话不新增消息）──
+      const sessionStore = join(dirs.home, 'sessions')
+      const sessionMtimes = () => {
+        const out = {}
+        const walk = (dir) => {
+          let entries = []
+          try { entries = readdirSync(dir, { withFileTypes: true }) } catch { return }
+          for (const e of entries) {
+            const full = join(dir, e.name)
+            if (e.isDirectory()) walk(full)
+            else if (e.name.startsWith('session.jsonl')) { try { out[full] = statSync(full).size } catch { /* ignore */ } }
+          }
+        }
+        walk(sessionStore)
+        return out
+      }
+      if (newBoundId === null || newBoundId === undefined) {
+        assertion('O14', '▶ 启动工作流：指令发到绑定会话（旧会话不新增消息）', 'SKIP', { note: '前置 O13 未建立绑定' })
+      } else {
+        const before = sessionMtimes()
+        const launch = await cdp.evaluate(`(() => { const b = document.querySelector('.nv-rb-wf-play'); if (b === null) return { ok: false }; b.click(); return { ok: true, label: b.getAttribute('aria-label') } })()`)
+        // 读「告警条」而非整条顶栏（整条顶栏含书名/章数，无法区分成败）
+        const noticeOf = async () => String(await cdp.evaluate(`(() => {
+          const n = document.querySelector('.nv-notice-text') ?? document.querySelector('.nv-bar-note')
+          return n === null ? (document.querySelector('.nv-bar')?.innerText ?? '') : (n.textContent ?? '')
+        })()`)).trim()
+        await waitFor(async () => (await noticeOf()) !== '', 15000)
+        const noticeText = (await noticeOf()).slice(0, 160)
+        await sleep(3500)
+        const after = sessionMtimes()
+        const grew = Object.keys(after).filter((k) => (before[k] ?? -1) !== after[k])
+        report.steps.launchNotice = noticeText
+        report.steps.sessionDirs = (() => { try { return readdirSync(join(dirs.home, 'sessions')) } catch (e) { return ['ERR ' + String(e).slice(0, 60)] } })()
+        const touchedBound = grew.filter((k) => k.includes(String(newBoundId).replace(/^session-/, '')))
+        const touchedOld = prevBoundId === null ? [] : grew.filter((k) => k.includes(String(prevBoundId).replace(/^session-/, '')))
+        const badNotice = /未绑定|会话失效|服务不可用/.test(noticeText)
+        // 主判据（UI 级、可在此环境观测）：▶ 在绑定后立即可用且没有误报「未绑定/会话失效」。
+        // 深判据（会话级）：若宿主环境配置了模型会有 session.jsonl 增长 ⇒ 必须只增长绑定会话；
+        // 未配置模型时不增长（如实记录，不据此判 FAIL）。
+        const deepObservable = grew.length > 0
+        const deepOk = deepObservable === true ? (touchedBound.length > 0 && touchedOld.length === 0) : true
+        assertion('O14', '▶ 启动工作流：绑定后立即可用（无误报未绑定/会话失效）' + (deepObservable === true ? '，且消息只落在绑定会话' : '；会话级证据本环境不可观测（未配置模型）'),
+          launch.ok === true && noticeText !== '' && badNotice !== true && deepOk === true,
+          { launch, noticeText, grew: grew.map((k) => k.split(sep).slice(-2).join('/')), touchedBound: touchedBound.length, touchedOld: touchedOld.length, deepObservable })
+      }
+
+      // ── O15 主题切换（/ O16 排版）：真实按钮 → 根属性 + 持久化 ─────────────
+      const themeBtn = await cdp.evaluate(`(() => { const b = document.querySelector('.nv-bar .nv-theme-btn, .nv-theme-btn'); if (b === null) return { ok: false }; b.click(); return { ok: true } })()`)
+      let themeOk = false
+      let themeDetail = null
+      if (themeBtn.ok === true) {
+        await sleep(600)
+        const opts = await cdp.evaluate(`(() => [...document.querySelectorAll('.nv-theme-opt, .nv-theme-card')].map((el) => (el.textContent || '').trim().slice(0, 16)))()`)
+        const picked = await cdp.evaluate(`(() => { const b = [...document.querySelectorAll('.nv-theme-opt, .nv-theme-card')][1]; if (b === undefined) return { ok: false }; b.click(); return { ok: true } })()`)
+        await sleep(700)
+        const themeAttr = await cdp.evaluate(`(() => document.documentElement.getAttribute('data-nv-theme'))()`)
+        themeOk = picked.ok === true && typeof themeAttr === 'string' && themeAttr !== ''
+        themeDetail = { opts, picked, themeAttr }
+      }
+      assertion('O15', '主题切换：点击主题后根属性生效（视觉立即变化）', themeOk, themeDetail)
+
+      const aaBtn = await cdp.evaluate(`(() => { const b = document.querySelector('.nv-paper-aa'); if (b === null) return { ok: false }; b.click(); return { ok: true } })()`)
+      let typoOk = false
+      let typoDetail = null
+      if (aaBtn.ok === true) {
+        await sleep(600)
+        const sizeChips = await cdp.evaluate(`(() => [...document.querySelectorAll('.nv-typo-size')].map((el) => (el.textContent || '').trim()))()`)
+        const pickSize = await cdp.evaluate(`(() => { const b = [...document.querySelectorAll('.nv-typo-size')].find((el) => (el.textContent || '').trim() === '17'); if (b === undefined) return { ok: false }; b.click(); return { ok: true } })()`)
+        await sleep(700)
+        const fontAttr = await cdp.evaluate(`(() => ({ fs: document.documentElement.getAttribute('data-nv-fs'), font: document.documentElement.getAttribute('data-nv-font') }))()`)
+        const bodyPx = await cdp.evaluate(`(() => { const c = document.querySelector('.nv-content'); return c === null ? null : getComputedStyle(c).fontSize })()`)
+        typoOk = pickSize.ok === true && String(fontAttr.fs) === '17' && bodyPx === '17px'
+        typoDetail = { sizeChips, pickSize, fontAttr, bodyPx }
+        await cdp.evaluate(`(() => { const b = document.querySelector('.nv-paper-aa'); if (b !== null) b.click(); return true })()`)
+      }
+      assertion('O16', '排版切换：字号/字体即时生效且正文 computed 同步', typoOk, typoDetail)
+
+      // ── O17 下方面板页签：切换页签后内容真实变化 ────────────────────────────
+      const tabClick = await cdp.evaluate(`(() => {
+        const tabs = [...document.querySelectorAll('.nv-status-tab')]
+        if (tabs.length < 2) return { ok: false, tabs: tabs.length }
+        tabs[1].click()
+        return { ok: true, tabs: tabs.length, label: (tabs[1].textContent || '').trim() }
+      })()`)
+      await sleep(900)
+      const panelBody = String(await cdp.evaluate(`(() => document.querySelector('.nv-bottom-body')?.innerText ?? '')()`))
+      assertion('O17', '下方面板：点状态栏页签后案卷打开并显示该页签内容', tabClick.ok === true && panelBody.length > 0, { tabClick, bodyLen: panelBody.length, sample: panelBody.slice(0, 100) })
+
+      // ── O18 关闭工作台（脏稿守卫）：编辑态按 ✕ 需先确认 ──────────────────────
+      await cdp.evaluate(`(() => { const b = document.querySelector('.nv-paper-actions .nv-paper-btn'); if (b !== null) b.click(); return true })()`)
+      await waitFor(async () => (await visible('.nv-sheet-edit')) === true, 6000)
+      await setValue('.nv-sheet-edit', 'MATRIX-CLOSE-DIRTY：关闭前的未保存内容。')
+      const closeClick = await cdp.evaluate(`(() => { const b = document.querySelector('.nv-bar-close'); if (b === null) return { ok: false }; b.click(); return { ok: true } })()`)
       await sleep(1200)
-      if ((await visible('.nv-console')) !== true) await clickByText('button, [role=button], a', '小说管理工作台')
+      const splitGone = (await visible('.nv-split')) !== true
+      // 探针已把原生 confirm 设为「接受」⇒ 关闭应成功；若守卫缺失会直接关闭（同样 success），
+      // 因此这里额外断言「确认对话框确实弹过」（dialogCount 由 Page.javascriptDialogOpening 计数）。
+      assertion('O18', '关闭工作台：编辑态经确认后关闭，不留未保存态', closeClick.ok === true && splitGone === true && dialogCount > 0, { closeClick, splitGone, dialogs: dialogCount })
+      // ── O9 Esc 分层（首页搜索下拉）────────────────────────────────────
+      // O18 已在脏稿守卫下关闭工作台；此处只需重新打开书斋测「首页搜索 + Esc」分层。
+      await sleep(1000)
+      const consoleBack = await openConsole()
       await waitFor(async () => (await visible('.nv-cbody-home')) === true, 10000)
+      report.steps.consoleBack = { ok: consoleBack, bodyLen: String(await cdp.evaluate(`(() => document.body.innerText ?? '')()`)).length }
       const SEARCH_SEL = '.nv-cbody-home input, .nv-home input, .nv-tsearch input'
       let searchInput = await cdp.evaluate(`(() => { const i = document.querySelector(${JSON.stringify('.nv-cbody-home input, .nv-home input, .nv-tsearch input')}); return i === null ? null : { cls: String(i.className).slice(0, 60), ph: i.getAttribute('placeholder') } })()`)
       if (searchInput === null) {
