@@ -1,260 +1,219 @@
 # dsh-novel-writing
 
-> DSH（DeepSeek Harness）**自动化小说写作发布流水线**插件：把 [claude-writing-workflow](https://github.com/peterwangze/claude-writing-workflow) 的端到端创作质量体系迁移为 **agent 预设**，并用 **宿主插件**补齐项目管理、可视化工作台、多平台发布配置与数据闭环——门禁从「靠 AI 自觉」升级为「代码强制」。
+> 把 DSH 变成一个能管理多部小说、把写作流程跑成可审阅流水线的写作插件：不是“一键生成小说”，而是让选题、大纲、正文、审查、发布和数据复盘都有状态、有门禁、有人的决策。
 
-[![dsh-plugin](https://img.shields.io/badge/DSH-plugin-blue)](https://github.com/peterwangze/dsh-novel-writing) [![preset](https://img.shields.io/badge/agent--preset-novel--writing-green)](./agent-presets/novel-writing) [![CI](https://img.shields.io/badge/CI-syntax%20%7C%20deps%20%7C%20preset%20%7C%20smoke-brightgreen)](./.github/workflows/ci.yml) [![license](https://img.shields.io/badge/license-MIT-lightgrey)](#license)
+## 1. 插件目标
 
----
+写网文真正难的不是让 AI 生成几段文字，而是：
 
-## 项目目标
+- 选对赛道，不写到一半才发现方向错了；
+- 大纲不崩、正文不离纲；
+- 审查不放水，发布前没有硬伤；
+- 多部小说能管理，不靠手工翻目录；
+- 发布后的数据能反馈到下一轮写作。
 
-写一部能赚钱的网文，难点从来不是「生成文字」，而是：**选对赛道 → 大纲不崩 → 正文不离纲 → 审查不放水 → 发布不走样 → 数据能反馈到写作方向**。原 claude-writing-workflow 用 26 个 SKILL + 16 个专业 Agent + 零容忍门禁解决了前四件事，但受限于终端形态：门禁靠模型自觉、无界面、无持久数据通道、无法管理多部小说。
+本插件做三件事：
 
-本插件在 DSH 上补齐这一层：
+1. **管理多部小说**：工作区、书目、章节、文件、绑定会话、发布与数据，一套界面管理。
+2. **把工作流做成可执行的流程**：29 个 SKILL、16 个专业 Agent、Coordinator 协作，关键节点必须由人确认。
+3. **把门禁从“AI 自觉”变成代码约束**：保存、审查、发布、数据信号由代码检查，语义审查由专业 Agent 完成。
 
-| 需求 | 实现 |
-|---|---|
-| ① 迁移源工作流为 agent 预设 | `agent-presets/novel-writing/`：Coordinator 人设（三层角色模型）+ 29 SKILL（26 个迁移 + 3 个 DSH 原生）+ 16 Agent 参考 |
-| ② 小说管理与人机高价值互动 | 宿主 `novel-writing` 服务管理 workspace 多书目（小说管理工作台：书目管理 + **一键新建小说** + **卡片 🗑 删除**——宿主 `novel-delete` 接口带 id 校验/路径穿越防护，仅用户显式确认后触发）；所有关键决策走 `ask_user_question`；工作台「请求队列」让人在 UI 侧发起优化/审查/发布/数据请求，协调者用 `novel_requests` 接单 |
-| ③ 写作过程可视化 + 实时渲染 | **两级工作台**：侧栏「📖 小说管理工作台」区块（纯主入口：标题行开/关控制台 + 书目卡片——**小一档卡片**（13.5/12px、紧凑内边距与 8px 状态点，UX-015④ 层次感 + UX-055 微调））+ **管理控制台**（shell.overlay 全屏管理界面：仅管理工作区的创建/切换 + 小说的创建（＋磁贴）/删除（🗑 卡片钮）/卡片化呈现——排序（默认/手动拖拽）+ 卡片网格（书名/阶段/状态行/绑定双圆/数据摘要/图标操作 🔗🗑）、底部搜索小说/会话）；**抽屉/控制台书目卡片点击 = 直接进入小说创作工作台**（分栏工作区，标题栏「📖 小说创作工作台 ·《书名》」+ 阶段徽标——**标题栏加高放大**（38px/14px/32×32 按钮，UX-015①）——管理小说本身的创作与内容/状态/数据：margin 挤法把官方对话窗挤到右侧，左窗仅**当前书目文件树**（目录默认折叠）/中五页签/右对话，⇄ 换边（32px 醒目钮）、分隔线可拖、宽度记忆；**章节页签左列显示章节名（`第N章 名称`，无装饰圆点〔UX-021〕，无章节名回退 `第N章`，不显示字数；列宽默认 160px、右缘**分割条**常驻可视可拖宽 120–360px 持久化〔UX-022〕；**滚动条默认隐藏**、悬停/拖动才显〔UX-022〕；章节多时列表上下滚动且与正文**滚动隔离**——UX-015②/UX-019②③/UX-020/UX-021/UX-022）**；打开期间点侧栏其他会话自动退出）；2s 轮询实时渲染正文/进度/门禁 |
-| ④ 章节编辑保存 + 优化建议 | 工作台章节编辑器：保存即跑看护门禁（不通过即拒绝，人工改稿可强制留痕）；机器审计（字数/段落/开篇钩子/章末钩子/AI 痕迹密度）；一键向协调者发起优化请求 |
-| ⑤ 多平台自动化配置发布 + 数据获取 | 每平台可配 `export / command / manual` 三种发布模式与 `fetchCommand` 数据抓取；导出定稿产物 + 发布清单；数据三级降级（API→自动化→手动录入） |
-| ⑥ 基于数据动态优化写作方向 | 数据入库即检信号（完读率低/章节流失/追读下降/收藏停滞/收益下滑）→ 建议行动（重审黄金三章/章节重写/节奏调整/书名优化/止损框架），调整分四级（章内→细纲→大纲→题材）且必须用户确认 |
+明确不承诺“自动赚钱”。目标是提高从选题到上架、复盘的可控性；收益仍然取决于内容、平台和市场。
 
-**立场继承（不变）**：人类是创作主体，AI 提供研究/灵感/校对/有限改写；AI 参与度 A/B/C 分级，路径 B/C 阻断上架与变现；审查只有满分（9 维 100 分制）；场景覆盖率=100%、偏离度=0% 零容忍。
+## 2. 界面设计与交互逻辑
 
-## 架构一览
+### 书斋
 
-```
-DSH Host                                    Browser
-├─ bundle 行 novel-writing                  ├─ 侧栏「📖 小说管理工作台」抽屉（sidebar，纯主入口）
-│   ├─ novel-writing 服务（项目管理/门禁/    │    标题行（点击=开/关控制台）· 书目卡片 · 绑定状态点
-│   │   审计/发布/数据信号/请求队列/绑定）   ├─ 管理控制台（shell.overlay nv-console，全屏管理界面）
-│   ├─ HTTP API /novel-writing/api/*  ◄─────┤    排序+卡片网格（状态/数据）· ＋磁贴新建 · 🗑删除 · 底部搜索
-│   │   （含 novel-create / novel-delete）   ├─ 小说创作工作台（shell.overlay novel-split，打开小说后）
-│   └─ 预设自动同步到 .agent-presets/        │    标题「📖 小说创作工作台 ·《书名》」｜左：当前书目文件树（目录默认折叠）｜中：五页签 ｜ 右：对话窗
-└─ 预设 novel-writing（会话挂载）            ├─ 工作区/绑定会话对话框（shell.overlay）
-    ├─ Coordinator persona + 29 SKILL       └─ 设置 → 小说写作（仅插件级：开关/轮询/同步/LAN）
-    └─ tool-novel：novel_* 工具集（门禁代码化）
-```
+打开插件先看到书斋：当前书、上次写到哪、一键续写、书架和搜索。
 
-> 每本小说与一个会话 **1:1 绑定**（settings `novel-writing.bindings`，overview 附带下发）：**侧栏书目卡片点击 = 直接进入小说创作工作台**（未绑定首次点击自动创建会话并关联）；控制台卡片点击 = 同样切换绑定会话并进**小说创作工作台**分栏；Esc/✕/再次点击侧栏标题行关闭控制台并还原布局；删除小说（🗑）会先弹确认框，确认后删除整个书稿目录并自动清理该书绑定键。
+- 空书架给一句话和一个主按钮，不让用户面对空白表格。
+- 书目卡片直接进入写作台；不先要求用户理解会话、工作区、绑定这些内部概念。
 
-详见 [docs/DESIGN.md](./docs/DESIGN.md)（设计方案）与 [docs/RESEARCH.md](./docs/RESEARCH.md)（市场/源工作流/DSH 生态三路调研）。
+### 管理控制台
 
-## 一键安装
+用于管理多部小说和工作区：
 
-### 方式一（推荐）：`dsh plugin` 标准命令
+- 新建/切换工作区；
+- 新建、删除、拖拽排序书目；
+- 搜索书目和会话；
+- 每本书显示阶段、字数、发布状态、数据信号和绑定状态。
 
-```sh
-dsh plugin --profile web add peterwangze/dsh-novel-writing   # 从 GitHub 安装
-dsh plugin --profile web update dsh-novel-writing            # 升级
-dsh plugin --profile web remove dsh-novel-writing            # 卸载
-```
+### 写作台
 
-也支持 npm 包名或本地路径：`add file:/path/to/repo`（内容寻址，升级需 remove+add）、`add link:/path/to/repo`（符号链接，改码即生效，本地开发用）。
+一本书一个写作台：
 
-> dsh ≥0.1.5：`dsh plugin add` 即注册 profile `package.json`（`dependencies` + `dsh.profile.bundles`）——per-profile pnpm 布局的标准通道，无需手动改文件。dsh ≥0.2.0：宿主行与「小说写作工作流」预设声明行均由包内 `cordis.patch.yml` 经 bundles 通道自动承载（安装器检测到 0.2.0 代系时不再写 profile patch 插行——同 id 双层会破坏宿主设置面写入）。**两代真源不同（COMPAT-020）**：0.1.x 走包内 `agent-presets/novel-writing/agent.cordis.yml`（含独立 `list-agents` 子路径行），0.2.x 走 `cordis.patch.yml` 的预设声明行（**不含**该行——0.2.2 起该子路径已从 exports 移除、`list_agents` 由主包 `@deepseek-ai/dsh-tool-subagent-control` 注册）；两源的方向性差异由 `GENERATION_DROPPED` 披露 + smoke B2 双源硬不变量看护。Windows 下若该命令报「'dsh' 不是内部或外部命令」，为 dsh 上游 shell 转发问题（非本插件问题）：在 profile 目录（`$DSH_HOME/profiles/<Profile>`）手动执行 `pnpm add <spec>`（如 `pnpm add file:/path/to/repo`）+ 把 `dsh-novel-writing` 追加进 `dsh.profile.bundles` 即等价替代。
+- 顶栏：返回书斋、书名/阶段、全局状态、主题、专注、对话、更多。
+- 左栏：章节目录、搜索、资料、新建章节；可折叠为图标栏。
+- 中间：稿纸式阅读/编辑；首行缩进、行宽受控、真实页码。
+- 右侧：按需打开的宿主原生会话抽屉；打开时仍保留宿主顶栏、左侧会话栏和插件状态栏。
+- 状态栏：本章发布状态、门禁、字数、工作流/数据/发布/请求入口。
+- 下方面板：工作流、数据、发布、请求；可开关、可拖动调高度。
+- 专注：隐藏插件左栏、抽屉和状态栏，把空间还给正文，但不遮挡宿主 chrome。
 
-安装后：
+![写作台与对话抽屉](docs/evidence/UX-067/ux067-01-drawer-1680-mozhi-light.png)
 
-1. **重启 DSH**（`dsh web`）——bundle 层重启生效；
-2. 首次启动会自动把 **「小说写作工作流」预设** 同步到 `$DSH_HOME/.agent-presets/novel-writing/`（预设选择器立即可见，无需手动建目录）；
-3. 无需改任何配置文件。
+### 视觉与可读性
 
-> 升级时预设目录会被新版本覆盖（插件拥有该预设）；若你改过预设想保留，先把它复制成新 id（如 `novel-writing-mine`）。
+- 三套主题：墨纸（默认）、青简、夜航；每套跟随宿主明暗。
+- 正文与编辑器可独立选择宋体/黑体/楷体/系统和 15/16/17/18 字号；只影响正文，不影响界面 chrome。
+- 稿纸、对话框、设置页共用同一色系，避免白色宿主面板和工作台暖纸面割裂。
 
-### 方式二：离线一键脚本（无 pnpm / 内网环境备选）
+![墨纸设置页](docs/evidence/UX-067/ux067-04-settings-1680-mozhi-light.png)
 
-**Windows（PowerShell 5.1+）**——在线一行：
+### 交互原则
 
-```powershell
-powershell -ExecutionPolicy Bypass -Command "iex (((irm https://raw.githubusercontent.com/peterwangze/dsh-novel-writing/main/install.ps1) -join [Environment]::NewLine).TrimStart([char]0xFEFF))"
-```
+- **一本书对应一个会话**：点书目卡片进入该书工作台，未绑定则自动创建会话。
+- **人是最终决策者**：阶段切换、方向调整、发布、删除等关键动作走明确的用户确认。
+- **真实数据**：对话、章节、保存时间、门禁、发布和数据都是真实数据；不伪造消息、差异、页码或数据。
+- **手动保存优先**：保存时跑门禁；不通过拒绝写盘；人工强制保存会留痕并提示重审。
+- **一个入口做一件事**：对话只保留一个带文字的「对话」入口；专注和抽屉互斥；不遮挡宿主管理界面。
+- **状态可恢复**：布局、主题、字体、面板高度、工作台和抽屉状态在刷新后保持。
 
-离线（解压发行包后在包目录内）：`.\install.ps1 -LocalPath .`
+### 设置页
 
-**macOS / Linux / Git Bash**——在线一行：
+插件设置只放插件级内容：
 
-```sh
-curl -fsSL https://raw.githubusercontent.com/peterwangze/dsh-novel-writing/main/install.sh | sh
-```
+- 外观：主题、正文排版；
+- 运行：启用插件、轮询间隔、预设自动同步、API LAN 访问；
+- 诊断：只读契约投影；
+- 业务配置位置：告诉用户工作区、发布、绑定在哪里，而不是把所有配置堆在设置页。
 
-离线：`./install.sh --local .`
+## 3. 工作流设计与为什么它能达成目标
 
-> 两脚本自动检测宿主代系（0.2.0 声明代 / 0.1.x）：声明代办下预设由 bundle patch 承载（跳过目录同步与 settings.yaml 写入，并撤除旧版安装器插入的 patch 行）；检测到 `<DSH_HOME>/settings.yaml.imported` 含 novel-writing 配置节时提示数据迁移（插件在下次启动自动完成，也可经 `/novel-writing/api/settings-migrate` 手动触发）。
+### 主流程
 
-脚本幂等可重复执行：接入 `node_modules` → 写入 profile 组合行 → 同步 agent 预设 → 写默认配置。脚本自动检测 dsh 布局版本（0.1.5+ per-profile / 旧版全局），双通道自适应——新布局接入 `profiles/<Profile>/node_modules` 并注册 profile `package.json`（dependencies + bundles），旧布局接入全局 `profiles/node_modules`（行为不变），两种布局均以 `cordis.patch.yml` 插行兜底。
-
-## 使用指导
-
-### 第一步：准备与启动
-
-1. 安装并重启 DSH 后，**侧栏底部出现「📖 小说管理工作台」区块（纯主入口）**：点**标题行**打开/关闭小说管理工作台控制台（反选语义），或点**书目卡片**直接进入该书的**小说创作工作台**（未绑定首次点击自动创建会话并关联）；没有书目时显示「打开工作台界面创建第一本小说」；控制台打开期间**点击侧栏其他会话会自动退出工作台界面**（控制台随之关闭）；创作工作台打开期间点击**侧栏其他会话同样自动退出**（分栏随之关闭，与管理台行为对齐）；
-2. 打开的**管理控制台**是全屏管理界面（覆盖内容区，不遮侧栏）：顶部栏**工作区路径旁**的「**切换 / 新建工作区…**」打开「选择小说创作工作区」对话框——**仅支持切换与新建**：从已配置工作区中**选中一项即切换**（`workspaceRoot` 自动同步为该工作区路径，管理工作台随后显示该工作区书目），或「选择文件夹」/「在其下新建目录」新建工作区（对话框不再创建小说会话——会话创建与绑定经**首次点击书目卡片自动完成**或卡片 🔗 手动管理）；
-3. 控制台卡片网格末尾的「**＋ 虚线磁贴**」点开**居中模态**新建对话框（UX-012：全屏遮罩 + 居中卡片，Esc/遮罩/✕ 关闭）：只需**三步**——填**目录名**（书目 id，书名由工作流后续确定，确定前卡片名=目录名）→ 点「**创建**」（仅建书目，不自动启动任何东西）→ **点击新书卡片**（首次点击自动创建会话并关联此书，见下）进入小说创作工作台，再在创作台中窗下半区左侧（与章节列表列等宽，工作台右移收窄——空出章节标题栏正下方一块）工作流控制面板点「**▶ 开始工作流**」启动创作；想先看看效果，把 [`examples/demo-novel`](./examples/demo-novel) 整个目录拷到工作区目录下，工作台即出现《示例小说》（含 1 章 + 看护卡，可体验阅读/编辑/门禁/发布面板）；
-4. 小说创作工作区 = 所选 DSH 工作区目录（其路径自动同步为小说 `workspaceRoot`）；工作区根目录的切换/新建在**管理控制台顶部「切换 / 新建工作区…」对话框**（选中即切换，UX-014 起创作工作台左窗仅展示当前书目文件树）；
-5. 也可沿用传统路径：新建会话时在**预设选择器**选「**小说写作工作流**」，或在对话输入 **`开始小说创作工作流`**（旧项目输入 `继续小说创作工作流`，从 `workflow-state.json` 断点续传），再在控制台卡片上用 🔗 把会话与书绑定。
-
-### 第二步：跟着工作流走（你在决策位）
-
-```
-作品类型 → 平台调研 → 竞品分析 → 题材选择 → 作品确认 → 创作规划
-   → 大纲(三审) → 章节细纲(三审) → 正文(看护) → AI合规 → 质量审查(6审)
-   → 上架发布 → 变现 → 数据监控 → 读者互动
+```text
+作品类型
+  → 平台调研 / 竞品分析
+  → 题材选择 / 作品确认 / 创作规划
+  → 大纲（三审）
+  → 章节细纲（三审）
+  → 正文生成（看护门禁）
+  → AI 合规
+  → 质量审查（6 审）
+  → 上架发布 / 变现
+  → 数据监控 → 读者互动 → 下一轮调整
 ```
 
-- 每个阶段切换都有进度面板与结构化选项（继续/回退/查看产出/退出）——**所有关键决策由你确认**；
-- 市场/平台数据全部来自实时搜索，无来源的结论会标注「推测」；
-- 正文保存被**代码门禁**保护：必写场景缺失或命中禁止项时拒绝保存并给出明细；你在工作台手改的稿子可以「强制保存（人工改稿）」，但会打 `forced` 标记提醒协调者重新审查。
+每个阶段都有结构化产出、进度面板和下一步选择；不是让模型自由发挥到结束。
 
-### 第三步：用两级工作台看与改
+### 组成
 
-**小说管理工作台**（侧栏区块 = 纯主入口）：点**标题行**打开**管理控制台**——全屏管理界面（覆盖内容区，不遮侧栏），只管三件事：**工作区的创建/切换、小说的创建（＋磁贴）与删除（🗑）、卡片化呈现**；抽屉书目卡片为**小一档**（标题 13.5px/副行 12px/紧凑内边距与 8px 状态点，较管理控制台卡片更小巧——UX-015④ 两级层次感 + UX-055⑥ 微调）；标题行再点 / 控制台 ✕ / Esc 关闭；**点书目卡片 = 直接进入该书的创作工作台**（UX-014⑦——未绑定首次点击自动创建会话并关联，见下卡片主体点击）；**控制台打开期间点击侧栏其他会话也会自动退出工作台界面**（自动关闭控制台，参照 dsh-worktable 项目×会话联动；插件自身链路——卡片打开/找到会话/新建——不受影响）：
+- Coordinator：负责阶段推进、分派专业 Agent、汇总决策。
+- 29 个 SKILL：把选题、平台、竞品、大纲、细纲、正文、审查、发布、数据等步骤固化为可复用技能。
+- 16 个专业 Agent：平台、商业、连续性、角色、节奏、AI 痕迹等审查分工。
+- `tool-novel`：把门禁、章节保存、审查提交、发布、数据入库等机械动作变成工具，而不是提示词约定。
 
-- **顶部栏**：📖 小说管理工作台 · 当前工作区名 + **紧邻路径**的「切换 / 新建工作区…」· ✕（最右）；
-- **排序控制**（网格上方）：「默认 / 手动」两态切换——默认 = 工作区顺序；手动 = 卡片可**拖拽换位**（拖动中半透明、落点虚线框），顺序记忆在本地（`dsh.novel.order.v1`）；
-- **底部搜索行**（搜索引擎风格大药丸，高 48px 居中）：关键词同时过滤①小说卡片（书名/目录 id）②会话快照（标题/id 匹配 →「找到的会话」行，点击 = 打开那个会话并关闭控制台——「关键词找到 session」）；
-- **＋ 虚线磁贴**（网格末尾，过滤时也始终显示）：点开**居中模态**新建对话框（UX-012：全屏遮罩点击/Esc/✕ 关闭 + 居中卡片 min(520px,100%)）——表单**仅目录名**（必填；书名由工作流确定，确定前卡片名=目录名），按钮仅「创建 / 取消」；创建成功即关窗并在控制台提示点击卡片进入创作台（**不再自动建会话/挂预设/绑定/发指令**——启动动作归创作台中窗下半区左侧（与章节列表列等宽，工作台右移收窄——空出章节标题栏正下方一块）工作流控制面板「▶ 开始工作流」钮）；busy 期间禁关窗/禁连点、错误红字就地提示；
-- **小说卡片网格**（UX-055 视觉 V2 构成重构——DEC-021 修订版主题无关自适应，在 UX-053 V1 基础上叠加：minmax 320px / gap 20px——宽容器 3 列均分；卡片与「＋」磁贴统一 min-height 180px）：**Linear 式卡构成**——①**monogram 首字色块**（40×40 圆角方块，`color-mix(accent 14%)` 派生底 + 书名首字 18px/600 accent 色，替代 📖 图标位）；②标题区（monogram + 书名 **17px/600**（字阶第二级）+ 阶段徽标 pill）与数据区之间 **1px 分隔线**（`label-primary 8%` 派生）；③**数据 chips**（「38 章」「89232 字」「信号 N」独立 chip：2px 8px/圆角 6px/500 12px，`label-primary 6%/9%` 派生底边，tabular-nums）+ **状态 chips**（「已发布」ok /「未发布」danger /「已开通变现」ok /「未开通变现」muted——`.nv-chip` 组件 `data-tone`，状态色 tint 12% 底/25% 边）；④**底部状态带**（绑定双圆：○○ 空心未绑定 / ●● 实心已绑定 / 工作中=accent 蓝脉冲 / 待决=黄 / 完成=绿 / 会话失效=红 + 最近更新时间 11px）；**数据卡片**：每书卡内一行最近 metrics 摘要（完读率/读完率/追读/日增收藏/收益，无数据显示「尚无数据信号」）；右下角两个 22×22 图标钮（🔗 绑定·重绑 / 🗑 删除）；书目 >8 本时折叠为前 8 + 「展开全部（N）／折叠」行；**0 本书为英雄空态**（48px 图标 + 28px「从第一本书开始」+ 「＋ 新建小说」主按钮，隐藏网格/磁贴）；**1–2 本书网格内容居中**（DEC-022 白名单，R1 修复真交付：该分支网格容器内联条件模板 `repeat(auto-fit,minmax(320px,420px))` + `justify-content:center`——轨道组不再恒满宽，居中真实生效；≥3 本恢复标准模板 `repeat(auto-fill,minmax(320px,1fr))`）；＋磁贴为 `label-primary 15%` 派生虚线 + 20px muted ＋ 图标；
-- **🗑 删除小说**（UX-011，管理工作台职责）：点卡片右下角 🗑 弹确认框「确定删除《书名》（目录 id）？将删除整个书稿目录，不可恢复。」——确认后调用宿主 `novel-delete` 接口（id 校验与新建同规 + 路径穿越防护，只删该书目录）并自动清理该书绑定键；取消则不动；**无任何自动删除路径**（P-07）；删除不依赖会话服务（降级态仍可用）；
-- **卡片主体点击 = 打开该书**：已绑定 → 切换绑定会话 → 进入**小说创作工作台**分栏（控制台自动关闭）；**未绑定（首次）→ 自动创建会话并关联**（按当前工作区 `workspaceId` 创建，未命中则用 `工作区根目录/书目id` 作 cwd → 自动挂载「小说写作工作流」预设 → 写入绑定 → 打开分栏，提示「已为《书名》创建并关联新会话」；预设挂载失败会告知会话已建、不绑定不打开，可手动重试）；会话失效 → 引导重新绑定；**自动链不发送启动指令**——启动归创作台中窗下半区左侧（与章节列表列等宽，工作台右移收窄——空出章节标题栏正下方一块）工作流控制面板「▶ 开始/继续工作流」；
-- **🔗 绑定会话**：面板按工作区分组列出全部会话，点击即绑定（1:1）并可一键「新建会话并绑定」（新书目录为 cwd + 自动挂预设）；绑定会话失效时卡片标「会话失效」，点击引导重新绑定；
+### 为什么当前工作流能达成目标
 
-**小说创作工作台**（打开小说后的分栏工作区）：管理小说本身的创作与内容/状态/数据——左窗（**当前书目 `novel-project/` 文件树**——UX-014①：创作台关联具体小说，不显示工作区其他小说，去工作区行与书目列表，可「«」折叠）｜中窗（五个内容页签）｜右窗 = 官方对话窗本身（**margin+width 双压挤法**（UX-018）：margin 贴边挤压之外显式 `width=chatW`——margin 不改变元素 content-box 尺寸，单纯 margin 挤压在「页面先全宽挂载、后加挤压」的真实时序下无尺寸事件、宿主不重排，hero 保持全宽坐标仅露右缘碎片（=渲染异常）；显式 width 使 border-box 真变小 → 宿主必然重排，两种时序统一；**⇄ 可换边到左侧**；对话窗保持整高不被下推——首入截断修复）；两条分隔线可拖拽调宽，宽度与换边记忆在本地（`dsh.novel.split.v1`）；**小窗口下聊天窗默认加宽（UX-017 再宽一档：无存档默认 ≈50% 且 ≥320px，左窗下限 120px / 中窗下限 300px 预留重分配——1078×593 实测 378px，hero 页不再折行/截断；标题栏与控制台头部有 `.nv-tag` 版本徽标（当前 v4），用于核对浏览器实际加载的客户端包版本）**；关闭创作台后视图区原 width/margin 恢复原值（UX-018）；标题栏（UX-015① 加高至 38px、标题/徽标/按钮随栏放大）：「📖 小说创作工作台 ·《书名》」+ 阶段徽标 · 绑定会话状态点 · **⇄ 换边 · ✕ 关闭（均为 32×32 醒目钮，UX-015① 放大，Esc 同）**（UX-059：**「▶ 开始/继续工作流」启动钮已迁至中窗下半区左侧（与章节列表列等宽，工作台右移收窄——空出章节标题栏正下方一块）工作流控制面板**）；**打开期间点击侧栏其他会话自动退出**（分栏关闭，与管理台行为对齐）；
-- **中窗下半区左侧（与章节列表列等宽，工作台右移收窄——空出章节标题栏正下方一块）工作流控制面板**（UX-059，位于数据/发布/请求工作台左侧）：**状态指示**（运行中 · 空闲 · 未绑定状态点）· **▶ 开始/继续工作流 / ⏹ 停止工作流** 合并主按钮（按绑定会话状态切换形态——运行中=⏹ 停止（`sessions.cancel`，队列保留），空闲=▶ 开始·继续）· **压缩上下文**（对绑定会话发 `/compact`，需空闲）· **绑定新会话**（create→预设→绑定，不自动打开）；未绑定/会话失效/服务缺席三态提示沿用（UX-059）；
-- **文件树**：当前书目 `novel-project/` 的完整文件树（**目录默认全部折叠（UX-014③）**，点击展开；点击文件就地预览，.md 渲染阅读）。
+1. **机械可判的门禁由代码执行**
+   场景覆盖率、偏离项、保存阻断、审查提交有效性、发布合规、数据信号阈值都由代码检查；不依赖模型“记得检查”。
 
-> **配置边界**：业务配置统一在两级工作台内（工作区根目录 = 管理控制台顶部「切换 / 新建工作区…」对话框——UX-014 起创作台左窗不再放工作区行；平台发布模式/命令/数据抓取 = 发布页签「⚙ 平台发布配置」；小说↔会话绑定与删除 = 管理工作台控制台卡片 🔗/🗑）；**设置 → 小说写作**只保留插件级开关（启用/轮询/预设自动同步/LAN 暴露），与具体小说无关。
+2. **语义审查由专业 Agent 执行**
+   逻辑、角色、连续性、商业、体验、AI 痕迹等无法完全机械化的部分，交给分工明确的审查 Agent；代码负责记录和阻断。
 
-| 页签 | 用途 |
-|---|---|
-| 章节 | 左侧章节列表（**每行显示章节名**（`第N章 名称`，无装饰圆点〔UX-021〕，无章节名回退 `第N章`，不显示字数；列宽默认 160px、右缘**分割条**常驻可视可拖宽 120–360px 持久化〔UX-022〕；**滚动条默认隐藏**、悬停/拖动才显〔UX-022〕；章节多时列表上下滚动且与正文**滚动隔离**——UX-019②③/UX-020/UX-021/UX-022）/已发布/门禁⚠）；中间阅读（场景分隔渲染，含「需求项」提示与机器审计折叠）或编辑（**Ctrl+S 保存**、未保存切换确认、保存跑门禁） |
-| 工作流 | 当前阶段（含大纲三审/细纲三审/AI 合规子阶段）、完成清单、发布/变现/AI 路径门禁、请求列表 |
-| 数据 | 信号看板（阈值/现值/建议行动）+ **最近 7 天记录表** + 每日指标录入（完读率/读完率/追读/日增收藏/收益） |
-| 发布 | 选平台 → 导出 / 导出+命令 / 仅清单（可勾选「含已发布」重发）；发布历史；**⚙ 平台发布配置**（模式/命令/fetchCommand 就地编辑） |
-| 请求 | 向协调者提交「优化第 N 章 / 审查 / 发布推进 / 补录数据 / 人工指令」，AI 接单处理 |
+3. **结构化状态可恢复**
+   作品使用 `workflow-state.json` 保存阶段和产出；章节元数据、门禁结果、发布记录、数据信号落在项目目录；换会话、重开工作台、刷新页面都能接着走。
 
-会话运行状态零轮询镜像到抽屉卡片、控制台卡片（双圆状态点）与分栏标题栏（工作中=蓝发光 / 待决=黄 / 完成=绿；绑定会话被删除 → 红点「会话失效」）。会话服务缺席时自动降级：状态点隐藏、打开/绑定禁用并提示。
+4. **人的决策保留在关键节点**
+   AI 不替用户决定题材、方向、发布和止损；用户确认后才推进。AI 参与度沿用 A/B/C 分级，高风险参与度不会伪装成可上架。
 
-### 第四步：发布与数据闭环
+5. **数据闭环**
+   发布数据入库即检查完读率、流失、追读、收藏、收益信号，再给出重审、重写、节奏调整或止损建议；调整必须回到大纲/细纲/正文的可控层级。
 
-1. **「小说」工作台 → 发布页签 → ⚙ 平台发布配置**：给目标平台选模式——`export`（导出定稿产物+发布清单）、`command`（导出后执行你的自动化脚本，可用环境变量 `DSH_NOVEL_DIR/DSH_DIST_DIR/DSH_PLATFORM`）、`manual`（仅清单）；数据抓取 `fetchCommand` 也在此配置；
-2. 质量审查与 AI 合规通过（`release_allowed`）后，对话里让协调者发布或在工作台点发布；
-3. 每天把后台数据填进「数据」页（或配置 `fetchCommand` 输出 JSON 行 `{"date":"...","完读率":..,"追读":..}` 自动入库）；
-4. 信号触发时（如完读率 <10%），协调者按 `data-driven-optimization` 给出「定位→对策→影响→预期」方案，**你确认后**才动稿，改后 7 天观察验证。
+6. **真实环境约束**
+   平台数据来自真实搜索或用户配置的抓取命令；没有来源的结论会标注推测；不承诺绕过平台风控或无人值守发布。
 
-### 常用话术
+## 4. 兼容的 DSH 版本
 
-```
-开始小说创作工作流 / 继续小说创作工作流
-处理工作台请求            # 接单 UI 侧请求
-给第 3 章优化建议          # 单章优化
-发布最近 5 章到番茄小说
-把本周数据入库并分析信号
-抓取番茄数据入库          # 执行平台 fetchCommand 适配器（需在设置里配置）
-```
-
-## 兼容性与验证
-
-- **依赖架构**：`@deepseek-ai/*` 全部为 `peerDependencies`，运行时解析到宿主闭包（同一实例）——规避「双闭包」导致的 boot 崩溃与版本漂移失效（详见 [docs/RESEARCH.md](./docs/RESEARCH.md) §3.2）。
-- **客户端 API 双表面**（BUG-004）：浏览器侧经 lib/client.js 内**适配层单点收口**——新宿主（0.1.2-rc.1+）走 `remote.<ns>` 服务（settings/session/workspace/agentPresets/directoryPicker）+ `workspaces`/`sessions` 快照服务；旧宿主回退 `connection.api` 域对象；两者皆缺时按域降级提示（`apiHas` 语义不变）。
-- **能力降级**：宿主行缺席 `webServer` 仅降级 API；工具行缺席 `novel-writing` 服务时注册 0 工具，预设仍可挂载。
-- **兼容矩阵**：见下方「宿主版本矩阵」（DEC-026 定案的实测覆盖与 v1.0 生效时点）；peer 声明为 `*`，向前兼容以实测为准。
-- **dsh 0.1.5-rc.1 布局重构兼容（BUG-006）**：v0.5.1 插件代码零改动全兼容（隔离实例全链路实测启动成功）；dsh ≥0.1.5 的 per-profile 布局（每 profile 独立 `package.json` + `node_modules`）由安装脚本自动适配（profile `dependencies`/`dsh.profile.bundles` 注册 + patch 行双保险）。升级 dsh 后若插件消失 = profile 模板重建重置了注册，重跑安装脚本即恢复。
-- **预设行 × 已装宿主 Config schema 机检（BUG-007）**：宿主 `@deepseek-ai/dsh-persona@0.1.5-rc.2` 把 Config 收紧为 `prefix` 必填，预设 persona 行若仍写旧键 `text`，**整棵预设挂载会被否决**（工作台「继续工作流／绑定新会话」与宿主预设切换器两条消费路径同时失败）。防线三层：① `test/fixtures/host-surfaces/preset-schema-face.mjs` 用**已装宿主插件自身的 Config + 解析出的 cordis `resolveConfig`** 逐行核对组合（零 schema 复制），接入 `validate-preset` 第 4 段并随 CI 执行，三态 **PASS / FAIL / NOT_RUN**（宿主平面不可达 ⇒ NOT_RUN 并披露，**绝不渲染成 PASS**；`--require-schema-plane` 可把 NOT_RUN 变失败）；② 契约 `presetRowConfig`（item 5.6）登记「本行使用的键集」，smoke 离线双向 ⊆ 对账 ⇒ **宿主平面缺席的 CI 也有回归信号**；③ 隔离实例端到端挂载冒烟（见下管线 `isolated-preset-mount.mjs`）。**升级生效条件**：本版本起 `package.json` version 参与 `ensurePreset()` 幂等标记，升级后**下次启动自动重同步** `$DSH_HOME/.agent-presets/novel-writing/`（无需手动删目录）。
-- **验证管线**（CI 全量执行 + 发版手动隔离 boot）：
-
-```sh
-node --check lib/index.js && node --check lib/tools.js && node --check lib/client.js
-node test/validate-preset.mjs   # 预设挂载级校验（loader 同源解析 + 逐行模块解析 + **第 4 段：预设行 × 已装宿主 Config schema**〔preset-schema-face，三态；`--require-schema-plane` 把 NOT_RUN 变失败〕）
-node test/smoke.mjs             # 宿主逻辑 + 挂载契约 366 项断言（状态/门禁/审计/发布/信号/注册面/BUG-004 适配层与联动守卫/BUG-009 会话镜像 hook 响应性/CLEAN-007 D-1·F2·F3·F4·F6·F9；CLEAN-006 N-3 扩面：WorkspaceDialog 自挂 Esc effect 的早退顺序入 F6 同一判据；CLEAN-006 F1：useSyncExternalStore 读面 + 4 条 React 契约断言（含通道直取/回调转发/有界重渲染）；BUG-011 P0-2：settingsFormsUpdate await/catch 回归（拒绝不逃逸为 unhandledRejection）；UX-061 1b-2：尺度令牌治理（font-size 字面量 ⊆ 图标白名单 ∧ --nv-ctl-* 真实消费 ≥3/≥1）；UX-063 P0-a①：全屏工作台 + 对话抽屉（420/48/z 三值共存/让位公式/五路径还原/契约 3.3 双向对账）；COMPAT-023：全依赖面看护〔surfaceEvidence 30 格 fail-closed + 离线证据缓存四代 + 采集脚本只读纪律 + preflight --surfaces 接线 + 三探针 boot 统一（官方 CLI + DSH_HOME）+ 工作台挂载探针 W1-W6〕；UX-064 S2 R4：`.nv-split` 布局变量零未消费（声明 ⊆ CSS var()/JS cssVarNum 消费）；UX-064 S3：面板高度纯模型/持久化/ARIA/键盘/Esc 单层 + 页码只随真实可滚正文出现；UX-066：写作排版纯函数/持久键 `dsh.novel.typography.v1`/Aa popover 与设置页 4+4/正文·编辑器 prose 令牌且 UI chrome 零漏用；UX-067：设置页四段结构（4 字体卡/4 字号/4 运行行/details）+ 原生抽屉 11 宿主令牌内联兜底与 `data-nv-theme` 依赖清除；计数由 smoke 末条断言机检 ≡ 本行 ⇒ 改断言数须同 commit 改本行）
-
-# 方向 B 视觉几何基线（headless Edge；本地无 Edge 可跳过，CI 必须真跑）
-node scripts/verify-visual-geometry.mjs --strict
-# 宿主发版探测轨（CI scheduled 每日一次；只读 npm view，无 install / 无宿主代码执行）：
-npm view @deepseek-ai/dsh versions --json   # 与 fixtures 覆盖版本对账 ⇒ 新版本即红（见下「探测轨与窗口期」）
-node test/fixtures/host-surfaces/probe-face.mjs   # 探测轨判据的**离线机检** + install 头部布局契约对账（PR 门禁：提取 ci.yml heredoc → node --check → 构造 JSON 驱动判据真跑；不触网、不 install）
-node scripts/probe-host.mjs --self-check          # 宿主能力探针**离线自检**（契约 × fixtures 能力面 6 层对账；零网络 / 零宿主进程；实机模式见「维护者：一条命令定位断在哪一层」）
-# COMPAT-021 预设声明行级预检（代际清单 + 行投影 + exports/schema/dual 对账；agentPresets.register 激活前的快速门禁；详见 docs/COMPATIBILITY.md §7）：
-node test/preflight-preset-rows.test.mjs                                 # 六 fixture 期望全对账（4 代际 exit 0 / unknown fail-closed exit 1 / negative 必含 ERR_PACKAGE_PATH_NOT_EXPORTED）+ 本机平面真跑 + exit 3 NOT_RUN 口径
-node scripts/preflight-preset-rows.mjs --fixture test/fixtures/host-generations/decl-0.2.2 --json   # 离线单代际（fixture 用法：伪 node_modules 平面 + rows.patch/rows.legacy.yml 最小行集 + expected.json；换目录即换代际）
-node scripts/preflight-preset-rows.mjs --json                            # 真实 profile 平面（平面判定绑定 profile 宿主平面，npm 全局闭包仅 fallback；无平面 ⇒ exit 3 NOT_RUN，绝不渲染成 PASS）
-node scripts/preflight-preset-rows.mjs --explain tool-subagent-list-agents   # 单行逐代际处置解释（keep/drop/replace + 修复建议）
-# 隔离 boot（最接近真实安装路径）：
-$env:DSH_HOME="$env:TEMP\dsh-novel-test"; dsh plugin --profile web add link:<本仓库>
-dsh web --port 3100 --no-open   # 另一终端 curl http://127.0.0.1:3100/novel-writing/api/overview → 200
-# 隔离实例预设挂载冒烟（BUG-007；DSH_HOME 重定向到临时目录，真实环境只读）：
-node scripts/isolated-preset-mount.mjs   # 起隔离实例 → 插件 ensurePreset 同步 → 宿主自身 mount 预设 → 读 system prompt 段
-# UX-012 新建链/模态行为探针（CLEAN-007 F7；同族先例 = 上方 probe-nv-bar-geometry）：
-node scripts/probe-nv-ux012.mjs --falsifiability   # 谓词登记表 red/ok 向量自证（零浏览器/零实例/零网络；「构造反例 ⇒ 必红」）
-node scripts/probe-nv-ux012.mjs                    # 隔离实例 + 无头浏览器真实 UI 驱动（弹窗几何/模态语义·焦点陷阱·归还/Esc 分层/请求体仅 {name}/busy 禁关/绑定面板 D-1/创建链两消费点）
-# COMPAT-023 依赖面看护（六面证据采集 + 对账 + 工作台挂载用户真路径探针）：
-node scripts/collect-host-surface-evidence.mjs     # 只读采集（npm view/pack + tar 解包 → test/fixtures/host-generations/<gen>/surfaces/；零 install）
-node scripts/preflight-preset-rows.mjs --surfaces  # 30 格对账（24 PASS + 6 WARN〔unknown 代 fail-closed〕；--strict 升红；篡改证据必红）
-node scripts/probe-nv-workbench-mount.mjs          # 工作台挂载真路径（W1 抽屉→W2 控制台→W3 建 API→W4 点书卡 .nv-split→W5 自动绑定→W6 零 #310；截图落 docs/evidence/COMPAT-023/）
-```
-
-### 宿主版本矩阵（DEC-026 定案）
-
-`peerDependencies` 当前仍为 `*`（A1 收敛**未生效**）；矩阵以 fixtures 快照与隔离实例实测为依据。**依赖面证据（COMPAT-023）**：每代「六面」（服务端 API / client 槽位 / DOM / 安装 / 预设清单 / 版本）消费证据登记于 `lib/host-compat/generation-manifest.mjs` 的 `SURFACE_EVIDENCE`（30 格 fail-closed，无据格 = unknown 非绿），离线缓存 = `test/fixtures/host-generations/<gen>/surfaces/surfaces.json`（采集：`node scripts/collect-host-surface-evidence.mjs`，只读 npm view/pack；对账：`node scripts/preflight-preset-rows.mjs --surfaces`）；下表各行证据栏的 `surfaces.json` 路径即该代六面证据入口。
-
-| 宿主版本 | 支持状态 | 依据 / 生效时点 |
+| DSH 版本 | 状态 | 说明 |
 |---|---|---|
-| `0.2.2-rc.1`（现行宿主修复面：桌面端预设「加载失败」热修 + BUG-012 工作台不出现修复验证） | ✅ 预设 + 工作台浮层面已实测（修复 = 插件侧 hooks 违规，与宿主代际无关；证据 docs/evidence/BUG-012/fix-verification.md） | 0.2.2 起 `@deepseek-ai/dsh-tool-subagent-control` 移除 `./list-agents` 子路径、`list_agents` 并入主包（`registerListAgents`）；本版包内 `cordis.patch.yml` 已删除 legacy 子路径行（仅保留主包行，由主包注册 `list_agents`）⇒ 预设声明行可正常 `agentPresets.register`；0.1.x 源 `agent.cordis.yml` 保留该行（0.1.x 通道靠它获得工具），方向差由 `GENERATION_DROPPED` 机检看护。证据 = 0.2.2-rc.1 闭包只读实测（exports 面 + 主包注册点）+ smoke B2 双源断言 + validate-preset 声明代平面显式跳过披露 + docs/evidence/COMPAT-020/diag-preset-0.2.2-rc.1.json（`agentPresets.list()` 中 `novel-writing` 无 `broken`）。**工作台浮层面（BUG-012）**：原「点小说工作台不出现」经查为插件自身 Rules-of-Hooks 违规（UX-063 P0-a② 把消费 effect 放在条件早退后 ⇒ React #310 ⇒ 宿主 SlotErrorBoundary 卸载 novel-split entry），同一代码四代宿主同雷、与 shell.overlay 协议无关（0.2.0~0.2.2 tarball+asar 逐版比对未变）；修复后 0.2.2-rc.1 隔离探针 Playwright 实测点抽屉头浮层挂载、点书卡分栏工作台挂载且 console 无 #310/无槽位崩溃（docs/evidence/BUG-012/fix-verification.md）；**COMPAT-023 复验 + 固化**：工作台挂载用户真路径探针（`scripts/probe-nv-workbench-mount.mjs`，W1 抽屉→W2 控制台〔shell.overlay 消费〕→W3 建 API→W4 点书卡 `.nv-split`→W5 autoBindDone→W6 零 #310/零 slot entry crashed）在桌面 CLI 0.2.2-rc.1 全绿（报告 + 截图 = docs/evidence/COMPAT-023/workbench-mount-report.json 及同目录 PNG）。**六面依赖证据** = test/fixtures/host-generations/decl-0.2.2/surfaces/surfaces.json（tarball 实测采集）。**本行背书面 = 预设加载面 + 工作台浮层面**：激活/HTTP/写路径/迁移等其余面以上方验证管线实测为准（0.2.2 未重跑全链路） |
-| `0.2.1-rc.2`（COMPAT-020 探针实测；npm-global） | ⚠️ 部分支持（预设加载面已实测；独立 `list_agents` 不可用） | 隔离实例诊断 `agentPresets.list()`：返回 5 个预设、`novel-writing` 行含 `name`/`description`/`order`、**无 `broken`**、`ok:true`（`docs/evidence/COMPAT-020/diag-preset-0.2.1-rc.2.json`，启动日志同目录）⇒ 预设加载面已实测。`list_agents` 不可用的依据 = 该代 `@deepseek-ai/dsh-tool-subagent-control` 主包尚未注册该工具 + 包内 patch 已无 legacy 子路径行（包面结论，非本次 `agentPresets.list()` 探针直接测得）；**六面依赖证据** = test/fixtures/host-generations/decl-0.2.1/surfaces/surfaces.json（tarball 实测采集，含该代槽位注册/消费形态）；本轮未重跑 0.2.1 全链路，链路基线沿用 BUG-011 的 0.2.0 代隔离实例证据（见下行） |
-| `0.2.0-rc.2`（BUG-011 代：CLI 0.2.0-rc.2，闭包 cordis 4.0.5 / schemastery 3.18.5） | ⚠️ 部分支持（预设可加载；独立 `list_agents` 不可用） | 隔离实例全链路实测（激活/HTTP/预设声明行/写路径重启持久/legacy settings 迁移）+ `preset-schema-face` dual 模式逐行核对；settings Config 范式 + 预设声明行 + install 代系分流 + 会话面双表面（详见 CHANGELOG [Unreleased] BUG-011 / COMPAT-020）；**六面依赖证据** = test/fixtures/host-generations/decl-0.2.0/surfaces/surfaces.json（tarball 实测采集） |
-| `0.1.5-rc.2`（现行闭包内子包实测版本；CLI `0.1.5-rc.1` = registry `latest`） | ✅ 完整支持 | 宿主表面 fixtures 现行快照（`test/fixtures/host-surfaces/`）+ per-profile 布局隔离实例全链路实测（BUG-006）+ 预设组合行 × 已装 Config schema 逐行核对与隔离实例挂载冒烟（BUG-007：`preset-schema-face.mjs` / `scripts/isolated-preset-mount.mjs`，persona 键 = `prefix`）；**六面依赖证据** = test/fixtures/host-generations/legacy-0.1/surfaces/surfaces.json（tarball 实测采集；dsh-* 子包 0.1.5-rc.2 + cordis 4.0.2 / schemastery 3.18.2 按主包依赖钉解析） |
-| `0.1.2-rc.1` | ✅ 支持（**最低支持线**） | fixtures 快照 + 客户端双表面适配层；**v1.0 起为声明下限**（`peerDependencies` 加下限 + 移除 `connection.api` 回退〔过渡期保留一个版本期的 `__NV_LEGACY_API__` 开关〕）——A1 绑定 v1.0 major 边界，**当前 A3 阶段尚未生效** |
-| `0.1.0-rc.7` / `0.1.1-rc.2`（0.1.x 旧表面线） | ⚠️ 最佳努力（A3 保留旧表面回退） | 依据 = `docs/RESEARCH.md` §3.1 实测（`0.1.0-rc.7`）+ `docs/DESIGN.md` 兼容矩阵 + fixtures 快照（`0.1.1-rc.2` 为 0.1.x 旧表面线代表，与 `0.1.2-rc.1` 构成 BUG-003/004 断点对照）；**fixture 归属精确化**：本行两版本中——`0.1.0-rc.7` **无仓内 fixture**（勿把本行的「实测」依据读作适用于它的快照；其依据是 `RESEARCH`/`DESIGN` 的历史实机实测），`0.1.1-rc.2` **有**仓内 fixture 快照（`test/fixtures/host-surfaces/0.1.1-rc.2.json`，由 smoke ① 目录 ≡ 契约键集机检）；**v1.0 起断供**——旧宿主上 `remote.*` 全缺而 `connection.api` 域对象在场 ⇒ 设置页「诊断」区明确提示「宿主版本低于最低支持」，并指向 v0.5.x tag 回退路径（DEC-026） |
-| 未列版本（含 `next` / `alpha` tag 上的预发布） | 未验证 | 向前兼容以实测为准；`*` 无下限 = 不设防（契约 6.1） |
+| `0.1.2-rc.1` ~ `0.1.x` | 支持 | 旧表面；`0.1.5-rc.2` 为完整支持基线；使用 `agent.cordis.yml` 的 legacy 预设通道 |
+| `0.2.0-rc.2` / `0.2.1-rc.2` | 可加载，非完整支持 | 预设可加载；宿主未在主包注册独立 `list_agents`，该能力不可用，不伪装为完整支持 |
+| `0.2.2-rc.1` | 推荐（当前实测基线） | 0.2.x 声明预设；`list_agents` 由主包提供；预设加载与工作台挂载已实测 |
 
-**代际限制（0.2.0 / 0.2.1，COMPAT-020 如实披露）**：这两代的 bundle patch 是**静态声明**、无法按宿主版本分流 ⇒ 预设可加载（0.2.0 有 BUG-011 隔离实例全链路证据；0.2.1 有 `diag-preset-0.2.1-rc.2.json` 的预设加载面实测），但独立 `list_agents` 工具不可用（这两代的 `dsh-tool-subagent-control` 主包尚未注册 `list_agents`，而包内 patch 已不再声明 legacy 子路径行）；0.2.2+ 由主包提供该工具，0.1.x 继续走 `agent.cordis.yml` 的 legacy 行。根治方案需运行时按宿主代际分流；COMPAT-021 先交付设计、契约与预检，运行时实现另立任务并以关键决策批准。
+0.1.x 使用包内 `agent-presets/novel-writing/agent.cordis.yml`，0.2.x 使用 `cordis.patch.yml` 的预设声明；两份源文件不能混用。0.2.0/0.2.1 的独立 `list_agents` 缺失是宿主能力差异，不是插件静默补上的功能。
 
-### 宿主发版探测轨与探测窗口期（COMPAT-007；DEC-025 决策②② / RB-01）
+其他要求：
 
-- **探测轨**：CI **每日一次**（`cron: '17 3 * * *'`，UTC）以**只读 npm 元数据**（仅 `npm view <pkg> versions --json`——**不 install、不 pack、不执行宿主代码**）把上游已发布版本与 fixtures 覆盖版本对账；判定口径（与实现逐字一致，判据④）：**高于最新覆盖车**的新版本、或**已覆盖车内高于已覆盖版本**者 ⇒ job 红并输出 `detected new host version X, fixtures covered Y`；**低于最新覆盖车的中间车**版本**不判红**（例如覆盖 `0.1.5-rc.2` 时上游 `0.1.4-rc.9` 不触发）——请勿按「任何新版本都红」理解。红按类别给差异化处置（`version-drift` 版本推进 / `version-form` 受限口径外形态〔需扩口径或人工审阅，**更新 fixtures 关不掉**〕/ `coverage` 覆盖声明失配 / `surface` 探测面或契约版本面失配 / `input` 探测输入缺失或不可解析〔退出码 2〕）；亦可 `workflow_dispatch` 手动触发。**每日执行面 = 仅本探测 job**（`sanity` / `host-logic` 已加反向 `if` ⇒ `schedule` 下 skipped；push / pull_request / 手动 dispatch 仍全量执行，故每日不会无人值守跑第三方安装）。**已知盲区（如实披露）**：上游客包**新增子包**不在判据范围——契约 `hostSurface.packages` 是探测目标集单一事实源，新增子包须同步契约与探测行（判据① 双向对账是兜底）。本地等效：`npm view @deepseek-ai/dsh versions --json`（及 `dsh-settings` / `dsh-api-gateway` / `dsh-client-modules` / `dsh-client-connection` / `dsh-tools` / `dsh-home-paths` / `cordis` / `schemastery`）；判据本身的离线机检 = `node test/fixtures/host-surfaces/probe-face.mjs`（PR 门禁内执行，提取 ci.yml heredoc → `node --check` → 构造 JSON 驱动判据，零网络）。
-- **代价（A-F1 收敛的取舍，如实留档）**：`sanity` / `host-logic` 已加反向 `if` ⇒ 每日面只剩只读探测 job——即**「每日一次的真实 schemastery 漂移可见性」随本次收敛一并消失**（它曾是收敛前的附带收益，REVIEW-COMPAT-007-R1 F1 曾列明）。若需要该信号：用 `workflow_dispatch` 手动随查（dispatch 下三 job 全量执行）或另立定时任务——**勿误以为每日仍在跑真实包安装 + 全量 smoke**。取舍动因 = 避免每日无人值守执行未钉版本的第三方安装（供应链面）；采纳方案 (a)「收敛 + 披露」。
-- **⚠️ 探测窗口期（已知残余，RB-01）**：探测是**每日一次、且只在 CI 侧**的检测——**窗口期内（≤ 1 天）宿主升级仍可能先于探测到达用户**：在探测变红、修复发布之前升级宿主的用户，仍会先遇到不适配（探测不是实时防护，也不能替代升级前的兼容核对）。该窗口由**加载期防线**兜底（不依赖 CI）：① `[nv-compat]` 结构化告警（缺面时 console 一次性告警，含缺面域名 / 方法名 / 服务名与契约 item）；② 客户端 `apiHas` 按域降级 + 设置页「诊断」区如实报告缺失面——**降级不白屏**。即：**「有探测」≠「无窗口」**。
+- Node.js **>= 20**
+- DSH Web / Desktop 均可；插件客户端面向 web 宿主，桌面端使用同一套客户端表面
+- 安装后需要重启 DSH 一次，让 bundle 和客户端插件生效
+- 兼容性细节以 [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md) 为唯一权威；升级 DSH 前建议先跑 `node scripts/preflight-preset-rows.mjs`
 
-### 维护者：一条命令定位「断在哪一层」（COMPAT-008 探针固化）
-
-宿主/浏览器侧行为异常（BUG-004/005 一类）时，先用探针把「断点层」定位到六面之一，再进代码——不必重走一遍人工排查：
+## 安装
 
 ```sh
-node scripts/probe-host.mjs --self-check        # ① 离线自检（零网络 / 零宿主进程）：契约 × fixtures 能力面 6 层对账 + 打印隔离方案与命令计划
-node scripts/probe-host.mjs --run --port 3210   # ② 实机探针：隔离实例起宿主 → 只读探测 → 与契约的能力 diff 报告
-```
-
-- **① `--self-check`（本仓已验证，CI sanity 常态步骤）**：不启宿主、不联网、不起浏览器；逐层断言 6 个依赖面（服务端 API / 客户端 API / DOM·前端约定 / 安装注册 / 预设 manifest / 版本环境）在**仓内实证**（fixtures / 源码 / 安装脚本 / 预设目录）中成立，并打印 ② 将要执行的**命令计划 + 环境变量重定向**（逐条留痕）。
-- **② `--run` —— 固定标记 `REAL-RUN: UNVERIFIED`（**未验证**，如实标注）**：需**运行中的宿主环境**（`dsh` 在 PATH、可用的浏览器自动化依赖或宿主 DOM）。本仓开发环境与 CI **均未执行过**该模式，其输出 MUST 经人工确认后才可作为宿主兼容性证据——**不得据此宣称「实机已验证」**（脚本自带该固定标记，并由 smoke 接线守卫断言其存在，防静默转「已验证」）。
-- **安全口径（② 执行时生效，硬约束）**：`DSH_HOME` 重定向到 `os.tmpdir()` 下的隔离实例 + `npm_config_cache` / `npm_config_userconfig` / `npm_config_globalconfig` 三重定向 ⇒ 插件的全部写入面（profiles / `.agent-presets` / `settings.yaml`）落在临时根内；`DSH_HOME` 解析结果不在临时根内则**拒绝执行**（fail-closed）；只 `GET` 只读路由（liveness + `/novel-writing/api/compat`），**不 install、不写宿主目录、不触碰真实 `$HOME` / `$DSH_HOME`**。
-
-## 卸载
-
-```sh
+# 按你的宿主 profile 替换 web；桌面端通常是 desktop
+dsh plugin --profile web add peterwangze/dsh-novel-writing
+dsh plugin --profile web update dsh-novel-writing
 dsh plugin --profile web remove dsh-novel-writing
 ```
 
-可选清理：删除 `$DSH_HOME/.agent-presets/novel-writing/`（预设）与 `$DSH_HOME/settings.yaml` 的 `novel-writing` 节。小说内容（`~/novels`）不受任何安装/卸载影响。
+安装后：
 
-## 已知限制（诚实边界）
+1. 重启 DSH；
+2. 首次启动会自动同步「小说写作工作流」预设；
+3. 打开侧栏「小说管理工作台」，创建第一本书，或把 [examples/demo-novel](examples/demo-novel) 复制到工作区直接体验。
 
-| 限制 | 说明 |
-|---|---|
-| 平台无公开 API | 13 个主流平台均无官方写作/发布/数据 API；`command` 模式的自动化脚本由用户自担合规与风控风险，默认关闭 |
-| 机械门禁的语义盲区 | 场景覆盖用「标题精确 + 关键词滑窗」匹配，可能漏判同义改写——输出明细供 agent/人复核；「不得无铺垫引入」类**条件型**禁止无法机械判定，gate 输出 `conditional` 列表提示人工复核，不计入偏离度；看护卡场景段**格式漂移时门禁 fail-closed（阻断而非静默放行）** |
-| 数据口径 | 追读率/跟读率/完读率各平台定义不同，录入时以平台后台口径为准 |
-| 客户端热更新 | 浏览器侧（抽屉/控制台/分栏工作区/对话框/设置页）随 DSH 重启生效；宿主侧行为下次 boot 生效 |
-| LAN 暴露 | `apiPublic: true` 后同网段可无鉴权读全部书稿——仅在你完全信任内网时开启 |
+离线安装、旧版 profile 布局和手动安装见 [install.ps1](install.ps1) / [install.sh](install.sh) 以及 [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md)。
 
-## 安全模型
+## 快速开始
 
-- API 默认**仅回环**：以连接来源（socket.remoteAddress）判定，Host 头仅兜底；
-- **写方法同源校验**：POST 必须携带与宿主一致的 Origin/Referer 且 content-type 为 application/json（拒绝跨站「简单请求」CSRF，含命令执行端点）；
-- 请求体上限 4MB；章号/路径/平台名/书目 id 统一收口校验（拒绝 `../` 注入）；
-- **删除（`novel-delete`）风控**（UX-011，P-07）：id 校验与新建同规（`sanitizeNovelId` 收口）+ `resolve()` 后必须仍在工作区根目录内（路径穿越防护）；仅删除单个书目目录、绝不触碰根目录；只由浏览器侧用户在确认弹窗显式确认后触发，无任何自动删除路径；`enabled=false` 时与其他变更 API 一样 503 拒绝；
-- 发布命令/fetchCommand 由用户显式配置，异步执行（不冻结宿主），180s/120s 超时；发布前 `release_allowed` 门禁在**服务层**强制（工具与浏览器同一收口）。
+1. 安装并重启 DSH。
+2. 打开「小说管理工作台」，新建工作区和书目。
+3. 点击书目进入写作台；未绑定会话会自动创建并绑定。
+4. 在工作流面板开始/继续流程，按阶段做选择。
+5. 在稿纸里阅读、编辑、保存；保存会跑门禁。
+6. 发布后在「数据」页看信号，决定下一步调整。
+
+## 边界与非目标
+
+- 不绕过平台风控，不做无人值守发布；自动发布默认关闭，必须由用户显式配置。
+- 不把 AI 代写成“人类原创”；AI 参与度沿用 A/B/C 分级。
+- 不伪造对话、差异、页码、章节数或平台数据。
+- 不自动删除小说；删除必须显式确认。
+- 不在设置页重新堆放业务配置；工作区、发布、绑定在对应工作台完成。
+- 不承诺收益；只提高过程可控性和复盘效率。
+
+## 项目结构
+
+```text
+lib/
+  index.js              宿主服务、HTTP API、预设同步
+  client.js             书斋、写作台、主题/排版、宿主抽屉适配
+  host-boundary.js      宿主 API 边界与双表面适配
+  host-contract.mjs     宿主耦合契约（单一事实源）
+agent-presets/novel-writing/
+  agent.cordis.yml      0.1.x 预设源
+  skills/               29 个 SKILL
+  agents/               16 个专业 Agent
+cordis.patch.yml        0.2.x 预设声明
+scripts/                几何、契约、探针、预检
+test/                   smoke / preset 校验
+docs/                   DESIGN / COMPATIBILITY / 调研与设计证据
+```
+
+## 开发与验证
+
+```sh
+node --check lib/client.js
+node test/validate-preset.mjs
+node test/smoke.mjs          # 366 项断言
+node scripts/verify-visual-geometry.mjs --strict
+node scripts/verify-contract-anchors.mjs
+node scripts/preflight-preset-rows.mjs
+```
+
+真实工作台验收使用隔离 DSH profile + 临时 `DSH_HOME`，覆盖 1680/1152/956/800 等宽度、浅/深主题、抽屉、专注和设置页；不以合成 DOM 代替真实宿主。
+
+## 文档
+
+- [设计方案](docs/DESIGN.md)
+- [兼容性设计与版本矩阵](docs/COMPATIBILITY.md)
+- [市场/源工作流/DSH 生态调研](docs/RESEARCH.md)
+- [示例小说](examples/demo-novel)
+- [更新记录](CHANGELOG.md)
 
 ## License
 
