@@ -5893,6 +5893,31 @@ check('F-02/F-03/F-04 首页与控制台：首页有 notice 宿主 ∧ 未绑定
     && clientSrc.includes("if (homeSearchOpen === true && homeSearchQ !== '') return")
 })(), 'f02/03/04')
 
+check('BUG-016 工作台顶边只认会话页眉：文档级 <header> 扫描已删除（弹窗标题栏不得推低工作台）∧ 只扫会话根内 header ∧ 弹窗内 header 被排除', (() => {
+  const body = fnBody('hostHeaderBottom() {')
+  return body.length > 200
+    // ① 全文档扫描必须消失——这是「提问弹窗标题栏把工作台顶到窗口中部」的直接成因
+    && !body.includes('document.querySelectorAll(\'header\')')
+    && !body.includes("document.querySelectorAll('header')")
+    && !body.includes("insidePlugin(h)")
+    // ② 页眉扫描收敛到会话根内
+    && body.includes("root.querySelectorAll('header')")
+    // ③ 弹窗/对话框内的 header 一律排除
+    && body.includes('insideOverlay')
+    && body.includes("'[role=dialog],[role=alertdialog],[role=menu],[role=listbox],[aria-modal=true],dialog'")
+    // ④ 稳定 data 钩子仍是唯一被采信的文档级判据（且要求在会话根内）
+    && body.includes("root.querySelector('[data-conversation-header-leading]')")
+})(), 'bug016 anchor=' + fnBody('hostHeaderBottom() {').length)
+
+check('BUG-016 稿纸页脚不得在不可测量时输出荒谬页码：正文区 < PAGE_MIN_H 即隐藏页码 ∧ PAGE_MIN_H 有定义 ∧ 门槛先于换算', (() => {
+  const measure = fnBody('const measure = () => {')
+  return clientSrc.includes('const PAGE_MIN_H =')
+    && measure.includes('h < PAGE_MIN_H')
+    // 门槛必须早于页数换算（否则仍会产出 469 这类总数）
+    && measure.indexOf('h < PAGE_MIN_H') < measure.indexOf('Math.ceil(sh / h)')
+    && measure.includes('setPaperPage(null)')
+})(), 'bug016 page')
+
 const readmeSmokeDeclared = Number((/node test\/smoke\.mjs\s+#[^\n]*?(\d+)\s*项断言/.exec(readFileSync(new URL('../README.md', import.meta.url), 'utf8')) ?? [])[1] ?? NaN)
 check('COMPAT-014 A-F9 README smoke 断言计数同步：声明 ' + (Number.isNaN(readmeSmokeDeclared) ? '缺失' : readmeSmokeDeclared) + ' ≡ 实测 ' + (passed + 1) + '（含本断言自身；陈旧即红）',
   readmeSmokeDeclared === passed + 1,

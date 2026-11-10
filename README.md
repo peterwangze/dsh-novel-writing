@@ -201,7 +201,7 @@ docs/                   DESIGN / COMPATIBILITY / 调研与设计证据
 ```sh
 node --check lib/client.js
 node test/validate-preset.mjs
-node test/smoke.mjs          # 377 项断言
+node test/smoke.mjs          # 379 项断言
 node scripts/verify-visual-geometry.mjs --strict
 node scripts/verify-contract-anchors.mjs
 node scripts/preflight-preset-rows.mjs
