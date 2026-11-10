@@ -1065,7 +1065,7 @@ check('客户端源码面：UX-036/S2 工作流与数据面板（按需下半案
     && !clientSrc.includes('detail !== null ? midFooter : null')
     && clientSrc.includes("el(WorkflowPanel, { t, novel: detail })")
     && (clientSrc.match(/el\(WorkflowPanel, \{ t, novel: detail \}\)/g) ?? []).length === 1
-    && clientSrc.includes("el(DataPanel, { t, novelId: selectedId, detail })")
+    && clientSrc.includes("el(DataPanel, { t, novelId: selectedId, detail, draft: draftOf('data'), onDraft: setDraftOf('data') })")
     && clientSrc.includes("el(PublishPanel, {")
     && clientSrc.includes("el(RequestPanel, {")
     // UX-041：标题栏居中统计横幅（真实数据；碰撞保护保留）
@@ -5917,6 +5917,35 @@ check('BUG-016 稿纸页脚不得在不可测量时输出荒谬页码：正文�
     && measure.indexOf('h < PAGE_MIN_H') < measure.indexOf('Math.ceil(sh / h)')
     && measure.includes('setPaperPage(null)')
 })(), 'bug016 page')
+
+check('WB-12 面板未提交输入不随页签丢失：三面板草稿均由父级持有（props.draft/onDraft）∧ 面板内不再用本地 useState 存表单 ∧ 父级草稿状态在 tab 之外', (() => {
+  const dataBody = fnBody('function DataPanel(props) {')
+  const reqBody = fnBody('function RequestPanel(props) {')
+  const pubBody = fnBody('function PublishPanel(props) {')
+  return dataBody.length > 100 && reqBody.length > 100 && pubBody.length > 100
+    // ① 三面板都从 props 读草稿
+    && dataBody.includes('const form = props.draft')
+    && dataBody.includes('const setForm = props.onDraft')
+    && reqBody.includes('props.draft.kind')
+    && reqBody.includes('props.draft.note')
+    && reqBody.includes('props.draft.chapter')
+    && pubBody.includes('props.draft.platform')
+    && pubBody.includes('props.draft.rescope')
+    // ② 面板内不得再把表单放进本地 state（回归即红——这正是 WB-12 的成因）
+    && !dataBody.includes("useState({ date:")
+    && !reqBody.includes("useState('optimize')")
+    && !pubBody.includes('useState(platforms[0])')
+    // 「含已发布」勾选也不得再放本地 state（busy/notice 之类的瞬时态仍允许）
+    && !pubBody.includes('const [rescope, setRescope] = useState')
+    // ③ 父级草稿状态与 tab 同级（切页签只改 tab，不卸载草稿）
+    && clientSrc.includes('const [panelDraft, setPanelDraft] = useState({')
+    && clientSrc.includes("const draftOf = (key) => panelDraft[key]")
+    && clientSrc.includes("const setDraftOf = (key) => (next) => setPanelDraft")
+    // ④ 三个面板都真的接上了草稿
+    && clientSrc.includes("draft: draftOf('data'), onDraft: setDraftOf('data')")
+    && clientSrc.includes("draft: draftOf('request'), onDraft: setDraftOf('request')")
+    && clientSrc.includes("draft: draftOf('publish'), onDraft: setDraftOf('publish')")
+})(), 'wb12 drafts')
 
 const readmeSmokeDeclared = Number((/node test\/smoke\.mjs\s+#[^\n]*?(\d+)\s*项断言/.exec(readFileSync(new URL('../README.md', import.meta.url), 'utf8')) ?? [])[1] ?? NaN)
 check('COMPAT-014 A-F9 README smoke 断言计数同步：声明 ' + (Number.isNaN(readmeSmokeDeclared) ? '缺失' : readmeSmokeDeclared) + ' ≡ 实测 ' + (passed + 1) + '（含本断言自身；陈旧即红）',

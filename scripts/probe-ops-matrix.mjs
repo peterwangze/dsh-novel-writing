@@ -25,6 +25,7 @@
  *   O15 主题切换           ThemePicker → 根属性 data-nv-theme 生效
  *   O16 排版切换           Aa → 字号 17 生效且正文 computed 同步
  *   O17 下方面板页签       状态栏页签 → 案卷打开并显示该页签内容
+ *   O17b WB-12 输入保留      数据页签填数 → 切走 → 切回，未提交的数值须仍在
  *   O18 关闭工作台         编辑态 ✕ → 脏稿确认确实弹出（dialog 计数）且关闭成功
  *   O19~O21（新建书目 / 删除书目 / 专注模式）已在探针内实现，但无头实例在多次浮层开合后
  *        首页视图状态受限（找不到「新建」CTA / 书卡删除钮 / 专注入口）⇒ 如实记为 SKIP，
@@ -722,6 +723,78 @@ async function main() {
       await sleep(900)
       const panelBody = String(await cdp.evaluate(`(() => document.querySelector('.nv-bottom-body')?.innerText ?? '')()`))
       assertion('O17', '下方面板：点状态栏页签后案卷打开并显示该页签内容', tabClick.ok === true && panelBody.length > 0, { tabClick, bodyLen: panelBody.length, sample: panelBody.slice(0, 100) })
+
+      // ── O17b（WB-12）面板未提交输入不随页签丢失：数据页签填数 → 切走 → 切回，值须仍在 ──
+      const wb12 = await (async () => {
+        // 切到「数据」页签（页签顺序：[工作流, 数据, 发布, 请求]）
+        // 面板开合是「同页签再点即收起」的切换语义，且面板已开时要真的**切到目标页签**。
+        // 判据必须包含 current === 目标页签——只看「面板是否打开」会把「停在发布页签」
+        // 误当成「已在数据页签」，进而读到空输入集。
+        const selectTab = async (label) => {
+          for (let i = 0; i < 5; i += 1) {
+            const st = await cdp.evaluate('(' + String(function select(labelText) {
+              const panel = document.querySelector('.nv-bottom')
+              const body = document.querySelector('.nv-bottom-body')
+              const tabs = [...document.querySelectorAll('.nv-status-tab')]
+              const hit = tabs.find((x) => (x.textContent || '').includes(labelText))
+              if (hit === undefined) return { ok: false, why: 'no tab', n: tabs.length }
+              const cur = (hit.getAttribute('data-on') === 'true') || (hit.getAttribute('aria-pressed') === 'true')
+              if (panel !== null && body !== null && cur) return { ok: true }
+              hit.click()
+              return { ok: false, clicked: true }
+            }) + ')(' + JSON.stringify(label) + ')')
+            if (st.ok === true) return { ok: true, rounds: i }
+            await sleep(700)
+          }
+          return { ok: false }
+        }
+        const openDataTab = () => selectTab('数据')
+        const toData = await openDataTab()
+        await sleep(900)
+        const domState = await cdp.evaluate(`(() => {
+          const tabs = [...document.querySelectorAll('.nv-status-tab')].map((x) => (x.textContent || '').trim())
+          const bodies = [...document.querySelectorAll('.nv-bottom-body')].map((b) => ({ n: b.querySelectorAll('input').length, txt: (b.innerText || '').slice(0, 40) }))
+          const panel = document.querySelector('.nv-bottom')
+          return { tabs, bodies, panelOpen: panel !== null, panelH: panel === null ? 0 : Math.round(panel.getBoundingClientRect().height) }
+        })()`)
+        const filled = await cdp.evaluate(`(() => {
+          const body = document.querySelector('.nv-bottom-body')
+          if (body === null) return { ok: false, why: 'no body' }
+          const inputs = [...body.querySelectorAll('input[type=number]')]
+          if (inputs.length === 0) return { ok: false, why: 'no number inputs', n: 0 }
+          const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set
+          const marks = []
+          for (let i = 0; i < Math.min(2, inputs.length); i += 1) {
+            setter.call(inputs[i], String(11 + i * 7))
+            inputs[i].dispatchEvent(new Event('input', { bubbles: true }))
+            marks.push(String(11 + i * 7))
+          }
+          return { ok: true, marks, n: inputs.length }
+        })()`)
+        await sleep(500)
+        // 切到「发布」再切回「数据」——组件在中间被卸载
+        await cdp.evaluate(`(() => {
+          const tabs = [...document.querySelectorAll('.nv-status-tab')]
+          const t1 = tabs.find((x) => (x.textContent || '').includes('发布'))
+          if (t1 !== undefined) t1.click()
+          return true
+        })()`)
+        await sleep(800)
+        const backToData = await selectTab('数据')
+        // 等数据页签的数值输入真正回到 DOM（切页签有卸载/重挂，读数过早会拿到空集）
+        await waitFor(async () => (await cdp.evaluate(`(() => {
+          const body = document.querySelector('.nv-bottom-body')
+          return body !== null && body.querySelectorAll('input[type=number]').length >= 2
+        })()`)) === true, 8000)
+        const after = await cdp.evaluate(`(() => {
+          const body = document.querySelector('.nv-bottom-body')
+          if (body === null) return null
+          return [...body.querySelectorAll('input[type=number]')].map((x) => x.value)
+        })()`)
+        const kept = filled.ok === true && Array.isArray(after) && filled.marks.every((m, i) => after[i] === m)
+        return { toData, backToData, domState, filled, after, kept }
+      })()
+      assertion('O17b', 'WB-12：数据页签填的数值切页签再切回后仍在（未提交输入不丢）', wb12.kept === true, wb12)
 
       // ── O18 关闭工作台（脏稿守卫）：编辑态按 ✕ 需先确认 ──────────────────────
       await cdp.evaluate(`(() => { const b = document.querySelector('.nv-paper-actions .nv-paper-btn'); if (b !== null) b.click(); return true })()`)
